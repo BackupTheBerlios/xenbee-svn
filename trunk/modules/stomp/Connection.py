@@ -1,5 +1,5 @@
 """
-
+Implementation of the STOMP protocol (client side)
 """
 
 __version__ = "0.1"
