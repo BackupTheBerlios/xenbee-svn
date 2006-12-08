@@ -1,5 +1,7 @@
 #!/usr/bin/env python
-"""Example to use the UNIX socket server"""
+"""
+The Xen Based Execution Environment managing daemon
+"""
 
 LOGFILE = '/tmp/xenbeed.log'
 
@@ -17,23 +19,14 @@ from twisted.protocols import basic
 import os, os.path
 from syslog import syslog, openlog, LOG_MAIL
 
-class TestProtocol(basic.LineReceiver):
-	"""Processing input on a UNIX socket.
-	"""
-
-	def connectionMade(self):
-		log.msg('Connection from %r' % self.transport)
-		self.sendLine('Hello!')
-
-	def lineReceived(self, line):
-		log.msg('got line: %s' % line)
-		self.sendLine("you wrote: %s" % line)
+from proto import XenBEEProtocol
 
 def main():
 	# listen on the unix socket
 	f = Factory()
-	f.protocol = TestProtocol
+	f.protocol = XenBEEProtocol
 	reactor.listenUNIX("/var/lib/xenbeed/xenbeed-socket", f, 10)
+	reactor.listenTCP(1234, f)
 	reactor.run()
 
 if __name__ == "__main__":
