@@ -1,4 +1,15 @@
 * Files added/created:
 	/var/lib/xenbeed/
 	`+- xenbeed-socket
+	/var/run/xenbeed/
+
+Design idea
+===========
+
+	XenManager:
+		* createInstance(job-id, instance-config)
+			* config: mac, kernel, initrd, images
+			* throws: InstanceCreationError
+			* registers instance
+			* return: void
 

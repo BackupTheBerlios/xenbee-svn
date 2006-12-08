@@ -21,7 +21,7 @@ class TestDataStager(unittest.TestCase):
 	def test_local_retrieve(self):
 		dst = TempFile()
 		stager = DataStager("file://" + self.source.path, dst.path)
-		stager.run()
+		stager()
 		tmpdata = open(dst.path, "r").read()
 		self.assertEqual(self.data, tmpdata)
 

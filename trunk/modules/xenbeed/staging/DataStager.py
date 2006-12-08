@@ -19,6 +19,9 @@ class DataStager(threading.Thread):
 		self.src = src
 		self.dst = dst
 
+	def __call__(self):
+		self.run()
+
 	def run(self):
 		"""Transfers data from source to destination
 

@@ -24,7 +24,7 @@ class XenBEEProtocol(basic.LineReceiver):
 
 	def connectionMade(self):
 		log.msg('Connection from %r' % self.transport)
-		self.sendLine('Hello, user %d!' % self.counter)
+		self.sendLine('XenBEE server')
 
 	def lineReceived(self, line):
 		log.msg('got line: %s' % line)
