@@ -2,9 +2,9 @@
 
 TestCase 1: download file and verify it is correct.
 	Therefore: 1) create temporary file
-                   2) fill with known content
-                   3) download the file using the 'file' protocol
-                   4) ve
+		2) fill with known content
+		3) download the file using the 'file' protocol
+		4) ve
 """
 
 import unittest, os, sys
@@ -30,6 +30,9 @@ class TestDataStager(unittest.TestCase):
 		dst = TempFile()
 		stager = DataStager(remoteSource, dst.path)
 		stager.run()
+
+def suite():
+	return unittest.makeSuite(TestDataStager, 'test')
 
 if __name__ == '__main__':
 	unittest.main()

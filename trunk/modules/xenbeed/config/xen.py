@@ -1,60 +1,284 @@
 """
-Some classes needed for the interaction with xen.
+Some classes needed to configure a xen instance using libvirt.
+
+$Rev$
+$Author$
+$Date$
 """
 
-import time
+class ConfigurationError(Exception):
+    pass
 
 class InstanceConfig:
-	def __init__(self, name):
-		self.instanceName = name
+    """Parameters required by a xen instance.
 
-class XenConfigGenerator:
-	def __init__(self):
-		pass
+    kernel - which kernel to use
+    initrd - an optional initrd image
 
-	def generate(self, config):
-		self.config = config
-		self.config.date = time.asctime()
+    disk-images - the first will be the root disk
 
-		s = """# Configuration for the Xen instance %(instanceName)s, created on
-# %(date)s
-"""
-		s += self._generateKernelParameters()
-		s += self._generateDiskParameters()
-		s += self._generateHostname()
-		s += self._generateNetworking()
-		return s % self.config.__dict__
-	def __call__(self, cfg):
-		return self.generate(cfg)
+    vcpus - the number of virtual cpus
+    memory - the memory to reserve
+    MAC  --- the mac address
+    """
+    def __init__(self, name):
+        self.name = name
+        self.diskImages = []
+        self.mac = None
+        self.memory = 128 * 2**20
+        self.kernel = None
+        self.initrd = None
+        self.cmdline = None
+        self.vcpus = 1
 
-	def _generateKernelParameters(self):
-		return """# kernel configuration + memory
-kernel = '/srv/xen-images/domains/xenhobel-1/kernel'
-ramdisk = '/srv/xen-images/domains/xenhobel-1/kernel'
-memory = '128'
-"""
+    def getInstanceName(self):
+        """Returns the instance name."""
+        return self.name
 
-	def _generateDiskParameters(self):
-		return """# disk devices
-root = '/dev/sda1 ro'
-disk = [ 'file:/srv/xen-images/domains/xenhobel-1/disk.img,sda1,w',
-         'file:/srv/xen-images/domains/xenhobel-1/swap.img,sda2,w' ]
-"""
+    def validate(self):
+        """Checks whether this configuration is valid or not.
 
-	def _generateHostname(self):
-		return """# hostname
-name = '%(instanceName)s'
-"""
+        Does not check if used files exist, but whether all required parameters are specified.
 
-	def _generateNetworking(self):
-		return """# networking
-vif = [ 'ip=10.199.136.101 bridge=xenbr1' ]
-"""
+        required: kernel
+        """
+        if self.vcpus < 1: raise ConfigurationError("InstanceConfig: vcpus < 1: %d" % self.vcpus)
+        if not self.kernel: raise ConfigurationError("InstanceConfig: kernel is None")
+        if not len(self.getDisks()): raise ConfigurationError("InstanceConfig: no disks")
 
-	def _generateBehaviour(self):
-		return """# behaviour
-on_poweroff = 'destroy'
-on_reboot = 'restart'
-on_crash = 'restart'
-"""
+    def setKernel(self, kernel):
+        """Sets the kernel to be used."""
+        self.kernel = kernel
+    def getKernel(self):
+        """Returns the used kernel."""
+        return self.kernel
 
+    def setKernelCommandLine(self, cmdline):
+        """Sets the kernel commandline that shall be passed."""
+        self.cmdline = cmdline
+    def getKernelCommandLine(self):
+        """Returns the kernel commandline."""
+        return self.cmdline
+
+    def setNumCpus(self, vcpus):
+        """Sets the number of virtual cpus to be used."""
+        self.vcpus = vcpus
+    def getNumCpus(self):
+        """Returns the number of virtual cpus."""
+        return self.vcpus
+
+    def setInitrd(self, initrd):
+        """Sets the initial ramdisk to be used."""
+        self.initrd = initrd
+    def getInitrd(self):
+        """Returns the initial ramdisk or None."""
+        return self.initrd
+
+    def addDisk(self, path, target):
+        """Adds disk image.
+        path - the path to the image file
+        target - the device name that should be used in the instance
+            for example: sda1, sda2...
+        """
+        self.diskImages.append( {"path" : path, "target": target} )
+    def getDisks(self):
+        return self.diskImages
+
+    def setMac(self, mac):
+        try:
+            mac = mac.strip().lower()
+        except:
+            raise ConfigurationError("invalid mac: %s" % mac)
+
+        import re
+        mac_pattern = '[0-9a-f]{1,2}:[0-9a-f]{1,2}:[0-9a-f]{1,2}:[0-9a-f]{1,2}:[0-9a-f]{1,2}:[0-9a-f]{1,2}'
+        p = re.compile(mac_pattern)
+        m = p.match(mac)
+        if not m or m.group() != mac:
+            raise ConfigurationError("invalid mac: %s" % mac)
+        self.mac = mac
+    def getMac(self):
+        return self.mac
+
+    def setMemory(self, mem):
+        """Sets the memory to be used.
+
+        Trailing modifier characters may be used, such as K, M or G to
+        specify kilo-, mega- or giga bytes.
+
+        Examples:
+             128M == 128 * 1024**2 bytes
+        """
+        try:
+            mem = str(mem).strip().lower()
+        except Exception, e:
+            cfgerr = ConfigurationError("invalid mem: %s" % str(mem))
+            cfgerr.exception = e
+        import re
+        mem_pattern = r"^(?P<bytes>\d+)(?P<modifier>[gmkb]?)$"
+        p = re.compile(mem_pattern)
+        m = p.match(mem)
+        if not m: raise ConfigurationError("invalid mem: %s" % mem)
+
+                                     # interpret trailing characters
+        modTable = { "b" : 1,        # b - Just bytes
+                     "k" : 1024,     # k - Kilo bytes
+                     "m" : 1024**2,  # m - Mega bytes
+                     "g" : 1024**3 } # g - Giga bytes
+        self.memory = int(m.group("bytes")) * modTable.get(m.group("modifier"), 1)
+        if (self.memory <= 0): raise ConfigurationError("invalid mem: %d" % self.memory)
+        
+    def getMemory(self, unit="b"):
+        """Returns the amount of memory in bytes (default).
+
+        The optional parameter unit can be used to retrieve the memory
+        in a different scale than the default bytes. Examples are: b,
+        k, m or g.
+        """
+        modTable = { "b" : 1,
+                     "k" : 1024,
+                     "m" : 1024**2,
+                     "g" : 1024**3 }
+        if not unit in modTable.keys():
+            raise ConfigurationError("no such modifier: %s" % unit)
+        return int(self.memory / modTable.get(unit))
+
+from xml.dom.DOMImplementation import implementation
+import xml.utils
+
+class LibVirtXMLConfigGenerator:
+    """Generates xml configs for libvirt.
+
+    A sample could look like this: (source: http://libvirt.org/format.html)
+
+    <domain type='xen' id='18'>
+        <name>fc4</name>
+        <os>
+            <type>linux</type>
+            <kernel>/boot/vmlinuz-2.6.15-1.43_FC5guest</kernel>
+            <initrd>/boot/initrd-2.6.15-1.43_FC5guest.img</initrd>
+            <root>/dev/sda1</root>
+            <cmdline> ro selinux=0 3</cmdline>
+        </os>
+        <memory>131072</memory>
+        <vcpu>1</vcpu>
+        <devices>
+            <disk type='file'>
+                <source file='/u/fc4.img'/>
+                <target dev='sda1'/>
+            </disk>
+            <interface type='bridge'>
+                <source bridge='xenbr0'/>
+                <mac address='aa:00:00:00:00:11'/>
+                <script path='/etc/xen/scripts/vif-bridge'/>
+            </interface>
+            <console tty='/dev/pts/5'/>
+        </devices>
+    </domain>
+    """
+
+    def generate(self, config, pretty=False):
+        tree = self.generateXMLTree(config)
+        # return xml-string
+        if pretty:
+            from xml.dom.ext import PrettyPrint as Print
+        else:
+            from xml.dom.ext import Print as Print
+        import StringIO
+        out = StringIO.StringIO()
+        Print(tree, out)
+        return out.getvalue()
+        
+    def generateXMLTree(self, config):
+        config.validate()
+        self.config = config
+        self.start()
+
+        self.build_os()
+        self.build_other()
+        self.build_devices()
+
+        self.end()
+        return self.document
+
+    def __call__(self, cfg):
+        return self.generate(cfg)
+
+    def _createTextNode(self, tag, txt):
+        node = self.document.createElement(tag)
+        self._addText(node, txt)
+        return node
+
+    def _addText(self, node, txt):
+        txt_n = self.document.createTextNode(txt)
+        node.appendChild(txt_n)
+
+    def start(self):
+        self.document = implementation.createDocument(None,None,None)
+        self.domain = self.document.createElement("domain")
+
+        self.domain.setAttribute("type", "xen")
+        name = self._createTextNode("name", self.config.getInstanceName())
+        self.domain.appendChild(name)
+
+        self.document.appendChild(self.domain)
+
+    def build_os(self):
+        doc = self.document
+        os = doc.createElement("os")
+        os.appendChild(self._createTextNode("type", "linux"))
+        os.appendChild(self._createTextNode("kernel", self.config.getKernel()))
+        if self.config.getInitrd():
+            os.appendChild(self._createTextNode("initrd", self.config.getInitrd()))
+        os.appendChild(self._createTextNode("root", self.config.getDisks()[0]["target"]))
+        # additional commandline
+        if self.config.getKernelCommandLine():
+            os.appendChild(self._createTextNode("cmdline", self.config.getKernelCommandLine()))
+
+        self.domain.appendChild(os)
+
+    def build_other(self):
+        self.domain.appendChild(self._createTextNode("memory",
+                                                     str(self.config.getMemory("k"))))
+        self.domain.appendChild(self._createTextNode("vcpu",
+                                                     str(self.config.getNumCpus())))
+
+    def build_devices(self):
+        doc = self.document
+        devices = doc.createElement("devices")
+
+        # disks
+        for disk in self.config.getDisks():
+            disk_n = doc.createElement("disk")
+            disk_n.setAttribute("type", "file")
+
+            source_n = doc.createElement("source")
+            source_n.setAttribute("file", disk["path"])
+            target_n = doc.createElement("target")
+            target_n.setAttribute("dev", disk["target"])
+
+            disk_n.appendChild(source_n)
+            disk_n.appendChild(target_n)
+            devices.appendChild(disk_n)
+
+        # network
+        if self.config.getMac():
+            interface_n = doc.createElement("interface")
+            interface_n.setAttribute("type", "bridge")
+            
+            source_n = doc.createElement("source")
+            source_n.setAttribute("bridge", "xenbr0")
+            mac_n = doc.createElement("mac")
+            mac_n.setAttribute("address", self.config.getMac())
+            script_n = doc.createElement("script")
+            script_n.setAttribute("path", "vif-bridge")
+                            
+            interface_n.appendChild(source_n)
+            interface_n.appendChild(mac_n)
+            interface_n.appendChild(script_n)
+            devices.appendChild(interface_n)
+        
+        self.domain.appendChild(devices)
+
+    def end(self):
+        pass
