@@ -5,11 +5,21 @@
 
 Design idea
 ===========
+	xenbeed:
 
-	XenManager:
-		* createInstance(job-id, instance-config)
+	InstanceManager (server side):
+		* newInstance()
+		* startInstance(instance-config)
 			* config: mac, kernel, initrd, images
 			* throws: InstanceCreationError
 			* registers instance
-			* return: void
 
+submit job:
+	1. check validity
+	2. check security context
+	3. create instance placeholder (create spool directory: /srv/xen-images/domains/[uuid]/)
+	4. retrieve defined images to spool
+	5. if all images available, assign to instance (kernel, root, swap, additional stuff)
+		convention: sda1 - root, sda2 - swap, etc.
+	6. check reservations
+	7. if can be started: start instance

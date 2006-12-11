@@ -169,7 +169,7 @@ class TestConfigGenerator(unittest.TestCase):
         self.generator = LibVirtXMLConfigGenerator()
 
     def test_simple_config(self):
-        expected = "<?xml version='1.0' encoding='UTF-8'?><domain type='xen'><name>test-config</name><os><type>linux</type><kernel>/vmlinuz</kernel><root>sda1</root></os><memory>131072</memory><vcpu>1</vcpu><devices><disk type='file'><source file='/tmp/foo.img'/><target dev='sda1'/></disk></devices></domain>"
+        expected = "<?xml version='1.0' encoding='UTF-8'?><domain type='xen'><name>test-config</name><os><type>linux</type><kernel>/vmlinuz</kernel><root>/dev/sda1</root></os><memory>131072</memory><vcpu>1</vcpu><devices><disk type='file'><source file='/tmp/foo.img'/><target dev='sda1'/></disk></devices><on_reboot>restart</on_reboot><on_poweroff>destroy</on_poweroff><on_crash>rename-restart</on_crash></domain>"
         xml = self.generator.generate(self.instanceConfig, pretty=False)
         self.assertEqual(expected, xml)
 

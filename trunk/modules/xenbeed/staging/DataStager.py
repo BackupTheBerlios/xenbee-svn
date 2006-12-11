@@ -63,7 +63,7 @@ class TempFile:
                 self.f = open(self.path, "wb")
                 # check if it is a symlink and abort if so
                 import stat
-                if stat.S_ISLNK(os.stat(self.path)[stat.ST_MODE]):
+                if stat.S_ISLNK(os.lstat(self.path)[stat.ST_MODE]):
 			self.f.close()
 			self.f = None
                         raise RuntimeError, "probable security breach while using temporary file: %s" % self.path

@@ -6,6 +6,8 @@ $Author$
 $Date$
 """
 
+import time
+
 class ConfigurationError(Exception):
     pass
 
@@ -45,6 +47,7 @@ class InstanceConfig:
         if self.vcpus < 1: raise ConfigurationError("InstanceConfig: vcpus < 1: %d" % self.vcpus)
         if not self.kernel: raise ConfigurationError("InstanceConfig: kernel is None")
         if not len(self.getDisks()): raise ConfigurationError("InstanceConfig: no disks")
+        if not self.name or not len(self.name): raise ConfigurationError("InstanceConfig: illegal name")
 
     def setKernel(self, kernel):
         """Sets the kernel to be used."""
@@ -76,9 +79,11 @@ class InstanceConfig:
 
     def addDisk(self, path, target):
         """Adds disk image.
+        
         path - the path to the image file
         target - the device name that should be used in the instance
             for example: sda1, sda2...
+            without the /dev prefix
         """
         self.diskImages.append( {"path" : path, "target": target} )
     def getDisks(self):
@@ -143,6 +148,77 @@ class InstanceConfig:
             raise ConfigurationError("no such modifier: %s" % unit)
         return int(self.memory / modTable.get(unit))
 
+class XenConfigGenerator:
+    """Generates Xen (text) configuration files."""
+
+    def __call__(self, config):
+        return self.generate(config)
+    
+    def generate(self, config):
+        config.validate()
+        self.config = config
+        
+        from StringIO import StringIO
+        self.out = StringIO()
+
+        self.write_heading()
+        self.write_kernel()
+        self.write_other()
+        self.write_disks()
+        self.write_networking()
+        self.write_behavior()
+
+        return self.out.getvalue()
+
+    def _write_helper(self, k, v):
+        if v:
+            print >>self.out, k, "=", "%s" % repr(v)
+
+    def write_heading(self):
+        print >>self.out, "# Configuration for the xen-instance: %s" % self.config.getInstanceName()
+        print >>self.out, "# created on: %s" % time.asctime()
+        print >>self.out
+        self._write_helper("name", self.config.getInstanceName())
+
+    def write_kernel(self):
+        print >>self.out, "# Kernel configuration"
+        self._write_helper("kernel", self.config.getKernel())
+        self._write_helper("ramdisk", self.config.getInitrd())
+        print >>self.out
+
+    def write_other(self):
+        print >>self.out, "# Memory and cpu configurtion"
+        self._write_helper("memory", str(self.config.getMemory("m")))
+        print >>self.out
+
+    def write_disks(self):
+        print >>self.out, "# Disk device(s)"
+        
+        # root
+        self._write_helper("root", "/dev/"+self.config.getDisks()[0]["target"]+" ro")
+
+        # all disks
+        disks = []
+        for disk in self.config.getDisks():
+            disks.append( "file:%(path)s,%(target)s,w" % disk )
+        self._write_helper("disk", disks)
+
+    def write_networking(self):
+        print >>self.out, "# Networking configuration"
+        if self.config.getMac():
+            vif = [ "mac=%s" % self.config.getMac() ]
+        else:
+            vif = [ '' ]
+        self._write_helper("vif", vif)
+        # use dhcp
+        self._write_helper("dhcp", "dhcp")
+
+    def write_behavior(self):
+        print >>self.out, "# Behavior"
+        self._write_helper("on_poweroff", "destroy")
+        self._write_helper("on_reboot", "restart")
+        self._write_helper("on_crash", "restart")
+    
 from xml.dom.DOMImplementation import implementation
 import xml.utils
 
@@ -174,6 +250,9 @@ class LibVirtXMLConfigGenerator:
             </interface>
             <console tty='/dev/pts/5'/>
         </devices>
+        <on_reboot>restart</on_reboot>
+        <on_poweroff>destroy</on_poweroff>
+        <on_crash>rename-restart</on_crash>
     </domain>
     """
 
@@ -197,6 +276,7 @@ class LibVirtXMLConfigGenerator:
         self.build_os()
         self.build_other()
         self.build_devices()
+        self.build_behavior()
 
         self.end()
         return self.document
@@ -230,7 +310,7 @@ class LibVirtXMLConfigGenerator:
         os.appendChild(self._createTextNode("kernel", self.config.getKernel()))
         if self.config.getInitrd():
             os.appendChild(self._createTextNode("initrd", self.config.getInitrd()))
-        os.appendChild(self._createTextNode("root", self.config.getDisks()[0]["target"]))
+        os.appendChild(self._createTextNode("root", "/dev/" + self.config.getDisks()[0]["target"]))
         # additional commandline
         if self.config.getKernelCommandLine():
             os.appendChild(self._createTextNode("cmdline", self.config.getKernelCommandLine()))
@@ -279,6 +359,11 @@ class LibVirtXMLConfigGenerator:
             devices.appendChild(interface_n)
         
         self.domain.appendChild(devices)
+
+    def build_behavior(self):
+        self.domain.appendChild(self._createTextNode("on_reboot", "restart"))
+        self.domain.appendChild(self._createTextNode("on_poweroff", "destroy"))
+        self.domain.appendChild(self._createTextNode("on_crash", "rename-restart"))
 
     def end(self):
         pass
