@@ -2,5 +2,11 @@
 Some common errors.
 """
 
-E_NOERR  = 0x00
-E_CONFIG = 0x01
+__version__ = "$Rev: $"
+__author__ = "$Author$"
+
+
+ENOERR  = 0
+EPERM   = 1         # no permission
+EEXIST  = 20
+ECONFIG = 30

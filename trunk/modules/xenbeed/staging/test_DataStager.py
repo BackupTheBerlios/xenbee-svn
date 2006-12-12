@@ -7,6 +7,10 @@ TestCase 1: download file and verify it is correct.
 		4) ve
 """
 
+__version__ = "$Rev$"
+__author__ = "$Author$"
+
+
 import unittest, os, sys
 from DataStager import DataStager
 from DataStager import TempFile

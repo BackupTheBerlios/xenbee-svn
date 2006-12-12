@@ -5,6 +5,10 @@ A class that can be used to stage data from a source to a destination.
 		* http, ftp, file
 """
 
+__version__ = "$Rev$"
+__author__ = "$Author$"
+
+
 import pycurl, threading, sys, os
 
 class DataStager(threading.Thread):

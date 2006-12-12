@@ -3,6 +3,9 @@
 The Xen Based Execution Environment managing daemon
 """
 
+__version__ = "$Rev: $"
+__author__ = "$Author: $"
+
 LOGFILE = '/tmp/xenbeed.log'
 
 # Setup log file

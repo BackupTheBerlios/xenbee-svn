@@ -7,10 +7,12 @@ contains:
            manages all currently available instances
 """
 
+__version__ = "$Rev: $"
+__author__ = "$Author$"
+
 import libvirt
 import os, os.path
 
-from xenbeed.config.xen import XenConfigGenerator
 from xenbeed.exceptions import *
 from twisted.python import log
 from traceback import format_exc as format_exception
@@ -29,7 +31,7 @@ class Instance:
 
     def getSpool(self):
         return self.spool
-    
+
 class InstanceManager:
     """The instance-manager.
 
@@ -98,32 +100,40 @@ class InstanceManager:
         except:
             log.err(format_exception())
             raise
-        
+
+        # remember the instance in our db
+        self.instances[inst.uuid()] = inst
         return inst
+
+    def getInstance(self, uuid):
+        return self.instances(uuid, None)
+
+    def stopInstance(self, inst):
+        from xenbeed import backend
+        backend.shutdownInstance(inst)
+
+    def destroyInstance(self, inst):
+        """Destroys the given instance.
+
+        actions made:
+             * stop the instance
+             * removes the complete spool directory
+             
+        Warning: all data belonging to that instance are deleted, so be warned.
+        """
+        
 
     def startInstance(self, inst):
         """Starts a new xen instance.
 
         inst - the instance to be instantiated (contains config etc.)
         """
-        generator = XenConfigGenerator()
-        try:
-            cfg = generator.generate(config)
-        except:
-            log.err(format_exc())
-            raise
-
         # check if needed files are available
         # (kernel, initrd, disks, etc.)
-        
 
-        # write current config to inst.spool/config
-        try:
-            cfg_path = os.path.join(inst.getSpool(), inst.uuid())
-            cfg_file = open(cfg_path, "w")
-            cfg_file.write(cfg)
-            cfg_file.close()
-        except:
-            log.err("could not write current config: %s" % format_exception())
-            raise
-
+        # TODO: make this a separate thread/process:
+        #       * better control if something goes wrong
+        #       * maybe use "call in thread" from twisted
+        # use the backend to start
+        from xenbeed import backend
+        dom_id = backend.createInstance(inst)

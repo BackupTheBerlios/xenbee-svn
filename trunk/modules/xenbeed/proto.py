@@ -3,6 +3,10 @@
 The Xen Based Execution Environment protocol
 """
 
+__version__ = "$Rev$"
+__author__ = "$Author$"
+
+
 # Twisted imports
 from twisted.python import log
 from twisted.internet import reactor, stdio

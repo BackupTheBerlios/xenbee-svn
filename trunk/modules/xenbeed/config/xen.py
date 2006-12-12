@@ -1,10 +1,11 @@
 """
 Some classes needed to configure a xen instance using libvirt.
 
-$Rev$
-$Author$
 $Date$
 """
+
+__version__ = "$Rev$"
+__author__ = "$Author$"
 
 import time
 

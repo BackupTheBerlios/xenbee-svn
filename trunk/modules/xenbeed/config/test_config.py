@@ -4,8 +4,12 @@ TestCase: set legal mac
 TestCase: set illegal mac
 """
 
+__version__ = "$Rev: $"
+__author__ = "$Author$"
+
+
 import unittest, os, sys
-from xen import InstanceConfig, ConfigurationError, LibVirtXMLConfigGenerator
+from xenbeed.config.xen import InstanceConfig, ConfigurationError, LibVirtXMLConfigGenerator
 
 class TestInstanceConfig(unittest.TestCase):
     def setUp(self):

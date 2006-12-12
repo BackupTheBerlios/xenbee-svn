@@ -4,6 +4,10 @@ The current implementation uses the uuid command line tool
 (debian/ubuntu package 'uuid').
 """
 
+__version__ = "$Rev: $"
+__author__ = "$Author$"
+
+
 import commands
 
 class UUID:
