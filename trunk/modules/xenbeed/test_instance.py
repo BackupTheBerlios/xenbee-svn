@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 """Test cases for the InstanceManager"""
 
 __version__ = "$Rev$"

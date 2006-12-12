@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 """Test for the InstanceConfig.
 
 TestCase: set legal mac
@@ -181,7 +183,6 @@ def suite():
     s1 = unittest.makeSuite(TestInstanceConfig, 'test')
     s2 = unittest.makeSuite(TestConfigGenerator, 'test')
     return unittest.TestSuite((s1,s2))
-
 
 if __name__ == '__main__':
     unittest.main()

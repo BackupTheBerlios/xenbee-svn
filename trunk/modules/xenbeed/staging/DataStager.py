@@ -8,7 +8,6 @@ A class that can be used to stage data from a source to a destination.
 __version__ = "$Rev$"
 __author__ = "$Author: petry $"
 
-
 import pycurl, threading, sys, os
 
 class DataStager(threading.Thread):
@@ -50,28 +49,58 @@ class DataStager(threading.Thread):
 		curl.close()
 		fp.close()
 
+import stat
+
 class TempFile:
 	"""Provides a temporary file that gets unlinked if no longer needed.
 
 	WARNING: This implementation uses the os.tmpnam() function to generate
-                 a random file name, but this could lead to a symlink attack.
+		a random file name, but this could lead to a symlink attack.
 
-		 It tries its best to avoid such an attack by verifying after
-                 opening whether the file is a symlink or not.
+		It tries its best to avoid such an attack by verifying after
+		opening whether the file is a symlink or not.
+
 	"""
 
-	def __init__(self):
+	def __init__(self, keep=False):
+		"""Initializes a temporary file.
+
+		The file will be generated in the temporary folder
+		defined by the operating system.
+
+		keep -- unlink the temporary file or not.
+
+		The tempfile will be generated using using the
+		'os.tmpnam()' function. Since this function is known
+		to have a symlink attack security leak, this class has
+		the same drawbacks, but tries to avoid it best:
+
+		1. check if file exists
+		2. temporary file is opened for writing
+		3. now is checked, if the opened file has been a symlink
+
+		"""
+
+		self.f = None
+		self.keep = keep
+		
 		import warnings
 		warnings.filterwarnings("ignore", "tmpnam", RuntimeWarning, __name__)
 		self.path = os.tmpnam()
-                self.f = open(self.path, "wb")
+		if os.access(self.path, os.F_OK):
+			raise RuntimeError, "probable security breach while using temporary file: %s" % self.path
+
+		try:
+			self.f = open(self.path, "wb")
+		except IOError, ioerr:
+			raise
+
                 # check if it is a symlink and abort if so
-                import stat
                 if stat.S_ISLNK(os.lstat(self.path)[stat.ST_MODE]):
 			self.f.close()
 			self.f = None
                         raise RuntimeError, "probable security breach while using temporary file: %s" % self.path
-	
+
 		self.write = self.f.write
 		self.read  = self.f.read
 		self.fileno= self.f.fileno
@@ -84,7 +113,6 @@ class TempFile:
 	def __del__(self):
 		if self.f:
 			self.f.close()
-			os.unlink(self.path)
 			self.f = None
-
+			if not self.keep: os.unlink(self.path)
 
