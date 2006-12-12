@@ -4,7 +4,7 @@ The Xen Based Execution Environment protocol
 """
 
 __version__ = "$Rev$"
-__author__ = "$Author$"
+__author__ = "$Author: petry $"
 
 
 # Twisted imports

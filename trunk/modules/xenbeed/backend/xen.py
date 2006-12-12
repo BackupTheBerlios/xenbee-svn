@@ -2,8 +2,8 @@
 The Xen backend.
 """
 
-__version__ = "$Rev: $"
-__author__ = "$Author$"
+__version__ = "$Rev$"
+__author__ = "$Author: petry $"
 
 import commands
 import os, os.path, re

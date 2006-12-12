@@ -2,8 +2,8 @@
 Some common errors.
 """
 
-__version__ = "$Rev: $"
-__author__ = "$Author$"
+__version__ = "$Rev$"
+__author__ = "$Author: petry $"
 
 
 ENOERR  = 0

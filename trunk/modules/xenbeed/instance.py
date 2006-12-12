@@ -7,8 +7,8 @@ contains:
            manages all currently available instances
 """
 
-__version__ = "$Rev: $"
-__author__ = "$Author$"
+__version__ = "$Rev$"
+__author__ = "$Author: petry $"
 
 import libvirt
 import os, os.path

@@ -1,7 +1,7 @@
 """Test cases for the InstanceManager"""
 
-__version__ = "$Rev: $"
-__author__ = "$Author$"
+__version__ = "$Rev$"
+__author__ = "$Author: petry $"
 
 
 import unittest, os, sys

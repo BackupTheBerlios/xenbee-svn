@@ -2,8 +2,8 @@
 Common exceptions.
 """
 
-__version__ = "$Rev: $"
-__author__ = "$Author$"
+__version__ = "$Rev$"
+__author__ = "$Author: petry $"
 
 
 class XenBeeException(Exception):

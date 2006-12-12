@@ -4,8 +4,8 @@ TestCase: set legal mac
 TestCase: set illegal mac
 """
 
-__version__ = "$Rev: $"
-__author__ = "$Author$"
+__version__ = "$Rev$"
+__author__ = "$Author: petry $"
 
 
 import unittest, os, sys

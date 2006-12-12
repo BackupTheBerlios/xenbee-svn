@@ -4,8 +4,8 @@ The current implementation uses the uuid command line tool
 (debian/ubuntu package 'uuid').
 """
 
-__version__ = "$Rev: $"
-__author__ = "$Author$"
+__version__ = "$Rev$"
+__author__ = "$Author: petry $"
 
 
 import commands

@@ -8,7 +8,7 @@ TestCase 1: download file and verify it is correct.
 """
 
 __version__ = "$Rev$"
-__author__ = "$Author$"
+__author__ = "$Author: petry $"
 
 
 import unittest, os, sys

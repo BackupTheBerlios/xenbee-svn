@@ -6,7 +6,7 @@ A class that can be used to stage data from a source to a destination.
 """
 
 __version__ = "$Rev$"
-__author__ = "$Author$"
+__author__ = "$Author: petry $"
 
 
 import pycurl, threading, sys, os
