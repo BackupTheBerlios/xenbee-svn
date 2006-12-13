@@ -21,6 +21,7 @@ from twisted.python import log
 
 from xenbeed.config.xen import XenConfigGenerator
 from xenbeed.exceptions import *
+from xenbeed.backend.status import *
 
 try:
     # try to use libvirt
@@ -29,10 +30,12 @@ try:
 
     # register an ErrorCallback
     def errHandler(ctx, error):
-        print >>sys.stderr, error
-    libvirtConn.registerErrorHandler(errHandler, None)
+        # TODO: maybe log as debug?
+        pass
+    libvirt.registerErrorHandler(errHandler, None)
 except:
-    libvirtConn = None
+    log.err("could not connect to xen backend!")
+    raise
 
 __all__ = [ "createInstance",
             "retrieveID",
@@ -56,27 +59,6 @@ class BackendDomainInfo:
     def __init__(self, virDomainInfo):
         """Initializes from the list returned by virDomain.info()."""
         self.state, self.maxMem, self.memory, self.nrVirtCpu, self.cpuTime = virDomainInfo
-        self.stateNames = [ "NOSTATE",
-                            "RUNNING",
-                            "BLOCKED",
-                            "PAUSED",
-                            "SHUTDOWN",
-                            "SHUTOFF",
-                            "CRASHED" ]
-
-    def getStateName(self):
-        """Return a human readable form of the state.
-
-        NOSTATE = 0
-        RUNNING = 1     the domain is running
-        BLOCKED = 2     the domain is blocked on some resource
-        PAUSED = 3      the domain is currently paused by the user
-        SHUTDOWN = 4    the domain is shutting down
-        SHUTOFF = 5     the domain is shut off
-        CRASHED = 6     the domain has crashed
-        
-        """
-        return self.stateNames[self.state]
 
 def _runcmd(cmd, *args):
     """Executes the specified command on the xen backend, using 'xm'.
@@ -85,25 +67,25 @@ def _runcmd(cmd, *args):
     
     TODO: find a way to escape correctly (re.escape includes
     double-backslashes not only for quotes)
+
     """
 #    cmdline = "xm " + "'%s' " % re.escape(cmd) + " ".join(map(lambda x: "'%s'" % re.escape(str(x)), args))
     cmdline = "xm " + "'%s' " % cmd + " ".join(map(lambda x: "'%s'" % x, args))
     return commands.getstatusoutput(cmdline)
 
+def _getDomain(inst):
+    try:
+        d = libvirtConn.lookupByName(inst.getName())
+    except libvirt.libvirtError:
+        raise BackendException("backend domain not found: %s" % inst.getName())
+    return d
+
 def retrieveID(inst):
     """Retrieves the backend id for the given instance."""
-    if libvirtConn:
-        try:
-            domain = libvirtConn.lookupByName(inst.getName())
-        except libvirt.libvirtError:
-            return -1
-        return domain.ID()
-    else:
-        (status, output) = _runcmd("domid", inst.getName())
-        if status == 0:
-            return int(output)
-        else:
-            return -1
+    try:
+        return _getDomain(inst).ID()
+    except:
+        return -1
 
 def getStatus(inst):
     """Return the current status of 'inst'.
@@ -122,22 +104,21 @@ def getStatus(inst):
         VIR_DOMAIN_CRASHED = 6 : the domain is crashed
     }
 
+    That are currently the same as in xenbeed.backend.status.
+
     """
-    if libvirtConn:
-        try:
-            domain = libvirtConn.lookupByID(inst.getBackendID())
-        except libvirt.libvirtError:
-            log.err("backend: could not get domain: %d" % inst.getBackendID())
-            raise BackendException("backend domain not found: %d" % inst.getBackendID())
+    try:
+        domain = _getDomain(inst)
         info = BackendDomainInfo(domain.info())
-        return info.state, info.getStateName()
-    else:
-        raise BackendException("status retrieval currently not implemented")
+        return info.state
+    except:
+        return BE_INSTANCE_NOSTATE
 
 def createInstance(inst):
     """Creates a new backend-instance.
 
     inst - an instance object (created by the InstanceManager)
+
     """
 
     log.msg("attempting to create backend instance for: %s" % inst.getName())
@@ -169,14 +150,16 @@ def createInstance(inst):
     # dry-run and create instance
     (status, output) = _runcmd("dry-run", cfg_path)
     if status != 0:
-        log.err("backend: could not execute dry-run: %s" % output)
-        raise InstanceCreationError("dry-run failed: %s" % output)
+        log.err("backend: could not execute dry-run: %d: %s" % (status, output))
+        raise InstanceCreationError("dry-run failed: %d: %s" % (status, output))
 
     # TODO: decouple it using a thread/spawn whatever
+    #    reason: the 'create' may hang due to some callbacks
+    #            (e.g. network interfaces within the instance)
     (status, output) = _runcmd("create", cfg_path)
     if status != 0:
-        log.err("backend: could not create backend instance: %s" % output)
-        raise InstanceCreationError("create failed: %s" % output)
+        log.err("backend: could not create backend instance: %d: %s" % (status, output))
+        raise InstanceCreationError("create failed: %d, %s" % (status, output))
     backend_id = retrieveID(inst)
     inst.setBackendID(backend_id)
     return backend_id
@@ -188,14 +171,40 @@ def destroyInstance(inst):
              within the instance will be killed(!). From the xm
              man-page: it is equivalent to ripping the power cord.
     """
-    (status, output) = _runcmd("destroy", inst.getBackendID())
-    if status != 0:
-        log.err("backend: could not destroy backend instance: %s" % output)
-        raise BackendException("destroy failed: %s" % output)
+    domain = _getDomain(inst)
+    domain.destroy()
+    
+#    (status, output) = _runcmd("destroy", inst.getBackendID())
+#    if status != 0:
+#        log.err("backend: could not destroy backend instance: %s" % output)
+#        raise BackendException("destroy failed: %s" % output)
 
-def shutdownInstance(inst):
-    """Attempts to cleanly shut the backend instance down."""
-    (status, output) = _runcmd("shutdown", inst.getBackendID())
-    if status != 0:
-        log.err("backend: could not shutdown backend instance: %s" % output)
-        raise BackendException("destroy failed: %s" % output)
+def waitState(inst, states=(BE_INSTANCE_SHUTOFF), retries=5):
+    """wait until the instance reached one of the given states.
+
+    states -- an iterable object of states (xenbeed.backend.status)
+    retries -- the maximum number of retries
+
+    """
+    from time import sleep
+    for retry in xrange(retries):
+        if getStatus(inst) in states:
+            log.msg("backend: reached state: %s" % (getStateName(getStatus(inst))))
+            return True
+        log.msg("backend: waiting for one of: %s" % map(getStateName, states), "currently in:", getStateName(getStatus(inst)))
+        sleep(1)
+    return False
+
+def shutdownInstance(inst, wait=True):
+    """Attempts to cleanly shut the backend instance down.
+
+    WARNING: may not succeed, since the OS ignores the request.
+
+    """
+    domain = _getDomain(inst)
+    domain.shutdown()
+
+    if wait:
+        result = waitState(inst, (BE_INSTANCE_NOSTATE,
+                                  BE_INSTANCE_SHUTOFF,
+                                  BE_INSTANCE_CRASHED))

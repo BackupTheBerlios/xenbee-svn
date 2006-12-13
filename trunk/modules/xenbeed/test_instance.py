@@ -43,7 +43,7 @@ class TestInstanceManager(unittest.TestCase):
         self.assertEqual(None, self.mgr.lookupByUUID(inst.uuid()))
         self._cleanUp(inst)
 
-    def test_instance_creation(self):
+    def test_successful_instance_creation(self):
         """tests the creation of a backend instance.
 
         some files are required (will be staged in):
@@ -56,8 +56,8 @@ class TestInstanceManager(unittest.TestCase):
         inst = self.mgr.newInstance()
 
         src_files = { "image" : "/srv/xen-images/domains/ttylinux/disk.img",
-                      "kernel": "/boot/xen0-linux-2.6.17-6-server-xen0",
-                      "initrd": "/boot/initrd.img-2.6.17-6-server-xen0" }
+                      "kernel": "/srv/xen-images/domains/ttylinux/kernel",
+                      "initrd": "/srv/xen-images/domains/ttylinux/initrd" }
         dst_files = {}
         for name, path in src_files.iteritems():
             self.assertTrue(os.access(path, os.F_OK))
@@ -73,7 +73,17 @@ class TestInstanceManager(unittest.TestCase):
         inst.config.addDisk(dst_files["image"], "sda1")
 
         inst.start()
-        
+        state = inst.getBackendState()
+
+        from xenbeed.backend import status
+        self.assertTrue(state in (status.BE_INSTANCE_RUNNING, status.BE_INSTANCE_BLOCKED))
+
+        # shut the instance down
+        inst.stop()
+        self.assertTrue(inst.getBackendState() in (status.BE_INSTANCE_NOSTATE, status.BE_INSTANCE_SHUTOFF))
+
+        inst.cleanUp()
+
     def _cleanUp(self, inst):
         util.removeDirCompletely(inst.getSpool())
 

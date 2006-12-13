@@ -17,6 +17,7 @@ from traceback import format_exc as format_exception
 
 from xenbeed.exceptions import *
 from xenbeed import backend
+from xenbeed import util
 
 class InstanceError(XenBeeException):
     pass
@@ -79,6 +80,14 @@ class Instance:
         """Return the spool directory."""
         return self.spool
 
+    def getBackendState(self):
+        """Return the backend state of this instance.
+
+        see: xenbeed.backend.status
+
+        """
+        return backend.getStatus(self)
+
     def stop(self):
         """Stop the instance."""
         if self.state == "started":
@@ -89,8 +98,11 @@ class Instance:
         """Removes all data belonging to this instance."""
 
         # check backend state
-        backend_state, state_name = backend.getStatus(self)
-        
+        backend_state = backend.getStatus(self)
+        if backend_state in (backend.status.BE_INSTANCE_NOSTATE,
+                             backend.status.BE_INSTANCE_SHUTOFF,
+                             backend.status.BE_INSTANCE_CRASHED):
+            util.removeDirCompletely(self.getSpool())
         
     def destroy(self):
         """Destroys the given instance.
