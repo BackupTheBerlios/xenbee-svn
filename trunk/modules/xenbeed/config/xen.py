@@ -23,8 +23,11 @@ class InstanceConfig:
     vcpus - the number of virtual cpus
     memory - the memory to reserve
     MAC  --- the mac address
+    
     """
     def __init__(self, name):
+        """Initialize a new configuration using the given name."""
+        
         self.name = name
         self.diskImages = []
         self.mac = None
@@ -97,10 +100,9 @@ class InstanceConfig:
             raise ConfigurationError("invalid mac: %s" % mac)
 
         import re
-        mac_pattern = '[0-9a-f]{1,2}:[0-9a-f]{1,2}:[0-9a-f]{1,2}:[0-9a-f]{1,2}:[0-9a-f]{1,2}:[0-9a-f]{1,2}'
+        mac_pattern = r"^([0-9a-f]{1,2}:){5}[0-9a-f]{1,2}$"
         p = re.compile(mac_pattern)
-        m = p.match(mac)
-        if not m or m.group() != mac:
+        if not p.match(mac):
             raise ConfigurationError("invalid mac: %s" % mac)
         self.mac = mac
     def getMac(self):
