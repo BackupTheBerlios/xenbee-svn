@@ -14,6 +14,7 @@ __version__ = "$Rev$"
 __author__ = "$Author: petry $"
 
 import commands
+import sys
 import os.path
 from traceback import format_exc as format_exception
 from twisted.python import log
@@ -25,6 +26,11 @@ try:
     # try to use libvirt
     import libvirt
     libvirtConn = libvirt.open(None)
+
+    # register an ErrorCallback
+    def errHandler(ctx, error):
+        print >>sys.stderr, error
+    libvirtConn.registerErrorHandler(errHandler, None)
 except:
     libvirtConn = None
 
@@ -88,12 +94,12 @@ def retrieveID(inst):
     """Retrieves the backend id for the given instance."""
     if libvirtConn:
         try:
-            domain = libvirtConn.lookupByName(inst.getInstanceName())
+            domain = libvirtConn.lookupByName(inst.getName())
         except libvirt.libvirtError:
             return -1
         return domain.ID()
     else:
-        (status, output) = _runcmd("domid", inst.getInstanceName())
+        (status, output) = _runcmd("domid", inst.getName())
         if status == 0:
             return int(output)
         else:
@@ -134,6 +140,8 @@ def createInstance(inst):
     inst - an instance object (created by the InstanceManager)
     """
 
+    log.msg("attempting to create backend instance for: %s" % inst.getName())
+
     # check if another (or maybe this) instance is running with same name
     # (that should not happen!)
     if retrieveID(inst) >= 0:
@@ -150,7 +158,7 @@ def createInstance(inst):
     
     # write current config to inst.spool/config
     try:
-        cfg_path = os.path.join(inst.getSpool(), inst.uuid())
+        cfg_path = os.path.join(inst.getSpool(), "config")
         cfg_file = open(cfg_path, "w")
         cfg_file.write(cfg)
         cfg_file.close()
@@ -169,7 +177,6 @@ def createInstance(inst):
     if status != 0:
         log.err("backend: could not create backend instance: %s" % output)
         raise InstanceCreationError("create failed: %s" % output)
-
     backend_id = retrieveID(inst)
     inst.setBackendID(backend_id)
     return backend_id

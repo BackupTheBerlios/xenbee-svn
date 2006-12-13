@@ -10,6 +10,8 @@ __author__ = "$Author: petry $"
 
 import pycurl, threading, sys, os
 
+__all__ = [ 'DataStager', 'TempFile' ]
+
 class DataStager(threading.Thread):
 	def __init__(self, src, dst):
 		"""Initializes the DataStager.

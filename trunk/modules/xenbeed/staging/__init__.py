@@ -5,7 +5,5 @@
 __version__ = "$Rev$"
 __author__ = "$Author: petry $"
 
-from DataStager import DataStager, TempFile
+from DataStager import *
 from test_DataStager import suite as TestSuite
-
-__all__ = [ DataStager, TempFile, TestSuite ]

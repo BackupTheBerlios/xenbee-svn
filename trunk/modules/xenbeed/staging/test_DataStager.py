@@ -15,8 +15,7 @@ __version__ = "$Rev$"
 __author__ = "$Author: petry $"
 
 import unittest, os, sys
-from DataStager import DataStager
-from DataStager import TempFile
+from xenbeed.staging import DataStager, TempFile
 
 class TestDataStager(unittest.TestCase):
 	def setUp(self):
@@ -29,7 +28,7 @@ class TestDataStager(unittest.TestCase):
 		"""Tests whether retrieving a local file works."""
 		dst = TempFile()
 		stager = DataStager("file://" + self.source.path, dst.path)
-		stager()
+		stager.run()
 		tmpdata = open(dst.path, "r").read()
 		self.assertEqual(self.data, tmpdata)
 
@@ -83,4 +82,3 @@ def suite():
 
 if __name__ == '__main__':
 	unittest.main()
-
