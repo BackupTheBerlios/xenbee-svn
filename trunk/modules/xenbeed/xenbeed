@@ -6,21 +6,12 @@ The Xen Based Execution Environment managing daemon
 __version__ = "$Rev: $"
 __author__ = "$Author: $"
 
-LOGFILE = '/tmp/xenbeed.log'
-
-# Setup log file
-from twisted.python import log
-log.startLogging(open(LOGFILE, 'a'))
-import sys
-sys.stderr = log.logfile
-
 # Twisted imports
 from twisted.internet import reactor, stdio
 from twisted.internet.protocol import Protocol, Factory
 from twisted.protocols import basic
 
 import os, os.path
-from syslog import syslog, openlog, LOG_MAIL
 
 from proto import XenBEEProtocol
 

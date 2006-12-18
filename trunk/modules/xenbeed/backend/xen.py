@@ -13,11 +13,13 @@ I have tried to use libvirt as best as I could.
 __version__ = "$Rev$"
 __author__ = "$Author: petry $"
 
+import logging
+log = logging.getLogger(__name__)
+
 import commands
 import sys
 import os.path
 from traceback import format_exc as format_exception
-from twisted.python import log
 
 from xenbeed.config.xen import XenConfigGenerator
 from xenbeed.exceptions import *
@@ -34,7 +36,7 @@ try:
         pass
     libvirt.registerErrorHandler(errHandler, None)
 except:
-    log.err("could not connect to xen backend!")
+    log.error("could not connect to xen backend!")
     raise
 
 __all__ = [ "createInstance",
@@ -121,12 +123,12 @@ def createInstance(inst):
 
     """
 
-    log.msg("attempting to create backend instance for: %s" % inst.getName())
+    log.info("attempting to create backend instance for: %s" % inst.getName())
 
     # check if another (or maybe this) instance is running with same name
     # (that should not happen!)
     if retrieveID(inst) >= 0:
-        log.err("backend: another instance (or maybe this one?) is already known to xen")
+        log.error("backend: another instance (or maybe this one?) is already known to xen")
         raise InstanceCreationError("instance already known")
 
     # build configuration
@@ -134,7 +136,7 @@ def createInstance(inst):
     try:
         cfg = generator.generate(inst.config)
     except:
-        log.err("backend: could not generate config: " + format_exception())
+        log.error("backend: could not generate config: " + format_exception())
         raise
     
     # write current config to inst.spool/config
@@ -144,13 +146,13 @@ def createInstance(inst):
         cfg_file.write(cfg)
         cfg_file.close()
     except:
-        log.err("backend: could not write current config: %s" % format_exception())
+        log.error("backend: could not write current config: %s" % format_exception())
         raise
 
     # dry-run and create instance
     (status, output) = _runcmd("dry-run", cfg_path)
     if status != 0:
-        log.err("backend: could not execute dry-run: %d: %s" % (status, output))
+        log.error("backend: could not execute dry-run: %d: %s" % (status, output))
         raise InstanceCreationError("dry-run failed: %d: %s" % (status, output))
 
     # TODO: decouple it using a thread/spawn whatever
@@ -158,10 +160,11 @@ def createInstance(inst):
     #            (e.g. network interfaces within the instance)
     (status, output) = _runcmd("create", cfg_path)
     if status != 0:
-        log.err("backend: could not create backend instance: %d: %s" % (status, output))
+        log.error("backend: could not create backend instance: %d: %s" % (status, output))
         raise InstanceCreationError("create failed: %d, %s" % (status, output))
     backend_id = retrieveID(inst)
     inst.setBackendID(backend_id)
+    log.debug("created backend instance with id: %d" % backend_id)
     return backend_id
 
 def destroyInstance(inst):
@@ -176,22 +179,24 @@ def destroyInstance(inst):
     
 #    (status, output) = _runcmd("destroy", inst.getBackendID())
 #    if status != 0:
-#        log.err("backend: could not destroy backend instance: %s" % output)
+#        log.error("backend: could not destroy backend instance: %s" % output)
 #        raise BackendException("destroy failed: %s" % output)
 
 def waitState(inst, states=(BE_INSTANCE_SHUTOFF), retries=5):
     """wait until the instance reached one of the given states.
 
-    states -- an iterable object of states (xenbeed.backend.status)
+    states -- a list of states (xenbeed.backend.status)
     retries -- the maximum number of retries
+
+    returns True if the state has been reached, False otherwise.
 
     """
     from time import sleep
     for retry in xrange(retries):
         if getStatus(inst) in states:
-            log.msg("backend: reached state: %s" % (getStateName(getStatus(inst))))
+            log.debug("backend: reached state: %s" % (getStateName(getStatus(inst))))
             return True
-        log.msg("backend: waiting for one of: %s" % map(getStateName, states), "currently in:", getStateName(getStatus(inst)))
+        log.debug("backend: waiting for one of: %s currently in: %s" % (map(getStateName, states), getStateName(getStatus(inst))))
         sleep(1)
     return False
 
@@ -201,6 +206,7 @@ def shutdownInstance(inst, wait=True):
     WARNING: may not succeed, since the OS ignores the request.
 
     """
+    log.info("attempting to shut instance %s down." % inst.getName())
     domain = _getDomain(inst)
     domain.shutdown()
 

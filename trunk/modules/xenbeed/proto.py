@@ -6,9 +6,10 @@ The Xen Based Execution Environment protocol
 __version__ = "$Rev$"
 __author__ = "$Author: petry $"
 
+import logging
+log = logging.getLogger(__name__)
 
 # Twisted imports
-from twisted.python import log
 from twisted.internet import reactor, stdio
 from twisted.internet.protocol import Protocol, Factory
 from twisted.protocols import basic
@@ -27,10 +28,10 @@ class XenBEEProtocol(basic.LineReceiver):
 		self.counter = XenBEEProtocol.cnt
 
 	def connectionMade(self):
-		log.msg('Connection from %r' % self.transport)
+		log.info('Connection from %r' % self.transport)
 		self.sendLine('XenBEE server')
 
 	def lineReceived(self, line):
-		log.msg('got line: %s' % line)
+		log.info('got line: %s' % line)
 		self.sendLine("you wrote: %s" % line)
 

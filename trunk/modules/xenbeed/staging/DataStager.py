@@ -8,7 +8,8 @@ A class that can be used to stage data from a source to a destination.
 __version__ = "$Rev$"
 __author__ = "$Author: petry $"
 
-import pycurl, threading, sys, os
+import pycurl, threading, sys, os, logging, time
+log = logging.getLogger(__name__)
 
 __all__ = [ 'DataStager', 'TempFile' ]
 
@@ -42,12 +43,15 @@ class DataStager(threading.Thread):
 		curl.setopt(pycurl.WRITEDATA, fp)
 
 		try:
+			log.debug("beginning retrieving uri: %s" % self.src)
+			start = time.time()
 			curl.perform()
+			dur = time.time() - start
+			log.debug("finished retrieving uri: %s: %ds" % (self.src, dur))
 		except:
 			import traceback
 			# TODO: use twisted logging here...
-			traceback.print_exc(file=sys.stderr)
-			sys.stderr.flush()
+			log.error("retrieval failed: %s" % traceback.format_exc())
 		curl.close()
 		fp.close()
 
