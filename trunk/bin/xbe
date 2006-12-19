@@ -3,7 +3,7 @@
 """Xen based execution environment (XBE) commandline tool.
 
 usage: xbe <subcommand> [options] [args]
-Version: $Revision: $
+Version: $Revision$
 Author: Alexander Petry <petry@itwm.fhg.de>
 
 Type 'svn help <subcommand>' for help on a specific subcommand.
