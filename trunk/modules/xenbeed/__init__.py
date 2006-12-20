@@ -17,8 +17,6 @@ _syslogHdlr.setLevel(logging.INFO)
 _syslogHdlr.setFormatter(logging.Formatter('[%(process)d:%(threadName)s] %(name)-12s: %(levelname)-8s %(message)s'))
 logging.getLogger('').addHandler(_syslogHdlr)
 
-logging.info('logging initialized')
-
 def TestSuite():
     import unittest, xenbeed.config, xenbeed.staging
     import xenbeed.test_instance

@@ -6,55 +6,191 @@ usage: xbe <subcommand> [options] [args]
 Version: $Revision$
 Author: Alexander Petry <petry@itwm.fhg.de>
 
-Type 'svn help <subcommand>' for help on a specific subcommand.
+Type 'xbe help <subcommand>' for help on a specific subcommand.
 
 Available subcommands:
 
        help
+       create
 
 """
-import xenbeed
+from xenbeed.instance import InstanceManager
 
-import logging, sys
+import logging, sys, re, os
 log = logging.getLogger(__name__)
 
 from optparse import OptionParser
-parser = OptionParser
+from textwrap import dedent
 
+URI_PATTERN = r'((?P<prot>[a-zA-Z]+)://)?(?P<path>.*)'
+
+class NoPrintOptionParser(OptionParser):
+    def __init__(self, usage=None, add_help_option=True):
+        OptionParser.__init__(self,usage=usage, add_help_option=add_help_option, prog="")
+    def error(self, msg):
+        raise CommandFailed(msg)
+
+class CommandFailed(Exception):
+    def __init__(self, msg):
+        Exception.__init__(self)
+        self.msg = msg
+
+def parse_args_stderr_hack(parser, argv):
+    try:
+        # WARNIG: hack to avoid printing to stderr
+        stderr_hack = sys.stderr
+
+        from StringIO import StringIO
+        sys.stderr = StringIO()
+
+        options, args = parser.parse_args(argv)
+        sys.stderr = stderr_hack
+    except:
+        msg, sys.stderr = sys.stderr, stderr_hack
+        msg.seek(0)
+        lines = [ l.strip() for l in msg.readlines()[2:] ]
+        raise CommandFailed("\n".join(lines))
+    return (options, args)
+
+def parse_args_normal(parser, argv):
+    return parser.parse_args(argv)
+parse_args = parse_args_normal
+    
 
 class Command(object):
     """The base class for commands."""
 
-class Command_help(Command):
-    """The help command."""
-    def __init__(self, argv):
-        self.subcmd = createCommand(argv)
-        self.__doc__ = __doc__
+    def execute(self):
+        """run the specified command."""
+        raise RuntimeError("can't execute the base Command.")
 
-def help(cmd=None):
-    if not cmd:
-        print >>sys.stderr, "Type 'xbe help' for usage."
-    else:
-        print >>sys.stderr, cmd.__doc__
+    def __init__(self, argv = []):
+        """initialize the command.
+
+        argv -- the arguments passed to this command.
+
+        """
+
+class Command_help(Command):
+    """\
+    help: Describe the usage of this program or its subcommands.
+
+    usage: help [subcommand]
+    Valid options:
+         currently none
+    """
+    def __init__(self, argv = []):
+        """initialize the 'help' command."""
+        Command.__init__(self)
+
+        self.subcmd = createCommand(argv[1:])
+        
+    def execute(self):
+        if self.subcmd:
+            print >>sys.stderr, dedent(self.subcmd.__doc__).strip()
+        else:
+            print dedent(__doc__).strip()
+
+    def __str__(self):
+        return "help"
+
+class Command_create(Command):
+    """\
+    create: Create a new instance.
+
+    """
+    def __init__(self, argv = []):
+        """initialize the 'create' command."""
+        Command.__init__(self)
+
+        p = NoPrintOptionParser(usage="usage: create [options]", add_help_option=False)
+        p.add_option("-k", "--kernel", dest="kernel",  type="string", help="the uri to the kernel")
+        p.add_option("-r", "--initrd", dest="initrd",  type="string", help="the uri to a initrd")
+        p.add_option("-m", "--mem",    dest="memory",  type="int",    help="the amount of memory to use (in MB)", default=128)
+        p.add_option("-s", "--swap",   dest="swap",    type="int",    help="the amount of swap space to use (in MB)", default=128)
+        p.add_option("-i", "--image",  dest="image",   type="string", help="the main image to boot")
+        p.add_option("-C", "--cpus",   dest="cpus",    type="int",    help="the number of cpus to use", default=1)
+        self.parser = p
+        self.argv = argv
+
+        from StringIO import StringIO
+        help_file = StringIO()
+        p.print_help(help_file)
+        help_file.seek(0)
+        lines = help_file.readlines()[2:]
+        self.__doc__ += "".join(lines)
+
+    def __str__(self):
+        return "create"
+
+    def execute(self):
+        self.options, self.args = parse_args(self.parser, self.argv)
+
+        # test for required values
+        if not self.options.kernel:
+            raise CommandFailed("'kernel' is required")
+        if not self.options.image:
+            raise CommandFailed("'image' is required")
+
+        # create instance manager
+        self.mgr = InstanceManager()
+        self.inst = self.mgr.newInstance()
+
+        self.inst.addFile(self.options.kernel, "kernel")
+        self.inst.addFile(self.options.image, "image")
+        
+        self.inst.config.setKernel(self.inst.getFile("kernel"))
+        if self.options.initrd:
+            self.inst.addFile(self.options.initrd, "initrd")
+            self.inst.config.setInitrd(self.inst.getFile("initrd"))
+
+        from xenbeed import disk
+        disk.makeSwap(self.inst.getFile("swap"), self.options.swap)
+        
+        self.inst.config.addDisk(self.inst.getFile("image"), "sda1")
+        self.inst.config.addDisk(self.inst.getFile("swap"), "sda2")
+        self.inst.config.setMac("00:16:3e:00:00:01")
+
+        self.inst.start()
+        print "created instance:", self.inst.getName()
+
+def printShortHelp():
+    print >>sys.stderr, "Type '%s help' for usage." % sys.argv[0]
 
 def createCommand(argv):
     """Creates a command object from the given command line."""
     if len(argv):
         try:
-            return eval("Command_%s(%s)" % (argv[0], "argv[1:]"))
+            return eval("Command_%s(%s)" % (argv[0], "argv"))
         except NameError, ne:
             print >>sys.stderr, "Unknown command: '%s'" % argv[0]
+            return None
+        except:
+            from traceback import format_exc
+            print >>sys.stderr, "Unknwon error:", format_exc()
             return None
     else:
         return None
 
 def main(argv):
     """The main routine."""
-    if len(argv) == 1:
-        help()
-        return 1
+    sys.argv[0] = os.path.basename(sys.argv[0])
+    
     cmd = createCommand(argv[1:])
-    help(cmd)
+    if cmd:
+        try:
+            cmd.execute()
+        except CommandFailed, cf:
+            print >>sys.stderr, "%s:" % sys.argv[0], cmd, "failed (details follow)"
+            print >>sys.stderr, "\n".join([ "%s: %s" % (sys.argv[0],s) for s in cf.msg.split('\n')])
+            return 2
+        except:
+            from traceback import format_exc
+            print >>sys.stderr, "Error during command execution:", format_exc()
+    else:
+        printShortHelp()
+        return 1
+
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv))
