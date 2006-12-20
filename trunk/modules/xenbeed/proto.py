@@ -19,6 +19,11 @@ from syslog import syslog, openlog, LOG_MAIL
 
 class XenBEEProtocol(basic.LineReceiver):
 	"""Processing input on one of the sockets
+
+	Very easy protocol:
+
+	content-length: <#bytes>
+
 	"""
 
 	cnt = 0
@@ -28,8 +33,8 @@ class XenBEEProtocol(basic.LineReceiver):
 		self.counter = XenBEEProtocol.cnt
 
 	def connectionMade(self):
-		log.info('Connection from %r' % self.transport)
-		self.sendLine('XenBEE server')
+		log.debug('Connection from %r' % self.transport)
+		self.sendLine('XenBEE server: %s' % __version__)
 
 	def lineReceived(self, line):
 		log.info('got line: %s' % line)

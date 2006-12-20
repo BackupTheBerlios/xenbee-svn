@@ -13,7 +13,7 @@ from twisted.protocols import basic
 
 import os, os.path
 
-from proto import XenBEEProtocol
+from xenbeed.proto import XenBEEProtocol
 
 def main():
 	# listen on the unix socket
