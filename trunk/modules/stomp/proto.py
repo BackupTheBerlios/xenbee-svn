@@ -1,6 +1,10 @@
-"""Implementation of the STOMP protocol (client side)"""
+"""Implementation of the STOMP protocol (client side).
 
-import sys
+see: http://stomp.codehaus.org/Protocol
+
+"""
+
+import sys, re
 
 # twisted imports
 from twisted.protocols.basic import LineReceiver
@@ -8,21 +12,43 @@ from textwrap import dedent
 from xenbeed.uuid import uuid
 
 class Frame:
+	"""This class represents a 'frame'.
+
+	A frame consists of a 'type' field which describes its
+	meaning, a header which holds (key,value) pairs (such as
+	'content-length') and some data belonging to this frame.
+
+	Example Frame:
+
+	    MESSAGE
+	    content-length: 5
+
+	    hello!\x00\x0a
+
+	"""
 	def __init__(self, frame_type):
 		self.type = frame_type
 		self.header = {}
 		self.data = ""
 
 	def remainingBytes(self):
+		"""Return the number of bytes that are still needed to complete this frame.
+
+		returns 0 if no more bytes are needed or the frame does not have a content-length header.
+		returns > 0 if bytes are remaining and a content-length was specified.
+
+		"""
 		if self.hasContentLength():
 			return self.contentLength() - len(self.data)
 		else:
-			return 1
+			return 0
 
 	def hasContentLength(self):
+		"""return True iff a content-length has been given."""
 		return self.header.has_key("content-length")
 
 	def contentLength(self):
+		"""return the content-length if one was given, raises KeyError otherwise."""
 		return int(self.header.get("content-length"))
 
 	def __str__(self):
@@ -36,13 +62,25 @@ class Frame:
 		return "".join(s)
 
 class Message:
+	"""Holds a single message, containing header and body."""
 	def __init__(self, header, body):
 		self.header = header
 		self.body = body
 
 class StompClient(LineReceiver):
+	"""Implementation of the STOMP protocol - client side.
+
+	Uses the twisted LineReceiver to implement the protocol
+	details.
+
+	"""
+
+	auto_connect = True
+
 	def __init__(self):
+		"""Initializes the client."""
 		self.frame = None
+		self.state = "disconnected"
 		self.transaction = None
 		self.session = None
 		self.mode = "command"
@@ -51,52 +89,51 @@ class StompClient(LineReceiver):
 		self.buffer = ''
 
 	def connectionMade(self):
-		f = Frame("CONNECT")
-		f.header["login"] = self.factory.user
-		f.header["passcode"] = self.factory.password
-		self.sendFrame(f)
+		"""Called when connection has been established."""
+		if self.auto_connect and self.state == "disconnected":
+			self.connect(self.factory.user, self.factory.password)
 
 	def sendFrame(self, frame):
-		old_delim, self.delimiter = self.delimiter, ''
-		#print >>sys.stderr, "sending frame:\n", frame
-		self.sendLine(str(frame))
-		self.delimiter = old_delim
+		"""Send a frame."""
+		self.transport.write(str(frame))
 
 	def lineReceived(self, line):
-		#print "got line:", line
+		"""Handle a new line."""
+		line = line.strip()
 		if self.mode == "command":
-			# ignore any empty lines
-			line = line.strip()
+			# ignore any empty lines before a new command
 			if not len(line):
 				return
 
-			# got new command
 			cmd = line.upper()
+			if re.search('\s+', cmd):
+				self.disconnect()
+				return
+			
+			# got new command
 			self.frame = Frame(line.upper())
 			self.mode = "header"
-			#print >>sys.stderr, "got command:", cmd
 			return
 
 		# parse header
 		elif self.mode == "header":
-			line = line.strip()
+			# end of header reached?
 			if not len(line):
-				#print "switching to raw"
 				self.mode = "data"
 				self.setRawMode()
 				return
 
+			# read header
 			try:
 				k,v = [ p.strip() for p in line.split(':', 1) ]
 				self.frame.header[k] = v
-				#print >>sys.stderr, "got header part:",k,":",v
 			except ValueError:
-				# could not get header element, so it must be an empty line
-				#print >>sys.stderr, "could not parse header field:", line
-				self.looseConnection()
+				# could not get header element, this is an error condition
+				self.disconnect()
 				return
 
 	def closeFrame(self, remaining=''):
+		"""finish the current frame."""
 		f, self.frame = self.frame, None
 
 		# call back
@@ -106,17 +143,31 @@ class StompClient(LineReceiver):
 		self.setLineMode(remaining)
 
 	def rawDataReceived(self, data):
+		"""reads raw data received from the socket.
+
+		Used to read the data part of a frame, since it may
+		not be line-oriented.
+
+		I.  no content-length:
+		       * read until 'terminator' character code is reached (default: \x00\x0a)
+		       * close frame
+		       * handle remaining data line oriented
+
+		II. content-length available:
+		       * read data into frame until content-length bytes have been read.
+		       * handle rest as line oriented
+
+		"""
 		f = self.frame
 
 		# if frame does not  have a content length, read until
 		# the termination code arrives.
 		if not f.hasContentLength():
-			#print "no content-length"
-			if self.terminator in data:
+			try:
 				idx = data.index(self.terminator)
 				f.data += data[0:idx]
 				self.closeFrame(data[idx+1:])
-			else:
+			except ValueError:
 				self.data += data
 			return
 		
@@ -131,7 +182,6 @@ class StompClient(LineReceiver):
 			self.closeFrame(data)
 
 	def handleFrame(self, frame):
-		#print "got frame:",frame
 		if frame.type == "CONNECTED":
 			self.handle_CONNECTED(frame)
 		elif frame.type == "MESSAGE":
@@ -141,22 +191,54 @@ class StompClient(LineReceiver):
 			self.errorReceived(frame.header["message"], frame.data)
 
 	def handle_CONNECTED(self, frame):
-		self.session = frame.header["session"]
-		self.connectedReceived()
+		self.state = "connected"
+		self.connectedReceived(frame)
 
-	def connectedReceived(self):
+	def connect(self, user, password):
+		"""Connect to the STOMP server, using 'user' and 'password'."""
+		f = Frame("CONNECT")
+		f.header["login"] = user
+		f.header["passcode"] = password
+		self.sendFrame(f)
+
+	def connectedReceived(self, frame):
+		"""Called when we are logged in to the STOMP server.
+
+		Override this method.
+
+		"""
 		pass
 		
 	# callbacks
 	def messageReceived(self, msg, queue):
+		"""A message has been received.
+
+		msg -- a Message object, containing all header fields and the body.
+		queue -- the queue in which the message has been received.
+
+		Override this method.
+		"""
 		raise NotImplementedError("'messageReceived' not implemented")
 
 	def errorReceived(self, msg, detail):
+		"""Called when the server found an error.
+
+		Override this method.
+
+		"""
 		pass
 		
 	# client protocol
 
 	def send(self, queue, msg = '', header={}):
+		"""Send a message to a specific queue.
+
+		header -- a dictionary of header fields
+		msg -- the body of the message to be sent
+		queue -- the destination queue
+
+		"""
+		
 		if not queue or not len(queue):
 			raise RuntimeError("destination queue must not be empty: '%s'" % str(queue))
 		f = Frame("SEND")
@@ -168,21 +250,30 @@ class StompClient(LineReceiver):
 		f.header["content-length"] = len(msg)
 		self.sendFrame(f)
 
-	def subscribe(self, queue, ack="auto"):
-		ack = ack.lower()
-		if not ack in ("auto", "client"):
-			raise RuntimeError("acknowledge mode must be one of 'auto' or 'client': %s" % ack)
+	def subscribe(self, queue, auto_ack=True):
+		"""Subscribe to queue 'queue'.
+
+		When subscribed to a queue, the client receives all
+		messages targeted at that queue.
+
+		auto_ack -- if True, all messages are automatically acknowledged,
+		            otherwise a seperate 'ack' has to be sent.
+
+		"""
 		f = Frame("SUBSCRIBE")
 		f.header["destination"] = queue
-		f.header["ack"] = ack
+		if auto_ack: f.header["ack"] = "auto"
+		else: f.header["ack"] = "client"
 		self.sendFrame(f)
 
 	def unsubscribe(self, queue):
+		"""Remove the subscription to some queue."""
 		f = Frame("SUBSCRIBE")
 		f.header["destination"] = queue
 		self.sendFrame(f)
 
 	def ack(self, msgid):
+		"""Acknowledge the given message id."""
 		f = Frame("ACK")
 		f.header["message-id"] = msgid
 		if self.transaction:
@@ -190,6 +281,7 @@ class StompClient(LineReceiver):
 		self.sendFrame(f)
 
 	def begin(self):
+		"""Begin a new transaction."""
 		if self.transaction:
 			raise RuntimeError("currently only one active transaction is supported!")
 		self.transaction = uuid()
@@ -198,6 +290,7 @@ class StompClient(LineReceiver):
 		self.sendFrame(f)
 
 	def abort(self):
+		"""Abort an ongoing transaction."""
 		if not self.transaction:
 			raise RuntimeError("no currently active transaction")
 		f = Frame("ABORT")
@@ -206,6 +299,7 @@ class StompClient(LineReceiver):
 		self.sendFrame(f)
 
 	def commit(self):
+		"""Commit the current transaction."""
 		if not self.transaction:
 			raise RuntimeError("no currently active transaction")
 		f = Frame("COMMIT")
@@ -214,10 +308,16 @@ class StompClient(LineReceiver):
 		self.sendFrame(f)
 
 	def disconnect(self):
-		f = Frame("DISCONNECT")
-		self.sendFrame(f)
-		self.looseConnection()
-		self.session = None
+		"""Disconnect from the server."""
+		if self.state == "connected":
+			f = Frame("DISCONNECT")
+			self.sendFrame(f)
+			self.transport.loseConnection()
+			self.session = None
+		self.state = "disconnected"
+
+	def __del__(self):
+		self.disconnect()
 
 def selftest(host="localhost", port=61613):
 	from twisted.internet.protocol import ClientFactory
@@ -232,10 +332,9 @@ def selftest(host="localhost", port=61613):
 			StompClient.send(self, queue="/queue/xenbee/daemon",
 					 msg=msg, header={"client-id": self.client_id})
 
-		def connectedReceived(self):
-
-			self.subscribe("/queue/xenbee/clients/%s"%self.client_id, ack="auto")
-			self.subscribe("/queue/xenbee/daemon", ack="auto")
+		def connectedReceived(self, frame):
+			self.subscribe("/queue/xenbee/clients/%s"%self.client_id, auto_ack=True)
+			self.subscribe("/queue/xenbee/daemon", auto_ack=True)
 			msg = """\
 			hello daemon!
 			"""
