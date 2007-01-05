@@ -15,6 +15,11 @@ Available subcommands:
 
 """
 from xenbeed.instance import InstanceManager
+from xenbeed.uuid import uuid
+
+from twisted.internet import reactor
+from twisted.internet.protocol import ClientCreator
+from stomp.proto import StompClientFactory, StompClient
 
 import logging, sys, re, os
 log = logging.getLogger(__name__)
@@ -71,6 +76,31 @@ class Command(object):
 
         """
 
+class RemoteCommand(Command):
+    host = 'localhost'
+    port = 61613
+
+    def __init__(self, argv):
+        """Initialize some common options for remote commands."""
+        p = self.parser = NoPrintOptionParser(usage="usage: %s [options]" % argv[0], add_help_option=False)
+        p.add_option("-u", "--username", dest="user",  type="string", help="the username to use")
+        p.add_option("-p", "--password", dest="pass",  type="string", help="the password to use")
+        p.add_option("--cert", dest="cert",  type="string", help="the certificate to use")
+    
+    def handleMessage(self, msg):
+        """handles the given message from the STOMP server."""
+        print "got answer in queue:",msg.queue
+        print msg
+        reactor.stop()
+
+    def executeRemote(self, msg):
+        f = StompClientFactory(user='client')
+        f.protocol = StompClientCmd
+        f.cmd = self
+        f.msg = msg
+        reactor.connectTCP(self.host, self.port, f)
+        reactor.run()
+    
 class Command_help(Command):
     """\
     help: Describe the usage of this program or its subcommands.
@@ -94,23 +124,23 @@ class Command_help(Command):
     def __str__(self):
         return "help"
 
-class Command_create(Command):
+class Command_create(RemoteCommand):
     """\
     create: Create a new instance.
 
     """
+
     def __init__(self, argv = []):
         """initialize the 'create' command."""
-        Command.__init__(self)
+        RemoteCommand.__init__(self, argv)
 
-        p = NoPrintOptionParser(usage="usage: create [options]", add_help_option=False)
+        p = self.parser
         p.add_option("-k", "--kernel", dest="kernel",  type="string", help="the uri to the kernel")
         p.add_option("-r", "--initrd", dest="initrd",  type="string", help="the uri to a initrd")
         p.add_option("-m", "--mem",    dest="memory",  type="int",    help="the amount of memory to use (in MB)", default=128)
         p.add_option("-s", "--swap",   dest="swap",    type="int",    help="the amount of swap space to use (in MB)", default=128)
         p.add_option("-i", "--image",  dest="image",   type="string", help="the main image to boot")
         p.add_option("-C", "--cpus",   dest="cpus",    type="int",    help="the number of cpus to use", default=1)
-        self.parser = p
         self.argv = argv
 
         from StringIO import StringIO
@@ -123,6 +153,9 @@ class Command_create(Command):
     def __str__(self):
         return "create"
 
+    def handleMessage(self, msg):
+        RemoteCommand.handleMessage(self, msg)
+    
     def execute(self):
         self.options, self.args = parse_args(self.parser, self.argv)
 
@@ -131,6 +164,9 @@ class Command_create(Command):
             raise CommandFailed("'kernel' is required")
         if not self.options.image:
             raise CommandFailed("'image' is required")
+
+        self.executeRemote('%s' % " ".join(self.argv))
+        return
 
         # create instance manager
         self.mgr = InstanceManager()
@@ -161,7 +197,11 @@ def createCommand(argv):
     """Creates a command object from the given command line."""
     if len(argv):
         try:
-            return eval("Command_%s(%s)" % (argv[0], "argv"))
+            clsname = "Command_%s" % argv[0]
+            if clsname in globals():
+                return globals()[clsname](argv)
+            else:
+                raise NameError, "no such command: %s" % argv[0]
         except NameError, ne:
             print >>sys.stderr, "Unknown command: '%s'" % argv[0]
             return None
@@ -172,10 +212,24 @@ def createCommand(argv):
     else:
         return None
 
+def connectFailed(e):
+    print e
+    reactor.stop()
+
+class StompClientCmd(StompClient):
+
+    def connectedReceived(self, frame):
+        cid = uuid()
+        self.subscribe('/queue/xenbee/clients/%s' % cid)
+#        self.send('/queue/xenbee/daemon', "hello", { 'client-id': cid })
+        self.send('/queue/xenbee/daemon', self.factory.msg, { 'client-id': cid })
+        self.receive().addCallback(self.factory.cmd.handleMessage)
+        reactor.callLater(10, reactor.stop)
+
 def main(argv):
     """The main routine."""
     sys.argv[0] = os.path.basename(sys.argv[0])
-    
+
     cmd = createCommand(argv[1:])
     if cmd:
         try:

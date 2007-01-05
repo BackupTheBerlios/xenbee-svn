@@ -9,34 +9,40 @@ __author__ = "$Author: petry $"
 import logging
 log = logging.getLogger(__name__)
 
+from stomp.proto import StompClient, StompClientFactory
+
 # Twisted imports
-from twisted.internet import reactor, stdio
-from twisted.internet.protocol import Protocol, Factory
-from twisted.protocols import basic
+from twisted.internet import reactor
+from twisted.internet import reactor
 
 import os, os.path
-from syslog import syslog, openlog, LOG_MAIL
 
-class XenBEEProtocol(basic.LineReceiver):
-	"""Processing input on one of the sockets
+class XenBEEProtocol(StompClient):
+    """Processing input received by the STOMP server."""
 
-	Very easy protocol:
+	def connectedReceived(self, frame):
+	    # i am connected to the stomp server
+	    log.debug("successfully connected to STOMP server, avaiting your commands.")
+	    self.subscribe(self.factory.queue, auto_ack=True)
 
-	content-length: <#bytes>
+	def messageReceived(self, msg):
+	    log.debug("got message\n%s" % msg.body)
+	    try:
+		client = msg.header["client-id"]
+		self.send(queue="/queue/xenbee/clients/%s" % client, msg="huhu")
+	    except KeyError:
+		log.error("illegal message received")
 
-	"""
+	def errorOccured(self, msg, detail):
+	    log.error("error-message: '%s', details: '%s'" % (msg, detail))
 
-	cnt = 0
+class XenBEEProtocolFactory(StompClientFactory):
+    protocol = XenBEEProtocol
 
-	def __init__(self):
-		XenBEEProtocol.cnt = XenBEEProtocol.cnt + 1
-		self.counter = XenBEEProtocol.cnt
+    def __init__(self, queue="/queue/xenbee/daemon"):
+	StompClientFactory.__init__(self, user='daemon', password='none')
+	self.queue = queue
 
-	def connectionMade(self):
-		log.debug('Connection from %r' % self.transport)
-		self.sendLine('XenBEE server: %s' % __version__)
-
-	def lineReceived(self, line):
-		log.info('got line: %s' % line)
-		self.sendLine("you wrote: %s" % line)
-
+    def clientConnectionFailed(self, connector, reason):
+	log.error("connection to STOMP server failed!: %s" % reason)
+	reactor.stop()

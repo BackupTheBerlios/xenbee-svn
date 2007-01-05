@@ -8,8 +8,12 @@ import sys, re
 
 # twisted imports
 from twisted.protocols.basic import LineReceiver
+from twisted.internet import defer, reactor
+from twisted.internet.protocol import ReconnectingClientFactory
 from textwrap import dedent
 from xenbeed.uuid import uuid
+
+__all__ = [ 'StompClient', 'Message', 'StompClientFactory' ]
 
 class Frame:
 	"""This class represents a 'frame'.
@@ -63,9 +67,13 @@ class Frame:
 
 class Message:
 	"""Holds a single message, containing header and body."""
-	def __init__(self, header, body):
+	def __init__(self, header, body, queue):
 		self.header = header
 		self.body = body
+		self.queue = queue
+
+	def __str__(self):
+		return str(self.body)
 
 class StompClient(LineReceiver):
 	"""Implementation of the STOMP protocol - client side.
@@ -185,14 +193,17 @@ class StompClient(LineReceiver):
 		if frame.type == "CONNECTED":
 			self.handle_CONNECTED(frame)
 		elif frame.type == "MESSAGE":
-			msg = Message(frame.header, frame.data)
-			self.messageReceived(msg, frame.header["destination"])
+			msg = Message(frame.header, frame.data, frame.header["destination"])
+			self.messageReceived(msg)
 		elif frame.type == "ERROR":
-			self.errorReceived(frame.header["message"], frame.data)
+			self.errorOccurred(frame.header["message"], frame.data)
 
 	def handle_CONNECTED(self, frame):
 		self.state = "connected"
 		self.connectedReceived(frame)
+		if self.connectDefer:
+			self.connectDefer.callback(frame)
+			self.connectDefer = None
 
 	def connect(self, user, password):
 		"""Connect to the STOMP server, using 'user' and 'password'."""
@@ -200,6 +211,17 @@ class StompClient(LineReceiver):
 		f.header["login"] = user
 		f.header["passcode"] = password
 		self.sendFrame(f)
+		self.connectDefer = defer.Deferred()
+		return self.connectDefer
+
+	def receive(self):
+		"""Await the reception of a message.
+
+		Returns a 'deferred' object.
+		
+		"""
+		self.defer = defer.Deferred()
+		return self.defer
 
 	def connectedReceived(self, frame):
 		"""Called when we are logged in to the STOMP server.
@@ -210,7 +232,7 @@ class StompClient(LineReceiver):
 		pass
 		
 	# callbacks
-	def messageReceived(self, msg, queue):
+	def messageReceived(self, msg):
 		"""A message has been received.
 
 		msg -- a Message object, containing all header fields and the body.
@@ -218,16 +240,21 @@ class StompClient(LineReceiver):
 
 		Override this method.
 		"""
-		raise NotImplementedError("'messageReceived' not implemented")
+		if self.defer:
+			self.defer.callback(msg)
+			self.defer = None
 
-	def errorReceived(self, msg, detail):
+	def errorOccurred(self, msg, detail):
 		"""Called when the server found an error.
 
 		Override this method.
 
 		"""
-		pass
-		
+		if self.defer:
+			self.defer.errback(msg)
+			self.defer = None
+
+
 	# client protocol
 
 	def send(self, queue, msg = '', header={}):
@@ -319,41 +346,45 @@ class StompClient(LineReceiver):
 	def __del__(self):
 		self.disconnect()
 
-def selftest(host="localhost", port=61613):
-	from twisted.internet.protocol import ClientFactory
-	from twisted.internet import reactor
+class StompClientFactory(ReconnectingClientFactory):
+	protocol = StompClient
+	
+	def __init__(self, user = '', password = ''):
+		self.user = user
+		self.password = password
 
+	def clientConnectionFailed(self, connector, reason):
+#		log.error("could not connect: %s" % reason)
+		reactor.stop()
+
+def selftest(host="localhost", port=61613):
 	class StompClientTest(StompClient):
 		def __init__(self):
 			StompClient.__init__(self)
 			self.client_id = uuid()
 
 		def send(self, msg):
-			StompClient.send(self, queue="/queue/xenbee/daemon",
+			StompClient.send(self, queue="/queue/xenbee/test-daemon",
 					 msg=msg, header={"client-id": self.client_id})
 
 		def connectedReceived(self, frame):
 			self.subscribe("/queue/xenbee/clients/%s"%self.client_id, auto_ack=True)
-			self.subscribe("/queue/xenbee/daemon", auto_ack=True)
+			self.subscribe("/queue/xenbee/test-daemon", auto_ack=True)
 			msg = """\
 			hello daemon!
 			"""
 			self.send(dedent(msg).strip())
 
-		def messageReceived(self, msg, queue):
-			print "got message in queue:", queue
+		def messageReceived(self, msg):
+			print "got message in queue:", msg.queue
 			print "'%s'" % msg.body
 
-			if queue == "/queue/xenbee/daemon":
+			if queue == "/queue/xenbee/test-daemon":
 				msg = "daemon says hello to %s" % msg.header["client-id"]
 				StompClient.send(self, queue="/queue/xenbee/clients/%s" % self.client_id,
 						 msg=msg)
 
-	f = ClientFactory()
-	f.protocol = StompClientTest
-	f.user = ""
-	f.password = ""
-
+	f = StompClientFactory()
 	reactor.connectTCP(host, port, f)
 	reactor.run()
 
