@@ -18,7 +18,7 @@ from twisted.internet import reactor
 import os, os.path
 
 class XenBEEProtocol(StompClient):
-    """Processing input received by the STOMP server."""
+	"""Processing input received by the STOMP server."""
 
 	def connectedReceived(self, frame):
 	    # i am connected to the stomp server
@@ -45,4 +45,7 @@ class XenBEEProtocolFactory(StompClientFactory):
 
     def clientConnectionFailed(self, connector, reason):
 	log.error("connection to STOMP server failed!: %s" % reason)
-	reactor.stop()
+	if 'twisted.internet.error.ConnectionRefusedError' in reason.parents:
+            log.info("stopping the reactor...")
+            reactor.stop()
+

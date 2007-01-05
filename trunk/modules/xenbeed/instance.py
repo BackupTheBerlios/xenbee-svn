@@ -13,7 +13,10 @@ __author__ = "$Author: petry $"
 import logging, os, os.path
 log = logging.getLogger(__name__)
 
-from traceback import format_exc as format_exception
+try:
+	from traceback import format_exc as format_exception
+except:
+	from traceback import format_exception
 
 from xenbeed.exceptions import *
 from xenbeed import backend

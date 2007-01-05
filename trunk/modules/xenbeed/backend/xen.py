@@ -19,7 +19,11 @@ log = logging.getLogger(__name__)
 import commands
 import sys
 import os.path
-from traceback import format_exc as format_exception
+
+try:
+	from traceback import format_exc as format_exception
+except:
+	from traceback import format_exception
 
 from xenbeed.config.xen import XenConfigGenerator
 from xenbeed.exceptions import *

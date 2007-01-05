@@ -6,7 +6,7 @@ The Xen Based Execution Environment managing daemon
 __version__ = "$Rev: $"
 __author__ = "$Author: $"
 
-import os, os.path
+import os, os.path, sys
 
 # Twisted imports
 from twisted.internet import reactor
