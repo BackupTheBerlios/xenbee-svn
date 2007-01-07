@@ -48,9 +48,9 @@ class TestProtocol(StompClient):
         self.transport.write(">>> ")
 
 def main():
-    f = protocol.Factory()
+    f = StompClientFactory()
     f.protocol = TestProtocol
-    reactor.listenTCP(1234, f)
+    reactor.connectTCP('localhost', 61613, f)
     reactor.run()
     return 0
 
