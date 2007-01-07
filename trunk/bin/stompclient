@@ -1,0 +1,133 @@
+#!/usr/bin/env python
+
+"""A command line tool for the stomp protocol"""
+
+import sys
+from twisted.internet import reactor
+from twisted.internet.protocol import ClientFactory
+from twisted.internet.stdio import StandardIO
+from stomp.proto import StompClientFactory, StompClient
+from twisted.protocols import basic
+
+from optparse import OptionParser
+
+p = OptionParser()
+p.add_option("-H", "--hostname", dest="hostname", default="localhost", type="string", help="hostname to connect to")
+p.add_option("-P", "--port", dest="port", default=61613, type="int", help="port to connect to")
+p.add_option("-u", "--username", dest="username", default="test", type="string", help="username used for login")
+p.add_option("-p", "--password", dest="password", default="test", type="string", help="password used for login")
+
+stompClient = None
+stdioClient = None
+
+class Client(StompClient):
+    def __init__(self):
+        StompClient.__init__(self)
+        self.header = {}
+        global stompClient
+        stompClient = self
+
+    def send(self, queue, msg='', header={}):
+        header.update(self.header)
+        StompClient.send(self, queue,msg,header)
+        
+    def connectedReceived(self, frame):
+        print "connected to stomp server"
+    
+    def messageReceived(self, msg):
+        stdioClient.sendLine("got message:")
+        for k,v in msg.header.iteritems():
+            stdioClient.sendLine("%s: %s" % (k,v))
+        stdioClient.sendLine("")
+        stdioClient.sendLine(msg.body)
+
+    def errorOccurred(self, msg, detail):
+        stdioClient.sendLine(detail)
+
+class CommandLineProtocol(basic.LineReceiver):
+    from os import linesep as delimiter
+    
+    def __init__(self, prompt="> "):
+        self.parser = OptionParser()
+        self.prompt = prompt
+
+        global stdioClient
+        stdioClient = self
+
+    def connectionMade(self):
+        self.transport.write(self.prompt)
+
+    def lineReceived(self, line):
+        if not len(line):
+            self.transport.write(self.prompt)
+            return
+        
+        line = line.strip()
+        commandParts = line.split()
+        command = commandParts[0].lower()
+        args = commandParts[1:]
+
+        try:
+            method = getattr(self, 'do_' + command)
+        except AttributeError, e:
+            self.sendLine("E: no such command")
+        else:
+            try:
+                method(*args)
+            except Exception, e:
+                self.sendLine("E: " + str(e))
+        self.transport.write(self.prompt)
+
+
+    def do_send(self, queue, *msg):
+        stompClient.send(queue=queue, msg=" ".join(msg))
+
+    def do_help(self, command=None):
+        if not command:
+            self.sendLine("""Available commands:
+
+send <queue> msg           -- send 'msg' to queue
+subscribe <queue>          -- subscribe to queue
+unsubscribe <queue>        -- unsubscribe from queue
+hdr [key [value]]          -- shows the header
+                              if key given, delete it
+                              if key and value given, add it
+help                       -- show this help""")
+
+    def do_subscribe(self, queue):
+        stompClient.subscribe(queue)
+    do_sub = do_subscribe
+
+    def do_unsubscribe(self, queue):
+        stompClient.unsubscribe(queue)
+    do_unsub = do_unsubscribe
+    
+    def do_hdr(self, key=None, value=None):
+        if key and value:
+            stompClient.header[key] = value
+        elif key:
+            if key in stompClient.header:
+                self.sendLine("removed header field: %s" % key)
+                stompClient.header.pop(key)
+            else:
+                self.sendLine("E: no such header field")
+        else:
+            for k,v in stompClient.header.iteritems():
+                self.sendLine("%s: %s" % (k,v))
+    do_header = do_hdr
+    
+    def do_quit(self):
+        stompClient.disconnect()
+        reactor.stop()
+
+def main():
+    opts, args = p.parse_args(sys.argv)
+    f = StompClientFactory(opts.username, opts.password)
+    f.protocol = Client
+    reactor.connectTCP(opts.hostname, opts.port, f)
+    StandardIO(CommandLineProtocol(prompt=""))
+    reactor.run()
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main())

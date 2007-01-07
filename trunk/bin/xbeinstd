@@ -1,0 +1,58 @@
+#!/usr/bin/env python
+
+"""Xen based execution environment (XBE) instance daemon.
+
+This  daemon  runs  within  a  Xen instance  and  is  responsible  for
+application execution.
+
+"""
+
+import sys
+from twisted.internet import reactor, protocol, utils
+from twisted.protocols import basic
+from stomp.proto import StompClientFactory, StompClient
+
+class ProcProtocol(protocol.ProcessProtocol):
+    def connectionMade(self):
+        pass
+
+    def outReceived(self, data):
+        """parse the data and store it in some file."""
+        print "got stdout:", data
+        self.creator.transport.write(data)
+
+    def errReceived(self, data):
+        print "got stderr:", data
+
+    def processEnded(self, status_object):
+        print "process ended, status %d" % status_object.value.exitCode
+
+class TestProtocol(StompClient):
+
+    def connectedReceived(self, frame):
+        self.subscribe("/queue/xenbee/instances/1", auto_ack=True)
+        self.send(queue="/queue/xenbee/daemon",
+                  msg="ready",
+                  header={ "instance-id": 1 })
+
+    def messageReceived(self, msg):
+        line = msg.body
+
+        if not len(line):
+            reactor.stop()
+            return
+        cmdline = line.split()
+        self.proc = ProcProtocol()
+        self.proc.creator = self
+        reactor.spawnProcess(self.proc, cmdline[0], cmdline, {})
+        self.transport.write(">>> ")
+
+def main():
+    f = protocol.Factory()
+    f.protocol = TestProtocol
+    reactor.listenTCP(1234, f)
+    reactor.run()
+    return 0
+
+if __name__ == '__main__':
+    sys.exit(main())

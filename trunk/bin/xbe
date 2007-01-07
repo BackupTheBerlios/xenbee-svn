@@ -14,7 +14,7 @@ Available subcommands:
        create
 
 """
-#from xenbeed.instance import InstanceManager
+
 from xenbeed.uuid import uuid
 
 from twisted.internet import reactor
