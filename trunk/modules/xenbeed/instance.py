@@ -2,9 +2,9 @@
 The XenBEE instance module (server side)
 
 contains:
-      InstanceManager:
-           used to create new instances
-           manages all currently available instances
+    InstanceManager:
+	used to create new instances
+	manages all currently available instances
 """
 
 __version__ = "$Rev$"
@@ -14,13 +14,15 @@ import logging, os, os.path
 log = logging.getLogger(__name__)
 
 try:
-	from traceback import format_exc as format_exception
+    from traceback import format_exc as format_exception
 except:
-	from traceback import format_exception
+    from traceback import format_exception
 
 from xenbeed.exceptions import *
 from xenbeed import backend
 from xenbeed import util
+
+from twisted.internet import reactor
 
 class InstanceError(XenBeeException):
     pass
@@ -33,10 +35,10 @@ class Instance:
         information about the instance.
 
         Requirement:
-           config.name must be a UUID.
+	    config.name must be a UUID.
 
         """
-        
+
         # check if the instance name is a UUID
         # example: 85a21198-89db-11db-a9dc-d3d26ec3b24a
         import re
@@ -45,10 +47,11 @@ class Instance:
         if not p.match(config.getInstanceName()):
             raise InstanceError("instance name is not a UUID: %s" % config.getInstanceName())
         self.config = config
-        
+
         self.state = "created"
         self.spool = self._createSpoolDirectory(spool_base)
         self.backend_id = -1
+	self.mgr = None
 
     def uuid(self):
         """Return the UUID for this instance.
@@ -89,10 +92,10 @@ class Instance:
         from xenbeed.staging import DataStager
         ds = DataStager(uri, dst)
         try:
-            ds.run()
-        except:
-            log.error("could not put file from: %s into spool" % uri)
-            raise InstanceError("could not retrieve: %s" % uri)
+	    reactor.callInThread(ds.run)
+        except Exception, e:
+            log.error("could not put file from: %s into spool: %s" % (uri, str(e)))
+            raise InstanceError("could not retrieve %s: %s" % (uri, str(e)))
         return dst
 
     def addFiles(self, mapping={}, **kwords):
@@ -102,11 +105,11 @@ class Instance:
         The 'values' are the files to retrieve.
 
         Example:
-             addFiles(kernel='file:///boot/vmlinuz',
-                      disk1='http://www.example.com/instance/test.img')
+	    addFiles(kernel='file:///boot/vmlinuz',
+		disk1='http://www.example.com/instance/test.img')
 
-             will copy the files '/boot/vmlinuz' (local) and '/instance/test.img'
-             (from www.example.com) to the spool directory as 'kernel' and 'disk1'.
+	    will copy the files '/boot/vmlinuz' (local) and '/instance/test.img'
+	    (from www.example.com) to the spool directory as 'kernel' and 'disk1'.
 
         """
         logical_files = {}
@@ -145,19 +148,19 @@ class Instance:
                              backend.status.BE_INSTANCE_SHUTOFF,
                              backend.status.BE_INSTANCE_CRASHED):
             util.removeDirCompletely(self.getSpool())
-        
+
     def destroy(self):
         """Destroys the given instance.
 
         actions made:
-             * stop the instance
-             * removes the complete spool directory
-             
+	    * stop the instance
+	    * removes the complete spool directory
+
         Warning: all data belonging to that instance are deleted, so be warned.
 
         essentially the same as:
-             stop()
-             cleanUp()
+	    stop()
+	    cleanUp()
 
         """
         self.stop()
@@ -172,8 +175,9 @@ class Instance:
         #       * better control if something goes wrong
         #       * maybe use "call in thread" from twisted
         # use the backend to start
-        self.setBackendID(backend.createInstance(self))
-        self.state = "started"
+	def __started():
+	    self.started = "started"
+	reactor.deferToThread(self.setBackendID(backend.createInstance(self))).addCallBack(__started)
 
     def _createSpoolDirectory(self, base_path="", doSanityChecks=True):
         """Creates the spool-directory for this instance.
@@ -182,13 +186,13 @@ class Instance:
 
         base_path -- the 'global' spool directory (such as /var/lib/spool/xenbeed etc.)
         doSanityChecks -- some small tests to prohibit possible security breachs:
-              * result path is subdirectory of base-path
-              * result path is not a symlink
+	    * result path is subdirectory of base-path
+	    * result path is not a symlink
 
         The spool directory is used to all necessary information about an instance:
-              * kernel, root, swap, additional images
-              * persistent configuration
-              * access and security stuff
+	    * kernel, root, swap, additional images
+	    * persistent configuration
+	    * access and security stuff
 
         """
         path = os.path.normpath(os.path.join(base_path,
@@ -220,9 +224,9 @@ class InstanceManager:
     """The instance-manager.
 
     Through this class every known instance can be controlled:
-         - send data (messages) to the manager on the instance
-         - handle received data
-         - create a new one
+	- send data (messages) to the manager on the instance
+	- handle received data
+	- create a new one
 
     """
     def __init__(self):
@@ -245,9 +249,10 @@ class InstanceManager:
         except:
             log.error(format_exception())
             raise
-
+	
         # remember the instance in our db
         self.instances[inst.uuid()] = inst
+	inst.mgr = self
         return inst
 
     def removeInstance(self, inst):
@@ -255,7 +260,7 @@ class InstanceManager:
 
         It is assumed that the instance has been stopped/destroyed
         before.
-        
+
         """
         self.instances.pop(inst.uuid())
 
@@ -263,7 +268,7 @@ class InstanceManager:
         """Return the instance for the given identifier.
 
         returns the instance object or None
-        
+
         """
         return self.instances.get(uuid, None)
 

@@ -73,7 +73,7 @@ class TestTempFile(unittest.TestCase):
 		prev_path = None
 		for f in tmpfiles:
 			self.assertTrue(f.path != prev_path, "two temporary files have the same path!")
-			last_path = f.path
+			prev_path = f.path
 		
 def suite():
 	s1 = unittest.makeSuite(TestDataStager, 'test')

@@ -4,7 +4,7 @@ see: http://stomp.codehaus.org/Protocol
 
 """
 
-import sys, re
+import re
 
 # twisted imports
 from twisted.protocols.basic import LineReceiver
@@ -96,6 +96,7 @@ class StompClient(LineReceiver):
 	self.terminator = "\x00\x0a"
 	self.buffer = ''
 	self.defer = None
+        self.factory = None
 
     def connectionMade(self):
 	"""Called when connection has been established."""
@@ -177,7 +178,7 @@ class StompClient(LineReceiver):
 		f.data += data[0:idx]
 		self.closeFrame(data[idx+1:])
 	    except ValueError:
-		self.data += data
+		f.data += data
 	    return
 
 	# if  frame contains content-length,  read as  many as
@@ -305,7 +306,7 @@ class StompClient(LineReceiver):
 	f = Frame("ACK")
 	f.header["message-id"] = msgid
 	if self.transaction:
-	    frame.header["transaction"] = self.transaction
+	    f.header["transaction"] = self.transaction
 	self.sendFrame(f)
 
     def begin(self):
@@ -385,6 +386,7 @@ def selftest(host="localhost", port=61613):
 				 msg=msg)
 
     f = StompClientFactory()
+    f.protocol = StompClientTest
     reactor.connectTCP(host, port, f)
     reactor.run()
 

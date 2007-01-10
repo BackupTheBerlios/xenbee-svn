@@ -220,8 +220,7 @@ class StompClientCmd(StompClient):
 
     def connectedReceived(self, frame):
         cid = uuid()
-        self.subscribe('/queue/xenbee/clients/%s' % cid)
-#        self.send('/queue/xenbee/daemon', "hello", { 'client-id': cid })
+        self.subscribe('/queue/xenbee/client/%s' % cid)
         self.send('/queue/xenbee/daemon', self.factory.msg, { 'client-id': cid })
         self.receive().addCallback(self.factory.cmd.handleMessage)
         reactor.callLater(10, reactor.stop)

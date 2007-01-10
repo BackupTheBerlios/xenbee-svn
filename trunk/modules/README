@@ -28,12 +28,12 @@ submit job:
 Communication:
 ==============
 
-	* xenbee daemon connects to ActiveMQ and subscribes to the queue:
+	* xenbee daemon connects to STOMP server and subscribes to the queue:
 		/queue/xenbee/daemon
 
 	* a client requesting some action etc. acts as follows:
 		* create a UUID u
-		* subscribe to /queue/xenbee/clients/<u>
+		* subscribe to /queue/xenbee/client/<u>
 		* send messages to the daemon "destination: /queue/xenbee/daemon" and include the header field:
 			client-id: <u>
 
@@ -48,3 +48,16 @@ Communication:
 		client-id: 912f2f3b-ba0d-4467-a72b-d6f932cea9c7
 		
 		hello
+
+File Retrieval:
+===============
+
+	call regularly:
+		* mgr.startInstances():
+			* start startable instances
+		* mgr.retrieveFiles():
+			* retrieve pending files
+	inst = mgr.newInstance(...)
+	inst.addFile(...):
+		push to queue
+	

@@ -8,6 +8,7 @@ from twisted.internet.protocol import ClientFactory
 from twisted.internet.stdio import StandardIO
 from stomp.proto import StompClientFactory, StompClient
 from twisted.protocols import basic
+from textwrap import dedent
 
 from optparse import OptionParser
 
@@ -32,6 +33,7 @@ class Client(StompClient):
         StompClient.send(self, queue,msg,header)
         
     def connectedReceived(self, frame):
+	StandardIO(CommandLineProtocol(prompt=""))
         print "connected to stomp server"
     
     def messageReceived(self, msg):
@@ -78,21 +80,26 @@ class CommandLineProtocol(basic.LineReceiver):
                 self.sendLine("E: " + str(e))
         self.transport.write(self.prompt)
 
-
     def do_send(self, queue, *msg):
         stompClient.send(queue=queue, msg=" ".join(msg))
 
+    def do_sendfile(self, queue, path):
+        self.do_send(queue, file(path).read())
+
     def do_help(self, command=None):
         if not command:
-            self.sendLine("""Available commands:
+            self.sendLine(dedent("""
+            Available commands:
 
-send <queue> msg           -- send 'msg' to queue
-subscribe <queue>          -- subscribe to queue
-unsubscribe <queue>        -- unsubscribe from queue
-hdr [key [value]]          -- shows the header
-                              if key given, delete it
-                              if key and value given, add it
-help                       -- show this help""")
+            send <queue> msg       -- send 'msg' to queue
+            sendfile <queue> file  -- sends the given file to queue
+            subscribe <queue>      -- subscribe to queue
+            unsubscribe <queue>    -- unsubscribe from queue
+            hdr [key [value]]      -- shows the header
+                    if key given, delete the header field it
+                    if key and value given, add the pair to the header
+            help                   -- show this help
+            """))
 
     def do_subscribe(self, queue):
         stompClient.subscribe(queue)
@@ -105,6 +112,7 @@ help                       -- show this help""")
     def do_hdr(self, key=None, value=None):
         if key and value:
             stompClient.header[key] = value
+            self.sendLine("set header field '%s' to '%s'" % (key,value))
         elif key:
             if key in stompClient.header:
                 self.sendLine("removed header field: %s" % key)
@@ -125,7 +133,6 @@ def main():
     f = StompClientFactory(opts.username, opts.password)
     f.protocol = Client
     reactor.connectTCP(opts.hostname, opts.port, f)
-    StandardIO(CommandLineProtocol(prompt=""))
     reactor.run()
     return 0
 

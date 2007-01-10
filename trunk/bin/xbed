@@ -6,23 +6,12 @@ The Xen Based Execution Environment managing daemon
 __version__ = "$Rev: $"
 __author__ = "$Author: $"
 
-import os, os.path, sys
-
-# Twisted imports
-from twisted.internet import reactor
-from xenbeed.proto import XenBEEProtocol, XenBEEProtocolFactory
-
+import sys
+from xenbeed.daemon import Daemon
 
 def main():
-    # listen on the unix socket
-    #	f = Factory()
-    #	f.protocol = XenBEEProtocol
-    #	reactor.listenUNIX("/var/lib/xenbeed/xenbeed-socket", f, 10)
-    #	reactor.listenTCP(1234, f)
-
-    # connect to stomp server
-    reactor.connectTCP( 'localhost', 61613, XenBEEProtocolFactory(queue="/queue/xenbee/daemon"))
-    reactor.run()
+    daemon = Daemon()
+    return daemon.run()
     
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

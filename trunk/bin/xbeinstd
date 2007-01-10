@@ -12,13 +12,18 @@ from twisted.internet import reactor, protocol, utils
 from twisted.protocols import basic
 from stomp.proto import StompClientFactory, StompClient
 
+class CommStation:
+    def __init__(self):
+        self.proc = None
+
+commStation = CommStation()
+
 class ProcProtocol(protocol.ProcessProtocol):
     def connectionMade(self):
-        pass
+        commStation.proc = self
 
     def outReceived(self, data):
         """parse the data and store it in some file."""
-        print "got stdout:", data
         self.creator.transport.write(data)
 
     def errReceived(self, data):
@@ -26,11 +31,12 @@ class ProcProtocol(protocol.ProcessProtocol):
 
     def processEnded(self, status_object):
         print "process ended, status %d" % status_object.value.exitCode
+        commStation.proc = None
 
 class TestProtocol(StompClient):
-
     def connectedReceived(self, frame):
-        self.subscribe("/queue/xenbee/instances/1", auto_ack=True)
+        commStation.stomp = self
+        self.subscribe("/queue/xenbee/instance/1", auto_ack=True)
         self.send(queue="/queue/xenbee/daemon",
                   msg="ready",
                   header={ "instance-id": 1 })
