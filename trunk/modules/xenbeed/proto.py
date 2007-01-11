@@ -11,14 +11,13 @@ log = logging.getLogger(__name__)
 
 from stomp.proto import StompClient, StompClientFactory
 from xenbeed.instance import InstanceManager
+from xenbeed import isdl
 
 # Twisted imports
 from twisted.internet import reactor
 
 import xml.dom
 from xml.dom.ext.reader import PyExpat as XMLReaderBuilder
-
-ISDL_NS = u'http://www.example.com/schemas/isdl/2007/01/isdl'
 
 class StompTransport:
     """Simply wraps the message sending to write(text).
@@ -36,46 +35,11 @@ class StompTransport:
 	"""Write data to the destination queue."""
 	self.stomp.send(self.queue, data)
 
-class XenBEEClientError:
-    """Encapsulates errors using XML."""
-    
-    class OK:
-	value = 200
-	name = "OK"
-    class ILLEGAL_REQUEST:
-	value = 201
-	name = "ILLEGAL REQUEST"
-    class SUBMISSION_FAILURE:
-	value = 202
-	name = "SUBMISSION FAILURE"
-
-    def __init__(self, msg, errcode):
-	self.doc = xml.dom.getDOMImplementation().createDocument(ISDL_NS, "isdl:Message", None)
-
-	root = self.doc.documentElement
-	root.setAttributeNS(xml.dom.XMLNS_NAMESPACE, "xmlns:isdl", ISDL_NS)
-	error = self.doc.createElementNS(ISDL_NS, "isdl:Error")
-	errorCode = self.doc.createElementNS(ISDL_NS, "isdl:ErrorCode")
-	errorCode.appendChild(self.doc.createTextNode(str(errcode.value)))
-	errorName = self.doc.createElementNS(ISDL_NS, "isdl:ErrorName")
-	errorName.appendChild(self.doc.createTextNode(errcode.name))
-	errorMessage = self.doc.createElementNS(ISDL_NS, "isdl:ErrorMessage")
-	errorMessage.appendChild(self.doc.createTextNode(msg))
-	
-	error.appendChild(errorCode)
-	error.appendChild(errorName)
-	error.appendChild(errorMessage)
-	root.appendChild(error)
-	self.doc.normalize()
-	
-    def __str__(self):
-	return self.doc.toprettyxml(indent='  ', encoding='UTF-8')
-
 def ChildNodes(node, func=lambda n: n.nodeType == xml.dom.Node.ELEMENT_NODE):
     for c in filter(func, node.childNodes):
 	yield c
 class ElementNSFilter:
-    def __init__(self, ns=ISDL_NS):
+    def __init__(self, ns=isdl.ISDL_NS):
 	self.ns = ns
 
     def __call__(self, n):
@@ -104,35 +68,35 @@ class XenBEEClientProtocol:
 	self.dom = self.xmlReader.fromString(msg.body)
 	root = self.dom.documentElement
 	# check the message
-	if root.namespaceURI != ISDL_NS or root.nodeName != u'isdl:Message':
+	if root.namespaceURI != isdl.ISDL_NS or root.localName != 'Message':
 	    # got an unacceptable message
-	    self.transport.write(str(XenBEEClientError("you sent me an illegal request!",
-						       XenBEEClientError.ILLEGAL_REQUEST)))
+	    self.transport.write(str(isdl.XenBEEClientError("you sent me an illegal request!",
+                                                            isdl.XenBEEClientError.ILLEGAL_REQUEST)))
 	    return
-	children = filter(ElementNSFilter(ISDL_NS), root.childNodes)
+	children = filter(ElementNSFilter(isdl.ISDL_NS), root.childNodes)
 	if not len(children):
-	    self.transport.write(str(XenBEEClientError("no elements from ISDL namespace found",
-						       XenBEEClientError.ILLEGAL_REQUEST)))
+	    self.transport.write(str(isdl.XenBEEClientError("no elements from ISDL namespace found",
+                                                            isdl.XenBEEClientError.ILLEGAL_REQUEST)))
 	    return
 	    
 	try:
 	    method = getattr(self, "do_" + children[0].localName)
 	except AttributeError, ae:
-	    self.transport.write(str(XenBEEClientError("you sent me an illegal request!",
-						       XenBEEClientError.ILLEGAL_REQUEST)))
+	    self.transport.write(str(isdl.XenBEEClientError("you sent me an illegal request!",
+                                                            isdl.XenBEEClientError.ILLEGAL_REQUEST)))
 	    log.error("illegal request: " + str(ae))
 	    return
 	try:
 	    method(children[0])
 	except Exception, e:
-	    self.transport.write(str(XenBEEClientError("submission failed: " + str(e),
-						       XenBEEClientError.ILLEGAL_REQUEST)))
+	    self.transport.write(str(isdl.XenBEEClientError("submission failed: " + str(e),
+                                                            isdl.XenBEEClientError.ILLEGAL_REQUEST)))
 	    
     def do_ImageSubmission(self, dom_node):
 	"""Handle an image submission."""
-	def getChild(n, name, ns=ISDL_NS):
+	def getChild(n, name, ns=isdl.ISDL_NS):
 	    try:
-		return n.getElementsByTagNameNS(ISDL_NS, name)[0]
+		return n.getElementsByTagNameNS(ns, name)[0]
 	    except:
 		return None
 	    
@@ -160,11 +124,16 @@ class XenBEEClientProtocol:
 	# create instance and add files
 	inst = self.factory.instanceManager.newInstance()
 	inst.addFiles(files)
-	self.transport.write(str(XenBEEClientError("executing image : " + str(files),
-						   XenBEEClientError.OK)))
+        # do something like:
+        #     inst.addFiles(files).callBack(inst.start().errBack(inform user)
+	self.transport.write(str(isdl.XenBEEClientError("executing image : " + str(files),
+                                                        isdl.XenBEEClientError.OK)))
 
     def do_StatusRequest(self, dom_node):
 	"""Handle status request."""
+        msg = isdl.XenBEEStatusMessage()
+        map(msg.addStatusForInstance, self.factory.instanceManager)
+        self.transport.write(str(msg))
 	
 	
 class XenBEEProtocol(StompClient):

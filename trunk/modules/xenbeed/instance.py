@@ -233,7 +233,8 @@ class InstanceManager:
         """Initialize the InstanceManager."""
         self.instances = {}
         self.base_path = "/srv/xen-images/xenbee"  # TODO: make this a configurable global variable
-
+        self.__iter__ = self.instances.itervalues
+        
     def newInstance(self):
         """Returns a new instance.
 

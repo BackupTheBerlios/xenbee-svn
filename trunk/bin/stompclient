@@ -52,6 +52,7 @@ class CommandLineProtocol(basic.LineReceiver):
     def __init__(self, prompt="> "):
         self.parser = OptionParser()
         self.prompt = prompt
+        self.subscriptions = []
 
         global stdioClient
         stdioClient = self
@@ -95,18 +96,51 @@ class CommandLineProtocol(basic.LineReceiver):
             sendfile <queue> file  -- sends the given file to queue
             subscribe <queue>      -- subscribe to queue
             unsubscribe <queue>    -- unsubscribe from queue
+            show subscriptions     -- prints the current subscriptions
             hdr [key [value]]      -- shows the header
                     if key given, delete the header field it
                     if key and value given, add the pair to the header
+            quit                   -- quit the program
             help                   -- show this help
             """))
 
     def do_subscribe(self, queue):
         stompClient.subscribe(queue)
+        self.subscriptions.append(queue)
     do_sub = do_subscribe
 
+    def do_show(self, target, *args):
+        try:
+            method = getattr(self, 'do_show_' + target)
+        except AttributeError, e:
+            self.sendLine("E: no such config variable")
+        else:
+            try:
+                method(*args)
+            except Exception, e:
+                self.sendLine("E: " + str(e))
+
+    def do_show_subscriptions(self):
+        map(self.sendLine, self.subscriptions)
+
+    def do_show_hdr(self, field=None):
+        if field:
+            if field in stompClient.header:
+                self.sendLine("%s: %s" % (field, stompClient.header[field]))
+            else:
+                self.sendLine("E: field not set")
+        else:
+            for k,v in stompClient.header.iteritems():
+                self.sendLine("%s: %s" % (k,v))
+
     def do_unsubscribe(self, queue):
-        stompClient.unsubscribe(queue)
+        try:
+            self.subscriptions.remove(queue)
+        except:
+            self.sendLine("E: not subscribed to " + queue)
+        else:
+            stompClient.unsubscribe(queue)
+
     do_unsub = do_unsubscribe
     
     def do_hdr(self, key=None, value=None):

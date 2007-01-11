@@ -2,9 +2,9 @@
 The XenBEE task module
 
 contains:
-      TaskManager:
-           used to create new tasks
-           manages all currently known tasks
+    TaskManager:
+	used to create new tasks
+	manages all currently known tasks
 """
 
 __version__ = "$Rev$"
@@ -14,9 +14,9 @@ import logging
 log = logging.getLogger(__name__)
 
 try:
-	from traceback import format_exc as format_exception
+    from traceback import format_exc as format_exception
 except:
-	from traceback import format_exception
+    from traceback import format_exception
 
 from xenbeed.exceptions import *
 from xenbeed import util
@@ -28,7 +28,8 @@ class Task:
     def __init__(self, ID):
         """Initialize a new task."""
 	self._id = ID
-	
+	self.mgr = None
+
     def ID(self):
         """Return the ID for this task."""
         return self._id
@@ -37,7 +38,7 @@ class TaskManager:
     """The task-manager.
 
     Through this class every known task can be controlled:
-         - create a new tasks
+	- create a new tasks
 
     """
     def __init__(self):
@@ -49,6 +50,7 @@ class TaskManager:
         from xenbeed.uuid import uuid
 	task = Task(uuid())
         self.tasks[task.ID()] = task
+	task.mgr = self
         return task
 
     def removeTask(self, task):
@@ -59,6 +61,6 @@ class TaskManager:
         """Return the task for the given ID.
 
         returns the task object or None
-        
+
         """
         return self.tasks.get(ID, None)
