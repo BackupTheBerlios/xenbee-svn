@@ -279,8 +279,16 @@ class StompClientCmd(StompClient):
         cid = uuid()
         self.subscribe('/queue/xenbee/client/%s' % cid)
         self.send('/queue/xenbee/daemon', self.factory.msg, { 'client-id': cid })
-        self.receive().addCallback(self.factory.cmd.handleMessage)
-        reactor.callLater(10, reactor.stop)
+        self.receive().addCallback(self.message)
+        self.call = reactor.callLater(5, self.abort)
+
+    def message(self, msg):
+        self.call.cancel()
+        self.factory.cmd.handleMessage(msg)
+
+    def abort(self):
+        print >>sys.stderr, "no answer from server!"
+        reactor.stop()
 
 def main(argv):
     """The main routine."""
