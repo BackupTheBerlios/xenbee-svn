@@ -54,7 +54,8 @@ __all__ = [ "createInstance",
             "retrieveID",
             "shutdownInstance",
             "destroyInstance",
-            "getStatus" ]
+            "getStatus",
+            "getInfo" ]
 
 class BackendDomainInfo:
     """The python version of virDomainInfo.
@@ -124,16 +125,16 @@ def getStatus(inst):
     That are currently the same as in xenbeed.backend.status.
 
     """
+    return getInfo(inst).state
+
+def getInfo(inst):
     try:
-	try:
-	    acquireLock()
-	    domain = _getDomain(inst)
-	    info = BackendDomainInfo(domain.info())
-	finally:
-	    releaseLock()
-    except:
-        return BE_INSTANCE_NOSTATE
-    return info.state
+        acquireLock()
+        domain = _getDomain(inst)
+        info = BackendDomainInfo(domain.info())
+    finally:
+        releaseLock()
+    return info
 
 def _createInstance(inst):
     """Creates a new backend-instance.

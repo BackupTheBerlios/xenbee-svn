@@ -10,7 +10,7 @@ contains:
 __version__ = "$Rev$"
 __author__ = "$Author: petry $"
 
-import logging, os, os.path
+import logging, os, os.path, time
 import threading
 log = logging.getLogger(__name__)
 
@@ -53,6 +53,7 @@ class Instance:
         self.spool = self._createSpoolDirectory(spool_base)
         self.backend_id = -1
 	self.mgr = None
+        self.startTime = 0
 
     def __del__(self):
         log.debug("deleting instance")
@@ -150,6 +151,10 @@ class Instance:
         """
         return backend.getStatus(self)
 
+    def getBackendInfo(self):
+        """Return all information known about the backend instance."""
+        return backend.getInfo(self)
+
     def stop(self):
         """Stop the instance."""
         if self.state == "started":
@@ -204,6 +209,7 @@ class Instance:
 	def __started(backendId):
 	    self.state = "started"
             self.setBackendID(backendId)
+            self.startTime = time.time()
         def __failed(err):
             log.error("starting failed: " + err.getErrorMessage())
             self.state = "failed"

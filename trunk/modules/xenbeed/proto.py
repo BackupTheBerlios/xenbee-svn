@@ -64,7 +64,7 @@ class XenBEEClientProtocol:
 	if self.dom:
 	    self.xmlReader.releaseNode(self.dom)
 
-    def messageReceived(self, msg):
+    def _messageReceived(self, msg):
 	"""Handle a received message."""
 	log.debug(msg)
 	self.dom = self.xmlReader.fromString(msg.body)
@@ -91,9 +91,14 @@ class XenBEEClientProtocol:
 	try:
 	    method(children[0])
 	except Exception, e:
-	    self.transport.write(str(isdl.XenBEEClientError("submission failed: " + str(e),
+	    self.transport.write(str(isdl.XenBEEClientError("request failed: " + str(e),
                                                             isdl.XenBEEClientError.ILLEGAL_REQUEST)))
-	    
+    def messageReceived(self, msg):
+        try:
+            self._messageReceived(msg)
+        except:
+            log.exception("message handling failed")
+        
     def __getChild(self, n, name, ns=isdl.ISDL_NS):
         try:
             return n.getElementsByTagNameNS(ns, name)[0]

@@ -80,12 +80,19 @@ class XenBEEStatusMessage(XenBEEClientMessage):
 
     def addStatusForInstance(self, obj):
         status = self.createElement("Status", self.statusList)
+        objInfo = obj.getBackendInfo()
+        
         def _c(name, txt=None):
             self.createElement(name, status, txt)
         _c("Name", obj.getName())
-        _c("User", "test")
-        _c("Memory", "N/A")
-        _c("CPUTime", "N/A")
-        _c("StartTime", "N/A")
+        _c("User", "N/A")
+        if objInfo:
+            _c("Memory", objInfo.memory)
+            _c("CPUTime", objInfo.cpuTime)
+        else:
+            _c("Memory", "N/A")
+            _c("CPUTime", "N/A")
+            
+        _c("StartTime", obj.startTime)
         _c("EndTime", "N/A")
         _c("State", obj.state)

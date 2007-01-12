@@ -3,6 +3,11 @@
 	`+- xenbeed-socket
 	/var/run/xenbeed/
 
+PROBLEMS:
+=========
+	* VERY SEVERE:
+		* starting of more than 4 instances at a time results in reboot of host
+
 Design idea
 ===========
 	xenbeed:
