@@ -89,8 +89,7 @@ class RemoteCommand(Command):
     
     def handleMessage(self, msg):
         """handles the given message from the STOMP server."""
-        print "got answer in queue:",msg.queue
-        print msg
+        print str(msg).strip()
         reactor.stop()
 
     def executeRemote(self, msg):
