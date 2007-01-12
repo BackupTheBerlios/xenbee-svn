@@ -16,14 +16,21 @@ __author__ = "$Author: petry $"
 import logging
 log = logging.getLogger(__name__)
 
-import commands
-import sys
-import os.path
+import commands, sys, os.path, threading
+
+_lock = threading.RLock()
+
+def acquireLock():
+    global _lock
+    if _lock: _lock.acquire()
+def releaseLock():
+    global _lock
+    if _lock: _lock.release()
 
 try:
-	from traceback import format_exc as format_exception
+    from traceback import format_exc as format_exception
 except:
-	from traceback import format_exception
+    from traceback import format_exception
 
 from xenbeed.config.xen import XenConfigGenerator
 from xenbeed.exceptions import *
@@ -52,16 +59,16 @@ __all__ = [ "createInstance",
 class BackendDomainInfo:
     """The python version of virDomainInfo.
 
-       struct _virDomainInfo {
-           unsigned char state: the running state, one of virDomainFlag
-           unsigned long maxMem: the maximum memory in KBytes allowed
-           unsigned long memory: the memory in KBytes used by the domain
-           unsigned short nrVirtCpu: the number of virtual CPUs for the doma
-           unsigned long long cpuTime: the CPU time used in nanoseconds
-       }
+	struct _virDomainInfo {
+	    unsigned char state: the running state, one of virDomainFlag
+	    unsigned long maxMem: the maximum memory in KBytes allowed
+	    unsigned long memory: the memory in KBytes used by the domain
+	    unsigned short nrVirtCpu: the number of virtual CPUs for the doma
+	    unsigned long long cpuTime: the CPU time used in nanoseconds
+	}
 
     """
-    
+
     def __init__(self, virDomainInfo):
         """Initializes from the list returned by virDomain.info()."""
         self.state, self.maxMem, self.memory, self.nrVirtCpu, self.cpuTime = virDomainInfo
@@ -70,7 +77,7 @@ def _runcmd(cmd, *args):
     """Executes the specified command on the xen backend, using 'xm'.
 
     WARNING: this function is exploitable using an injection mechanism
-    
+
     TODO: find a way to escape correctly (re.escape includes
     double-backslashes not only for quotes)
 
@@ -81,13 +88,17 @@ def _runcmd(cmd, *args):
 
 def _getDomain(inst):
     try:
-        d = libvirtConn.lookupByName(inst.getName())
+	acquireLock()
+	try:
+	    d = libvirtConn.lookupByName(inst.getName())
+	finally:
+	    releaseLock()
     except libvirt.libvirtError:
         raise BackendException("backend domain not found: %s" % inst.getName())
     return d
 
 def retrieveID(inst):
-    """Retrieves the backend id for the given instance."""
+    """Retrieves the backend id for the given instance or -1."""
     try:
         return _getDomain(inst).ID()
     except:
@@ -99,7 +110,7 @@ def getStatus(inst):
     returns a tuple of: (numeric status, readable form)
 
     see: http://libvirt.org/html/libvirt-libvirt.html
-    
+
     Enum virDomainState {
         VIR_DOMAIN_NOSTATE = 0 : no state
         VIR_DOMAIN_RUNNING = 1 : the domain is running
@@ -114,13 +125,17 @@ def getStatus(inst):
 
     """
     try:
-        domain = _getDomain(inst)
-        info = BackendDomainInfo(domain.info())
-        return info.state
+	try:
+	    acquireLock()
+	    domain = _getDomain(inst)
+	    info = BackendDomainInfo(domain.info())
+	finally:
+	    releaseLock()
     except:
         return BE_INSTANCE_NOSTATE
+    return info.state
 
-def createInstance(inst):
+def _createInstance(inst):
     """Creates a new backend-instance.
 
     inst - an instance object (created by the InstanceManager)
@@ -142,7 +157,7 @@ def createInstance(inst):
     except:
         log.error("backend: could not generate config: " + format_exception())
         raise
-    
+
     # write current config to inst.spool/config
     try:
         cfg_path = os.path.join(inst.getSpool(), "config")
@@ -171,20 +186,23 @@ def createInstance(inst):
     log.debug("created backend instance with id: %d" % backend_id)
     return backend_id
 
+def createInstance(inst):
+    try:
+	acquireLock()
+	rv = _createInstance(inst)
+    finally:
+	releaseLock()
+    return rv
+
 def destroyInstance(inst):
     """Attempts to destroy the backend instance immediately.
 
     WARNING: the instance will be shutdown, so any programs running
-             within the instance will be killed(!). From the xm
-             man-page: it is equivalent to ripping the power cord.
+	within the instance will be killed(!). From the xm
+	man-page: it is equivalent to ripping the power cord.
     """
     domain = _getDomain(inst)
     domain.destroy()
-    
-#    (status, output) = _runcmd("destroy", inst.getBackendID())
-#    if status != 0:
-#        log.error("backend: could not destroy backend instance: %s" % output)
-#        raise BackendException("destroy failed: %s" % output)
 
 def waitState(inst, states=(BE_INSTANCE_SHUTOFF), retries=5):
     """wait until the instance reached one of the given states.
@@ -197,12 +215,13 @@ def waitState(inst, states=(BE_INSTANCE_SHUTOFF), retries=5):
     """
     from time import sleep
     for retry in xrange(retries):
-        if getStatus(inst) in states:
-            log.debug("backend: reached state: %s" % (getStateName(getStatus(inst))))
-            return True
-        log.debug("backend: waiting for one of: %s currently in: %s" % (map(getStateName, states), getStateName(getStatus(inst))))
+	s = getStatus(inst)
+        if s in states:
+            log.debug("backend: reached state: %s" % (getStateName(s)))
+            return s
+        log.debug("backend: waiting for one of: %s currently in: %s" % (map(getStateName, states), getStateName(s)))
         sleep(1)
-    return False
+    return None
 
 def shutdownInstance(inst, wait=True):
     """Attempts to cleanly shut the backend instance down.
@@ -211,10 +230,17 @@ def shutdownInstance(inst, wait=True):
 
     """
     log.info("attempting to shut instance %s down." % inst.getName())
-    domain = _getDomain(inst)
-    domain.shutdown()
+    try:
+	acquireLock()
+	domain = _getDomain(inst)
+	domain.shutdown()
+    finally:
+	releaseLock()
 
     if wait:
         result = waitState(inst, (BE_INSTANCE_NOSTATE,
                                   BE_INSTANCE_SHUTOFF,
                                   BE_INSTANCE_CRASHED))
+    else:
+	result = None
+    return result

@@ -17,8 +17,7 @@ else:
 
 _fileHdlr = logging.FileHandler('/tmp/xenbeed.log', 'a')
 _fileHdlr.setLevel(logging.DEBUG)
-#_fileHdlr.setFormatter(logging.Formatter('%(asctime)s [%(process)d:%(threadName)s] %(name)s: %(levelname)-8s %(message)s'))
-_fileHdlr.setFormatter(logging.Formatter('%(asctime)s [%(process)d]' + thread + ' %(name)s:%(lineno)d %(levelname)-8s %(message)s'))
+_fileHdlr.setFormatter(logging.Formatter('%(asctime)s [%(process)d]' + thread + ' %(name)s %(levelname)-8s %(message)s'))
 logging.getLogger().addHandler(_fileHdlr)
 
 _syslogHdlr = logging.handlers.SysLogHandler()
