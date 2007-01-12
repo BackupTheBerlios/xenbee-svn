@@ -12,7 +12,8 @@ Available subcommands:
 
        help
        create
-
+       status
+       kill
 """
 
 from xenbeed.uuid import uuid
@@ -69,12 +70,21 @@ class Command(object):
         """run the specified command."""
         raise RuntimeError("can't execute the base Command.")
 
-    def __init__(self, argv = []):
+    def executeFailed(self, msg):
+        self.failed = (True, msg)
+
+    def __init__(self, argv):
         """initialize the command.
 
         argv -- the arguments passed to this command.
 
         """
+        self.failed = (False, '')
+        self.name = argv[0]
+        self.argv = argv[1:]
+
+    def __str__(self):
+        return self.name
 
 class RemoteCommand(Command):
     host = 'localhost'
@@ -82,9 +92,12 @@ class RemoteCommand(Command):
 
     def __init__(self, argv):
         """Initialize some common options for remote commands."""
-        p = self.parser = NoPrintOptionParser(usage="usage: %s [options]" % argv[0], add_help_option=False)
+        Command.__init__(self, argv)
+        
+        p = self.parser = NoPrintOptionParser(usage="usage: %s [options]" % self.name, add_help_option=False)
         p.add_option("-u", "--username", dest="user",  type="string", help="the username to use")
         p.add_option("-p", "--password", dest="pass",  type="string", help="the password to use")
+        p.add_option("-t", "--timeout", dest="timeout", type="int", default=5, help="time to wait for an answer from server")
         p.add_option("--cert", dest="cert",  type="string", help="the certificate to use")
     
     def handleMessage(self, msg):
@@ -108,20 +121,16 @@ class Command_help(Command):
     Valid options:
          currently none
     """
-    def __init__(self, argv = []):
+    def __init__(self, argv):
         """initialize the 'help' command."""
-        Command.__init__(self)
-
-        self.subcmd = createCommand(argv[1:])
+        Command.__init__(self, argv)
+        self.subcmd = createCommand(self.argv)
         
     def execute(self):
         if self.subcmd:
             print >>sys.stderr, dedent(self.subcmd.__doc__).strip()
         else:
             print dedent(__doc__).strip()
-
-    def __str__(self):
-        return "help"
 
 class Command_create(RemoteCommand):
     """\
@@ -140,7 +149,6 @@ class Command_create(RemoteCommand):
         p.add_option("-s", "--swap",   dest="swap",    type="int",    help="the amount of swap space to use (in MB)", default=128)
         p.add_option("-i", "--image",  dest="image",   type="string", help="the main image to boot")
         p.add_option("-C", "--cpus",   dest="cpus",    type="int",    help="the number of cpus to use", default=1)
-        self.argv = argv[1:]
 
         from StringIO import StringIO
         help_file = StringIO()
@@ -148,9 +156,6 @@ class Command_create(RemoteCommand):
         help_file.seek(0)
         lines = help_file.readlines()[2:]
         self.__doc__ += "".join(lines)
-
-    def __str__(self):
-        return "create"
 
     def handleMessage(self, msg):
         RemoteCommand.handleMessage(self, msg)
@@ -189,13 +194,12 @@ class Command_kill(RemoteCommand):
 
     """
 
-    def __init__(self, argv = []):
+    def __init__(self, argv):
         """initialize the 'kill' command."""
         RemoteCommand.__init__(self, argv)
 
         p = self.parser
         p.add_option("-s", "--signal", dest="signal",  type="int", default=15, help="the signal to use")
-        self.argv = argv[1:]
 
         from StringIO import StringIO
         help_file = StringIO()
@@ -225,12 +229,11 @@ class Command_status(RemoteCommand):
 
     """
 
-    def __init__(self, argv = []):
+    def __init__(self, argv):
         """initialize the 'status' command."""
         RemoteCommand.__init__(self, argv)
 
         p = self.parser
-        self.argv = argv[1:]
 
         from StringIO import StringIO
         help_file = StringIO()
@@ -280,14 +283,14 @@ class StompClientCmd(StompClient):
         self.subscribe('/queue/xenbee/client/%s' % cid)
         self.send('/queue/xenbee/daemon', self.factory.msg, { 'client-id': cid })
         self.receive().addCallback(self.message)
-        self.call = reactor.callLater(5, self.abort)
+        self.call = reactor.callLater(self.factory.cmd.options.timeout, self.abort)
 
     def message(self, msg):
         self.call.cancel()
         self.factory.cmd.handleMessage(msg)
 
     def abort(self):
-        print >>sys.stderr, "no answer from server!"
+        self.factory.cmd.executeFailed("No answer from server")
         reactor.stop()
 
 def main(argv):
@@ -298,8 +301,10 @@ def main(argv):
     if cmd:
         try:
             cmd.execute()
+            if cmd.failed[0]:
+                raise CommandFailed(cmd.failed[1])
         except CommandFailed, cf:
-            print >>sys.stderr, "%s:" % sys.argv[0], cmd, "failed (details follow)"
+            print >>sys.stderr, "%s:" % sys.argv[0], str(cmd), "failed (details follow)"
             print >>sys.stderr, "\n".join([ "%s: %s" % (sys.argv[0],s) for s in cf.msg.split('\n')])
             return 2
         except:
