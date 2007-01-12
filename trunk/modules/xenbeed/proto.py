@@ -128,17 +128,19 @@ class XenBEEClientProtocol:
 	d = inst.addFiles(files)
 
         def handleSuccess(_):
-            self.transport.write(str(isdl.XenBEEClientError("image submitted: " + str(inst.getName()),
-                                                            isdl.XenBEEClientError.OK)))
-        d.addCallback(handleSuccess)
-        
+            pass
         def _errFunc(err):
             self.transport.write(            
                 str(isdl.XenBEEClientError("file retrieval failed " + err.getTraceback(),
                                            isdl.XenBEEClientError.SUBMISSION_FAILURE))
                 )
             return None
+
+        d.addCallback(handleSuccess)
         d.addErrback(_errFunc)
+
+        self.transport.write(str(isdl.XenBEEClientError("image submitted: " + str(inst.getName()),
+                                                        isdl.XenBEEClientError.OK)))
 
     def do_StatusRequest(self, dom_node):
 	"""Handle status request."""
