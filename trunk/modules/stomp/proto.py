@@ -297,7 +297,7 @@ class StompClient(LineReceiver):
 
     def unsubscribe(self, queue):
 	"""Remove the subscription to some queue."""
-	f = Frame("SUBSCRIBE")
+	f = Frame("UNSUBSCRIBE")
 	f.header["destination"] = queue
 	self.sendFrame(f)
 
