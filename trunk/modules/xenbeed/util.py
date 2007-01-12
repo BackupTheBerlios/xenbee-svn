@@ -13,3 +13,18 @@ def removeDirCompletely(d):
         map(removeDirCompletely, [os.path.join(root, subdir) for subdir in dirs])
         os.rmdir(root)
 
+class Lock:
+    mutexName = '__mutexLock'
+    def __init__(self, obj):
+        try:
+            mtx = getattr(obj, Lock.mutexName)
+        except AttributeError:
+            mtx = threading.Lock()
+            setattr(obj, Lock.mutexName, mtx)
+        self.mtx = mtx
+        self.mtx.acquire()
+
+    def __del__(self):
+        if hasattr(self, 'mtx'):
+            self.mtx.release()
+

@@ -13,7 +13,7 @@
 
       <isdl:Boot>
 	<isdl:Kernel>
-	  <isdl:URI>file:///srv/xen-images/domains/xenhobel-2/kernel</isdl:URI>
+	  <isdl:URI>file:///srv/xen-images/domains/xenhobel-2/kernel2</isdl:URI>
 	</isdl:Kernel>
 	<isdl:Initrd>
 	  <isdl:URI>file:///srv/xen-images/domains/xenhobel-2/initrd</isdl:URI>
@@ -26,7 +26,7 @@
       <isdl:Images>
        <isdl:BootImage>
 	<isdl:Source>
-	  <isdl:URI>file:///srv/xen-images/domains/ttylinux/disk.img</isdl:URI>
+	  <isdl:URI>file:///srv/xen-images/domains/xenhobel-2/disk.img</isdl:URI>
 	</isdl:Source>
 	<isdl:TargetDevice>sda1</isdl:TargetDevice>
 	<isdl:MountPoint>/</isdl:MountPoint>

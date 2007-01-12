@@ -13,6 +13,7 @@ import sys
 # Twisted imports
 from twisted.internet import reactor
 from xenbeed.proto import XenBEEProtocol, XenBEEProtocolFactory
+from xenbeed.scheduler import Scheduler
 from urlparse import urlparse
 
 class Daemon:
@@ -20,6 +21,7 @@ class Daemon:
 	"""Initializes the Daemon."""
         self.argv = argv
         self.server = ('localhost', 61613)
+        self.scheduler = Scheduler()
         
     def run(self, daemonize=False):
 	""""""
@@ -30,6 +32,7 @@ class Daemon:
         # connect to stomp server
         reactor.connectTCP(self.server[0],
                            self.server[1],
-                           XenBEEProtocolFactory(queue="/queue/xenbee/daemon"))
+                           XenBEEProtocolFactory(self.scheduler,
+                                                 queue="/queue/xenbee/daemon"))
         reactor.run()
         return 0

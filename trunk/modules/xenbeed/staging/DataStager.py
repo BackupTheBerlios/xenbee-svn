@@ -8,10 +8,26 @@ A class that can be used to stage data from a source to a destination.
 __version__ = "$Rev$"
 __author__ = "$Author: petry $"
 
-import pycurl, threading, sys, os, logging, time
+import pycurl, os, logging, time
 log = logging.getLogger(__name__)
 
-__all__ = [ 'DataStager', 'TempFile' ]
+import threading
+from twisted.internet import threads, defer
+from twisted.python import failure
+
+from xenbeed.exceptions import XenBeeException
+try:
+    from traceback import format_exc as format_exception
+except:
+    from traceback import format_exception
+
+__all__ = [ 'DataStager', 'FileSetRetriever', 'TempFile' ]
+
+class StagingError(XenBeeException):
+    pass
+
+class StagingAborted(StagingError):
+    pass
 
 class DataStager:
     def __init__(self, src, dst):
@@ -23,37 +39,157 @@ class DataStager:
 
 	self.src = src.encode("ascii")
 	self.dst = dst.encode("ascii")
+        self._abort = False
+        
+        self.curl = pycurl.Curl()
+        self.curl.setopt(pycurl.FOLLOWLOCATION, 1)
+	self.curl.setopt(pycurl.CONNECTTIMEOUT, 30)
+	self.curl.setopt(pycurl.TIMEOUT, 300)
+	self.curl.setopt(pycurl.NOSIGNAL, 1)
+	self.curl.setopt(pycurl.VERBOSE, 0)
 
     def __call__(self):
-	self.run()
+	return self.perform()
 
-    def run(self):
-	"""Transfers data from source to destination
+    def __str__(self):
+        return "'%s' => '%s'" % (self.src, self.dst)
 
-	TODO: include upload: see /usr/share/doc/python-pycurl/examples/file_upload.py
-	"""
-	log.debug("staging '%s' => '%s'" % (self.src, self.dst))
-	
-	fp = open(self.dst, "wb") # for now assume dst is a local file
-	curl = pycurl.Curl()
-	curl.setopt(pycurl.URL, self.src)
-	curl.setopt(pycurl.FOLLOWLOCATION, 1)
-	curl.setopt(pycurl.CONNECTTIMEOUT, 30)
-	curl.setopt(pycurl.TIMEOUT, 300)
-	curl.setopt(pycurl.NOSIGNAL, 1)
-	curl.setopt(pycurl.WRITEDATA, fp)
+    def _write(self, buf):
+        if self.aborted():
+            # TODO: remove file here?
+            return 0
+        self.fp.write(buf)
+
+    def _read(self, size):
+        if self.aborted():
+            return 0
+        return self.fp.read(size)
+
+    def abort(self):
+        self._abort = True
+    def aborted(self):
+        return self._abort
+        
+    def perform_download(self):
+	self.fp = open(self.dst, "wb")
+	self.curl.setopt(pycurl.URL, self.src)
+        self.curl.setopt(pycurl.WRITEFUNCTION, self._write)
 
 	try:
 	    log.debug("beginning retrieving uri: %s" % self.src)
 	    start = time.time()
-	    curl.perform()
+	    self.curl.perform()
 	    dur = time.time() - start
 	    log.debug("finished retrieving uri: %s: %ds" % (self.src, dur))
 	except Exception, e:
 	    log.error("retrieval failed: %s" % str(e))
             raise
-	curl.close()
-	fp.close()
+	self.curl.close()
+	self.fp.close()
+        return self.dst
+
+    def perform_upload(self):
+        self.fp = open(self.src, 'rb')
+	self.curl.setopt(pycurl.URL, self.dst)
+        self.curl.setopt(pycurl.UPLOAD, 1)
+	self.curl.setopt(pycurl.READFUNCTION, self._read)
+        self.curl.setopt(pycurl.INFILESIZE, os.path.getsize(self.src))
+
+	try:
+	    log.debug("beginning upload of: %s" % self.src)
+	    start = time.time()
+	    self.curl.perform()
+	    dur = time.time() - start
+	    log.debug("finished uploading of %s after %ds" % (self.src, dur))
+	except Exception, e:
+	    log.error("upload failed: %s" % str(e))
+            raise
+	self.curl.close()
+        return self.dst
+
+    def __perform(self):
+	"""Transfers data from source to destination."""
+
+        if self.aborted():
+            raise StagingAborted("staging has been aborted")
+
+	log.debug("staging %s" % str(self))
+        from urlparse import urlparse
+        (scheme, netloc, path, params, query, fragment) = urlparse(self.src)
+        try:
+            if scheme or not os.path.exists(self.src):
+                return self.perform_download()
+            else:
+                return self.perform_upload()
+        except Exception, e:
+            log.error("could not perform staging: "+format_exception())
+            self.abort()
+            raise
+
+    def perform(self, asynchronous=True):
+	"""Transfers data from source to destination.
+
+        if asynchronous: call in thread
+        returns a Deferred
+        """
+        if asynchronous:
+            self.defer = threads.deferToThread(self.__perform)
+        else:
+            self.defer = defer.Derred()
+            try:
+                r = self.__perform()
+            except:
+                r = failure.Failure()
+            self.defer.callback(r)
+        return self.defer
+
+class FileSetRetriever:
+    """Retrieve many files and abort all if any one fails."""
+
+    def __init__(self, files, cleanUp=True):
+        """Retrieve all files in the list 'files'.
+
+        each item consits of a URI (source) and a path (destination).
+
+        """
+        self.cleanUp = cleanUp
+        self.files = files
+        self.pending = [ x[1].encode('ascii') for x in self.files ]
+        self.stagers = []
+        self.defer = defer.Deferred()
+        self.lock = threading.Lock()
+
+    def __fileRetrieved(self, path):
+        """Called when a file has been retrieved."""
+        self.lock.acquire()
+        log.debug("retrieved " + path)
+        self.pending.remove(path)
+        self.lock.release()
+        if not len(self.pending):
+            self.defer.callback(self)
+            
+    def __fileFailed(self, err):
+        """Called when a file could not be retrieved."""
+        log.error("file failed: " + err.getTraceback())
+        # abort all stagers
+        for stager in filter(lambda s: not s.aborted(), self.stagers):
+            stager.abort()
+        for stager in filter(lambda s: s.aborted(), self.stagers):
+            self.stagers.remove(stager)
+            if self.cleanUp and os.path.exists(stager.dst):
+                log.info("removing staged file: "+stager.dst)
+                os.unlink(stager.dst)
+        if not self.defer.called and not len(self.stagers):
+            self.defer.errback(err)
+        return err
+
+    def perform(self):
+        log.debug("retrieving set of files: " + str(self.files))
+        for src,dst in self.files:
+            stager = DataStager(src, dst)
+            self.stagers.append(stager)
+            stager.perform().addCallback(self.__fileRetrieved).addErrback(self.__fileFailed)
+        return self.defer
 
 import stat
 
@@ -98,7 +234,7 @@ class TempFile:
 
 	try:
 	    self.f = open(self.path, "wb")
-	except IOError, ioerr:
+	except IOError:
 	    raise
 
 	# check if it is a symlink and abort if so
@@ -121,4 +257,3 @@ class TempFile:
 	    self.f.close()
 	    self.f = None
 	    if not self.keep: os.unlink(self.path)
-

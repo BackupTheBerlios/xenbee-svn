@@ -141,7 +141,7 @@ class Command_create(RemoteCommand):
         p.add_option("-s", "--swap",   dest="swap",    type="int",    help="the amount of swap space to use (in MB)", default=128)
         p.add_option("-i", "--image",  dest="image",   type="string", help="the main image to boot")
         p.add_option("-C", "--cpus",   dest="cpus",    type="int",    help="the number of cpus to use", default=1)
-        self.argv = argv
+        self.argv = argv[1:]
 
         from StringIO import StringIO
         help_file = StringIO()
@@ -165,30 +165,88 @@ class Command_create(RemoteCommand):
         if not self.options.image:
             raise CommandFailed("'image' is required")
 
-        self.executeRemote('%s' % " ".join(self.argv))
-        return
+        # build xml message
+        from xenbeed.isdl import XenBEEClientMessage
+        msg = XenBEEClientMessage()
+        submit = msg.createElement("ImageSubmission", msg.root)
+        imgdef = msg.createElement("ImageDefinition", submit)
+        boot = msg.createElement("Boot", imgdef)
+        _t = msg.createElement("Kernel", boot)
+        msg.createElement("URI", _t, self.options.kernel)
+        _t = msg.createElement("Initrd", boot)
+        msg.createElement("URI", _t, self.options.initrd)
+        msg.createElement("Extra", boot)
 
-        # create instance manager
-        self.mgr = InstanceManager()
-        self.inst = self.mgr.newInstance()
+        imgs = msg.createElement("Images", imgdef)
+        bootimg = msg.createElement("BootImage", imgs)
+        bootimgsrc = msg.createElement("Source", bootimg)
+        msg.createElement("URI", bootimgsrc, self.options.image)
 
-        self.inst.addFile(self.options.kernel, "kernel")
-        self.inst.addFile(self.options.image, "image")
-        
-        self.inst.config.setKernel(self.inst.getFile("kernel"))
-        if self.options.initrd:
-            self.inst.addFile(self.options.initrd, "initrd")
-            self.inst.config.setInitrd(self.inst.getFile("initrd"))
+        self.executeRemote(str(msg))
 
-        from xenbeed import disk
-        disk.makeSwap(self.inst.getFile("swap"), self.options.swap)
-        
-        self.inst.config.addDisk(self.inst.getFile("image"), "sda1")
-        self.inst.config.addDisk(self.inst.getFile("swap"), "sda2")
-        self.inst.config.setMac("00:16:3e:00:00:01")
+class Command_kill(RemoteCommand):
+    """\
+    kill: Send a signal to an instance.
 
-        self.inst.start()
-        print "created instance:", self.inst.getName()
+    """
+
+    def __init__(self, argv = []):
+        """initialize the 'kill' command."""
+        RemoteCommand.__init__(self, argv)
+
+        p = self.parser
+        p.add_option("-s", "--signal", dest="signal",  type="int", default=15, help="the signal to use")
+        self.argv = argv[1:]
+
+        from StringIO import StringIO
+        help_file = StringIO()
+        p.print_help(help_file)
+        help_file.seek(0)
+        lines = help_file.readlines()[2:]
+        self.__doc__ += "".join(lines)
+
+    def execute(self):
+        self.options, self.args = parse_args(self.parser, self.argv)
+
+        if not len(self.args):
+            raise CommandFailed("at least one 'job-id' is required")
+
+        for job in self.args:
+            # build xml message
+            from xenbeed.isdl import XenBEEClientMessage
+            msg = XenBEEClientMessage()
+            kill = msg.createElement("Kill", msg.root)
+            msg.createElement("Signal", kill, self.options.signal)
+            msg.createElement("JobID", kill, job)
+            self.executeRemote(str(msg))
+
+class Command_status(RemoteCommand):
+    """\
+    status: Request status information
+
+    """
+
+    def __init__(self, argv = []):
+        """initialize the 'status' command."""
+        RemoteCommand.__init__(self, argv)
+
+        p = self.parser
+        self.argv = argv[1:]
+
+        from StringIO import StringIO
+        help_file = StringIO()
+        p.print_help(help_file)
+        help_file.seek(0)
+        lines = help_file.readlines()[2:]
+        self.__doc__ += "".join(lines)
+
+    def execute(self):
+        self.options, self.args = parse_args(self.parser, self.argv)
+
+        from xenbeed.isdl import XenBEEClientMessage
+        msg = XenBEEClientMessage()
+        sreq = msg.createElement("StatusRequest", msg.root)
+        self.executeRemote(str(msg))
 
 def printShortHelp():
     print >>sys.stderr, "Type '%s help' for usage." % sys.argv[0]

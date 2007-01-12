@@ -28,7 +28,7 @@ class TestDataStager(unittest.TestCase):
 		"""Tests whether retrieving a local file works."""
 		dst = TempFile()
 		stager = DataStager("file://" + self.source.path, dst.path)
-		stager.run()
+		stager.perform()
 		tmpdata = open(dst.path, "r").read()
 		self.assertEqual(self.data, tmpdata)
 
@@ -36,7 +36,16 @@ class TestDataStager(unittest.TestCase):
 		remoteSource = "http://www.heise.de/index.html"
 		dst = TempFile()
 		stager = DataStager(remoteSource, dst.path)
-		stager.run()
+		stager.perform()
+
+	def test_local_upload(self):
+		"""Tests whether uploading to a local file works."""
+		dst = TempFile()
+		dstUri = "file://"+dst.path
+		stager = DataStager(self.source.path, dstUri)
+		stager.perform()
+		tmpdata = open(dst.path, 'rb').read()
+		self.assertEqual(self.data, tmpdata)
 
 class TestTempFile(unittest.TestCase):
 	def setUp(self):

@@ -88,4 +88,4 @@ class XenBEEStatusMessage(XenBEEClientMessage):
         _c("CPUTime", "N/A")
         _c("StartTime", "N/A")
         _c("EndTime", "N/A")
-        _c("State", obj.status)
+        _c("State", obj.state)

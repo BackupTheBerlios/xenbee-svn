@@ -11,6 +11,7 @@ __version__ = "$Rev$"
 __author__ = "$Author: petry $"
 
 import logging, os, os.path
+import threading
 log = logging.getLogger(__name__)
 
 try:
@@ -22,7 +23,7 @@ from xenbeed.exceptions import *
 from xenbeed import backend
 from xenbeed import util
 
-from twisted.internet import reactor
+from twisted.internet import reactor, threads, task, defer
 
 class InstanceError(XenBeeException):
     pass
@@ -52,6 +53,9 @@ class Instance:
         self.spool = self._createSpoolDirectory(spool_base)
         self.backend_id = -1
 	self.mgr = None
+
+    def __del__(self):
+        log.debug("deleting instance")
 
     def uuid(self):
         """Return the UUID for this instance.
@@ -90,9 +94,9 @@ class Instance:
             raise InstanceError("logical file '%s' already exists." % logical)
 
         from xenbeed.staging import DataStager
-        ds = DataStager(uri, dst)
         try:
-	    reactor.callInThread(ds.run)
+            ds = DataStager(uri, dst)
+            ds.perform(asynchronous=False)
         except Exception, e:
             log.error("could not put file from: %s into spool: %s" % (uri, str(e)))
             raise InstanceError("could not retrieve %s: %s" % (uri, str(e)))
@@ -114,11 +118,24 @@ class Instance:
         """
         logical_files = {}
         mapping.update(kwords)
-        for logical_name, uri in mapping.iteritems():
-            logical_files[logical_name] = self.addFile(uri, logical_name)
-        return logical_files
 
-    def getFile(self, logical_name):
+        fileList = [(uri, self.getFullPath(name)) for name,uri in mapping.iteritems()]
+
+        from xenbeed.staging import FileSetRetriever
+        retriever = FileSetRetriever(fileList)
+
+        d = retriever.perform()
+        def __success(_):
+            log.info("successfully retrieved all files for: "+self.getName())
+            self.state = "start-pending"
+        def __fail(err):
+            self.state = "failed"
+            log.error("Retrieval failed: "+err.getTraceback())
+            return err
+        d.addCallback(__success).addErrback(__fail)
+        return d
+
+    def getFullPath(self, logical_name):
         return os.path.join(self.getSpool(), logical_name)
 
     def getSpool(self):
@@ -138,6 +155,7 @@ class Instance:
         if self.state == "started":
             backend.shutdownInstance(self)
         self.state = "stopped"
+        return defer.succeed(self)
 
     def cleanUp(self):
         """Removes all data belonging to this instance."""
@@ -166,18 +184,31 @@ class Instance:
         self.stop()
         self.cleanUp()
 
+    def startable(self):
+        return self.state == "start-pending"
+
+    def __configure(self):
+        self.config.setKernel(self.getFullPath("kernel"))
+        self.config.setInitrd(self.getFullPath("initrd"))
+        self.config.addDisk(self.getFullPath("root"), "sda1")
+    
     def start(self):
         """Starts a new backend instance."""
         # check if needed files are available
         # (kernel, initrd, disks, etc.)
-
-        # TODO: make this a separate thread/process:
-        #       * better control if something goes wrong
-        #       * maybe use "call in thread" from twisted
+        self.state = "starting"
+        
+        self.__configure()
+        
         # use the backend to start
-	def __started():
-	    self.started = "started"
-	reactor.deferToThread(self.setBackendID(backend.createInstance(self))).addCallBack(__started)
+	def __started(backendId):
+	    self.state = "started"
+            self.setBackendID(backendId)
+        def __failed(err):
+            log.error("starting failed: " + err.getErrorMessage())
+            self.state = "failed"
+            return err
+        return threads.deferToThread(backend.createInstance, self).addCallback(__started).addErrback(__failed)
 
     def _createSpoolDirectory(self, base_path="", doSanityChecks=True):
         """Creates the spool-directory for this instance.
@@ -234,7 +265,7 @@ class InstanceManager:
         self.instances = {}
         self.base_path = "/srv/xen-images/xenbee"  # TODO: make this a configurable global variable
         self.__iter__ = self.instances.itervalues
-        
+
     def newInstance(self):
         """Returns a new instance.
 
@@ -263,6 +294,7 @@ class InstanceManager:
         before.
 
         """
+        inst.mgr = None
         self.instances.pop(inst.uuid())
 
     def lookupByUUID(self, uuid):

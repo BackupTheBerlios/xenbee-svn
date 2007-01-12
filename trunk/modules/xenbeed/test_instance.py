@@ -63,15 +63,12 @@ class TestInstanceManager(unittest.TestCase):
         # create new instance
         inst = self.mgr.newInstance()
 
-        src_files = { "image" : "/srv/xen-images/domains/ttylinux/disk.img",
+        src_files = { "root" : "/srv/xen-images/domains/ttylinux/disk.img",
                       "kernel": "/srv/xen-images/domains/ttylinux/kernel",
                       "initrd": "/srv/xen-images/domains/ttylinux/initrd" }
         for name, path in src_files.iteritems():
             self.assertTrue(os.access(path, os.F_OK))
             inst.addFile("file://%s" % path, name)
-        inst.config.setKernel(inst.getFile("kernel"))
-        inst.config.setInitrd(inst.getFile("initrd"))
-        inst.config.addDisk(inst.getFile("image"), "sda1")
 
         inst.start()
         state = inst.getBackendState()

@@ -16,7 +16,7 @@ from xenbeed import isdl
 # Twisted imports
 from twisted.internet import reactor
 
-import xml.dom
+import xml.dom, threading
 from xml.dom.ext.reader import PyExpat as XMLReaderBuilder
 
 class StompTransport:
@@ -30,11 +30,13 @@ class StompTransport:
 	"""Initialize the transport."""
 	self.stomp = stompConn
 	self.queue = queue
+        self.mtx = threading.Lock()
 
     def write(self, data):
 	"""Write data to the destination queue."""
+        self.mtx.acquire()
 	self.stomp.send(self.queue, data)
-
+        self.mtx.release()
 def ChildNodes(node, func=lambda n: n.nodeType == xml.dom.Node.ELEMENT_NODE):
     for c in filter(func, node.childNodes):
 	yield c
@@ -64,7 +66,7 @@ class XenBEEClientProtocol:
 
     def messageReceived(self, msg):
 	"""Handle a received message."""
-	
+	log.debug(msg)
 	self.dom = self.xmlReader.fromString(msg.body)
 	root = self.dom.documentElement
 	# check the message
@@ -92,49 +94,99 @@ class XenBEEClientProtocol:
 	    self.transport.write(str(isdl.XenBEEClientError("submission failed: " + str(e),
                                                             isdl.XenBEEClientError.ILLEGAL_REQUEST)))
 	    
+    def __getChild(self, n, name, ns=isdl.ISDL_NS):
+        try:
+            return n.getElementsByTagNameNS(ns, name)[0]
+        except:
+            return None
+	    
     def do_ImageSubmission(self, dom_node):
 	"""Handle an image submission."""
-	def getChild(n, name, ns=isdl.ISDL_NS):
-	    try:
-		return n.getElementsByTagNameNS(ns, name)[0]
-	    except:
-		return None
-	    
 	# parse image information and start retrieval of neccessary files
-	imgDefNode = getChild(dom_node, "ImageDefinition")
+	imgDefNode = self.__getChild(dom_node, "ImageDefinition")
 	if not imgDefNode:
 	    raise Exception("no ImageDefinition found.")
 
 	# boot block
-	bootNode = getChild(imgDefNode, "Boot")
+	bootNode = self.__getChild(imgDefNode, "Boot")
 	files = {}
-	files["kernel"] = getChild(
-	    getChild(bootNode, "Kernel"), "URI").firstChild.nodeValue.strip()
-	files["initrd"] = getChild(
-	    getChild(bootNode, "Initrd"), "URI").firstChild.nodeValue.strip()
+	files["kernel"] = self.__getChild(
+	    self.__getChild(bootNode, "Kernel"), "URI").firstChild.nodeValue.strip()
+	files["initrd"] = self.__getChild(
+	    self.__getChild(bootNode, "Initrd"), "URI").firstChild.nodeValue.strip()
 
 	# image block
-	imagesNode = getChild(imgDefNode, "Images")
+	imagesNode = self.__getChild(imgDefNode, "Images")
 
-	bootImageNode = getChild(imagesNode, "BootImage")
-	files["image"] = getChild(
-	    getChild(bootImageNode, "Source"), "URI").firstChild.nodeValue.strip()
+	bootImageNode = self.__getChild(imagesNode, "BootImage")
+	files["root"] = self.__getChild(
+	    self.__getChild(bootImageNode, "Source"), "URI").firstChild.nodeValue.strip()
 	log.debug(files)
 
 	# create instance and add files
 	inst = self.factory.instanceManager.newInstance()
-	inst.addFiles(files)
-        # do something like:
-        #     inst.addFiles(files).callBack(inst.start().errBack(inform user)
-	self.transport.write(str(isdl.XenBEEClientError("executing image : " + str(files),
-                                                        isdl.XenBEEClientError.OK)))
+	d = inst.addFiles(files)
+
+        def handleSuccess(_):
+            self.transport.write(str(isdl.XenBEEClientError("image submitted: " + str(inst.getName()),
+                                                            isdl.XenBEEClientError.OK)))
+        d.addCallback(handleSuccess)
+        
+        def _errFunc(err):
+            self.transport.write(            
+                str(isdl.XenBEEClientError("file retrieval failed " + err.getTraceback(),
+                                           isdl.XenBEEClientError.SUBMISSION_FAILURE))
+                )
+            return None
+        d.addErrback(_errFunc)
 
     def do_StatusRequest(self, dom_node):
 	"""Handle status request."""
         msg = isdl.XenBEEStatusMessage()
         map(msg.addStatusForInstance, self.factory.instanceManager)
         self.transport.write(str(msg))
-	
+
+    def do_Kill(self, node):
+        # get the signal type
+        sig = self.__getChild(node, "Signal")
+        if not sig:
+            self.transport.write(            
+                str(isdl.XenBEEClientError("no signal given!",
+                                           isdl.XenBEEClientError.ILLEGAL_REQUEST))
+                )
+            return
+        
+        try:
+            signum = int(sig.firstChild.nodeValue.strip())
+            if not signum in [ 9, 15 ]:
+                raise ValueError("out of range, allowed are (9,15)")
+        except Exception, e:
+            self.transport.write(
+                str(isdl.XenBEEClientError("Illegal signal: %s" % (e,),
+                                           isdl.XenBEEClientError.ILLEGAL_REQUEST))
+                )
+
+        instN = self.__getChild(node, "JobID")
+        if not instN:
+            self.transport.write(            
+                str(isdl.XenBEEClientError("no instance given!",
+                                           isdl.XenBEEClientError.ILLEGAL_REQUEST))
+                )
+            return
+        instID = instN.firstChild.nodeValue.strip()
+        inst = self.factory.instanceManager.lookupByUUID(instID)
+        if not inst:
+            self.transport.write(            
+                str(isdl.XenBEEClientError("no such job: %s" % (instID,),
+                                           isdl.XenBEEClientError.ILLEGAL_REQUEST))
+                )
+            return
+
+        def _s(_):
+            self.factory.instanceManager.removeInstance(inst)
+            self.transport.write(str(isdl.XenBEEClientError("job stopped", isdl.XenBEEClientError.OK)))
+            
+        inst.stop().addCallback(_s)
 	
 class XenBEEProtocol(StompClient):
     """Processing input received by the STOMP server."""
@@ -151,7 +203,6 @@ class XenBEEProtocol(StompClient):
 	self.subscribe(self.factory.queue, auto_ack=True)
 	
     def messageReceived(self, msg):
-	log.debug("got message\n%s" % msg.body)
 	if "client-id" in msg.header:
 	    # request from some client
 	    self.factory.newClient(msg, msg.header["client-id"])
@@ -167,11 +218,12 @@ class XenBEEProtocol(StompClient):
 class XenBEEProtocolFactory(StompClientFactory):
     protocol = XenBEEProtocol
 
-    def __init__(self, queue="/queue/xenbee/daemon"):
+    def __init__(self, scheduler, queue="/queue/xenbee/daemon"):
 	StompClientFactory.__init__(self, user='daemon', password='none')
 	self.queue = queue
 	self.stomp = None
-	self.instanceManager = InstanceManager()
+        self.scheduler = scheduler
+	self.instanceManager = scheduler.instanceManager
 
     def clientConnectionFailed(self, connector, reason):
 	log.error("connection to STOMP server failed!: %s" % reason)
