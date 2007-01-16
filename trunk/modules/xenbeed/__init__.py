@@ -9,22 +9,23 @@ __author__ = "$Author: petry $"
 
 import logging, logging.handlers, sys
 
-if sys.hexversion >= 0x2040200:
+def initLogging(logfile='/tmp/xenbeed.log'):
+    if sys.hexversion >= 0x2040200:
 	# treadName available
 	thread = ":%(threadName)s"
-else:
+    else:
 	thread = ""
 
-_fileHdlr = logging.FileHandler('/tmp/xenbeed.log', 'a')
-_fileHdlr.setLevel(logging.DEBUG)
-_fileHdlr.setFormatter(logging.Formatter('%(asctime)s [%(process)d]' + thread + ' %(name)s %(levelname)-8s %(message)s'))
-logging.getLogger().addHandler(_fileHdlr)
+    _fileHdlr = logging.FileHandler('/tmp/xenbeed.log', 'a')
+    _fileHdlr.setLevel(logging.DEBUG)
+    _fileHdlr.setFormatter(logging.Formatter('%(asctime)s [%(process)d]' + thread + ' %(name)s %(levelname)-8s %(message)s'))
+    logging.getLogger().addHandler(_fileHdlr)
 
-_syslogHdlr = logging.handlers.SysLogHandler()
-_syslogHdlr.setLevel(logging.WARN)
-_syslogHdlr.setFormatter(logging.Formatter('[%(process)d]' + thread + ' %(name)-12s: %(levelname)-8s %(message)s'))
-logging.getLogger().addHandler(_syslogHdlr)
-logging.getLogger().setLevel(logging.DEBUG)
+    _syslogHdlr = logging.handlers.SysLogHandler()
+    _syslogHdlr.setLevel(logging.WARN)
+    _syslogHdlr.setFormatter(logging.Formatter('[%(process)d]' + thread + ' %(name)-12s: %(levelname)-8s %(message)s'))
+    logging.getLogger().addHandler(_syslogHdlr)
+    logging.getLogger().setLevel(logging.DEBUG)
 
 def TestSuite():
     import unittest, xenbeed.config, xenbeed.staging

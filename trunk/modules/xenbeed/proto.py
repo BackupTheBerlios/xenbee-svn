@@ -87,12 +87,14 @@ class XenBEEClientProtocol:
 	    self.transport.write(str(isdl.XenBEEClientError("you sent me an illegal request!",
                                                             isdl.XenBEEClientError.ILLEGAL_REQUEST)))
 	    log.error("illegal request: " + str(ae))
-	    return
+            raise
 	try:
 	    method(children[0])
 	except Exception, e:
 	    self.transport.write(str(isdl.XenBEEClientError("request failed: " + str(e),
                                                             isdl.XenBEEClientError.ILLEGAL_REQUEST)))
+            raise
+        
     def messageReceived(self, msg):
         try:
             self._messageReceived(msg)
@@ -172,6 +174,7 @@ class XenBEEClientProtocol:
                 str(isdl.XenBEEClientError("Illegal signal: %s" % (e,),
                                            isdl.XenBEEClientError.ILLEGAL_REQUEST))
                 )
+            raise
 
         instN = self.__getChild(node, "JobID")
         if not instN:
@@ -189,11 +192,8 @@ class XenBEEClientProtocol:
                 )
             return
 
-        def _s(_):
-            self.factory.instanceManager.removeInstance(inst)
-            self.transport.write(str(isdl.XenBEEClientError("job stopped", isdl.XenBEEClientError.OK)))
-            
-        inst.stop().addCallback(_s)
+        inst.stop()
+        self.transport.write(str(isdl.XenBEEClientError("signal sent", isdl.XenBEEClientError.OK)))
 	
 class XenBEEProtocol(StompClient):
     """Processing input received by the STOMP server."""

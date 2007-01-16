@@ -10,10 +10,14 @@ log = logging.getLogger(__name__)
 
 import sys
 
+import xenbeed
+xenbeed.initLogging()
+
 # Twisted imports
 from twisted.internet import reactor
 from xenbeed.proto import XenBEEProtocol, XenBEEProtocolFactory
 from xenbeed.scheduler import Scheduler
+from xenbeed.instance import InstanceManager
 from urlparse import urlparse
 
 class Daemon:
@@ -21,7 +25,8 @@ class Daemon:
 	"""Initializes the Daemon."""
         self.argv = argv
         self.server = ('localhost', 61613)
-        self.scheduler = Scheduler()
+        self.instanceManager = InstanceManager('/srv/xen-images/xenbee')
+        self.scheduler = Scheduler(self.instanceManager)
         
     def run(self, daemonize=False):
 	""""""

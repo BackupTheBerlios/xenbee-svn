@@ -43,9 +43,9 @@ try:
 
     # register an ErrorCallback
     def errHandler(ctx, error):
-        # TODO: maybe log as debug?
-        pass
+        log.warn("backend error: %s" % (error,))
     libvirt.registerErrorHandler(errHandler, None)
+    log.info("backend connected to libvirt")
 except:
     log.error("could not connect to xen backend!")
     raise
@@ -175,16 +175,12 @@ def _createInstance(inst):
         log.error("backend: could not execute dry-run: %d: %s" % (status, output))
         raise InstanceCreationError("dry-run failed: %d: %s" % (status, output))
 
-    # TODO: decouple it using a thread/spawn whatever
-    #    reason: the 'create' may hang due to some callbacks
-    #            (e.g. network interfaces within the instance)
     (status, output) = _runcmd("create", cfg_path)
     if status != 0:
         log.error("backend: could not create backend instance: %d: %s" % (status, output))
         raise InstanceCreationError("create failed: %d, %s" % (status, output))
     backend_id = retrieveID(inst)
-    inst.setBackendID(backend_id)
-    log.debug("created backend instance with id: %d" % backend_id)
+    log.debug("created backend instance with id: %d" % (backend_id,))
     return backend_id
 
 def createInstance(inst):
@@ -221,7 +217,7 @@ def waitState(inst, states=(BE_INSTANCE_SHUTOFF), retries=5):
             log.debug("backend: reached state: %s" % (getStateName(s)))
             return s
         log.debug("backend: waiting for one of: %s currently in: %s" % (map(getStateName, states), getStateName(s)))
-        sleep(1)
+        sleep(0.5)
     return None
 
 def shutdownInstance(inst, wait=True):
@@ -238,10 +234,18 @@ def shutdownInstance(inst, wait=True):
     finally:
 	releaseLock()
 
-    if wait:
-        result = waitState(inst, (BE_INSTANCE_NOSTATE,
-                                  BE_INSTANCE_SHUTOFF,
-                                  BE_INSTANCE_CRASHED))
-    else:
-	result = None
-    return result
+    rv = False
+    from time import sleep
+    while True:
+        try:
+            s = getStatus(inst)
+            if s == BE_INSTANCE_SHUTOFF:
+                rv = True
+                break
+            sleep(0.5)
+        except:
+            # exception means that the instance does not
+            # exist anymore
+            rv = True
+            break
+    return rv

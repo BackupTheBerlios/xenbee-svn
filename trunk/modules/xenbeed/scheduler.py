@@ -17,9 +17,9 @@ from twisted.internet import reactor, task
 class Scheduler:
     """The XenBee scheduler."""
     
-    def __init__(self):
+    def __init__(self, instMgr):
 	"""Initialize the scheduler."""
-        self.instanceManager = InstanceManager()
+        self.instanceManager = instMgr
         self.task = task.LoopingCall(self.cycle)
         self.task.start(1.0)
 
@@ -31,4 +31,4 @@ class Scheduler:
                     log.info("instance started")
                 def _f(f):
                     log.debug("starting failed")
-                inst.start().addCallback(_s).addErrback(_f)
+                inst.start().addCallbacks(_s,_f)

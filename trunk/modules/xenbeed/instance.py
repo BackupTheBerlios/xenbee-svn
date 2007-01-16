@@ -133,7 +133,7 @@ class Instance:
             self.state = "failed"
             log.error("Retrieval failed: "+err.getTraceback())
             return err
-        d.addCallback(__success).addErrback(__fail)
+        d.addCallbacks(__success, __fail)
         return d
 
     def getFullPath(self, logical_name):
@@ -158,9 +158,14 @@ class Instance:
     def stop(self):
         """Stop the instance."""
         if self.state == "started":
-            backend.shutdownInstance(self)
-        self.state = "stopped"
-        return defer.succeed(self)
+            d = threads.deferToThread(backend.shutdownInstance, self)
+            def _s(arg):
+                self.state = "stopped"
+                self.mgr.removeInstance(self)
+            d.addCallback(_s)
+        else:
+            raise InstanceError(getName()+" not yet started!")
+        return d
 
     def cleanUp(self):
         """Removes all data belonging to this instance."""
@@ -266,10 +271,10 @@ class InstanceManager:
 	- create a new one
 
     """
-    def __init__(self):
+    def __init__(self, base_path):
         """Initialize the InstanceManager."""
         self.instances = {}
-        self.base_path = "/srv/xen-images/xenbee"  # TODO: make this a configurable global variable
+        self.base_path = base_path
         self.__iter__ = self.instances.itervalues
 
     def newInstance(self):

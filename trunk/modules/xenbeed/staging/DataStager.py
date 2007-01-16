@@ -157,19 +157,21 @@ class FileSetRetriever:
         self.pending = [ x[1].encode('ascii') for x in self.files ]
         self.stagers = []
         self.defer = defer.Deferred()
-        self.lock = threading.Lock()
+        self.lock = threading.RLock()
 
     def __fileRetrieved(self, path):
         """Called when a file has been retrieved."""
         self.lock.acquire()
         log.debug("retrieved " + path)
         self.pending.remove(path)
+        finished = len(self.pending) == 0
         self.lock.release()
-        if not len(self.pending):
+        if finished:
             self.defer.callback(self)
             
     def __fileFailed(self, err):
         """Called when a file could not be retrieved."""
+        self.lock.acquire()
         log.error("file failed: " + err.getTraceback())
         # abort all stagers
         for stager in filter(lambda s: not s.aborted(), self.stagers):
@@ -179,16 +181,20 @@ class FileSetRetriever:
             if self.cleanUp and os.path.exists(stager.dst):
                 log.info("removing staged file: "+stager.dst)
                 os.unlink(stager.dst)
-        if not self.defer.called and not len(self.stagers):
+        doerrback = not self.defer.called and not len(self.stagers)
+        self.lock.release()
+        if doerrback:
             self.defer.errback(err)
         return err
 
     def perform(self):
         log.debug("retrieving set of files: " + str(self.files))
+        self.lock.acquire()
         for src,dst in self.files:
             stager = DataStager(src, dst)
             self.stagers.append(stager)
             stager.perform().addCallback(self.__fileRetrieved).addErrback(self.__fileFailed)
+        self.lock.release()
         return self.defer
 
 import stat

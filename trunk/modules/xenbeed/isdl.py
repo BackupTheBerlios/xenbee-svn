@@ -14,12 +14,22 @@ from xml.dom.ext.reader import PyExpat as XMLReaderBuilder
 
 ISDL_NS = u'http://www.example.com/schemas/isdl/2007/01/isdl'
 
+class XenBEEMessageFactory:
+    namespace = ISDL_NS
+    
+    def __init__(self, prefix="isdl"):
+        self.prefix = prefix
+
+    
+
 class XenBEEClientMessage:
     """Encapsulates a xml message."""
     def __init__(self, namespace=ISDL_NS, prefix="isdl"):
         self.ns = namespace
         self.prefix = prefix
-	self.doc = xml.dom.getDOMImplementation().createDocument(self.ns, self.prefix+":"+"Message", None)
+	self.doc = xml.dom.getDOMImplementation().createDocument(self.ns,
+                                                                 self.prefix+":"+"Message",
+                                                                 None)
 	self.root = self.doc.documentElement
         self.root.setAttributeNS(xml.dom.XMLNS_NAMESPACE, "xmlns:"+self.prefix, self.ns)
 
@@ -80,7 +90,10 @@ class XenBEEStatusMessage(XenBEEClientMessage):
 
     def addStatusForInstance(self, obj):
         status = self.createElement("Status", self.statusList)
-        objInfo = obj.getBackendInfo()
+        if obj.state == "started":
+            objInfo = obj.getBackendInfo()
+        else:
+            objInfo = None
         
         def _c(name, txt=None):
             self.createElement(name, status, txt)

@@ -15,6 +15,7 @@ from stomp.proto import StompClientFactory, StompClient
 class CommStation:
     def __init__(self):
         self.proc = None
+        self.stomp = None
 
 commStation = CommStation()
 
@@ -35,6 +36,7 @@ class ProcProtocol(protocol.ProcessProtocol):
 
 class TestProtocol(StompClient):
     def connectedReceived(self, frame):
+        print "connected"
         commStation.stomp = self
         self.subscribe("/queue/xenbee/instance/1", auto_ack=True)
         self.send(queue="/queue/xenbee/daemon",
