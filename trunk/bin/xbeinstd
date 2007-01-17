@@ -10,7 +10,10 @@ application execution.
 import sys
 from twisted.internet import reactor, protocol, utils
 from twisted.protocols import basic
-from stomp.proto import StompClientFactory, StompClient
+from stomp.proto import StompClientFactory, StompClient, StompTransport
+from xenbeed import isdl
+import xenbeed
+xenbeed.initLogging("/tmp/xbeinstd.log")
 
 class CommStation:
     def __init__(self):
@@ -25,38 +28,72 @@ class ProcProtocol(protocol.ProcessProtocol):
 
     def outReceived(self, data):
         """parse the data and store it in some file."""
-        self.creator.transport.write(data)
+        print data
 
     def errReceived(self, data):
         print "got stderr:", data
 
     def processEnded(self, status_object):
-        print "process ended, status %d" % status_object.value.exitCode
+        self.creator.processEnded(status_object)
         commStation.proc = None
 
+JSDL_NS = "http://schemas.ggf.org/jsdl/2005/11/jsdl"
+JSDL_POSIX_NS = "http://schemas.ggf.org/jsdl/2005/11/jsdl-posix"  
+
+class ServerProtocol(isdl.XMLProtocol):
+    def __init__(self, transport):
+        isdl.XMLProtocol.__init__(self,transport)
+
+    def do_JobDefinition(self, node):
+        jobDesc = isdl.getChild(node, "JobDescription", JSDL_NS)
+        jobIdent = isdl.getChild(jobDesc, "JobIdentification", JSDL_NS)
+        j_name = isdl.getChild(jobIdent,
+                               "JobName",
+                               JSDL_NS).firstChild.nodeValue.strip()
+        j_desc = isdl.getChild(jobIdent,
+                               "Description",
+                               JSDL_NS).firstChild.nodeValue.strip()
+        app = isdl.getChild(jobDesc, "Application", JSDL_NS)
+        appNam = isdl.getChild(app, "ApplicationName", JSDL_NS)
+        posixApp = isdl.getChild(app, "POSIXApplication", JSDL_POSIX_NS)
+        posixExecutable = isdl.getChild(posixApp,
+                                        "Executable",
+                                        JSDL_POSIX_NS).firstChild.nodeValue.strip()
+        args = [n.firstChild.nodeValue.strip() for n in posixApp.getElementsByTagNameNS(JSDL_POSIX_NS, "Argument")]
+        cmdline = [ posixExecutable ]
+        cmdline.extend(args)
+        print "got task: " + `cmdline`
+
+        self.proc = ProcProtocol()
+        self.proc.creator = self
+        reactor.spawnProcess(self.proc, cmdline[0], cmdline, {})
+
+    def processEnded(self, status_object):
+        print "process ended, status %d" % status_object.value.exitCode
+        
 class TestProtocol(StompClient):
     def connectedReceived(self, frame):
         print "connected"
         commStation.stomp = self
-        self.subscribe("/queue/xenbee/instance/1", auto_ack=True)
+        self.subscribe("/queue/xenbee/instance/%s" % (self.factory.instanceId), auto_ack=True)
         self.send(queue="/queue/xenbee/daemon",
-                  msg="ready",
-                  header={ "instance-id": 1 })
+                  msg=str(isdl.XenBEEInstanceAvailable(self.factory.instanceId)),
+                  header = { "instance-id": self.factory.instanceId})
 
     def messageReceived(self, msg):
-        line = msg.body
+        # parse the isdl message
+        try:
+            return self._messageReceived(msg)
+        except Exception, e:
+            print e
 
-        if not len(line):
-            reactor.stop()
-            return
-        cmdline = line.split()
-        self.proc = ProcProtocol()
-        self.proc.creator = self
-        reactor.spawnProcess(self.proc, cmdline[0], cmdline, {})
-        self.transport.write(">>> ")
+    def _messageReceived(self, msg):
+        p = ServerProtocol(StompTransport(self, "/queue/xenbee/daemon"))
+        return p.messageReceived(msg)
 
 def main():
     f = StompClientFactory()
+    f.instanceId = 1
     f.protocol = TestProtocol
     reactor.connectTCP('localhost', 61613, f)
     reactor.run()

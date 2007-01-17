@@ -101,3 +101,9 @@
     </jsdl:JobDefinition> 
   </isdl:ImageSubmission>
 </isdl:Message>
+
+<!--
+	Local Variables: ***
+	mode: nxml ***
+	End: ***
+-->

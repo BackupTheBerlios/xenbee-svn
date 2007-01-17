@@ -16,7 +16,7 @@ def initLogging(logfile='/tmp/xenbeed.log'):
     else:
 	thread = ""
 
-    _fileHdlr = logging.FileHandler('/tmp/xenbeed.log', 'a')
+    _fileHdlr = logging.FileHandler(logfile, 'a')
     _fileHdlr.setLevel(logging.DEBUG)
     _fileHdlr.setFormatter(logging.Formatter('%(asctime)s [%(process)d]' + thread + ' %(name)s %(levelname)-8s %(message)s'))
     logging.getLogger().addHandler(_fileHdlr)

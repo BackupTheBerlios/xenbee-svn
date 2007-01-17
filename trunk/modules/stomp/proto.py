@@ -4,7 +4,7 @@ see: http://stomp.codehaus.org/Protocol
 
 """
 
-import re
+import re, threading
 
 # twisted imports
 from twisted.protocols.basic import LineReceiver
@@ -75,6 +75,28 @@ class Message:
     def __str__(self):
 	return str(self.body)
 
+class StompTransport:
+    """Simply wraps the message sending to write(text).
+
+    Uses an existing STOMP Connection and a destination queue to send
+    its data.
+    """
+    
+    def __init__(self, stompConn, queue):
+	"""Initialize the transport."""
+	self.stomp = stompConn
+	self.queue = queue
+#        self.mtx = threading.RLock()
+
+    def write(self, data):
+	"""Write data to the destination queue."""
+        self.stomp.send(self.queue, data)
+#        try:
+#            self.mtx.acquire()
+#            self.stomp.send(self.queue, data)
+#        finally:
+#            self.mtx.release()
+        
 class StompClient(LineReceiver):
     """Implementation of the STOMP protocol - client side.
 
@@ -97,6 +119,7 @@ class StompClient(LineReceiver):
 	self.buffer = ''
 	self.defer = None
         self.factory = None
+        self.mtx = threading.RLock()
 
     def connectionMade(self):
 	"""Called when connection has been established."""
@@ -105,7 +128,11 @@ class StompClient(LineReceiver):
 
     def sendFrame(self, frame):
 	"""Send a frame."""
-	self.transport.write(str(frame))
+        try:
+            self.mtx.acquire()
+            self.transport.write(str(frame))
+        finally:
+            self.mtx.release()
 
     def lineReceived(self, line):
 	"""Handle a new line."""
@@ -267,17 +294,20 @@ class StompClient(LineReceiver):
 	queue -- the destination queue
 
 	"""
-
-	if not queue or not len(queue):
-	    raise RuntimeError("destination queue must not be empty: '%s'" % str(queue))
-	f = Frame("SEND")
-	f.header.update(header)
-	f.header["destination"] = queue
-	f.data = msg
-	if self.transaction:
-	    f.header["transaction"] = self.transaction
-	f.header["content-length"] = len(msg)
-	self.sendFrame(f)
+        try:
+            self.mtx.acquire()
+            if not queue or not len(queue):
+                raise RuntimeError("destination queue must not be empty: '%s'" % str(queue))
+            f = Frame("SEND")
+            f.header.update(header)
+            f.header["destination"] = queue
+            f.data = msg
+            if self.transaction:
+                f.header["transaction"] = self.transaction
+                f.header["content-length"] = len(msg)
+            self.sendFrame(f)
+        finally:
+            self.mtx.release()
 
     def subscribe(self, queue, auto_ack=True):
 	"""Subscribe to queue 'queue'.
