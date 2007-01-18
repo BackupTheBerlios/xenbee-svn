@@ -73,7 +73,14 @@ class Message:
 	self.queue = queue
 
     def __str__(self):
-	return str(self.body)
+        s = []
+	for k,v in self.header.iteritems():
+	    s.append( "%s: %s\n" % (k,v) )
+	s.append("\n")
+	if len(self.body):
+	    s.append(self.body)
+	s.append('\x00\x0a')
+	return "".join(s)
 
 class StompTransport:
     """Simply wraps the message sending to write(text).

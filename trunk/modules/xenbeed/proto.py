@@ -130,7 +130,7 @@ class XenBEEInstanceProtocol(isdl.XMLProtocol):
         
     def do_InstanceAvailable(self, dom_node):
         inst_id = isdl.getChild(dom_node, "InstanceID").firstChild.nodeValue.strip()
-        log.info("instance is available: %s" % inst_id)
+        log.info("instance is now manageble: %s" % inst_id)
 
 class XenBEEProtocol(StompClient):
     """Processing input received by the STOMP server."""
@@ -138,13 +138,12 @@ class XenBEEProtocol(StompClient):
     def __init__(self):
 	self.factory = None
 	StompClient.__init__(self)
-        self.setReplyTo(self.queue)
 
     def connectedReceived(self, _):
 	self.factory.stomp = self
-
 	# i am connected to the stomp server
 	log.debug("successfully connected to STOMP server, avaiting your commands.")
+        self.setReplyTo(self.factory.queue)
 	self.subscribe(self.factory.queue, auto_ack=True)
         self.subscribe('/topic/ActiveMQ.Advisory.Consumer.Queue.>')
 
@@ -154,8 +153,9 @@ class XenBEEProtocol(StompClient):
     def _messageReceived(self, msg):
         # check if we got an advisory from the activemq server
         if msg.header.get("type", "no") == "Advisory":
-            return _advisoryReceived(msg)
-        
+            return self._advisoryReceived(msg)
+        log.debug("got message: %s" % (str(msg),))
+
         # use the reply-to field
         try:
             replyTo = msg.header["reply-to"]
@@ -163,20 +163,20 @@ class XenBEEProtocol(StompClient):
 	    log.warn("illegal message received")
             raise
 
-        replyTo = replyTo.replace("/queue/")
-        xenbeedomain, clientType, clientId = replyTo.split(".", 2)
+        momIdentifier = replyTo.replace("/queue/", "")
+        domain, clientType, clientId = momIdentifier.split(".", 2)
+        if domain != "xenbee":
+            raise ValueError("wrong subqueue: "+str(domain))
         if clientType == "client":
 	    # request from some client
-	    self.factory.newClient(msg, msg.header["client-id"])
+	    self.factory.newClient(msg, clientId, replyTo)
 	elif clientType == "instance":
 	    # message from an instance
-	    self.factory.newInstance(msg, msg.header["instance-id"])
+	    self.factory.newInstance(msg, clientId, replyTo)
 	else:
             log.warn("illegal client type: %s" % clientType)
             
     def messageReceived(self, msg):
-        log.debug("got message: %s" % (str(msg),))
-
         try:
             return self._messageReceived(msg)
         except:
@@ -203,16 +203,12 @@ class XenBEEProtocolFactory(StompClientFactory):
 	else:
 	    StompClientFactory.clientConnectionFailed(self, connector, reason)
 
-    def newClient(self, msg, client):
-	clientProtocol = XenBEEClientProtocol(client,
-                                              StompTransport(self.stomp,
-                                                             "/queue/xenbee.client."+str(client)))
+    def newClient(self, msg, client, replyto):
+	clientProtocol = XenBEEClientProtocol(client, StompTransport(self.stomp, replyto))
 	clientProtocol.factory = self
         reactor.callInThread(clientProtocol.messageReceived, msg)
 
-    def newInstance(self, msg, instId):
-        instProtocol = XenBEEInstanceProtocol(instId,
-                                              StompTransport(self.stomp,
-                                                             "/queue/xenbee.instance."+str(instId)))
+    def newInstance(self, msg, instId, replyto):
+        instProtocol = XenBEEInstanceProtocol(instId, StompTransport(self.stomp, replyto))
 	instProtocol.factory = self
         reactor.callInThread(instProtocol.messageReceived, msg)
