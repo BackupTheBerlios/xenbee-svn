@@ -23,6 +23,9 @@ class CommStation:
 commStation = CommStation()
 
 class ProcProtocol(protocol.ProcessProtocol):
+    def __init__(self):
+        self.errOutput = []
+    
     def connectionMade(self):
         commStation.proc = self
 
@@ -31,7 +34,7 @@ class ProcProtocol(protocol.ProcessProtocol):
         print data
 
     def errReceived(self, data):
-        print "got stderr:", data
+        self.errOutput.append(data)
 
     def processEnded(self, status_object):
         self.creator.processEnded(status_object)
@@ -42,6 +45,7 @@ JSDL_POSIX_NS = "http://schemas.ggf.org/jsdl/2005/11/jsdl-posix"
 
 class ServerProtocol(isdl.XMLProtocol):
     def __init__(self, transport):
+        self.proc = None
         isdl.XMLProtocol.__init__(self,transport)
 
     def do_JobDefinition(self, node):
@@ -59,17 +63,30 @@ class ServerProtocol(isdl.XMLProtocol):
         posixExecutable = isdl.getChild(posixApp,
                                         "Executable",
                                         JSDL_POSIX_NS).firstChild.nodeValue.strip()
-        args = [n.firstChild.nodeValue.strip() for n in posixApp.getElementsByTagNameNS(JSDL_POSIX_NS, "Argument")]
+        def _f(n):
+            if n.firstChild:
+                return n.firstChild.nodeValue.strip()
+            else:
+                return u''
+            
+        args = [_f(n) for n in posixApp.getElementsByTagNameNS(JSDL_POSIX_NS, "Argument")]
         cmdline = [ posixExecutable ]
         cmdline.extend(args)
-        print "got task: " + `cmdline`
+        print "executing task: " + `cmdline`
 
         self.proc = ProcProtocol()
         self.proc.creator = self
         reactor.spawnProcess(self.proc, cmdline[0], cmdline, {})
 
     def processEnded(self, status_object):
-        print "process ended, status %d" % status_object.value.exitCode
+        msg = isdl.XenBEEClientMessage()
+        tsn = msg.createElement("TaskStatusNotification", msg.root)
+        tf = msg.createElement("TaskFinished", tsn)
+        msg.createElement("ExitCode", tf, str(status_object.value.exitCode))
+        lastErrLine = "".join(map(str, self.proc.errOutput[-1:]))
+        msg.createElement("ErrorOutput", tf, str(lastErrLine).strip())
+        self.proc = None
+        self.transport.write(str(msg))
         
 class TestProtocol(StompClient):
     def connectedReceived(self, frame):

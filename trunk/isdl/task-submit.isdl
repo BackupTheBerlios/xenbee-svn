@@ -11,7 +11,8 @@
   <jsdl:JobDefinition>
     <jsdl:JobDescription> 
       <jsdl:JobIdentification> 
-	<jsdl:JobName>My Gnuplot invocation</jsdl:JobName> 
+	<jsdl:JobName>My Gnuplot invocation</jsdl:JobName>
+	<jsdl:JobAnnotation>xbe-task-UUID</jsdl:JobAnnotation>
 	<jsdl:Description> Simple application invocation: User wants
 	to  run  the  application  'gnuplot' to  produce  a  plotted
 	graphical file based on  some data shipped in from elsewhere
