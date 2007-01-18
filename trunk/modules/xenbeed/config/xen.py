@@ -187,6 +187,9 @@ class XenConfigGenerator:
         print >>self.out, "# Kernel configuration"
         self._write_helper("kernel", self.config.getKernel())
         self._write_helper("ramdisk", self.config.getInitrd())
+        # additional arguments to kernel
+        if self.config.getKernelCommandLine():
+            self._write_helper("extra", self.config.getKernelCommandLine())
         print >>self.out
 
     def write_other(self):

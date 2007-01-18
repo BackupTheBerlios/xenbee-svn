@@ -33,73 +33,59 @@
       </isdl:BootImage>
      </isdl:Images>
     </isdl:ImageDefinition>
-    
-    <jsdl:JobDefinition>
-      <jsdl:JobDescription> 
-	<jsdl:JobIdentification> 
-	  <jsdl:JobName>My Gnuplot invocation</jsdl:JobName> 
-	  <jsdl:Description> Simple application invocation: User wants
-	  to  run  the  application  'gnuplot' to  produce  a  plotted
-	  graphical file based on  some data shipped in from elsewhere
-	  (perhaps  as part  of a  workflow). A  front-end application
-	  will then build into an animation of spinning data.
-	  
-	  Front-end application knows URL  for data file which must be
-	  staged-in. Front-end application wants to stage in a control
-	  file  that it  specifies directly  which directs  gnuplot to
-	  produce the output files.
-	  
-	  In  case of  error, messages  should be  produced  on stderr
-	  (also to  be staged on completion)  and no images  are to be
-	  transferred.
-	  </jsdl:Description> 
-	</jsdl:JobIdentification> 
-	<jsdl:Application> 
-	  <jsdl:ApplicationName>gnuplot</jsdl:ApplicationName> 
-	  <jsdl-posix:POSIXApplication> 
-	    <jsdl-posix:Executable> 
-	      /usr/local/bin/gnuplot
-	    </jsdl-posix:Executable> 
-	    <jsdl-posix:Argument>control.txt</jsdl-posix:Argument> 
-	    <jsdl-posix:Input>input.dat</jsdl-posix:Input> 
-	    <jsdl-posix:Output>output1.png</jsdl-posix:Output> 
-	  </jsdl-posix:POSIXApplication> 
-	</jsdl:Application> 
-	<jsdl:Resources> 
-	  <jsdl:IndividualPhysicalMemory> 
-	    <jsdl:LowerBoundedRange>2097152.0</jsdl:LowerBoundedRange> 
-	  </jsdl:IndividualPhysicalMemory> 
-	  <jsdl:TotalCPUCount> 
-	    <jsdl:Exact>1.0</jsdl:Exact> 
-	  </jsdl:TotalCPUCount> 
-	</jsdl:Resources> 
-	<jsdl:DataStaging> 
-	  <jsdl:FileName>control.txt</jsdl:FileName> 
-	  <jsdl:CreationFlag>overwrite</jsdl:CreationFlag> 
-	  <jsdl:DeleteOnTermination>true</jsdl:DeleteOnTermination> 
-	  <jsdl:Source> 
-	    <jsdl:URI>http://foo.bar.com/~me/control.txt</jsdl:URI> 
-	  </jsdl:Source> 
-	</jsdl:DataStaging> 
-	<jsdl:DataStaging> 
-	  <jsdl:FileName>input.dat</jsdl:FileName> 
-	  <jsdl:CreationFlag>overwrite</jsdl:CreationFlag> 
-	  <jsdl:DeleteOnTermination>true</jsdl:DeleteOnTermination> 
-	  <jsdl:Source> 
-	    <jsdl:URI>http://foo.bar.com/~me/input.dat</jsdl:URI> 
-	  </jsdl:Source> 
-	</jsdl:DataStaging> 
-	<jsdl:DataStaging> 
-	  <jsdl:FileName>output1.png</jsdl:FileName> 
-	  <jsdl:CreationFlag>overwrite</jsdl:CreationFlag> 
-	  <jsdl:DeleteOnTermination>true</jsdl:DeleteOnTermination> 
-	  <jsdl:Target> 
-	    <jsdl:URI>rsync://spoolmachine/userdir</jsdl:URI> 
-	  </jsdl:Target> 
-	</jsdl:DataStaging> 
-      </jsdl:JobDescription> 
-    </jsdl:JobDefinition> 
   </isdl:ImageSubmission>
+
+  <jsdl:JobDefinition>
+    <jsdl:JobDescription> 
+      <jsdl:JobIdentification> 
+	<jsdl:JobName>My Test invocation</jsdl:JobName>
+	<jsdl:JobAnnotation>xbe-task-UUID</jsdl:JobAnnotation>
+	<jsdl:Description>a simple test invocation</jsdl:Description> 
+      </jsdl:JobIdentification> 
+      <jsdl:Application> 
+	<jsdl:ApplicationName>ls</jsdl:ApplicationName> 
+	<jsdl-posix:POSIXApplication> 
+	  <jsdl-posix:Executable>/bin/ls</jsdl-posix:Executable> 
+	  <jsdl-posix:Argument>-lah</jsdl-posix:Argument> 
+	  <jsdl-posix:Argument>/</jsdl-posix:Argument> 
+	  <jsdl-posix:Input>input.dat</jsdl-posix:Input> 
+	  <jsdl-posix:Output>output1.txt</jsdl-posix:Output> 
+	</jsdl-posix:POSIXApplication> 
+      </jsdl:Application> 
+      <jsdl:Resources> 
+	<jsdl:IndividualPhysicalMemory> 
+	  <jsdl:LowerBoundedRange>2097152.0</jsdl:LowerBoundedRange> 
+	</jsdl:IndividualPhysicalMemory> 
+	<jsdl:TotalCPUCount> 
+	  <jsdl:Exact>1.0</jsdl:Exact> 
+	</jsdl:TotalCPUCount> 
+      </jsdl:Resources> 
+      <jsdl:DataStaging> 
+	<jsdl:FileName>control.txt</jsdl:FileName> 
+	<jsdl:CreationFlag>overwrite</jsdl:CreationFlag> 
+	<jsdl:DeleteOnTermination>true</jsdl:DeleteOnTermination> 
+	<jsdl:Source> 
+	  <jsdl:URI>http://foo.bar.com/~me/control.txt</jsdl:URI> 
+	</jsdl:Source> 
+      </jsdl:DataStaging> 
+      <jsdl:DataStaging> 
+	<jsdl:FileName>input.dat</jsdl:FileName> 
+	<jsdl:CreationFlag>overwrite</jsdl:CreationFlag> 
+	<jsdl:DeleteOnTermination>true</jsdl:DeleteOnTermination> 
+	<jsdl:Source> 
+	  <jsdl:URI>http://foo.bar.com/~me/input.dat</jsdl:URI> 
+	</jsdl:Source> 
+      </jsdl:DataStaging> 
+      <jsdl:DataStaging> 
+	<jsdl:FileName>output1.png</jsdl:FileName> 
+	<jsdl:CreationFlag>overwrite</jsdl:CreationFlag> 
+	<jsdl:DeleteOnTermination>true</jsdl:DeleteOnTermination> 
+	<jsdl:Target> 
+	  <jsdl:URI>rsync://spoolmachine/userdir</jsdl:URI> 
+	</jsdl:Target> 
+      </jsdl:DataStaging> 
+    </jsdl:JobDescription> 
+  </jsdl:JobDefinition> 
 </isdl:Message>
 
 <!--
@@ -107,3 +93,4 @@
 	mode: nxml ***
 	End: ***
 -->
+

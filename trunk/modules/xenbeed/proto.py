@@ -130,7 +130,7 @@ class XenBEEInstanceProtocol(isdl.XMLProtocol):
         
     def do_InstanceAvailable(self, dom_node):
         inst_id = isdl.getChild(dom_node, "InstanceID").firstChild.nodeValue.strip()
-        log.info("instance is now manageble: %s" % inst_id)
+        log.info("instance is now managable: %s" % inst_id)
 
 class XenBEEProtocol(StompClient):
     """Processing input received by the STOMP server."""
@@ -154,7 +154,7 @@ class XenBEEProtocol(StompClient):
         # check if we got an advisory from the activemq server
         if msg.header.get("type", "no") == "Advisory":
             return self._advisoryReceived(msg)
-        log.debug("got message: %s" % (str(msg),))
+        log.debug("got message:\n%s" % (str(msg),))
 
         # use the reply-to field
         try:

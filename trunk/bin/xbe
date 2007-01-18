@@ -79,9 +79,21 @@ class Command(object):
         argv -- the arguments passed to this command.
 
         """
+
         self.failed = (False, '')
         self.name = argv[0]
         self.argv = argv[1:]
+
+        p = NoPrintOptionParser(usage="usage: %s [options]" % self.name, add_help_option=False)
+
+        self.parser = p
+
+        from StringIO import StringIO
+        help_file = StringIO()
+        self.parser.print_help(help_file)
+        help_file.seek(0)
+        lines = help_file.readlines()[2:]
+        self.__doc__ += "".join(lines)
 
     def __str__(self):
         return self.name
@@ -93,13 +105,12 @@ class RemoteCommand(Command):
     def __init__(self, argv):
         """Initialize some common options for remote commands."""
         Command.__init__(self, argv)
-        
-        p = self.parser = NoPrintOptionParser(usage="usage: %s [options]" % self.name, add_help_option=False)
+        p = self.parser
         p.add_option("-u", "--username", dest="user",  type="string", help="the username to use")
         p.add_option("-p", "--password", dest="pass",  type="string", help="the password to use")
         p.add_option("-t", "--timeout", dest="timeout", type="int", default=5, help="time to wait for an answer from server")
         p.add_option("--cert", dest="cert",  type="string", help="the certificate to use")
-    
+        
     def handleMessage(self, msg):
         """handles the given message from the STOMP server."""
         print str(msg).strip()
@@ -153,13 +164,6 @@ class Command_create(RemoteCommand):
         p.add_option("-i", "--image",  dest="image",   type="string", help="the main image to boot")
         p.add_option("-C", "--cpus",   dest="cpus",    type="int",    help="the number of cpus to use", default=1)
 
-        from StringIO import StringIO
-        help_file = StringIO()
-        p.print_help(help_file)
-        help_file.seek(0)
-        lines = help_file.readlines()[2:]
-        self.__doc__ += "".join(lines)
-
     def handleMessage(self, msg):
         RemoteCommand.handleMessage(self, msg)
     
@@ -204,13 +208,6 @@ class Command_kill(RemoteCommand):
         p = self.parser
         p.add_option("-s", "--signal", dest="signal",  type="int", default=15, help="the signal to use")
 
-        from StringIO import StringIO
-        help_file = StringIO()
-        p.print_help(help_file)
-        help_file.seek(0)
-        lines = help_file.readlines()[2:]
-        self.__doc__ += "".join(lines)
-
     def execute(self):
         self.options, self.args = parse_args(self.parser, self.argv)
 
@@ -238,13 +235,6 @@ class Command_status(RemoteCommand):
 
         p = self.parser
 
-        from StringIO import StringIO
-        help_file = StringIO()
-        p.print_help(help_file)
-        help_file.seek(0)
-        lines = help_file.readlines()[2:]
-        self.__doc__ += "".join(lines)
-
     def execute(self):
         self.options, self.args = parse_args(self.parser, self.argv)
 
@@ -252,6 +242,29 @@ class Command_status(RemoteCommand):
         msg = XenBEEClientMessage()
         sreq = msg.createElement("StatusRequest", msg.root)
         self.executeRemote(str(msg))
+
+class Command_submit(RemoteCommand):
+    """\
+    submit: Submit an isdl document
+
+    arguments:
+       isdl -- path to an isdl document
+
+    """
+
+    def __init__(self, argv):
+        """initialize the 'submit' command."""
+        RemoteCommand.__init__(self, argv)
+
+    def execute(self):
+        self.options, self.args = parse_args(self.parser, self.argv)
+
+        # submit the isdl document
+        if not len(self.args):
+            raise CommandFailed("path to isdl document required!")
+
+        for isdl in self.args:
+            self.executeRemove(open(isdl).read())
 
 def printShortHelp():
     print >>sys.stderr, "Type '%s help' for usage." % sys.argv[0]

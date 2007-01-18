@@ -68,7 +68,6 @@ class XMLProtocol(object):
 
     def _messageReceived(self, msg):
 	"""Handle a received message."""
-	log.debug("received message:\n%s" %(str(msg)))
 	self.dom = self.xmlReader.fromString(msg.body)
 	root = self.dom.documentElement
 	# check the message

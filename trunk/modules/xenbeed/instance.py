@@ -200,6 +200,7 @@ class Instance:
     def __configure(self):
         self.config.setKernel(self.getFullPath("kernel"))
         self.config.setInitrd(self.getFullPath("initrd"))
+        self.config.setMac("00:16:3e:00:00:02")
         self.config.addDisk(self.getFullPath("root"), "sda1")
         self.config.addToKernelCommandLine("XBE_SERVER=%s:%d" % ( "xen-o-matic.itwm.fhrg.fraunhofer.de", 61613))
         self.config.addToKernelCommandLine("XBE_UUID=%s" % (self.getName(),))
