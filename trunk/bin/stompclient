@@ -2,7 +2,7 @@
 
 """A command line tool for the stomp protocol"""
 
-import sys
+import sys, time
 from twisted.internet import reactor
 from twisted.internet.protocol import ClientFactory
 from twisted.internet.stdio import StandardIO
@@ -27,22 +27,39 @@ class Client(StompClient):
         self.header = {}
         global stompClient
         stompClient = self
+        self.replyTo = None
 
-    def send(self, queue, msg='', header={}):
-        header.update(self.header)
-        StompClient.send(self, queue,msg,header)
+    def send(self, *args, **kw):
+        kw.update(self.header)
+        StompClient.send(self, *args, **kw)
+
+    def reply(self, *args, **kw):
+        if self.replyTo:
+            self.send(self.replyTo, *args, **kw)
+        else:
+            raise RuntimeError("no reply-to has been given")
+        self.replyTo = None
         
     def connectedReceived(self, frame):
 	StandardIO(CommandLineProtocol(prompt=""))
         print "connected to stomp server"
-    
-    def messageReceived(self, msg):
-        stdioClient.sendLine("got message:")
+
+    def _messageReceived(self, msg):
+        tstamp = int(msg.header.get("timestamp", time.time()*1000))
+        stdioClient.sendLine("On %s, I got message in queue %s:" % (
+            time.ctime(tstamp/1000.0), msg.header["destination"]))
         for k,v in msg.header.iteritems():
             stdioClient.sendLine("%s: %s" % (k,v))
         stdioClient.sendLine("")
         stdioClient.sendLine(msg.body)
-
+        self.replyTo = msg.header.get("reply-to", None)
+    
+    def messageReceived(self, msg):
+        try:
+            self._messageReceived(msg)
+        except Exception, e:
+            print >>sys.stderr, "Message handling failed", e
+            
     def errorOccurred(self, msg, detail):
         stdioClient.sendLine(detail)
 
@@ -60,6 +77,13 @@ class CommandLineProtocol(basic.LineReceiver):
     def connectionMade(self):
         self.transport.write(self.prompt)
 
+    def dispatch(self, cmd, *args, **kw):
+        try:
+            m = getattr(self, "do_%s" % (cmd))
+        except AttributeError:
+            raise AttributeError("no such command")
+        m(*args, **kw)
+
     def lineReceived(self, line):
         if not len(line):
             self.transport.write(self.prompt)
@@ -71,22 +95,29 @@ class CommandLineProtocol(basic.LineReceiver):
         args = commandParts[1:]
 
         try:
-            method = getattr(self, 'do_' + command)
-        except AttributeError, e:
-            self.sendLine("E: no such command")
-        else:
-            try:
-                method(*args)
-            except Exception, e:
-                self.sendLine("E: " + str(e))
+            self.dispatch(command, *args)
+        except Exception, e:
+            self.sendLine("E: " + str(e))
         self.transport.write(self.prompt)
 
+    def do_inreply(self, *args, **kw):
+        if not len(args):
+            raise ValueError("cannot reply with empty command")
+        if not stompClient.replyTo:
+            raise ValueError("cannot reply to this message")
+        cmd = args[0].lower()
+        
+        cmdargs = [ stompClient.replyTo ]
+        cmdargs.extend(args[1:])
+        self.dispatch(cmd, *cmdargs)
+
     def do_send(self, queue, *msg):
-        stompClient.send(queue=queue, msg=" ".join(msg))
+        stompClient.send(queue, " ".join(msg), 10*1000)
 
     def do_sendfile(self, queue, path):
         self.do_send(queue, file(path).read())
-
+    do_sf = do_sendfile
+    
     def do_help(self, command=None):
         if not command:
             self.sendLine(dedent("""
@@ -95,6 +126,7 @@ class CommandLineProtocol(basic.LineReceiver):
             send <queue> msg       -- send 'msg' to queue
             sendfile <queue> file  -- sends the given file to queue
             subscribe <queue>      -- subscribe to queue
+            subscribex <queue>     -- exclusively subscribe to queue
             unsubscribe <queue>    -- unsubscribe from queue
             show subscriptions     -- prints the current subscriptions
             hdr [key [value]]      -- shows the header
@@ -109,6 +141,11 @@ class CommandLineProtocol(basic.LineReceiver):
         self.subscriptions.append(queue)
     do_sub = do_subscribe
 
+    def do_subscribex(self, queue):
+        stompClient.subscribe(queue, exclusive=True)
+        self.subscriptions.append(queue)
+    do_subx = do_subscribex
+    
     def do_show(self, target, *args):
         try:
             method = getattr(self, 'do_show_' + target)

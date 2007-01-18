@@ -93,10 +93,10 @@ class TestProtocol(StompClient):
     def connectedReceived(self, frame):
         log.info("connected to server")
         commStation.stomp = self
-        self.subscribe("/queue/xenbee/instance/%s" % (self.factory.instanceId), auto_ack=True)
-        self.send(queue="/queue/xenbee/daemon",
-                  msg=str(isdl.XenBEEInstanceAvailable(self.factory.instanceId)),
-                  header = { "instance-id": self.factory.instanceId})
+        self.setReplyTo(self.factory.queue)
+        self.subscribe(self.factory.queue, exclusive=True)
+        self.send(self.factory.serverQueue,
+                  str(isdl.XenBEEInstanceAvailable(self.factory.instanceId)))
 
     def messageReceived(self, msg):
         # parse the isdl message
@@ -106,7 +106,7 @@ class TestProtocol(StompClient):
             log.exception(e)
 
     def _messageReceived(self, msg):
-        p = ServerProtocol(StompTransport(self, "/queue/xenbee/daemon"))
+        p = ServerProtocol(StompTransport(self, "/queue/xenbee.daemon"))
         return p.messageReceived(msg)
 
 def main():
@@ -124,12 +124,15 @@ def main():
     try:
         xbe_uuid = os.environ["XBE_UUID"]
     except KeyError:
-        xbe_uuid = 1
+        from xenbeed.uuid import uuid
+        xbe_uuid = uuid()
         log.warn("could not get my instance id, using: %s" % (xbe_uuid,))
     
     f = StompClientFactory()
     f.instanceId = xbe_uuid
     f.protocol = TestProtocol
+    f.serverQueue = '/queue/xenbee.daemon'
+    f.queue = '/queue/xenbee.instance.%s' % (xbe_uuid,)
     reactor.connectTCP(xbe_server, xbe_port, f)
     reactor.run()
     return 0

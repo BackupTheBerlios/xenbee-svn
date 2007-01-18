@@ -4,7 +4,7 @@ see: http://stomp.codehaus.org/Protocol
 
 """
 
-import re, threading
+import re, threading, time
 
 # twisted imports
 from twisted.protocols.basic import LineReceiver
@@ -86,16 +86,10 @@ class StompTransport:
 	"""Initialize the transport."""
 	self.stomp = stompConn
 	self.queue = queue
-#        self.mtx = threading.RLock()
 
-    def write(self, data):
+    def write(self, data, *args, **kw):
 	"""Write data to the destination queue."""
-        self.stomp.send(self.queue, data)
-#        try:
-#            self.mtx.acquire()
-#            self.stomp.send(self.queue, data)
-#        finally:
-#            self.mtx.release()
+        self.stomp.send(self.queue, data, *args, **kw)
         
 class StompClient(LineReceiver):
     """Implementation of the STOMP protocol - client side.
@@ -113,6 +107,7 @@ class StompClient(LineReceiver):
 	self.state = "disconnected"
 	self.transaction = None
 	self.session = None
+        self.replyTo = None
 	self.mode = "command"
 	self.delimiter = '\n'
 	self.terminator = "\x00\x0a"
@@ -120,6 +115,9 @@ class StompClient(LineReceiver):
 	self.defer = None
         self.factory = None
         self.mtx = threading.RLock()
+
+    def setReplyTo(self, replyTo):
+        self.replyTo = replyTo
 
     def connectionMade(self):
 	"""Called when connection has been established."""
@@ -286,11 +284,12 @@ class StompClient(LineReceiver):
 
     # client protocol
 
-    def send(self, queue, msg = '', header={}):
+    def send(self, queue, msg = '', ttl=0, **kw):
 	"""Send a message to a specific queue.
 
 	header -- a dictionary of header fields
 	msg -- the body of the message to be sent
+        ttl -- the time to live for this message in milliseconds
 	queue -- the destination queue
 
 	"""
@@ -299,30 +298,40 @@ class StompClient(LineReceiver):
             if not queue or not len(queue):
                 raise RuntimeError("destination queue must not be empty: '%s'" % str(queue))
             f = Frame("SEND")
-            f.header.update(header)
+            f.header.update(kw)
             f.header["destination"] = queue
+            if self.replyTo:
+                f.header["reply-to"] = self.replyTo
             f.data = msg
             if self.transaction:
                 f.header["transaction"] = self.transaction
-                f.header["content-length"] = len(msg)
+            f.header["content-length"] = len(msg)
+            if ttl:
+                f.header["expires"] = long((time.time() * 1000) + ttl)
+            else:
+                f.header["expires"] = 0
             self.sendFrame(f)
         finally:
             self.mtx.release()
 
-    def subscribe(self, queue, auto_ack=True):
+    def subscribe(self, queue, exclusive=False, auto_ack=True):
 	"""Subscribe to queue 'queue'.
 
 	When subscribed to a queue, the client receives all
 	messages targeted at that queue.
 
+        exclusive -- ActiveMQ extension: boolean: Would I like to be an Exclusive Consumer on a queue
 	auto_ack -- if True, all messages are automatically acknowledged,
 	    otherwise a seperate 'ack' has to be sent.
 
 	"""
 	f = Frame("SUBSCRIBE")
 	f.header["destination"] = queue
-	if auto_ack: f.header["ack"] = "auto"
-	else: f.header["ack"] = "client"
+        f.header["activemq.exclusive"] = exclusive
+        if auto_ack:
+            f.header["ack"] = "auto"
+        else:
+            f.header["ack"] = "client"
 	self.sendFrame(f)
 
     def unsubscribe(self, queue):
@@ -395,12 +404,12 @@ def selftest(host="localhost", port=61613):
 	    self.client_id = uuid()
 
 	def send(self, msg):
-	    StompClient.send(self, queue="/queue/xenbee/test-daemon",
-			     msg=msg, header={"client-id": self.client_id})
+	    StompClient.send(self, queue="/queue/stomptest.test-daemon",
+			     msg=msg, **{"client-id": self.client_id})
 
 	def connectedReceived(self, frame):
-	    self.subscribe("/queue/xenbee/clients/%s"%self.client_id, auto_ack=True)
-	    self.subscribe("/queue/xenbee/test-daemon", auto_ack=True)
+	    self.subscribe("/queue/stomptest.client.%s"%self.client_id, auto_ack=True)
+	    self.subscribe("/queue/stomptest.test-daemon", auto_ack=True)
 	    msg = """\
 	    hello daemon!
 	    """
@@ -410,9 +419,9 @@ def selftest(host="localhost", port=61613):
 	    print "got message in queue:", msg.queue
 	    print "'%s'" % msg.body
 
-	    if queue == "/queue/xenbee/test-daemon":
+	    if queue == "/queue/stomptest.test-daemon":
 		msg = "daemon says hello to %s" % msg.header["client-id"]
-		StompClient.send(self, queue="/queue/xenbee/clients/%s" % self.client_id,
+		StompClient.send(self, queue="/queue/stomptest.client.%s" % self.client_id,
 				 msg=msg)
 
     f = StompClientFactory()

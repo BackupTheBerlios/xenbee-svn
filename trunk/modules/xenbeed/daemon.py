@@ -38,6 +38,6 @@ class Daemon:
         reactor.connectTCP(self.server[0],
                            self.server[1],
                            XenBEEProtocolFactory(self.scheduler,
-                                                 queue="/queue/xenbee/daemon"))
+                                                 queue="/queue/xenbee.daemon"))
         reactor.run()
         return 0

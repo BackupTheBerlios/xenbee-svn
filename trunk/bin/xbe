@@ -110,6 +110,9 @@ class RemoteCommand(Command):
         f.protocol = StompClientCmd
         f.cmd = self
         f.msg = msg
+        f.clientId = uuid()
+        f.serverQueue = '/queue/xenbee.daemon'
+        f.queue = '/queue/xenbee.client.%s' % (f.clientId,)
         reactor.connectTCP(self.host, self.port, f)
         reactor.run()
     
@@ -279,9 +282,9 @@ def connectFailed(e):
 class StompClientCmd(StompClient):
 
     def connectedReceived(self, frame):
-        cid = uuid()
-        self.subscribe('/queue/xenbee/client/%s' % cid)
-        self.send('/queue/xenbee/daemon', self.factory.msg, { 'client-id': cid })
+        self.setReplyTo(self.factory.queue)
+        self.subscribe(self.factory.queue, exclusive=True)
+        self.send(self.factory.serverQueue, self.factory.msg)
         self.receive().addCallback(self.message)
         self.call = reactor.callLater(self.factory.cmd.options.timeout, self.abort)
 
