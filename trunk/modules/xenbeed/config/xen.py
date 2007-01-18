@@ -34,7 +34,7 @@ class InstanceConfig:
         self.memory = 128 * 2**20
         self.kernel = None
         self.initrd = None
-        self.cmdline = None
+        self.cmdline = []
         self.vcpus = 1
 
     def getInstanceName(self):
@@ -60,12 +60,12 @@ class InstanceConfig:
         """Returns the used kernel."""
         return self.kernel
 
-    def setKernelCommandLine(self, cmdline):
+    def addToKernelCommandLine(self, opt):
         """Sets the kernel commandline that shall be passed."""
-        self.cmdline = cmdline
+        self.cmdline.append(opt)
     def getKernelCommandLine(self):
         """Returns the kernel commandline."""
-        return self.cmdline
+        return " ".join(self.cmdline)
 
     def setNumCpus(self, vcpus):
         """Sets the number of virtual cpus to be used."""

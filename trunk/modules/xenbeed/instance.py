@@ -201,6 +201,8 @@ class Instance:
         self.config.setKernel(self.getFullPath("kernel"))
         self.config.setInitrd(self.getFullPath("initrd"))
         self.config.addDisk(self.getFullPath("root"), "sda1")
+        self.config.addToKernelCommandLine("XBE_SERVER=%s:%d" % ( "10.199.136.100", 61613))
+        self.config.addToKernelCommandLine("XBE_UUID=%s" % (self.getName(),))
     
     def start(self):
         """Starts a new backend instance."""

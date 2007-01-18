@@ -7,13 +7,15 @@ application execution.
 
 """
 
-import sys
+import sys, os, logging
 from twisted.internet import reactor, protocol, utils
 from twisted.protocols import basic
 from stomp.proto import StompClientFactory, StompClient, StompTransport
 from xenbeed import isdl
 import xenbeed
 xenbeed.initLogging("/tmp/xbeinstd.log")
+
+log = logging.getLogger("xbeinstd")
 
 class CommStation:
     def __init__(self):
@@ -31,7 +33,6 @@ class ProcProtocol(protocol.ProcessProtocol):
 
     def outReceived(self, data):
         """parse the data and store it in some file."""
-        print data
 
     def errReceived(self, data):
         self.errOutput.append(data)
@@ -72,7 +73,7 @@ class ServerProtocol(isdl.XMLProtocol):
         args = [_f(n) for n in posixApp.getElementsByTagNameNS(JSDL_POSIX_NS, "Argument")]
         cmdline = [ posixExecutable ]
         cmdline.extend(args)
-        print "executing task: " + `cmdline`
+        log.info("executing task: " + `cmdline`)
 
         self.proc = ProcProtocol()
         self.proc.creator = self
@@ -90,7 +91,7 @@ class ServerProtocol(isdl.XMLProtocol):
         
 class TestProtocol(StompClient):
     def connectedReceived(self, frame):
-        print "connected"
+        log.info("connected to server")
         commStation.stomp = self
         self.subscribe("/queue/xenbee/instance/%s" % (self.factory.instanceId), auto_ack=True)
         self.send(queue="/queue/xenbee/daemon",
@@ -102,17 +103,34 @@ class TestProtocol(StompClient):
         try:
             return self._messageReceived(msg)
         except Exception, e:
-            print e
+            log.exception(e)
 
     def _messageReceived(self, msg):
         p = ServerProtocol(StompTransport(self, "/queue/xenbee/daemon"))
         return p.messageReceived(msg)
 
 def main():
+    # get information about our host
+    try:
+        xbe_server, xbe_port = os.environ["XBE_SERVER"].split(":")
+        xbe_port = int(xbe_port)
+    except KeyError:
+        xbe_server, xbe_port = "localhost", 61613
+        log.warn("running in local mode with server at %s:%d" % (xbe_server,xbe_port))
+    except ValueError, ve:
+        xbe_server, xbe_port = "localhost", 61613
+        log.warn("could not interpret server variable: %s" % (str(ve)))
+        
+    try:
+        xbe_uuid = os.environ["XBE_UUID"]
+    except KeyError:
+        xbe_uuid = 1
+        log.warn("could not get my instance id, using: %s" % (xbe_uuid,))
+    
     f = StompClientFactory()
-    f.instanceId = 1
+    f.instanceId = xbe_uuid
     f.protocol = TestProtocol
-    reactor.connectTCP('localhost', 61613, f)
+    reactor.connectTCP(xbe_server, xbe_port, f)
     reactor.run()
     return 0
 
