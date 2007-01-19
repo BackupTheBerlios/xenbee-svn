@@ -264,7 +264,7 @@ class Command_submit(RemoteCommand):
             raise CommandFailed("path to isdl document required!")
 
         for isdl in self.args:
-            self.executeRemove(open(isdl).read())
+            self.executeRemote(open(isdl).read())
 
 def printShortHelp():
     print >>sys.stderr, "Type '%s help' for usage." % sys.argv[0]

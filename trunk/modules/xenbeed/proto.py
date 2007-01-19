@@ -16,8 +16,7 @@ from xenbeed import isdl
 # Twisted imports
 from twisted.internet import reactor
 
-import xml.dom, threading
-from xml.dom.ext.reader import PyExpat as XMLReaderBuilder
+import xml.dom.minidom, threading
 
 class XenBEEClientProtocol(isdl.XMLProtocol):
     """The XBE client side protocol.
@@ -55,6 +54,7 @@ class XenBEEClientProtocol(isdl.XMLProtocol):
 
 	# create instance and add files
 	inst = self.factory.instanceManager.newInstance()
+        inst._isdlDocument = dom_node.ownerDocument.cloneNode(deep=True)
 	d = inst.addFiles(files)
 
         def handleSuccess(_):
@@ -130,7 +130,30 @@ class XenBEEInstanceProtocol(isdl.XMLProtocol):
         
     def do_InstanceAvailable(self, dom_node):
         inst_id = isdl.getChild(dom_node, "InstanceID").firstChild.nodeValue.strip()
+        inst = self.factory.instanceManager.lookupByUUID(inst_id)
+        isdlDoc = inst._isdlDocument.documentElement
+        jsdlPart = isdl.getChild(isdlDoc, "JobDefinition", isdl.JSDL_NS)
+        if not jsdlPart:
+            raise ValueError("no JobDefinition found!")
+        jsdlPrefix = jsdlPart.prefix
+
+        jsdlPosixPart = isdl.getChild(jsdlPart, "POSIXApplication", isdl.JSDL_POSIX_NS)
+        jsdlPosixPrefix = jsdlPosixPart.prefix
+
+        # build task submission
+        msg = isdl.XenBEEClientMessage()
+        msg.addNamespace(jsdlPrefix, isdl.JSDL_NS).addNamespace(jsdlPosixPrefix, isdl.JSDL_POSIX_NS)
+        msg.root.appendChild(jsdlPart.cloneNode(True))
+        
         log.info("instance is now managable: %s" % inst_id)
+        log.debug("submitting:\n%s" % str(msg))
+        self.transport.write(str(msg))
+
+    def do_TaskStatusNotification(self, status_node):
+        fin_node = isdl.getChild(status_node, "TaskFinished")
+        exitcode = int(isdl.string_value(isdl.getChild(fin_node, "ExitCode")))
+        errout   = isdl.string_value(isdl.getChild(fin_node, "ErrorOutput"))
+        log.info("task finished: code=%d errout='%s'" % (exitcode, errout))
 
 class XenBEEProtocol(StompClient):
     """Processing input received by the STOMP server."""

@@ -13,7 +13,7 @@
 
       <isdl:Boot>
 	<isdl:Kernel>
-	  <isdl:URI>file:///srv/xen-images/domains/xenhobel-2/kernel2</isdl:URI>
+	  <isdl:URI>file:///srv/xen-images/domains/xenhobel-2/kernel</isdl:URI>
 	</isdl:Kernel>
 	<isdl:Initrd>
 	  <isdl:URI>file:///srv/xen-images/domains/xenhobel-2/initrd</isdl:URI>
