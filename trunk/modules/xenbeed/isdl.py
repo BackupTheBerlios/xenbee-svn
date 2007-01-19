@@ -49,6 +49,11 @@ class XMLProtocol(object):
         self.transport = transport
         self.factory = None
 
+        # a list of (localName, namespaceURI) tuples that are
+        # understood by the protocol
+        self.__understood = []
+        self.addUnderstood("Error", ISDL_NS)
+
     def dispatch(self, func, *args, **kw):
 	try:
 	    method = getattr(self, "do_" + func)
@@ -64,11 +69,18 @@ class XMLProtocol(object):
                                                             XenBEEClientError.ILLEGAL_REQUEST)))
             raise
 
+    def addUnderstood(self, localname, ns_uri):
+        pair = (localname, ns_uri)
+        if pair not in self.__understood:
+            self.__understood.append(pair)
+
     def messageReceived(self, msg):
         try:
             return self._messageReceived(msg)
-        except:
+        except Exception, e:
             log.exception("message handling failed")
+            self.transport.write(str(XenBEEClientError("handling failed: %s" % (str(e),),
+                                                       XenBEEClientError.ILLEGAL_REQUEST)))
 
     def _messageReceived(self, msg):
 	"""Handle a received message."""
@@ -78,16 +90,19 @@ class XMLProtocol(object):
 	# check the message
 	if root.namespaceURI != ISDL_NS or root.localName != 'Message':
 	    # got an unacceptable message
-	    self.transport.write(str(isdl.XenBEEClientError("you sent me an illegal request!",
+	    self.transport.write(str(XenBEEClientError("you sent me an illegal message!",
                                                             XenBEEClientError.ILLEGAL_REQUEST)))
 	    return
 	children = filter(ElementFilter(), root.childNodes)
 	if not len(children):
-	    self.transport.write(str(XenBEEClientError("no elements from ISDL namespace found",
+	    self.transport.write(str(XenBEEClientError("no elements to handle found, sorry",
                                                        XenBEEClientError.ILLEGAL_REQUEST)))
 	    return
         map(log.debug, map(NodeToString, children))
-        self.dispatch(children[0].localName, children[0])
+
+        for c in children:
+            if (c.localName, c.namespaceURI) in self.__understood:
+                self.dispatch(c.localName, c)
 
     def do_Error(self, err_node):
         log.debug("got error:\n%s" % (NodeToString(err_node)))

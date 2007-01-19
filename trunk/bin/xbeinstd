@@ -41,36 +41,34 @@ class ProcProtocol(protocol.ProcessProtocol):
         self.creator.processEnded(status_object)
         commStation.proc = None
 
-JSDL_NS = "http://schemas.ggf.org/jsdl/2005/11/jsdl"
-JSDL_POSIX_NS = "http://schemas.ggf.org/jsdl/2005/11/jsdl-posix"  
-
 class ServerProtocol(isdl.XMLProtocol):
     def __init__(self, transport):
         self.proc = None
         isdl.XMLProtocol.__init__(self,transport)
+        self.addUnderstood("JobDefinition", isdl.JSDL_NS)
 
     def do_JobDefinition(self, node):
-        jobDesc = isdl.getChild(node, "JobDescription", JSDL_NS)
-        jobIdent = isdl.getChild(jobDesc, "JobIdentification", JSDL_NS)
+        jobDesc = isdl.getChild(node, "JobDescription", isdl.JSDL_NS)
+        jobIdent = isdl.getChild(jobDesc, "JobIdentification", isdl.JSDL_NS)
         j_name = isdl.getChild(jobIdent,
                                "JobName",
-                               JSDL_NS).firstChild.nodeValue.strip()
+                               isdl.JSDL_NS).firstChild.nodeValue.strip()
         j_desc = isdl.getChild(jobIdent,
                                "Description",
-                               JSDL_NS).firstChild.nodeValue.strip()
-        app = isdl.getChild(jobDesc, "Application", JSDL_NS)
-        appNam = isdl.getChild(app, "ApplicationName", JSDL_NS)
-        posixApp = isdl.getChild(app, "POSIXApplication", JSDL_POSIX_NS)
+                               isdl.JSDL_NS).firstChild.nodeValue.strip()
+        app = isdl.getChild(jobDesc, "Application", isdl.JSDL_NS)
+        appNam = isdl.getChild(app, "ApplicationName", isdl.JSDL_NS)
+        posixApp = isdl.getChild(app, "POSIXApplication", isdl.JSDL_POSIX_NS)
         posixExecutable = isdl.getChild(posixApp,
                                         "Executable",
-                                        JSDL_POSIX_NS).firstChild.nodeValue.strip()
+                                        isdl.JSDL_POSIX_NS).firstChild.nodeValue.strip()
         def _f(n):
             if n.firstChild:
                 return n.firstChild.nodeValue.strip()
             else:
                 return u''
             
-        args = [_f(n) for n in posixApp.getElementsByTagNameNS(JSDL_POSIX_NS, "Argument")]
+        args = [_f(n) for n in posixApp.getElementsByTagNameNS(isdl.JSDL_POSIX_NS, "Argument")]
         cmdline = [ posixExecutable ]
         cmdline.extend(args)
         log.info("executing task: " + `cmdline`)

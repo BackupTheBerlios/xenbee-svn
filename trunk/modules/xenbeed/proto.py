@@ -27,6 +27,9 @@ class XenBEEClientProtocol(isdl.XMLProtocol):
     def __init__(self, client, transport):
         isdl.XMLProtocol.__init__(self, transport)
 	self.client = client
+        self.addUnderstood("ImageSubmission", isdl.ISDL_NS)
+        self.addUnderstood("StatusRequest", isdl.ISDL_NS)
+        self.addUnderstood("Kill", isdl.ISDL_NS)
 
     def do_ImageSubmission(self, dom_node):
 	"""Handle an image submission."""
@@ -126,6 +129,8 @@ class XenBEEInstanceProtocol(isdl.XMLProtocol):
     def __init__(self, instid, transport):
         isdl.XMLProtocol.__init__(self, transport)
 	self.instid = instid
+        self.addUnderstood("InstanceAvailable", isdl.ISDL_NS)
+        self.addUnderstood("TaskStatusNotification", isdl.ISDL_NS)
         
     def do_InstanceAvailable(self, dom_node):
         inst_id = isdl.getChild(dom_node, "InstanceID").firstChild.nodeValue.strip()
