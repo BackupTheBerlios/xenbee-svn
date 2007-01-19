@@ -10,7 +10,6 @@ import logging
 log = logging.getLogger(__name__)
 
 from stomp.proto import StompClient, StompClientFactory, StompTransport
-from xenbeed.instance import InstanceManager
 from xenbeed import isdl
 
 # Twisted imports

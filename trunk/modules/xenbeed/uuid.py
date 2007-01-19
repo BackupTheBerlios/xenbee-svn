@@ -9,7 +9,6 @@ __author__ = "$Author: petry $"
 
 
 import commands
-
 class UUID:
     def __init__(self, random=True):
         """Initializes the UUID generator.
@@ -22,6 +21,9 @@ class UUID:
             self.cmd = "uuid -v 4"
         else:
             self.cmd = "uuid -v 1"
+        (status, uuid) = commands.getstatusoutput(self.cmd)
+        if status != 0:
+            self.cmd = "uuidgen"
 
     def next(self):
         """Returns the next UUID.
@@ -36,5 +38,6 @@ class UUID:
         """same as next()"""
         return self.next()
 
+__UUID = UUID()
 def uuid():
-    return UUID().next()
+    return __UUID.next()
