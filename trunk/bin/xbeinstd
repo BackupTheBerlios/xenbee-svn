@@ -17,19 +17,12 @@ xenbeed.initLogging("/tmp/xbeinstd.log")
 
 log = logging.getLogger("xbeinstd")
 
-class CommStation:
-    def __init__(self):
-        self.proc = None
-        self.stomp = None
-
-commStation = CommStation()
-
 class ProcProtocol(protocol.ProcessProtocol):
     def __init__(self):
         self.errOutput = []
     
     def connectionMade(self):
-        commStation.proc = self
+        pass
 
     def outReceived(self, data):
         """parse the data and store it in some file."""
@@ -39,7 +32,6 @@ class ProcProtocol(protocol.ProcessProtocol):
 
     def processEnded(self, status_object):
         self.creator.processEnded(status_object)
-        commStation.proc = None
 
 class ServerProtocol(isdl.XMLProtocol):
     def __init__(self, transport):
@@ -90,7 +82,6 @@ class ServerProtocol(isdl.XMLProtocol):
 class TestProtocol(StompClient):
     def connectedReceived(self, frame):
         log.info("connected to server")
-        commStation.stomp = self
         self.setReplyTo(self.factory.queue)
         self.subscribe(self.factory.queue, exclusive=True)
         self.send(self.factory.serverQueue,
