@@ -32,9 +32,7 @@
       <jsdl:Application> 
 	<jsdl:ApplicationName>gnuplot</jsdl:ApplicationName> 
 	<jsdl-posix:POSIXApplication> 
-	  <jsdl-posix:Executable> 
-	    /bin/ls
-	  </jsdl-posix:Executable> 
+	  <jsdl-posix:Executable>/bin/ls</jsdl-posix:Executable> 
 	  <jsdl-posix:Argument>-l</jsdl-posix:Argument> 
 	  <jsdl-posix:Argument>/</jsdl-posix:Argument> 
 	  <jsdl-posix:Input>input.dat</jsdl-posix:Input> 

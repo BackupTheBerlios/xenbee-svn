@@ -135,6 +135,9 @@ class XenBEEInstanceProtocol(isdl.XMLProtocol):
     def do_InstanceAvailable(self, dom_node):
         inst_id = isdl.getChild(dom_node, "InstanceID").firstChild.nodeValue.strip()
         inst = self.factory.instanceManager.lookupByUUID(inst_id)
+        if not inst:
+            raise ValueError("no such instance")
+        
         isdlDoc = inst._isdlDocument.documentElement
         jsdlPart = isdl.getChild(isdlDoc, "JobDefinition", isdl.JSDL_NS)
         if not jsdlPart:

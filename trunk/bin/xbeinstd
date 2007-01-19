@@ -78,6 +78,8 @@ class ServerProtocol(isdl.XMLProtocol):
         msg.createElement("ErrorOutput", tf, str(lastErrLine).strip())
         self.proc = None
         self.transport.write(str(msg))
+
+        log.info("process ended: code:%d err:'%s'" % (status_object.value.exitCode, lastErrLine))
         
 class TestProtocol(StompClient):
     def connectedReceived(self, frame):
