@@ -86,7 +86,7 @@ class XMLProtocol(object):
 	    self.transport.write(str(XenBEEClientError("no elements from ISDL namespace found",
                                                        XenBEEClientError.ILLEGAL_REQUEST)))
 	    return
-        map(log.debug, map(str, children))
+        map(log.debug, map(NodeToString, children))
         self.dispatch(children[0].localName, children[0])
 
     def do_Error(self, err_node):
