@@ -6,4 +6,9 @@ __version__ = "$Rev$"
 __author__ = "$Author: petry $"
 
 # backend to use, currently only xen available
-from xenbeed.backend.xen import *
+_useXen = True
+if _useXen:
+    from xenbeed.backend.xen import *
+else:
+    from xenbeed.backend.local import *
+

@@ -10,7 +10,7 @@ contains:
 __version__ = "$Rev$"
 __author__ = "$Author$"
 
-import logging
+import logging, time
 log = logging.getLogger(__name__)
 
 try:
@@ -28,6 +28,7 @@ class Task:
     def __init__(self, ID):
         """Initialize a new task."""
 	self._id = ID
+	self._tstamp = time.time()
 	self.mgr = None
 
     def ID(self):
@@ -56,6 +57,7 @@ class TaskManager:
     def removeTask(self, task):
         """Remove the 'task' from the manager."""
         self.tasks.pop(task.ID())
+	task.mgr = None
 
     def lookupByID(self, ID):
         """Return the task for the given ID.
@@ -64,3 +66,4 @@ class TaskManager:
 
         """
         return self.tasks.get(ID, None)
+

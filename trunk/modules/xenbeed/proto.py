@@ -26,7 +26,7 @@ class XenBEEClientProtocol(isdl.XMLProtocol):
 
     def __init__(self, client, transport):
         isdl.XMLProtocol.__init__(self, transport)
-	self.client = client
+        self.client = client
         self.addUnderstood("ImageSubmission", isdl.ISDL_NS)
         self.addUnderstood("StatusRequest", isdl.ISDL_NS)
         self.addUnderstood("Kill", isdl.ISDL_NS)
