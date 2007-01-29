@@ -224,6 +224,7 @@ class XenBEEProtocolFactory(StompClientFactory):
 	self.stomp = None
         self.scheduler = scheduler
 	self.instanceManager = scheduler.instanceManager
+        self.taskManager = scheduler.taskManager
 
     def clientConnectionFailed(self, connector, reason):
 	log.error("connection to STOMP server failed!: %s" % reason)

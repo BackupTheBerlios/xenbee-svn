@@ -18,6 +18,7 @@ from twisted.internet import reactor
 from xenbeed.proto import XenBEEProtocol, XenBEEProtocolFactory
 from xenbeed.scheduler import Scheduler
 from xenbeed.instance import InstanceManager
+from xenbeed.task import TaskManager
 from urlparse import urlparse
 
 class Daemon:
@@ -26,7 +27,8 @@ class Daemon:
         self.argv = argv
         self.server = ('localhost', 61613)
         self.instanceManager = InstanceManager('/srv/xen-images/xenbee')
-        self.scheduler = Scheduler(self.instanceManager)
+        self.taskManager = TaskManager('/srv/xen-images/xenbee')
+        self.scheduler = Scheduler(self.instanceManager, self.taskManager)
         
     def run(self, daemonize=False):
 	""""""

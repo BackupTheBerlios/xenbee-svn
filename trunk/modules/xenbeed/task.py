@@ -27,9 +27,9 @@ class TaskError(XenBeeException):
 class Task:
     def __init__(self, ID):
         """Initialize a new task."""
-	self._id = ID
-	self._tstamp = time.time()
-	self.mgr = None
+        self._id = ID
+        self._tstamp = time.time()
+        self.mgr = None
 
     def ID(self):
         """Return the ID for this task."""
@@ -42,22 +42,22 @@ class TaskManager:
 	- create a new tasks
 
     """
-    def __init__(self):
+    def __init__(self, base_path="/srv/xen-images"):
         """Initialize the TaskManager."""
         self.tasks = {}
 
     def newTask(self):
         """Returns a new task."""
         from xenbeed.uuid import uuid
-	task = Task(uuid())
+        task = Task(uuid())
         self.tasks[task.ID()] = task
-	task.mgr = self
+        task.mgr = self
         return task
 
     def removeTask(self, task):
         """Remove the 'task' from the manager."""
         self.tasks.pop(task.ID())
-	task.mgr = None
+        task.mgr = None
 
     def lookupByID(self, ID):
         """Return the task for the given ID.

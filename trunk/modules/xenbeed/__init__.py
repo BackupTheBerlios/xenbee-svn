@@ -25,6 +25,13 @@ def initLogging(logfile='/tmp/xenbeed.log'):
     _syslogHdlr.setLevel(logging.WARN)
     _syslogHdlr.setFormatter(logging.Formatter('[%(process)d]' + thread + ' %(name)-12s: %(levelname)-8s %(message)s'))
     logging.getLogger().addHandler(_syslogHdlr)
+
+    _stderrHdlr = logging.StreamHandler(sys.stderr)
+    _stderrHdlr.setLevel(logging.ERROR)
+    _stderrHdlr.setFormatter(logging.Formatter('[%(process)d]' + thread + ' %(name)-12s: %(levelname)-8s %(message)s'))
+    logging.getLogger().addHandler(_syslogHdlr)
+
+    # activate overall logging of messages with DEBUG-level
     logging.getLogger().setLevel(logging.DEBUG)
 
 def TestSuite():

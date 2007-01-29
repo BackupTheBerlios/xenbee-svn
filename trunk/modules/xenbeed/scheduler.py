@@ -17,9 +17,10 @@ from twisted.internet import reactor, task
 class Scheduler:
     """The XenBee scheduler."""
     
-    def __init__(self, instMgr):
+    def __init__(self, instMgr, taskMgr):
 	"""Initialize the scheduler."""
         self.instanceManager = instMgr
+        self.taskManager = taskMgr
         self.task = task.LoopingCall(self.cycle)
         self.task.start(1.0)
 
