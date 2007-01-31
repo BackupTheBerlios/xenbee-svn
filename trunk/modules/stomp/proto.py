@@ -4,7 +4,7 @@ see: http://stomp.codehaus.org/Protocol
 
 """
 
-import re, threading, time
+import re, threading, time, os
 
 # twisted imports
 from twisted.protocols.basic import LineReceiver
@@ -12,8 +12,14 @@ from twisted.internet import defer, reactor
 from twisted.internet.protocol import ReconnectingClientFactory
 from textwrap import dedent
 from xenbeed.uuid import uuid
+import errno
 
 __all__ = [ 'StompClient', 'Message', 'StompClientFactory' ]
+
+class reason:
+    def __init__(self, errcode, msg=None):
+        self.errcode = errcode
+        self.msg = msg or os.strerror(errcode)
 
 class Frame:
     """This class represents a 'frame'.
@@ -107,6 +113,7 @@ class StompClient(LineReceiver):
     """
 
     auto_connect = True
+    timeout = 10 # timeout of ten seconds for an answer
 
     def __init__(self):
 	"""Initializes the client."""
@@ -122,6 +129,7 @@ class StompClient(LineReceiver):
 	self.defer = None
         self.factory = None
         self.mtx = threading.RLock()
+        self.timeoutTimer = None
 
     def setReplyTo(self, replyTo):
         self.replyTo = replyTo
@@ -129,7 +137,11 @@ class StompClient(LineReceiver):
     def connectionMade(self):
 	"""Called when connection has been established."""
 	if self.auto_connect and self.state == "disconnected":
-	    self.connect(self.factory.user, self.factory.password)
+            def _s(arg):
+                pass
+            def _f(arg):
+                pass
+	    self.connect(self.factory.user, self.factory.password).addCallbacks(_s, _f)
 
     def sendFrame(self, frame):
 	"""Send a frame."""
@@ -228,32 +240,60 @@ class StompClient(LineReceiver):
 	    self.handle_CONNECTED(frame)
 	elif frame.type == "MESSAGE":
 	    msg = Message(frame.header, frame.data, frame.header["destination"])
+            if self.defer:
+                if self.timeoutTimer:
+                    self.timeoutTimer.cancel()
+                    self.timeoutTimer = None
+                self.defer.callback(msg)
+                self.defer = None
 	    self.messageReceived(msg)
 	elif frame.type == "ERROR":
-	    self.errorOccurred(frame.header["message"], frame.data)
+            msg = frame.header["message"]
+	    self.errorOccurred(msg, frame.data)
+            if self.defer:
+                self.defer.errback(msg)
+                self.defer = None
 
     def handle_CONNECTED(self, frame):
 	self.state = "connected"
+        if self.timeoutTimer:
+            self.timeoutTimer.cancel()
+            self.timeoutTimer = None
 	self.connectedReceived(frame)
 	if self.connectDefer:
 	    self.connectDefer.callback(frame)
 	    self.connectDefer = None
 
-    def connect(self, user, password):
+    def connect(self, user, password, time_out=timeout):
 	"""Connect to the STOMP server, using 'user' and 'password'."""
 	f = Frame("CONNECT")
 	f.header["login"] = user
 	f.header["passcode"] = password
 	self.sendFrame(f)
+
+        r = reason(errno.ETIMEDOUT)
+        def _f(_reason):
+            self.connectFailed(_reason)
+            self.connectDefer.errback(_reason)
+            self.connectDefer = None
+
+        self.timeoutTimer = reactor.callLater(time_out, _f, r)
 	self.connectDefer = defer.Deferred()
 	return self.connectDefer
 
-    def receive(self):
+    def receive(self, time_out=None):
 	"""Await the reception of a message.
 
 	Returns a 'deferred' object.
 
 	"""
+        if time_out:
+            def _t(_reason):
+                self.defer.errback(_reason)
+                self.defer = None
+            r = reason(errno.ETIMEDOUT)
+            self.timeoutTimer = reactor.callLater(time_out, _t, r)
+            
 	self.defer = defer.Deferred()
 	return self.defer
 
@@ -265,6 +305,17 @@ class StompClient(LineReceiver):
 	"""
 	pass
 
+    def connectFailed(self, reason):
+        """Called when we could not connect to the stomp server.
+
+        Reason is an object with the following properties:
+           msg - a small description of the reason
+           errcode - the error code (see the errno module)
+
+        Override this method.
+        """
+        pass
+
     # callbacks
     def messageReceived(self, msg):
 	"""A message has been received.
@@ -274,9 +325,6 @@ class StompClient(LineReceiver):
 
 	Override this method.
 	"""
-	if self.defer:
-	    self.defer.callback(msg)
-	    self.defer = None
 
     def errorOccurred(self, msg, detail):
 	"""Called when the server found an error.
@@ -284,10 +332,6 @@ class StompClient(LineReceiver):
 	Override this method.
 
 	"""
-	if self.defer:
-	    self.defer.errback(msg)
-	    self.defer = None
-
 
     # client protocol
 

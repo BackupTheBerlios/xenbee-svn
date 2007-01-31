@@ -119,6 +119,10 @@ class RemoteCommand(Command):
     def initStomp(self):
         pass
 
+    def executeFailed(self, msg):
+        Command.executeFailed(self, msg)
+        reactor.stop()
+
     def executeRemote(self, msg):
         f = StompClientFactory(user='client')
         f.protocol = StompClientCmd
@@ -302,16 +306,17 @@ class StompClientCmd(StompClient):
         self.setReplyTo(self.factory.queue)
         self.subscribe(self.factory.queue, exclusive=True)
         self.send(self.factory.serverQueue, self.factory.msg)
-        self.receive().addCallback(self.message)
-        self.call = reactor.callLater(self.factory.cmd.options.timeout, self.abort)
+        self.receive(time_out=self.factory.cmd.options.timeout).addCallbacks(self.message, self.abort)
+
+    def connectFailed(self, reason):
+        print >>sys.stderr, "Connection to STOMP server failed!"
+        self.factory.cmd.executeFailed(reason.msg)
 
     def message(self, msg):
-        self.call.cancel()
         self.factory.cmd.handleMessage(msg)
 
-    def abort(self):
-        self.factory.cmd.executeFailed("No answer from server")
-        reactor.stop()
+    def abort(self, failure):
+        self.factory.cmd.executeFailed(failure.value.msg)
 
 def main(argv):
     """The main routine."""

@@ -29,7 +29,7 @@ def initLogging(logfile='/tmp/xenbeed.log'):
     _stderrHdlr = logging.StreamHandler(sys.stderr)
     _stderrHdlr.setLevel(logging.ERROR)
     _stderrHdlr.setFormatter(logging.Formatter('[%(process)d]' + thread + ' %(name)-12s: %(levelname)-8s %(message)s'))
-    logging.getLogger().addHandler(_syslogHdlr)
+    logging.getLogger().addHandler(_stderrHdlr)
 
     # activate overall logging of messages with DEBUG-level
     logging.getLogger().setLevel(logging.DEBUG)

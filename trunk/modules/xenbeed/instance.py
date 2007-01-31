@@ -20,7 +20,7 @@ except:
     from traceback import format_exception
 
 from xenbeed.exceptions import *
-from xenbeed import backend
+from xenbeed.backend import backend
 from xenbeed import util
 
 from twisted.internet import reactor, threads, task, defer

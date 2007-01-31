@@ -7,8 +7,14 @@ __author__ = "$Author: petry $"
 
 # backend to use, currently only xen available
 _useXen = True
-if _useXen:
-    from xenbeed.backend.xen import *
-else:
-    from xenbeed.backend.local import *
+backend = None
 
+def initBackend(backendType="xen"):
+    global backend
+    if backend:
+        raise RuntimeError("backend already initialized!")
+    try:
+        mod = __import__("xenbeed.backend.%s" % backendType, globals(), locals(), ["Backend"])
+        backend = mod.Backend()
+    except:
+        raise

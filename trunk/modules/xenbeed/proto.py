@@ -71,7 +71,7 @@ class XenBEEClientProtocol(isdl.XMLProtocol):
         d.addCallback(handleSuccess)
         d.addErrback(_errFunc)
 
-        self.transport.write(str(isdl.XenBEEClientError("image submitted: " + str(inst.getName()),
+        self.transport.write(str(isdl.XenBEEClientError("task submitted: " + str(inst.getName()),
                                                         isdl.XenBEEClientError.OK)))
 
     def do_StatusRequest(self, dom_node):
@@ -227,9 +227,10 @@ class XenBEEProtocolFactory(StompClientFactory):
         self.taskManager = scheduler.taskManager
 
     def clientConnectionFailed(self, connector, reason):
-	log.error("connection to STOMP server failed!: %s" % reason)
+	log.error("connection to STOMP server failed!: %s" % (str(reason.value)))
 	if 'twisted.internet.error.ConnectionRefusedError' in reason.parents:
-            log.info("stopping the reactor...")
+            log.info("shutting the server down...")
+            reactor.exitcode = 1
             reactor.stop()
 	else:
 	    StompClientFactory.clientConnectionFailed(self, connector, reason)
