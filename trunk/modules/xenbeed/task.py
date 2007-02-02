@@ -10,7 +10,7 @@ contains:
 __version__ = "$Rev$"
 __author__ = "$Author$"
 
-import logging, time
+import logging, time, threading
 log = logging.getLogger(__name__)
 
 try:
@@ -26,16 +26,27 @@ class TaskError(XenBeeException):
     pass
 
 class Task:
-    def __init__(self, ID, mgr):
+    def __init__(self, ID, mgr, doc):
         """Initialize a new task."""
         self._id = ID
         self._tstamp = time.time()
         self.mgr = mgr
+        self.document = doc
 
         # build FSM
         m = fsm.FSM()
-        m.newState("created.pending")
-        m.setStartState("created.pending")
+        m.newState("failed")
+        m.newState("created")
+        m.newState("preparing")
+        m.newState("pending")
+        m.newState("startingup")
+        m.newState("running")
+        m.newState("finished")
+
+        for s in ("preparing", "pending", "startingup", "running"):
+            m.addTransition(s, "failed", "failed", self.do_failed)
+        
+        m.setStartState("created")
 
         self.fsm = m
 
@@ -43,6 +54,26 @@ class Task:
         """Return the ID for this task."""
         return self._id
 
+    def state(self):
+        return self.fsm.getCurrentState()
+
+    def failed(self, extra_msg):
+        self.fsm.consume("failed", extra_msg)
+
+    def filesRetrieved(self):
+        self.fsm.consume("filesRetrieved")
+
+    def prepare(self):
+        self.fsm.consume("prepare")
+
+    # FSM callbacks
+    def do_failed(self, msg):
+        self.extra_msg = msg
+        self.mgr.taskFailed(self)
+
+    def do_prepare(self):
+        pass
+        
 class TaskManager:
     """The task-manager.
 
@@ -50,21 +81,32 @@ class TaskManager:
 	- create new tasks
 
     """
-    def __init__(self, base_path="/srv/xen-images/xenbee"):
+    def __init__(self, inst_mgr, base_path="/srv/xen-images/xenbee"):
         """Initialize the TaskManager."""
         self.tasks = {}
+        self.mtx = threading.RLock()
+        self.instanceManager = inst_mgr
 
-    def newTask(self):
+    def newTask(self, document):
         """Returns a new task."""
         from xenbeed.uuid import uuid
-        task = Task(uuid(), self)
+
+        task = Task(uuid(), self, document)
+
+        self.mtx.acquire()
         self.tasks[task.ID()] = task
+
+        self.mtx.release()
         return task
 
     def removeTask(self, task):
         """Remove the 'task' from the manager."""
-        self.tasks.pop(task.ID())
-        task.mgr = None
+        try:
+            self.mtx.acquire()
+            self.tasks.pop(task.ID())
+            task.mgr = None
+        finally:
+            self.mtx.release()
 
     def lookupByID(self, ID):
         """Return the task for the given ID.
@@ -73,3 +115,82 @@ class TaskManager:
 
         """
         return self.tasks.get(ID)
+
+    def prepareTask(self, task):
+        import isdl
+
+        task.prepare()
+
+	# boot block
+        imgDef = task.document.find(".//"+isdl.Tag("ImageDefinition", isdl.ISDL_NS))
+	boot = imgDef.find(isdl.Tag("Boot", isdl.ISDL_NS))
+	files = {}
+	files["kernel"] = boot.find(".//"+isdl.Tag("kernel")+"/"+isdl.Tag("URI")).text.strip()
+	files["initrd"] = boot.find(".//"+isdl.Tag("initrd")+"/"+isdl.Tag("URI")).text.strip()
+
+	# image block
+	images = imgDef.find(isdl.Tag("Images"))
+
+	bootImage = images.find(isdl.Tag("BootImage"))
+	files["root"] = bootImage.find(".//"+isdl.Tag("Source")+"/"+isdl.Tag("URI")).text.strip()
+
+	log.debug(files)
+
+        # create spool for task and instance and add files
+        task.spool = self.createSpool(task.ID())
+        task.inst_id = self.instanceManager.newInstance().uuid()
+        inst.task_id = task.ID()
+
+        d = inst.addFiles(files)
+        def _s(*args):
+            task.filesRetrieved()
+        def _f(err):
+            task.failed("file retrieval failed " + str(err.getTraceback()))
+            return err
+        d.addCallbacks(_s, _f)
+        return d
+
+    def taskFailed(self, task):
+        """Called when a task has failed somehow."""
+        pass
+
+    def createSpool(self, _id):
+        """Creates the spool-directory for a new task (using _id).
+
+        The spool looks something like that: <base_path>/UUID(task)/
+
+        doSanityChecks -- some small tests to prohibit possible security breachs:
+	    * result path is subdirectory of base-path
+	    * result path is not a symlink
+
+        The spool directory is used to all necessary information about an instance:
+	    * kernel, root, swap, additional images
+	    * persistent configuration
+	    * access and security stuff
+
+        """
+        import os, os.path
+        
+        path = os.path.normpath(os.path.join(self.base_path, _id))
+        if doSanityChecks:
+            # perform small santiy checks
+            if not path.startswith(self.base_path):
+                log.error("creation of spool directory (%s) failed: does not start with base_path (%s)" % (path, self.base_path))
+                raise SecurityError("sanity check of spool directory failed: not within base_path")
+            try:
+                import stat
+                if stat.S_ISLNK(os.lstat(path)[stat.ST_MODE]):
+                    log.error("possible security breach: %s is a symlink" % path)
+                    raise SecurityError("possible security breach: %s is a symlink" % path)
+            except: pass
+            if os.path.exists(path):
+                log.error("new spool directory (%s) does already exist, that should never happen!" % path)
+                raise SecurityError("spool directory does already exist: %s" % path)
+
+        # create the directory structure
+        try:
+            os.makedirs(path)
+        except os.error, e:
+            log.error("could not create spool directory: %s: %s" % (path, e))
+            raise InstanceError("could not create spool directory: %s: %s" % (path,e))
+        return path

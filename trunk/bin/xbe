@@ -248,6 +248,7 @@ class Command_status(RemoteCommand):
         from xenbeed.isdl import XenBEEClientMessage
         msg = XenBEEClientMessage()
         sreq = msg.createElement("StatusRequest", msg.root)
+        msg.root.append(sreq)
         self.executeRemote(str(msg))
 Command_list = Command_status
 

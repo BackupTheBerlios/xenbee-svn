@@ -66,3 +66,29 @@ File Retrieval:
 	inst.addFile(...):
 		push to queue
 	
+
+Task creation:
+==============
+
+	* on submission create a new task and store the ISDL document with
+          it
+	* task represents the front-end view
+	* task gets assigned an instance
+	* files are retrieved/created for the instance
+	* when the files are all ready and a current slot is available, the instance may be started and
+          the task executed
+
+	* scheduler manages the tasks according their states:
+	     - created tasks (recently submitted, no files retrieved yet)
+	       among these, the scheduler chooses the next task, whose
+	       files will be transfered next
+
+	     - pending tasks, tasks that have all files transfered and are
+               ready to be started
+
+	     - running tasks, the set of tasks currently being executed
+
+	     - finished tasks, task has finished, files need to be staged
+               out
+	       
+	     - closed tasks, all files staged out

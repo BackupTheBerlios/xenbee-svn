@@ -19,17 +19,31 @@ class Scheduler:
     
     def __init__(self, instMgr, taskMgr):
 	"""Initialize the scheduler."""
-        self.instanceManager = instMgr
-        self.taskManager = taskMgr
-        self.task = task.LoopingCall(self.cycle)
-        self.task.start(1.0)
+        self.__im = instMgr
+        self.__tm = taskMgr
+        self.schedulerLoop = task.LoopingCall(self.cycle)
+        self.schedulerLoop.start(.5)
+
+        self.__maxActiveInstances = 3
+
+        self.__preparing = []
+        self.__pending = []
+        self.__started = []
+        self.__finished = []
 
     def cycle(self):
-        for inst in self.instanceManager:
-            if inst.startable():
-                log.info("starting instance: "+inst.getName())
-                def _s(x):
-                    log.info("instance started")
-                def _f(f):
-                    log.debug("starting failed")
-                inst.start().addCallbacks(_s,_f)
+        for task in self.__tm.tasks.values():
+            if task.state() == "created":
+                log.info("preparing task: " + task.ID())
+                self.__preparing.append(task)
+                defer = self.__tm.prepareTask(task)
+
+                def _s(*args):
+                    self.__preparing.remove(task)
+                    self.__pending.append(task)
+                def _f(err):
+                    self.__preparing.remove(task)
+                defer.addCallbacks(_s,_f)
+            if task.state() == "pending":# and task.startable():
+                if self.__maxActiveInstances and len(self.__started) < self.__maxActiveInstances:
+                    log.info("starting instance for task: "+task.ID())

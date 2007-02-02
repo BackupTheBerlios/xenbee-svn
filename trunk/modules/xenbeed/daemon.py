@@ -43,7 +43,7 @@ class Daemon:
         from xenbeed.scheduler import Scheduler
         
         self.instanceManager = InstanceManager(self.opts.spool)
-        self.taskManager = TaskManager(self.opts.spool)
+        self.taskManager = TaskManager(self.instanceManager, self.opts.spool)
         self.scheduler = Scheduler(self.instanceManager, self.taskManager)
         
     def run(self, daemonize=False):

@@ -39,7 +39,11 @@ class DataStager:
 
 	self.src = src.encode("ascii")
 	self.dst = dst.encode("ascii")
+        self.tmpdst = None
         self._abort = False
+
+        __tmp = "abcdefghijklmnopqrstuvwxyz"
+        self.__charList = [ c for c in "0123456789" + __tmp + __tmp.upper() ]
         
         self.curl = pycurl.Curl()
         self.curl.setopt(pycurl.FOLLOWLOCATION, 1)
@@ -65,27 +69,45 @@ class DataStager:
             return 0
         return self.fp.read(size)
 
+    def cleanUp(self):
+        if self.tmpdst and os.path.exists(self.tmpdst):
+            os.unlink(self.tmpdst)
+            self.tmpdst = None
+
     def abort(self):
         self._abort = True
     def aborted(self):
         return self._abort
+
+    def __tempFileName(self):
+        import random
+        __ext = "".join([random.choice(self.__charList) for i in xrange(6)])
+        tmp = "." + os.path.basename(self.dst) + "." + __ext
+        tmp = os.path.join(os.path.dirname(self.dst), tmp)
+        return tmp
+        
         
     def perform_download(self):
-	self.fp = open(self.dst, "wb")
+        self.tmpdst = self.__tempFileName()
 	self.curl.setopt(pycurl.URL, self.src)
         self.curl.setopt(pycurl.WRITEFUNCTION, self._write)
 
 	try:
 	    log.debug("beginning retrieving uri: %s" % self.src)
 	    start = time.time()
+            self.fp = open(self.tmpdst, "wb")
 	    self.curl.perform()
-	    dur = time.time() - start
-	    log.debug("finished retrieving uri: %s: %ds" % (self.src, dur))
+            self.fp.close()
+            self.curl.close()
+	    self.duration = time.time() - start
+
+            os.rename(self.tmpdst, self.dst)
+            self.tmpdst = None
+            
+	    log.debug("finished retrieving uri: %s: %ds" % (self.src, self.duration))
 	except Exception, e:
 	    log.error("retrieval failed: %s" % str(e))
             raise
-	self.curl.close()
-	self.fp.close()
         return self.dst
 
     def perform_upload(self):

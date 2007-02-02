@@ -29,7 +29,7 @@ class InstanceError(XenBeeException):
     pass
 
 class Instance:
-    def __init__(self, config, spool_base):
+    def __init__(self, config, spool, mgr):
         """Initialize a new instance.
 
         config -- an InstanceConfig object that holds all necessary
@@ -50,9 +50,9 @@ class Instance:
         self.config = config
 
         self.state = "created"
-        self.spool = self._createSpoolDirectory(spool_base)
+        self.spool = spool
         self.backend_id = -1
-	self.mgr = None
+	self.mgr = mgr
         self.startTime = 0
 
     def __del__(self):
@@ -224,47 +224,6 @@ class Instance:
             return err
         return threads.deferToThread(backend.createInstance, self).addCallback(__started).addErrback(__failed)
 
-    def _createSpoolDirectory(self, base_path="", doSanityChecks=True):
-        """Creates the spool-directory for this instance.
-
-        The spool looks something like that: <base_path>/UUID(inst)/
-
-        base_path -- the 'global' spool directory (such as /var/lib/spool/xenbeed etc.)
-        doSanityChecks -- some small tests to prohibit possible security breachs:
-	    * result path is subdirectory of base-path
-	    * result path is not a symlink
-
-        The spool directory is used to all necessary information about an instance:
-	    * kernel, root, swap, additional images
-	    * persistent configuration
-	    * access and security stuff
-
-        """
-        path = os.path.normpath(os.path.join(base_path,
-                                             self.uuid()))
-        if doSanityChecks:
-            # perform small santiy checks
-            if not path.startswith(base_path):
-                log.error("creation of spool directory (%s) failed: does not start with base_path (%s)" % (path, base_path))
-                raise SecurityError("sanity check of spool directory failed: not within base_path")
-            try:
-                import stat
-                if stat.S_ISLNK(os.lstat(path)[stat.ST_MODE]):
-                    log.error("possible security breach: %s is a symlink" % path)
-                    raise SecurityError("possible security breach: %s is a symlink" % path)
-            except: pass
-            if os.path.exists(path):
-                log.error("new spool directory (%s) does already exist, that should never happen!" % path)
-                raise SecurityError("spool directory does already exist: %s" % path)
-
-        # create the directory structure
-        try:
-            os.makedirs(path)
-        except os.error, e:
-            log.error("could not create spool directory: %s: %s" % (path, e))
-            raise InstanceError("could not create spool directory: %s: %s" % (path,e))
-        return path
-
 class InstanceManager:
     """The instance-manager.
 
@@ -280,7 +239,7 @@ class InstanceManager:
         self.base_path = base_path
         self.__iter__ = self.instances.itervalues
 
-    def newInstance(self):
+    def newInstance(self, spool):
         """Returns a new instance.
 
         This instance does not have any files assigned.
@@ -291,14 +250,14 @@ class InstanceManager:
         icfg = InstanceConfig(uuid())
 
         try:
-            inst = Instance(icfg, self.base_path)
+            spool = self._createSpoolDirectory(icfg.getInstanceName())
+            inst = Instance(icfg, spool, self)
         except:
             log.error(format_exception())
             raise
 	
         # remember the instance in our db
         self.instances[inst.uuid()] = inst
-	inst.mgr = self
         return inst
 
     def removeInstance(self, inst):
@@ -326,3 +285,42 @@ class InstanceManager:
                 return inst
         return None
 
+    def _createSpoolDirectory(self, uuid, doSanityChecks=True):
+        """Creates the spool-directory for a new task.
+
+        The spool looks something like that: <base_path>/UUID(inst)/
+
+        doSanityChecks -- some small tests to prohibit possible security breachs:
+	    * result path is subdirectory of base-path
+	    * result path is not a symlink
+
+        The spool directory is used to all necessary information about an instance:
+	    * kernel, root, swap, additional images
+	    * persistent configuration
+	    * access and security stuff
+
+        """
+        path = os.path.normpath(os.path.join(self.base_path,
+                                             uuid))
+        if doSanityChecks:
+            # perform small santiy checks
+            if not path.startswith(self.base_path):
+                log.error("creation of spool directory (%s) failed: does not start with base_path (%s)" % (path, self.base_path))
+                raise SecurityError("sanity check of spool directory failed: not within base_path")
+            try:
+                import stat
+                if stat.S_ISLNK(os.lstat(path)[stat.ST_MODE]):
+                    log.error("possible security breach: %s is a symlink" % path)
+                    raise SecurityError("possible security breach: %s is a symlink" % path)
+            except: pass
+            if os.path.exists(path):
+                log.error("new spool directory (%s) does already exist, that should never happen!" % path)
+                raise SecurityError("spool directory does already exist: %s" % path)
+
+        # create the directory structure
+        try:
+            os.makedirs(path)
+        except os.error, e:
+            log.error("could not create spool directory: %s: %s" % (path, e))
+            raise InstanceError("could not create spool directory: %s: %s" % (path,e))
+        return path

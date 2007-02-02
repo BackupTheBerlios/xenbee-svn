@@ -68,7 +68,7 @@ class FSM(object):
             if i != input_symbol: continue
             return (s1, o, args, kw)
 
-    def consume(self, symbol):
+    def consume(self, symbol, *extra_args, **extra_kw):
         if not self.start or not self.current:
             raise FSMError("neither start state nor current state available!")
         
@@ -80,6 +80,9 @@ class FSM(object):
         if not t:
             raise FSMError("no transition from `%s' for input symbol `%s'" % (self.current.name, i))
         s1, o, args, kw = t
+        args = [ a for a in args ]
+        args.extend(extra_args)
+        kw.update(extra_kw)
         if o:
             # call transition method
             o(*args, **kw)

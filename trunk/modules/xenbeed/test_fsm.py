@@ -70,6 +70,17 @@ class TestFSM(unittest.TestCase):
         self.fsm.consume("1")
         self.assertEqual(self.fsm.getCurrentState(), "1")
 
+    def test_consume_add_arg(self):
+        fsm = FSM()
+        fsm.newState("A")
+        fsm.newState("B")
+        fsm.setStartState("A")
+
+        def _test(*args):
+            self.assertEqual(args[-1], "test")
+        fsm.addTransition("A", "B", "input1", _test, "foo")
+        fsm.consume("input1", "test")
+
 def suite():
     s1 = unittest.makeSuite(TestFSM, "test")
     return unittest.TestSuite((s1,))

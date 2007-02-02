@@ -9,17 +9,17 @@ __author__ = "$Author$"
 import logging
 log = logging.getLogger(__name__)
 
-import xml.dom.minidom
-from xml.dom.ext import PrettyPrint
+from lxml import etree
+import re
 
 try:
     from cStringIO import StringIO
 except:
     from StringIO import StringIO
 
-ISDL_NS = u'http://www.example.com/schemas/isdl/2007/01/isdl'
-JSDL_NS = u'http://schemas.ggf.org/jsdl/2005/11/jsdl'
-JSDL_POSIX_NS = u'http://schemas.ggf.org/jsdl/2005/11/jsdl-posix'
+ISDL_NS = "http://www.example.com/schemas/isdl/2007/01/isdl"
+JSDL_NS = "http://schemas.ggf.org/jsdl/2005/11/jsdl"
+JSDL_POSIX_NS = "http://schemas.ggf.org/jsdl/2005/11/jsdl-posix"
 
 
 def ChildNodes(node, func=lambda n: n.nodeType == xml.dom.Node.ELEMENT_NODE):
@@ -45,11 +45,10 @@ class XMLProtocol(object):
     """The base class of all here used client-protocols."""
 
     def __init__(self, transport):
-        self.__dom = None
         self.transport = transport
         self.factory = None
 
-        # a list of (localName, namespaceURI) tuples that are
+        # a list of ({uri}localName) tuples that are
         # understood by the protocol
         self.__understood = []
         self.addUnderstood("Error", ISDL_NS)
@@ -69,10 +68,10 @@ class XMLProtocol(object):
                                                             XenBEEClientError.ILLEGAL_REQUEST)))
             raise
 
-    def addUnderstood(self, localname, ns_uri):
-        pair = (localname, ns_uri)
-        if pair not in self.__understood:
-            self.__understood.append(pair)
+    def addUnderstood(self, elementName, namespace):
+        tag = Tag(elementName, namespace)
+        if tag not in self.__understood:
+            self.__understood.append(tag)
 
     def messageReceived(self, msg):
         try:
@@ -84,62 +83,36 @@ class XMLProtocol(object):
 
     def _messageReceived(self, msg):
 	"""Handle a received message."""
-	self.__dom = xml.dom.minidom.parseString(msg.body)
-        self.__dom.normalize()
-	root = self.__dom.documentElement
+	self.__root = etree.fromstring(msg.body)
+        
 	# check the message
-	if root.namespaceURI != ISDL_NS or root.localName != 'Message':
+	if self.__root.tag != (Tag("Message", ISDL_NS)):
 	    # got an unacceptable message
 	    self.transport.write(str(XenBEEClientError("you sent me an illegal message!",
-                                                            XenBEEClientError.ILLEGAL_REQUEST)))
+                                                       XenBEEClientError.ILLEGAL_REQUEST)))
 	    return
-	children = filter(ElementFilter(), root.childNodes)
-	if not len(children):
+
+	if not len(self.__root):
 	    self.transport.write(str(XenBEEClientError("no elements to handle found, sorry",
                                                        XenBEEClientError.ILLEGAL_REQUEST)))
 	    return
-        map(log.debug, map(NodeToString, children))
+        for child in filter(lambda x: x.tag in self.__understood, self.__root):
+            self.dispatch(decodeTag(child.tag)[1], child)
 
-        for c in children:
-            if (c.localName, c.namespaceURI) in self.__understood:
-                self.dispatch(c.localName, c)
+    def do_Error(self, err):
+        log.debug("got error:\n%s" % (etree.tostring(err)))
 
-    def do_Error(self, err_node):
-        log.debug("got error:\n%s" % (NodeToString(err_node)))
+__tagPattern = re.compile(r"^(?P<nsuri>{.*})?(?P<local>.*)$")
 
-#######
-# The following code has been taken from:
-#
-# http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/135131
+def decodeTag(tag):
+    m = __tagPattern.match(tag)
+    return (m.group("nsuri"), m.group("local"))
 
-def in_order_iterator_filter(node, filter_func):
-    if filter_func(node):
-        yield node
-    for child in node.childNodes:
-        for cn in in_order_iterator_filter(child, filter_func):
-            if filter_func(cn):
-                yield cn
-    return
+def Tag(local, uri=ISDL_NS):
+    return "{%s}%s" % (uri, local)
 
-def get_elements_by_tag_name_ns(node, ns, local):
-    return in_order_iterator_filter(
-        node,
-        lambda n: n.nodeType == xml.dom.Node.ELEMENT_NODE and \
-                  n.namespaceURI == ns and n.localName == local
-        )
-
-def string_value(node):
-    text_nodes = in_order_iterator_filter(
-        node, lambda n: n.nodeType == xml.dom.Node.TEXT_NODE)
-    return u''.join([ n.data for n in text_nodes ])
-
-#######
-
-def getChild(node, name, ns=ISDL_NS):
-    try:
-        return node.getElementsByTagNameNS(ns, name)[0]
-    except:
-        return None
+def getChild(elem, name, ns=ISDL_NS):
+    return elem.find(Tag(name,ns))
 
 def NodeToString(node):
     node.normalize()
@@ -160,36 +133,15 @@ class XenBEEClientMessage:
     def __init__(self, namespace=ISDL_NS, prefix="isdl"):
         self.__ns = namespace
         self.__prefix = prefix
-        self.__doc = None
-        self.root = None
-        self.__initXML()
+        self.root = etree.Element(Tag("Message", self.__ns), nsmap={ prefix: namespace } )
 
-    def __initXML(self):
-	self.__doc = xml.dom.minidom.getDOMImplementation().createDocument(self.__ns,
-                                                                           self.__prefix+":"+"Message",
-                                                                           None)
-	self.root = self.__doc.documentElement
-        self.addNamespace(self.__prefix, self.__ns)
-
-    def addNamespace(self, prefix, uri):
-        self.root.setAttributeNS(xml.dom.XMLNS_NAMESPACE, "xmlns:"+prefix, uri)
-        return self
-
-    def createElement(self, name, parent=None, text=None):
-        if not self.__doc:
-            raise RuntimeError("initXML() has to be called first")
-        e = self.__doc.createElementNS(self.__ns, self.__prefix + ":" + name)
-        if text:
-            e.appendChild(self.__doc.createTextNode(str(text)))
-        if parent:
-            parent.appendChild(e)
+    def createElement(self, tag, parent=None, text=None):
+        e = etree.SubElement(parent or self.root, Tag(tag, self.__ns))
+        e.text = text or ""
         return e
 
     def __str__(self):
-        if self.__doc:
-            return NodeToString(self.__doc)
-        else:
-            raise RuntimeError("message contains no document")
+        return etree.tostring(self.root)
 
 class XenBEEClientError(XenBEEClientMessage):
     """Encapsulates errors using XML."""
@@ -212,7 +164,9 @@ class XenBEEClientError(XenBEEClientMessage):
 
     def toxml(self):
 	error = self.createElement("Error", self.root)
-	errorCode = self.createElement("ErrorCode", error, self.errcode.value)
+#        error["code"] = str(self.errcode.value)
+#        error["name"] = str(self.errcode.name)
+	errorCode = self.createElement("ErrorCode", error, str(self.errcode.value))
 	errorName = self.createElement("ErrorName", error, self.errcode.name)
 	errorMessage = self.createElement("ErrorMessage", error, self.msg)
 
