@@ -48,8 +48,11 @@ class FSM(object):
         self.current = self.start
 
     def addTransition(self, s0, s1, input_symbol, output, *args, **kw):
-        stateS0 = self.getState(s0)
-        stateS1 = self.getState(s1)
+        try:
+            stateS0 = self.getState(s0)
+            stateS1 = self.getState(s1)
+        except KeyError, ke:
+            raise FSMError("no such state `%s'" % ke.args[0])
 
         t = self.getTransition(stateS0, input_symbol)
         if t:

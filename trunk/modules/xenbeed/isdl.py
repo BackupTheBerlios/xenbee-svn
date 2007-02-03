@@ -136,7 +136,8 @@ class XenBEEClientMessage:
         self.root = etree.Element(Tag("Message", self.__ns), nsmap={ prefix: namespace } )
 
     def createElement(self, tag, parent=None, text=None):
-        e = etree.SubElement(parent or self.root, Tag(tag, self.__ns))
+        if parent == None: parent = self.root
+        e = etree.SubElement(parent, Tag(tag, self.__ns))
         e.text = text or ""
         return e
 
@@ -201,8 +202,8 @@ class XenBEEStatusMessage(XenBEEClientMessage):
         else:
             objInfo = None
         
-        def _c(name, txt=None):
-            self.createElement(name, status, txt)
+        def _c(name, txt):
+            self.createElement(name, status, str(txt))
         _c("Name", obj.getName())
         _c("User", "N/A")
         if objInfo:

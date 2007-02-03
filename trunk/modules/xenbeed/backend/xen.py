@@ -65,7 +65,7 @@ class Backend(object):
     def acquireLock(self):
         self.lock.acquire()
 
-    def releaseLock():
+    def releaseLock(self):
         self.lock.release()
 
     def _runcmd(self, cmd, *args):
@@ -182,9 +182,9 @@ class Backend(object):
     def createInstance(self, inst):
         try:
             self.acquireLock()
-            rv = _createInstance(inst)
+            rv = self._createInstance(inst)
         finally:
-            releaseLock()
+            self.releaseLock()
         return rv
 
     def destroyInstance(self, inst):

@@ -36,7 +36,6 @@ class DataStager:
 	src - source from which to retrieve the data
 	dst - destination to which the data is to be transfered
 	"""
-
 	self.src = src.encode("ascii")
 	self.dst = dst.encode("ascii")
         self.tmpdst = None
@@ -157,12 +156,13 @@ class DataStager:
         if asynchronous:
             self.defer = threads.deferToThread(self.__perform)
         else:
-            self.defer = defer.Derred()
+            self.defer = defer.Deferred()
             try:
                 r = self.__perform()
+                self.defer.callback(r)
             except:
                 r = failure.Failure()
-            self.defer.callback(r)
+                self.defer.errback(r)
         return self.defer
 
 class FileSetRetriever:

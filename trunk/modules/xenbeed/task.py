@@ -40,11 +40,17 @@ class Task:
         m.newState("preparing")
         m.newState("pending")
         m.newState("startingup")
+        m.newState("started")
         m.newState("running")
         m.newState("finished")
 
         for s in ("preparing", "pending", "startingup", "running"):
             m.addTransition(s, "failed", "failed", self.do_failed)
+        m.addTransition("created", "preparing", "prepare", self.do_prepare)
+        m.addTransition("preparing", "pending", "filesRetrieved", self.do_pending)
+        m.addTransition("pending", "startingup", "start", self.do_startingup)
+        m.addTransition("startingup", "started", "started", self.do_started)
+        
         
         m.setStartState("created")
 
@@ -66,12 +72,24 @@ class Task:
     def prepare(self):
         self.fsm.consume("prepare")
 
+    def start(self):
+        self.fsm.consume("start")
+
     # FSM callbacks
     def do_failed(self, msg):
         self.extra_msg = msg
         self.mgr.taskFailed(self)
 
     def do_prepare(self):
+        pass
+
+    def do_pending(self):
+        pass
+
+    def do_startingup(self):
+        pass
+
+    def do_started(self):
         pass
         
 class TaskManager:
@@ -86,6 +104,7 @@ class TaskManager:
         self.tasks = {}
         self.mtx = threading.RLock()
         self.instanceManager = inst_mgr
+        self.base_path = base_path
 
     def newTask(self, document):
         """Returns a new task."""
@@ -125,8 +144,8 @@ class TaskManager:
         imgDef = task.document.find(".//"+isdl.Tag("ImageDefinition", isdl.ISDL_NS))
 	boot = imgDef.find(isdl.Tag("Boot", isdl.ISDL_NS))
 	files = {}
-	files["kernel"] = boot.find(".//"+isdl.Tag("kernel")+"/"+isdl.Tag("URI")).text.strip()
-	files["initrd"] = boot.find(".//"+isdl.Tag("initrd")+"/"+isdl.Tag("URI")).text.strip()
+	files["kernel"] = boot.find(".//"+isdl.Tag("Kernel")+"/"+isdl.Tag("URI")).text.strip()
+	files["initrd"] = boot.find(".//"+isdl.Tag("Initrd")+"/"+isdl.Tag("URI")).text.strip()
 
 	# image block
 	images = imgDef.find(isdl.Tag("Images"))
@@ -138,14 +157,18 @@ class TaskManager:
 
         # create spool for task and instance and add files
         task.spool = self.createSpool(task.ID())
-        task.inst_id = self.instanceManager.newInstance().uuid()
+        inst = self.instanceManager.newInstance(task.spool)
+
+        task.inst_id = inst.ID()
         inst.task_id = task.ID()
 
         d = inst.addFiles(files)
         def _s(*args):
+            log.info("files for task have been retrieved")
             task.filesRetrieved()
+            return self
         def _f(err):
-            task.failed("file retrieval failed " + str(err.getTraceback()))
+            task.failed("file retrieval for task %s failed %s" % (task.ID(), str(err.getTraceback())))
             return err
         d.addCallbacks(_s, _f)
         return d
@@ -154,7 +177,7 @@ class TaskManager:
         """Called when a task has failed somehow."""
         pass
 
-    def createSpool(self, _id):
+    def createSpool(self, _id, doSanityChecks=False):
         """Creates the spool-directory for a new task (using _id).
 
         The spool looks something like that: <base_path>/UUID(task)/

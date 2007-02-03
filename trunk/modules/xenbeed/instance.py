@@ -69,6 +69,9 @@ class Instance:
         """
         return self.config.getInstanceName()
 
+    def ID(self):
+        return self.uuid()
+
     def getName(self):
         """Return the instance name.
 
@@ -126,9 +129,10 @@ class Instance:
         retriever = FileSetRetriever(fileList)
 
         d = retriever.perform()
-        def __success(_):
+        def __success(*args):
             log.info("successfully retrieved all files for: "+self.getName())
             self.state = "start-pending"
+            return True
         def __fail(err):
             self.state = "failed"
             log.error("Retrieval failed: "+err.getTraceback())
@@ -250,7 +254,6 @@ class InstanceManager:
         icfg = InstanceConfig(uuid())
 
         try:
-            spool = self._createSpoolDirectory(icfg.getInstanceName())
             inst = Instance(icfg, spool, self)
         except:
             log.error(format_exception())
@@ -269,6 +272,9 @@ class InstanceManager:
         """
         inst.mgr = None
         self.instances.pop(inst.uuid())
+
+    def lookupByID(self, ID):
+        return self.lookupByUUID(ID)
 
     def lookupByUUID(self, uuid):
         """Return the instance for the given identifier.

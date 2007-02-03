@@ -32,7 +32,6 @@ class XenBEEClientProtocol(isdl.XMLProtocol):
 
     def do_ImageSubmission(self, elem):
 	"""Handle an image submission."""
-
         # run some checks on the received document
 	imgDef = elem.find(isdl.Tag("ImageDefinition", isdl.ISDL_NS))
 	if not imgDef:
@@ -40,6 +39,10 @@ class XenBEEClientProtocol(isdl.XMLProtocol):
 
         # create a new task object for this submission
         task = self.factory.taskManager.newTask(elem)
+        self.transport.write(
+            str(isdl.XenBEEClientError("task submitted: %s" % task.ID(),
+                                       isdl.XenBEEClientError.OK))
+            )
 
     def do_StatusRequest(self, dom_node):
 	"""Handle status request."""
@@ -183,8 +186,8 @@ class XenBEEProtocolFactory(StompClientFactory):
 	self.queue = queue
 	self.stomp = None
         self.scheduler = scheduler
-	self.instanceManager = scheduler.instanceManager
-        self.taskManager = scheduler.taskManager
+	self.instanceManager = scheduler.iMgr
+        self.taskManager = scheduler.tMgr
 
     def clientConnectionFailed(self, connector, reason):
 	log.error("connection to STOMP server failed!: %s" % (str(reason.value)))
