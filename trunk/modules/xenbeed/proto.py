@@ -47,7 +47,7 @@ class XenBEEClientProtocol(isdl.XMLProtocol):
     def do_StatusRequest(self, dom_node):
 	"""Handle status request."""
         msg = isdl.XenBEEStatusMessage()
-        map(msg.addStatusForInstance, self.factory.instanceManager)
+        map(msg.addStatusForTask, self.factory.taskManager.tasks.values())
         self.transport.write(str(msg))
 
     def do_Kill(self, elem):
@@ -73,15 +73,15 @@ class XenBEEClientProtocol(isdl.XMLProtocol):
 
         for t in node.findall(isdl.Tag("JobID")):
             taskID = t.text.strip()
-            task = self.factory.taskManager.lookupByUUID(t.text.strip())
+            task = self.factory.taskManager.lookupByID(t.text.strip())
             
             if not task:
                 self.transport.write(            
-                    str(isdl.XenBEEClientError("no such job: %s" % (instID,),
+                    str(isdl.XenBEEClientError("no such task: %s" % (instID,),
                                                isdl.XenBEEClientError.ILLEGAL_REQUEST))
                     )
             else:
-                log.warn("TODO")
+                task.kill(signum)
                 # pass
         self.transport.write(
             str(isdl.XenBEEClientError("signal sent", isdl.XenBEEClientError.OK)))
@@ -99,25 +99,14 @@ class XenBEEInstanceProtocol(isdl.XMLProtocol):
         self.addUnderstood("TaskStatusNotification", isdl.ISDL_NS)
 
     def executeTask(self, task):
-        pass
-#        isdlDoc = inst._isdlDocument
-#        jsdlPart = isdl.getChild(isdlDoc, "JobDefinition", isdl.JSDL_NS)
-#        if not jsdlPart:
-#            raise ValueError("no JobDefinition found!")
-#        jsdlPrefix = jsdlPart.prefix
-#
-#        jsdlPosixPart = isdl.getChild(jsdlPart, "POSIXApplication", isdl.JSDL_POSIX_NS)
-#        jsdlPosixPrefix = jsdlPosixPart.prefix
-#
-#        # build task submission
-#        msg = isdl.XenBEEClientMessage()
-#        msg.addNamespace(jsdlPrefix, isdl.JSDL_NS).addNamespace(jsdlPosixPrefix, isdl.JSDL_POSIX_NS)
-#        msg.root.appendChild(jsdlPart.cloneNode(True))
-#        
-#        log.info("instance is now managable: %s" % inst_id)
-#        log.debug("submitting:\n%s" % str(msg))
-#        self.transport.write(str(msg))
-        
+        job = task.document.find(".//" + isdl.Tag("JobDefinition", isdl.JSDL_NS))
+        if job == None:
+            raise RuntimeError("no job definition found for task %s" % (task.ID()))
+        msg = isdl.XenBEEClientMessage()
+        msg.root.append(job)
+
+        log.info("submitting:\n%s" % str(msg))
+        self.transport.write(str(msg))
 
     def queryStatus(self):
         pass
@@ -129,6 +118,8 @@ class XenBEEInstanceProtocol(isdl.XMLProtocol):
     #########################
     def do_InstanceAvailable(self, dom_node):
         inst_id = isdl.getChild(dom_node, "InstanceID").text.strip()
+        if inst_id != self.instid:
+            raise ValueError("got answer from different instance!")
         inst = self.factory.instanceManager.lookupByUUID(inst_id)
         if not inst:
             raise ValueError("no such instance")
@@ -136,14 +127,16 @@ class XenBEEInstanceProtocol(isdl.XMLProtocol):
             raise ValueError("no task belongs to this instance")
         inst.protocol = self
         inst.available()
-#        self.factory.taskManager.instanceAvailableForTask(task)
-        
 
-    def do_TaskStatusNotification(self, status_node):
-        fin_node = isdl.getChild(status_node, "TaskFinished")
-        exitcode = int(isdl.getChild(fin_node, "ExitCode").text)
-        errout   = isdl.getChild(fin_node, "ErrorOutput").text
+    def do_TaskStatusNotification(self, status_elem):
+        fin_elem = isdl.getChild(status_elem, "TaskFinished")
+        exitcode = int(isdl.getChild(fin_elem, "ExitCode").text)
+        errout   = isdl.getChild(fin_elem, "ErrorOutput").text
         log.info("task finished: code=%d errout='%s'" % (exitcode, errout))
+
+        task = self.factory.instanceManager.lookupByUUID(self.instid).task
+        task.status_elem = status_elem
+        task.finished(exitcode)
 
 class XenBEEProtocol(StompClient):
     """Processing input received by the STOMP server."""

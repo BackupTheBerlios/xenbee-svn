@@ -82,8 +82,16 @@ class Task(object):
     def instanceAvailable(self):
         self.fsm.consume("instance-available")
 
+    def kill(self, signal=15):
+        log.debug("TODO: send kill signal to task?")
+        return self.failed("killed")
+
     def execute(self):
+        log.debug("executing %s" % self.ID())
         return self.fsm.consume("execute")
+
+    def finished(self, exitcode=0):
+        return self.fsm.consume("finished", exitcode)
 
     # FSM callbacks
     def do_failed(self, msg):
@@ -105,16 +113,20 @@ class Task(object):
             log.err("instance could not be started: %s" % (err.getErrorMessage()))
             self.failed("instance could not be started: %s" % (err.getErrorMessage()))
             return err
+        d.addCallbacks(_s,_f)
         return d
 
     def do_instanceAvailable(self):
+        log.debug("my instance has been started")
         self.mgr.taskReady(self)
 
     def do_execute(self):
+        log.info("executing task %s" % (self.ID()))
         self.inst.protocol.executeTask(task=self)
 
-    def do_finished(self):
-        pass
+    def do_finished(self, exitcode):
+        self.__exitcode = exitcode
+        self.mgr.taskFinished(self)
         
 class TaskManager:
     """The task-manager.
@@ -217,10 +229,9 @@ class TaskManager:
         """Called when a task says, that it's ready."""
         self.notify(task, "taskReady")
 
-    def instanceAvailableForTask(self, task):
-        """Called when the instance is available for the task."""
-        task.instanceAvailable()
-        self.notify(task, "instanceAvailable")
+    def taskFinished(self, task):
+        """Called when a task finished."""
+        self.notify(task, "taskFinished")
 
     def createSpool(self, _id, doSanityChecks=False):
         """Creates the spool-directory for a new task (using _id).

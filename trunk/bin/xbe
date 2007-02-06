@@ -28,6 +28,9 @@ log = logging.getLogger(__name__)
 from optparse import OptionParser
 from textwrap import dedent
 
+from xenbeed.isdl import XenBEEClientMessage
+from lxml import etree
+
 URI_PATTERN = r'((?P<prot>[a-zA-Z]+)://)?(?P<path>.*)'
 
 class NoPrintOptionParser(OptionParser):
@@ -170,6 +173,7 @@ class Command_create(RemoteCommand):
         p.add_option("-s", "--swap",   dest="swap",    type="int",    help="the amount of swap space to use (in MB)", default=128)
         p.add_option("-i", "--image",  dest="image",   type="string", help="the main image to boot")
         p.add_option("-C", "--cpus",   dest="cpus",    type="int",    help="the number of cpus to use", default=1)
+        p.add_option("-j", "--jsdl",   dest="jsdl",    type="string", help="a jsdl document", default="-")
 
     def handleMessage(self, msg):
         RemoteCommand.handleMessage(self, msg)
@@ -183,8 +187,15 @@ class Command_create(RemoteCommand):
         if not self.options.image:
             raise CommandFailed("'image' is required")
 
+        if self.options.jsdl == "-":
+            # reading jsdl from stdin...
+            print "reading stdin..."
+            jsdlFile = sys.stdin
+        else:
+            jsdlFile = open(self.options.jsdl)
+        jsdl = etree.parse(jsdlFile)
+
         # build xml message
-        from xenbeed.isdl import XenBEEClientMessage
         msg = XenBEEClientMessage()
         submit = msg.createElement("ImageSubmission", msg.root)
         imgdef = msg.createElement("ImageDefinition", submit)
@@ -200,6 +211,8 @@ class Command_create(RemoteCommand):
         bootimgsrc = msg.createElement("Source", bootimg)
         msg.createElement("URI", bootimgsrc, self.options.image)
 
+        submit.append(jsdl.getroot())
+        
         self.executeRemote(str(msg))
 
 class Command_kill(RemoteCommand):

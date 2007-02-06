@@ -198,27 +198,28 @@ class XenBEEStatusMessage(XenBEEClientMessage):
         XenBEEClientMessage.__init__(self)
         self.statusList = self.createElement("StatusList", self.root)
 
-    def addStatusForInstance(self, obj):
+    def addStatusForTask(self, task):
         status = self.createElement("Status", self.statusList)
-        if obj.state == "started":
-            objInfo = obj.getBackendInfo()
-        else:
-            objInfo = None
+
+        try:
+            info = task.inst.getBackendInfo()
+        except:
+            info = None
         
         def _c(name, txt):
             self.createElement(name, status, str(txt))
-        _c("Name", obj.getName())
+        _c("TID", task.ID())
         _c("User", "N/A")
-        if objInfo:
-            _c("Memory", objInfo.memory)
-            _c("CPUTime", objInfo.cpuTime)
+        if info:
+            _c("Memory", info.memory)
+            _c("CPUTime", info.cpuTime)
         else:
             _c("Memory", "N/A")
             _c("CPUTime", "N/A")
             
-        _c("StartTime", obj.startTime)
+        _c("StartTime", task.startTime)
         _c("EndTime", "N/A")
-        _c("State", obj.state)
+        _c("State", task.state())
 
 class XenBEEInstanceAvailable(XenBEEClientMessage):
     """The message sent by an instance upon startup."""
