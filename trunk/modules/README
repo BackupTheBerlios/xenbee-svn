@@ -92,3 +92,17 @@ Task creation:
                out
 	       
 	     - closed tasks, all files staged out
+
+
+Bugs found:
+===========
+	* python logging: line-number output FIXED
+	* xen: 4 instances make the host-system freeze
+	* xen: fast starting of instances results in 2 instances, that may use the same MAC/IP
+
+	java       8480  root   18u  IPv6 129526       TCP 10.199.136.100:61613->10.199.136.102:1642 (ESTABLISHED)
+	java       8480  root   21u  IPv6 129527       TCP 10.199.136.100:61613->10.199.136.102:1936 (ESTABLISHED)
+
+	instance 1: python    2681 root    7u  IPv4   7415       TCP 10.199.136.102:1642->10.199.136.100:61613 (ESTABLISHED)
+	instance 2: python    2681 root    7u  IPv4   7366       TCP 10.199.136.102:1936->10.199.136.100:61613 (ESTABLISHED)
+

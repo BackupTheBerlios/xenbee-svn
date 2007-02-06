@@ -95,7 +95,7 @@ class Backend(object):
     def retrieveID(self, inst):
         """Retrieves the backend id for the given instance or -1."""
         try:
-            return _getDomain(inst).ID()
+            return self._getDomain(inst).ID()
         except:
             return -1
 

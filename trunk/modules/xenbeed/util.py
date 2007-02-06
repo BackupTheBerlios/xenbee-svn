@@ -14,17 +14,16 @@ def removeDirCompletely(d):
         os.rmdir(root)
 
 class Lock:
-    mutexName = '__mutexLock'
-    def __init__(self, obj):
-        try:
-            mtx = getattr(obj, Lock.mutexName)
-        except AttributeError:
-            mtx = threading.Lock()
-            setattr(obj, Lock.mutexName, mtx)
-        self.mtx = mtx
-        self.mtx.acquire()
+    counter = 0
+    def __init__(self, name=None, reentrant=True):
+        if reentrant:
+            self.__mtx = threading.RLock()
+        else:
+            self.__mtx = threading.Lock()
+        self.__name = name or "Lock-%d" % (Lock.counter, )
+        Lock.counter += 1
 
-    def __del__(self):
-        if hasattr(self, 'mtx'):
-            self.mtx.release()
-
+    def acquire(self):
+        self.log("acquiring %s" % (self.__name))
+        self.__mtx.acquire()
+        self.log("acquired %s" % (self.__name))

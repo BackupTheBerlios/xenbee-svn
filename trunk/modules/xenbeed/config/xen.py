@@ -48,10 +48,14 @@ class InstanceConfig:
 
         required: kernel
         """
-        if self.vcpus < 1: raise ConfigurationError("InstanceConfig: vcpus < 1: %d" % self.vcpus)
-        if not self.kernel: raise ConfigurationError("InstanceConfig: kernel is None")
-        if not len(self.getDisks()): raise ConfigurationError("InstanceConfig: no disks")
-        if not self.name or not len(self.name): raise ConfigurationError("InstanceConfig: illegal name")
+        if self.vcpus < 1:
+            raise ConfigurationError("InstanceConfig: vcpus < 1: %d" % self.vcpus)
+        if not self.kernel:
+            raise ConfigurationError("InstanceConfig: kernel is None")
+        if not len(self.getDisks()):
+            raise ConfigurationError("InstanceConfig: no disks")
+        if not self.name or not len(self.name):
+            raise ConfigurationError("InstanceConfig: illegal name")
 
     def setKernel(self, kernel):
         """Sets the kernel to be used."""
@@ -60,9 +64,13 @@ class InstanceConfig:
         """Returns the used kernel."""
         return self.kernel
 
-    def addToKernelCommandLine(self, opt):
+    def addToKernelCommandLine(self, *args, **kw):
         """Sets the kernel commandline that shall be passed."""
-        self.cmdline.append(opt)
+        for opt in args:
+            self.cmdline.append(opt)
+        for k,v in kw.iteritems():
+            self.cmdline.append("%s=%s" % (k,v))
+        
     def getKernelCommandLine(self):
         """Returns the kernel commandline."""
         return " ".join(self.cmdline)

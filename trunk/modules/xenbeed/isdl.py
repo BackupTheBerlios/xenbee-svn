@@ -131,14 +131,17 @@ class XenBEEMessageFactory:
 class XenBEEClientMessage:
     """Encapsulates a xml message."""
     def __init__(self, namespace=ISDL_NS, prefix="isdl"):
+        """Initialize a XML message using the given namespace and prefix."""
         self.__ns = namespace
         self.__prefix = prefix
         self.root = etree.Element(Tag("Message", self.__ns), nsmap={ prefix: namespace } )
 
     def createElement(self, tag, parent=None, text=None):
+        """Utility function to create a new element for this message."""
         if parent == None: parent = self.root
         e = etree.SubElement(parent, Tag(tag, self.__ns))
-        e.text = text or ""
+        if text != None:
+            e.text = str(text)
         return e
 
     def __str__(self):

@@ -50,9 +50,9 @@ class XenBEEClientProtocol(isdl.XMLProtocol):
         map(msg.addStatusForInstance, self.factory.instanceManager)
         self.transport.write(str(msg))
 
-    def do_Kill(self, node):
+    def do_Kill(self, elem):
         # get the signal type
-        sig = isdl.getChild(node, "Signal")
+	sig = elem.find(isdl.Tag("Signal", isdl.ISDL_NS))
         if not sig:
             self.transport.write(            
                 str(isdl.XenBEEClientError("no signal given!",
@@ -72,16 +72,19 @@ class XenBEEClientProtocol(isdl.XMLProtocol):
             raise
 
         for t in node.findall(isdl.Tag("JobID")):
-            instID = t.text.strip()
-            inst = self.factory.instanceManager.lookupByUUID(instID)
+            taskID = t.text.strip()
+            task = self.factory.taskManager.lookupByUUID(t.text.strip())
             
-            if not inst:
+            if not task:
                 self.transport.write(            
                     str(isdl.XenBEEClientError("no such job: %s" % (instID,),
                                                isdl.XenBEEClientError.ILLEGAL_REQUEST))
                     )
-            inst.stop()
-        self.transport.write(str(isdl.XenBEEClientError("signal sent", isdl.XenBEEClientError.OK)))
+            else:
+                log.warn("TODO")
+                # pass
+        self.transport.write(
+            str(isdl.XenBEEClientError("signal sent", isdl.XenBEEClientError.OK)))
 	
 class XenBEEInstanceProtocol(isdl.XMLProtocol):
     """The XBE instance side protocol.
@@ -94,13 +97,9 @@ class XenBEEInstanceProtocol(isdl.XMLProtocol):
 	self.instid = instid
         self.addUnderstood("InstanceAvailable", isdl.ISDL_NS)
         self.addUnderstood("TaskStatusNotification", isdl.ISDL_NS)
-        
-    def do_InstanceAvailable(self, dom_node):
-        inst_id = isdl.getChild(dom_node, "InstanceID").text.strip()
-        inst = self.factory.instanceManager.lookupByUUID(inst_id)
-        if not inst:
-            raise ValueError("no such instance")
-        
+
+    def executeTask(self, task):
+        pass
 #        isdlDoc = inst._isdlDocument
 #        jsdlPart = isdl.getChild(isdlDoc, "JobDefinition", isdl.JSDL_NS)
 #        if not jsdlPart:
@@ -118,6 +117,27 @@ class XenBEEInstanceProtocol(isdl.XMLProtocol):
 #        log.info("instance is now managable: %s" % inst_id)
 #        log.debug("submitting:\n%s" % str(msg))
 #        self.transport.write(str(msg))
+        
+
+    def queryStatus(self):
+        pass
+
+    #########################
+    #                       #
+    # Message handling part #
+    #                       #
+    #########################
+    def do_InstanceAvailable(self, dom_node):
+        inst_id = isdl.getChild(dom_node, "InstanceID").text.strip()
+        inst = self.factory.instanceManager.lookupByUUID(inst_id)
+        if not inst:
+            raise ValueError("no such instance")
+        if inst.task == None:
+            raise ValueError("no task belongs to this instance")
+        inst.protocol = self
+        inst.available()
+#        self.factory.taskManager.instanceAvailableForTask(task)
+        
 
     def do_TaskStatusNotification(self, status_node):
         fin_node = isdl.getChild(status_node, "TaskFinished")

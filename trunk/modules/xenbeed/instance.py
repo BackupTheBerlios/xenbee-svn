@@ -28,7 +28,7 @@ from twisted.internet import reactor, threads, task, defer
 class InstanceError(XenBeeException):
     pass
 
-class Instance:
+class Instance(object):
     def __init__(self, config, spool, mgr):
         """Initialize a new instance.
 
@@ -50,10 +50,19 @@ class Instance:
         self.config = config
 
         self.state = "created"
+        
+        # on instance-startup, a timer is created which results in notifying a failure
+        # if the instance does not respond within __availableTimeout seconds
+        self.__availableTimeout = 5*60
+        self.__availableTimer = None # the defered timer
+        self.__availableDefer = defer.Deferred()
+
         self.spool = spool
         self.backend_id = -1
 	self.mgr = mgr
         self.startTime = 0
+        self.protocol = None # the protocol used to speak to the instance
+        self.task = None
 
     def __del__(self):
         log.debug("deleting instance")
@@ -206,16 +215,35 @@ class Instance:
         self.config.setInitrd(self.getFullPath("initrd"))
         self.config.setMac("00:16:3e:00:00:02")
         self.config.addDisk(self.getFullPath("root"), "sda1")
-        self.config.addToKernelCommandLine("XBE_SERVER=%s:%d" % ( "xen-o-matic.itwm.fhrg.fraunhofer.de", 61613))
-        self.config.addToKernelCommandLine("XBE_UUID=%s" % (self.getName(),))
+        self.config.addToKernelCommandLine(XBE_SERVER="%s:%d" % (
+            "xen-o-matic.itwm.fhrg.fraunhofer.de", 61613))
+        self.config.addToKernelCommandLine(XBE_UUID="%s" % (self.getName(),))
     
     def start(self):
-        """Starts a new backend instance."""
-        # check if needed files are available
-        # (kernel, initrd, disks, etc.)
+        """Starts a new backend instance.
+
+        It returns a Deferred object, that is called back, when the
+        instance has notified us, i.e. when the instance could be
+        started correctly and is able to contact us.
+
+        """
         self.state = "starting"
-        
+
         self.__configure()
+
+        def __timeout():
+            self.state = "failed"
+            _msg = "instance %s did not respond!" % (self.ID())
+            log.warn(_msg)
+            self.__availableDefer.errback(_msg)
+
+        def __inst_available(arg):
+            # got signal from the backend instance
+            self.__availableTimer.cancel()
+            return arg
+            
+        self.__availableDefer.addCallback(__inst_available)
+        self.__availableTimer = reactor.callLater(self.__availableTimeout, __timeout)
         
         # use the backend to start
 	def __started(backendId):
@@ -223,10 +251,17 @@ class Instance:
             self.setBackendID(backendId)
             self.startTime = time.time()
         def __failed(err):
-            log.error("starting failed: " + err.getErrorMessage())
             self.state = "failed"
-            return err
-        return threads.deferToThread(backend.createInstance, self).addCallback(__started).addErrback(__failed)
+            log.error("starting failed: " + err.getErrorMessage())
+            self.__availableTimer.cancel()
+            self.__availableDefer.errback("starting failed: " + err.getErrorMessage())
+        threads.deferToThread(backend.createInstance, self).addCallback(__started).addErrback(__failed)
+            
+        return self.__availableDefer
+
+    def available(self):
+        """Callback called when the instance has notified us."""
+        self.__availableDefer.callback(self)
 
 class InstanceManager:
     """The instance-manager.

@@ -21,7 +21,7 @@ class State(object):
 
 class FSM(object):
     def __init__(self, start=None):
-        self.states = {}
+        self.__states = {}
         self.transitions = []
         self.current = None
         if start != None:
@@ -31,18 +31,21 @@ class FSM(object):
             self.start = None
 
     def newState(self, name):
-        if name in self.states.keys():
+        if name in self.__states.keys():
             raise FSMError("state `%s' does already exist." % name)
         s = State(name)
-        self.states[name] = s
+        self.__states[name] = s
         return s
+
+    def states(self):
+        return self.__states.keys()
 
     def setStartState(self, name):
         self.start = self.getState(name)
         self.reset()
 
     def getState(self, name):
-        return self.states[name]
+        return self.__states[name]
 
     def reset(self):
         self.current = self.start
@@ -88,9 +91,9 @@ class FSM(object):
         kw.update(extra_kw)
         if o:
             # call transition method
-            o(*args, **kw)
+            rv = o(*args, **kw)
         self.current = s1
-        return self.current
+        return rv
 
     def getCurrentState(self):
         return self.current.name
