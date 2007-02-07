@@ -1,18 +1,34 @@
 #!/bin/bash
 spool=/srv/xen-images/xenbee/
 
+if [ "x$1" == "x-n" ]; then
+	dry="yes"
+else
+	dry="no"
+fi
+
+if [ "x$1" == "x-k" ]; then
+	keep="yes"
+else
+	keep="no"
+fi
+
 # shutoff all running instances
 echo "shutting domains down..."
 for domain in `xm list | tail -n +2 | awk '{print $1}' | fgrep -v "Domain-0"`; do
-	echo -e "\t$domain"
-	xm shutdown $domain
+	if [ "$dry" == "no" ]; then
+		echo -e "\t$domain"
+		xm shutdown $domain
+	else
+		echo -e "\t* $domain"
+	fi
 done
 echo "  done."
 
 echo -n "waiting..."
 while true; do
 	instances=`xm list | tail -n +2 | wc -l`
-	if [ "$instances" -eq 1 ]; then
+	if [ "$instances" -eq 1 -o "$dry" == "yes" ]; then
 		break
 	fi
 	sleep 1
@@ -20,5 +36,7 @@ while true; do
 done
 echo "done."
 echo -n "cleaning up..."
-rm -rf $spool/*
+if [ "$dry" != "yes" -a "$keep" != "yes" ]; then
+	rm -rf $spool/*
+fi
 echo "done."
