@@ -28,9 +28,11 @@ class ProcProtocol(protocol.ProcessProtocol):
         """parse the data and store it in some file."""
 
     def errReceived(self, data):
+        log.debug("process-err: %s" % (str(data)))
         self.errOutput.append(data)
 
     def processEnded(self, status_object):
+        log.debug("process ended: %s" % str(status_object))
         self.creator.processEnded(status_object)
 
 class ServerProtocol(isdl.XMLProtocol):
@@ -39,28 +41,17 @@ class ServerProtocol(isdl.XMLProtocol):
         isdl.XMLProtocol.__init__(self,transport)
         self.addUnderstood("JobDefinition", isdl.JSDL_NS)
 
-    def do_JobDefinition(self, node):
-        jobDesc = isdl.getChild(node, "JobDescription", isdl.JSDL_NS)
-        jobIdent = isdl.getChild(jobDesc, "JobIdentification", isdl.JSDL_NS)
-        j_name = isdl.getChild(jobIdent,
-                               "JobName",
-                               isdl.JSDL_NS).firstChild.nodeValue.strip()
-        j_desc = isdl.getChild(jobIdent,
-                               "Description",
-                               isdl.JSDL_NS).firstChild.nodeValue.strip()
-        app = isdl.getChild(jobDesc, "Application", isdl.JSDL_NS)
-        appNam = isdl.getChild(app, "ApplicationName", isdl.JSDL_NS)
-        posixApp = isdl.getChild(app, "POSIXApplication", isdl.JSDL_POSIX_NS)
-        posixExecutable = isdl.getChild(posixApp,
-                                        "Executable",
-                                        isdl.JSDL_POSIX_NS).firstChild.nodeValue.strip()
-        def _f(n):
-            if n.firstChild:
-                return n.firstChild.nodeValue.strip()
-            else:
-                return u''
+    def do_JobDefinition(self, job_def):
+        desc = job_def.find(isdl.Tag("JobDescription", isdl.JSDL_NS))
+        ident = desc.find(isdl.Tag("JobIdentification", isdl.JSDL_NS))
+        name = (ident.find(isdl.Tag("JobName", isdl.JSDL_NS)).text or "").strip()
+        j_desc = (ident.find(isdl.Tag("Description", isdl.JSDL_NS)).text or "").strip()
+
+        app = desc.find(isdl.Tag("Application", isdl.JSDL_NS))
+        posixApp = app.find(isdl.Tag("POSIXApplication", isdl.JSDL_POSIX_NS))
+        posixExecutable = (posixApp.find(isdl.Tag("Executable", isdl.JSDL_POSIX_NS)).text or "").strip()
             
-        args = [_f(n) for n in posixApp.getElementsByTagNameNS(isdl.JSDL_POSIX_NS, "Argument")]
+        args = [(n.text or "").strip() for n in posixApp.findall(isdl.Tag("Argument", isdl.JSDL_POSIX_NS))]
         cmdline = [ posixExecutable ]
         cmdline.extend(args)
         log.info("executing task: " + `cmdline`)
@@ -105,12 +96,13 @@ def main():
     try:
         xbe_server, xbe_port = os.environ["XBE_SERVER"].split(":")
         xbe_port = int(xbe_port)
+    except ValueError, ve:
+        xbe_server, xbe_port = os.environ["XBE_SERVER"], 61613
     except KeyError:
         xbe_server, xbe_port = "localhost", 61613
         log.warn("running in local mode with server at %s:%d" % (xbe_server,xbe_port))
-    except ValueError, ve:
-        xbe_server, xbe_port = "localhost", 61613
-        log.warn("could not interpret server variable: %s" % (str(ve)))
+    except:
+        log.exception("could not interpret $XBE_SERVER")
         
     try:
         xbe_uuid = os.environ["XBE_UUID"]

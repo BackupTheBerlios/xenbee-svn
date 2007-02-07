@@ -1,0 +1,24 @@
+#!/bin/bash
+spool=/srv/xen-images/xenbee/
+
+# shutoff all running instances
+echo "shutting domains down..."
+for domain in `xm list | tail -n +2 | awk '{print $1}' | fgrep -v "Domain-0"`; do
+	echo -e "\t$domain"
+	xm shutdown $domain
+done
+echo "  done."
+
+echo -n "waiting..."
+while true; do
+	instances=`xm list | tail -n +2 | wc -l`
+	if [ "$instances" -eq 1 ]; then
+		break
+	fi
+	sleep 1
+	echo -n "."
+done
+echo "done."
+echo -n "cleaning up..."
+rm -rf $spool/*
+echo "done."

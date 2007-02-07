@@ -11,6 +11,7 @@ log = logging.getLogger(__name__)
 
 from stomp.proto import StompClient, StompClientFactory, StompTransport
 from xenbeed import isdl
+from lxml import etree
 
 # Twisted imports
 from twisted.internet import reactor
@@ -103,7 +104,7 @@ class XenBEEInstanceProtocol(isdl.XMLProtocol):
         if job == None:
             raise RuntimeError("no job definition found for task %s" % (task.ID()))
         msg = isdl.XenBEEClientMessage()
-        msg.root.append(job)
+        msg.root.append(etree.fromstring(etree.tostring(job)))
 
         log.info("submitting:\n%s" % str(msg))
         self.transport.write(str(msg))
