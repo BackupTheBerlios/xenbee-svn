@@ -109,8 +109,17 @@ def decodeTag(tag):
     m = __tagPattern.match(tag)
     return (m.group("nsuri"), m.group("local"))
 
-def Tag(local, uri=ISDL_NS):
-    return etree.QName(uri, local).text
+def Tag(local, ns=ISDL_NS):
+    return etree.QName(ns, local).text
+
+# taken from http://effbot.org/zone/element-lib.htm
+class NS(object):
+    def __init__(self, uri):
+        self.__uri = uri
+    def __getattr__(self, tag):
+        return etree.QName(self.__uri, tag).text
+    def __call__(self, path):
+        return "/".join(getattr(self, tag) for tag in path.split("/"))
 
 def getChild(elem, name, ns=ISDL_NS):
     return elem.find(Tag(name,ns))
