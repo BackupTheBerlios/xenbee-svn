@@ -73,7 +73,7 @@ class Scheduler:
                 log.debug("a new task has been created")
                 self.__created.append(task)
             elif event == "taskFinished":
-                self.debug("task %s finished" % task.ID())
+                log.debug("task %s finished" % task.ID())
         finally:
             self.unlock()
 

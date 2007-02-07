@@ -9,6 +9,7 @@ __author__ = "$Author$"
 import logging
 log = logging.getLogger(__name__)
 
+from time import gmtime, strftime
 from lxml import etree
 import re
 
@@ -109,7 +110,7 @@ def decodeTag(tag):
     return (m.group("nsuri"), m.group("local"))
 
 def Tag(local, uri=ISDL_NS):
-    return "{%s}%s" % (uri, local)
+    return etree.QName(uri, local).text
 
 def getChild(elem, name, ns=ISDL_NS):
     return elem.find(Tag(name,ns))
@@ -179,7 +180,7 @@ class XenBEEStatusMessage(XenBEEClientMessage):
 
     <StatusList>
         <Status>
-           <Name></Name>
+           <ID></ID>
            <User></User>
            <Memory></Memory>
            <CPUTime></CPUTime>
@@ -208,18 +209,29 @@ class XenBEEStatusMessage(XenBEEClientMessage):
         
         def _c(name, txt):
             self.createElement(name, status, str(txt))
-        _c("TID", task.ID())
+        _c("ID", task.ID())
         _c("User", "N/A")
+        _c("Submitted", str(task.tstamp))
         if info:
             _c("Memory", info.memory)
             _c("CPUTime", info.cpuTime)
         else:
             _c("Memory", "N/A")
             _c("CPUTime", "N/A")
-            
-        _c("StartTime", task.startTime)
-        _c("EndTime", "N/A")
+        if hasattr(task, "startTime"):
+            _c("StartTime", str(task.startTime))
+        else:
+            _c("StartTime", "N/A")
+        if hasattr(task, "endTime"):
+            _c("EndTime", str(task.endTime))
+        else:
+            _c("EndTime", "N/A")
         _c("State", task.state())
+        if hasattr(task, "exitCode"):
+            _c("ExitCode", str(task.exitCode))
+        else:
+            _c("ExitCode", "N/A")
+            
 
 class XenBEEInstanceAvailable(XenBEEClientMessage):
     """The message sent by an instance upon startup."""

@@ -28,7 +28,7 @@ log = logging.getLogger(__name__)
 from optparse import OptionParser
 from textwrap import dedent
 
-from xenbeed.isdl import XenBEEClientMessage
+from xenbeed import isdl
 from lxml import etree
 
 URI_PATTERN = r'((?P<prot>[a-zA-Z]+)://)?(?P<path>.*)'
@@ -116,8 +116,25 @@ class RemoteCommand(Command):
         
     def handleMessage(self, msg):
         """handles the given message from the STOMP server."""
-        print str(msg).strip()
-        reactor.stop()
+        xml = etree.fromstring(msg.body)
+        if xml.find(isdl.Tag("Error")):
+            self._handleError(xml.find(isdl.Tag("Error")))
+        else:
+            self._handleMessage(xml)
+            reactor.stop()
+
+    def _handleError(self,err):
+        errcode = int(err.find(isdl.Tag("ErrorCode")).text)
+        errname = (err.find(isdl.Tag("ErrorName")).text or "").strip()
+        errmsg  = (err.find(isdl.Tag("ErrorMessage")).text or "").strip()
+        if errcode != 200:
+            self.executeFailed("[Code %d]: %s - %s" % (errcode, errname, errmsg))
+        else:
+            print "[Code %d]: %s - %s" % (errcode, errname, errmsg)
+            reactor.stop()
+
+    def _handleMessage(self, msg):
+        print etree.tostring(msg)
 
     def initStomp(self):
         pass
@@ -175,9 +192,6 @@ class Command_create(RemoteCommand):
         p.add_option("-C", "--cpus",   dest="cpus",    type="int",    help="the number of cpus to use", default=1)
         p.add_option("-j", "--jsdl",   dest="jsdl",    type="string", help="a jsdl document", default="-")
 
-    def handleMessage(self, msg):
-        RemoteCommand.handleMessage(self, msg)
-    
     def execute(self):
         self.options, self.args = parse_args(self.parser, self.argv)
 
@@ -196,7 +210,7 @@ class Command_create(RemoteCommand):
         jsdl = etree.parse(jsdlFile)
 
         # build xml message
-        msg = XenBEEClientMessage()
+        msg = isdl.XenBEEClientMessage()
         submit = msg.createElement("ImageSubmission", msg.root)
         imgdef = msg.createElement("ImageDefinition", submit)
         boot = msg.createElement("Boot", imgdef)
@@ -263,6 +277,33 @@ class Command_status(RemoteCommand):
         sreq = msg.createElement("StatusRequest", msg.root)
         msg.root.append(sreq)
         self.executeRemote(str(msg))
+
+    def _handleMessage(self, msg):
+        """handles the status message."""
+        slist = msg.find(isdl.Tag("StatusList"))
+        stats = []
+        for child in slist:
+            stats.append(self._parseStatus(child))
+
+#        strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime(task.startTime)))
+        fmt = "%(ID)-36s  %(User)-10s %(Submitted)-14s %(StartTime)-14s %(EndTime)-14s %(State)-10s %(ExitCode)s"
+        hdr = { "ID": "task id",
+                "User": "user",
+                "Submitted": "submitted",
+                "StartTime": "starttime",
+                "EndTime": "endtime",
+                "State": "cur.state",
+                "ExitCode": "exitcode" }
+        print fmt % hdr
+        for s in stats:
+            print fmt % s
+        
+    def _parseStatus(self, status_elem):
+        s = {}
+        for child in status_elem:
+            s[isdl.decodeTag(child.tag)[1]] = (child.text or "").strip()
+        return s
+
 Command_list = Command_status
 
 class Command_submit(RemoteCommand):

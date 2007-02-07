@@ -52,38 +52,19 @@ class XenBEEClientProtocol(isdl.XMLProtocol):
         self.transport.write(str(msg))
 
     def do_Kill(self, elem):
-        # get the signal type
-	sig = elem.find(isdl.Tag("Signal", isdl.ISDL_NS))
-        if not sig:
-            self.transport.write(            
-                str(isdl.XenBEEClientError("no signal given!",
-                                           isdl.XenBEEClientError.ILLEGAL_REQUEST))
-                )
-            return
-        
-        try:
-            signum = int(sig.text)
-            if not signum in [ 9, 15 ]:
-                raise ValueError("out of range, allowed are (9,15)")
-        except Exception, e:
-            self.transport.write(
-                str(isdl.XenBEEClientError("Illegal signal: %s" % (e,),
-                                           isdl.XenBEEClientError.ILLEGAL_REQUEST))
-                )
-            raise
-
-        for t in node.findall(isdl.Tag("JobID")):
-            taskID = t.text.strip()
-            task = self.factory.taskManager.lookupByID(t.text.strip())
-            
+        sig = int(elem.find(isdl.Tag("Signal")).text)
+        if not sig in [ 9, 15 ]:
+            raise ValueError("out of range, allowed are (9,15)")
+        for t in elem.findall(isdl.Tag("JobID")):
+            tid = (t.text or "").strip()
+            task = self.factory.taskManager.lookupByID(tid)
             if not task:
                 self.transport.write(            
-                    str(isdl.XenBEEClientError("no such task: %s" % (instID,),
+                    str(isdl.XenBEEClientError("no such task: %s" % (tid,),
                                                isdl.XenBEEClientError.ILLEGAL_REQUEST))
                     )
             else:
-                task.kill(signum)
-                # pass
+                task.kill(sig)
         self.transport.write(
             str(isdl.XenBEEClientError("signal sent", isdl.XenBEEClientError.OK)))
 	

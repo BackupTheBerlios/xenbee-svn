@@ -31,7 +31,7 @@ class Task(object):
     def __init__(self, ID, mgr, doc):
         """Initialize a new task."""
         self._id = ID
-        self._tstamp = time.time()
+        self.tstamp = time.time()
         self.mgr = mgr
         self.document = doc
         self.inst = None
@@ -121,11 +121,13 @@ class Task(object):
         self.mgr.taskReady(self)
 
     def do_execute(self):
+        self.startTime = time.time()
         log.info("executing task %s" % (self.ID()))
         self.inst.protocol.executeTask(task=self)
 
     def do_finished(self, exitcode):
-        self.__exitcode = exitcode
+        self.endTime = time.time()
+        self.exitCode = exitcode
         self.mgr.taskFinished(self)
         
 class TaskManager:

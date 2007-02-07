@@ -6,7 +6,6 @@ __version__ = "$Rev$"
 __author__ = "$Author$"
 
 import xenbeed
-xenbeed.initLogging()
 
 import logging
 log = logging.getLogger(__name__)
@@ -31,8 +30,15 @@ class Daemon:
         p.add_option("-p", "--port", dest="port", type="int", default=61613, help="the STOMP port")
         p.add_option("-b", "--backend", dest="backend", type="string", default="xen", help="the backend to be used")
         p.add_option("-s", "--spool", dest="spool", type="string", default="/srv/xen-images/xenbee", help="the spool directory to use")
+        p.add_option("-l", "--logfile", dest="logfile", type="string", default="/var/log/xenbee/xbed.log", help="the logfile to use")
 
         self.opts, self.args = p.parse_args(self.argv)
+        global xenbeed
+        try:
+            xenbeed.initLogging(self.opts.logfile)
+        except IOError, ioe:
+            print >>sys.stderr, "E:", ioe
+            sys.exit(1)
         
         log.info("initializing the `%s' backend" % self.opts.backend)
         import xenbeed.backend

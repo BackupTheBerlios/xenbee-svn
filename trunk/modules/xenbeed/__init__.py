@@ -7,7 +7,7 @@ __author__ = "$Author: petry $"
 
 # start logging
 
-import logging, logging.handlers, sys
+import logging, logging.handlers, sys, os.path
 
 def initLogging(logfile='/tmp/xenbeed.log'):
     if sys.hexversion >= 0x2040200:
