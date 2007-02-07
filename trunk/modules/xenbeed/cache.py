@@ -5,7 +5,7 @@ The Xen Based Execution Environment - Chache implementation
 __version__ = "$Rev$"
 __author__ = "$Author$"
 
-import logging
+import logging, os
 log = logging.getLogger(__name__)
 
 from xenbeed.uuid import uuid
@@ -24,7 +24,14 @@ class Cache(object):
     """
 
     def __init__(self, _dir):
+        if not os.exists(_dir):
+            os.makedirs(_dir)
+        else:
+            import stat
+            if not stat.S_ISDIR(os.stat(_dir)):
+                raise RuntimeError("`%s' already exists and does not seem to be a directory!" % _dir)
         self.__cacheDir = _dir
+        
         # initDB
         # 
         pass
