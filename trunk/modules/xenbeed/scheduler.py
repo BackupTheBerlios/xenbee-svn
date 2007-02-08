@@ -100,7 +100,7 @@ class Scheduler:
                     # XXX: task has failed
                     self.unlock()
                     self.taskFailed(task, err)
-                task.prepare().addCallbacks(self.taskPrepared, _f)
+                task.prepare().addCallback(self.taskPrepared).addErrback(_f)
             finally:
                 self.unlock()
 
@@ -122,7 +122,7 @@ class Scheduler:
                     self.__starting.remove(task)
                     self.unlock()
                     self.taskFailed(task, err)
-                task.startInstance().addCallbacks(self.taskCanBeExecuted, _f)
+                task.startInstance().addCallback(self.taskCanBeExecuted).addErrback(_f)
                 self.unlock()
 
     def taskPrepared(self, task):

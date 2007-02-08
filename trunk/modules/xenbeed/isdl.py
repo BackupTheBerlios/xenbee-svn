@@ -250,6 +250,6 @@ class XenBEECacheEntries(XenBEEClientMessage):
 
     def addEntry(self, uuid, type, description):
         e = self.createElement("Entry", self.__entries)
-        self.createElement("ID", e, str(uuid))
+        self.createElement("URI", e, "cache://"+str(uuid))
         self.createElement("Type", e, str(type))
         self.createElement("Description", e, str(description))

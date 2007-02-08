@@ -77,12 +77,14 @@ class TestProtocol(StompClient):
         log.info("connected to server")
         self.setReplyTo(self.factory.queue)
         self.subscribe(self.factory.queue, exclusive=True)
+        log.info("notifying xbe daemon, that i am available now")
         self.send(self.factory.serverQueue,
                   str(isdl.XenBEEInstanceAvailable(self.factory.instanceId)))
 
     def messageReceived(self, msg):
         # parse the isdl message
         try:
+            log.debug("got message from server: %s" % (str(msg)))
             return self._messageReceived(msg)
         except Exception, e:
             log.exception(e)

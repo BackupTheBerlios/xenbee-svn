@@ -28,5 +28,5 @@ def _f(err):
     print err.getErrorMessage()
     reactor.stop()
 
-cache.cache("file://"+uri, fileType, desc).addCallbacks(_s, _f)
+cache.cache("file://"+uri, fileType, desc).addCallback(_s).addErrback(_f)
 reactor.run()

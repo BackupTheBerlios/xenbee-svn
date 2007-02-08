@@ -113,7 +113,7 @@ class Task(object):
             log.err("instance could not be started: %s" % (err.getErrorMessage()))
             self.failed("instance could not be started: %s" % (err.getErrorMessage()))
             return err
-        d.addCallbacks(_s,_f)
+        d.addCallback(_s).addErrback(_f)
         return d
 
     def do_instanceAvailable(self):
@@ -221,7 +221,7 @@ class TaskManager:
             task.failed("file retrieval for task %s failed %s" %
                         (task.ID(), str(err.getTraceback())))
             return err
-        d.addCallbacks(_s, _f)
+        d.addCallback(_s).addErrback(_f)
         return d
 
     def taskFailed(self, task):

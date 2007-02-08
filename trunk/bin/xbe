@@ -44,6 +44,11 @@ class CommandFailed(Exception):
         Exception.__init__(self)
         self.msg = msg
 
+class UnknownCommand(Exception):
+    def __init__(self, msg):
+        Exception.__init__(self)
+        self.msg = msg
+
 def parse_args_stderr_hack(parser, argv):
     try:
         # WARNIG: hack to avoid printing to stderr
@@ -88,6 +93,9 @@ class Command(object):
         self.argv = argv[1:]
 
         p = NoPrintOptionParser(usage="usage: %s [options]" % self.name, add_help_option=False)
+        p.add_option("-H", "--host", dest="host", type="string",
+                     default="xen-o-matic.itwm.fhrg.fraunhofer.de", help="STOMP server to use")
+        p.add_option("-P", "--port", dest="port", type="int",    default=61613, help="STOMP server to use")
 
         self.parser = p
 
@@ -102,9 +110,6 @@ class Command(object):
         return self.name
 
 class RemoteCommand(Command):
-    host = 'localhost'
-    port = 61613
-
     def __init__(self, argv):
         """Initialize some common options for remote commands."""
         Command.__init__(self, argv)
@@ -139,19 +144,26 @@ class RemoteCommand(Command):
     def initStomp(self):
         pass
 
+    def execute(self):
+        self.options, self.args = parse_args(self.parser, self.argv)
+        self.executeRemote(str(self._execute()))
+
+    def _execute(self):
+        raise CommandFailed("please implement me")
+
     def executeFailed(self, msg):
         Command.executeFailed(self, msg)
         reactor.stop()
 
-    def executeRemote(self, msg):
+    def executeRemote(self, cmdstring):
         f = StompClientFactory(user='client')
         f.protocol = StompClientCmd
         f.cmd = self
-        f.msg = msg
+        f.msg = cmdstring
         f.clientId = uuid()
         f.serverQueue = '/queue/xenbee.daemon'
         f.queue = '/queue/xenbee.client.%s' % (f.clientId,)
-        reactor.connectTCP(self.host, self.port, f)
+        reactor.connectTCP(self.options.host, self.options.port, f)
         reactor.run()
     
 class Command_help(Command):
@@ -192,9 +204,7 @@ class Command_create(RemoteCommand):
         p.add_option("-C", "--cpus",   dest="cpus",    type="int",    help="the number of cpus to use", default=1)
         p.add_option("-j", "--jsdl",   dest="jsdl",    type="string", help="a jsdl document", default="-")
 
-    def execute(self):
-        self.options, self.args = parse_args(self.parser, self.argv)
-
+    def _execute(self):
         # test for required values
         if not self.options.kernel:
             raise CommandFailed("'kernel' is required")
@@ -227,7 +237,7 @@ class Command_create(RemoteCommand):
 
         submit.append(jsdl.getroot())
         
-        self.executeRemote(str(msg))
+        return msg
 
 class Command_kill(RemoteCommand):
     """\
@@ -242,19 +252,17 @@ class Command_kill(RemoteCommand):
         p = self.parser
         p.add_option("-s", "--signal", dest="signal",  type="int", default=15, help="the signal to use")
 
-    def execute(self):
-        self.options, self.args = parse_args(self.parser, self.argv)
-
+    def _execute(self):
         if not len(self.args):
             raise CommandFailed("at least one 'job-id' is required")
 
+        msg = isdl.XenBEEClientMessage()
+        kill = msg.createElement("Kill", msg.root)
+        msg.createElement("Signal", kill, self.options.signal)
         for job in self.args:
             # build xml message
-            msg = isdl.XenBEEClientMessage()
-            kill = msg.createElement("Kill", msg.root)
-            msg.createElement("Signal", kill, self.options.signal)
             msg.createElement("JobID", kill, job)
-            self.executeRemote(str(msg))
+        return msg
 
 class Command_status(RemoteCommand):
     """\
@@ -268,13 +276,11 @@ class Command_status(RemoteCommand):
 
         p = self.parser
 
-    def execute(self):
-        self.options, self.args = parse_args(self.parser, self.argv)
-
+    def _execute(self):
         msg = isdl.XenBEEClientMessage()
         sreq = msg.createElement("StatusRequest", msg.root)
         msg.root.append(sreq)
-        self.executeRemote(str(msg))
+        return msg
 
     def _handleMessage(self, msg):
         """handles the status message."""
@@ -285,13 +291,13 @@ class Command_status(RemoteCommand):
 
 #        strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime(task.startTime)))
         fmt = "%(ID)-36s  %(User)-10s %(Submitted)-14s %(StartTime)-14s %(EndTime)-14s %(State)-10s %(ExitCode)s"
-        hdr = { "ID": "task id",
-                "User": "user",
-                "Submitted": "submitted",
-                "StartTime": "starttime",
-                "EndTime": "endtime",
-                "State": "cur.state",
-                "ExitCode": "exitcode" }
+        hdr = { "ID": "TASK ID",
+                "User": "USER",
+                "Submitted": "SUBMITTED",
+                "StartTime": "STARTTIME",
+                "EndTime": "ENDTIME",
+                "State": "CUR.STATE",
+                "ExitCode": "EXITCODE" }
         print fmt % hdr
         for s in stats:
             print fmt % s
@@ -315,9 +321,8 @@ class Command_showcache(RemoteCommand):
         RemoteCommand.__init__(self, argv)
         p = self.parser
 
-    def execute(self):
-        self.options, self.args = parse_args(self.parser, self.argv)
-        self.executeRemote(str(isdl.XenBEEListCache()))
+    def _execute(self):
+        return isdl.XenBEEListCache()
 
     def _handleMessage(self, msg):
         """handles the cache entries message."""
@@ -326,7 +331,7 @@ class Command_showcache(RemoteCommand):
         fmt = "%-44s  %-10s %s"
         print fmt % (" URI", "DATA-TYPE", "DESCRIPTION")
         for entry in msg.findall("./"+ISDL("CacheEntries/Entry")):
-            uri = "cache://" + entry.findtext(ISDL("ID"))
+            uri = entry.findtext(ISDL("URI"))
             type = entry.findtext(ISDL("Type"))
             desc = entry.findtext(ISDL("Description"))
             print fmt % (uri, type, desc)
@@ -344,15 +349,11 @@ class Command_submit(RemoteCommand):
         """initialize the 'submit' command."""
         RemoteCommand.__init__(self, argv)
 
-    def execute(self):
-        self.options, self.args = parse_args(self.parser, self.argv)
-
+    def _execute(self):
         # submit the isdl document
         if not len(self.args):
             raise CommandFailed("path to isdl document required!")
-
-        for isdl in self.args:
-            self.executeRemote(open(isdl).read())
+        return open(self.args[0]).read()
 
 def printShortHelp():
     print >>sys.stderr, "Type '%s help' for usage." % sys.argv[0]
@@ -365,9 +366,9 @@ def createCommand(argv):
             if clsname in globals():
                 return globals()[clsname](argv)
             else:
-                raise NameError, "no such command: %s" % argv[0]
-        except NameError, ne:
-            print >>sys.stderr, "Unknown command: '%s'" % argv[0]
+                raise UnknownCommand(argv[0])
+        except UnknownCommand, uc:
+            print >>sys.stderr, "Unknown command: '%s'" % uc.msg
             return None
         except:
             from traceback import format_exc
@@ -386,7 +387,7 @@ class StompClientCmd(StompClient):
         self.setReplyTo(self.factory.queue)
         self.subscribe(self.factory.queue, exclusive=True)
         self.send(self.factory.serverQueue, self.factory.msg)
-        self.receive(time_out=self.factory.cmd.options.timeout).addCallbacks(self.message, self.abort)
+        self.receive(time_out=self.factory.cmd.options.timeout).addCallback(self.message).addErrback(self.abort)
 
     def connectFailed(self, reason):
         print >>sys.stderr, "Connection to STOMP server failed!"
@@ -396,7 +397,7 @@ class StompClientCmd(StompClient):
         self.factory.cmd.handleMessage(msg)
 
     def abort(self, failure):
-        self.factory.cmd.executeFailed(failure.value.msg)
+        self.factory.cmd.executeFailed(failure.getErrorMessage())
 
 def main(argv):
     """The main routine."""

@@ -146,7 +146,7 @@ class Instance(object):
             self.state = "failed"
             log.error("Retrieval failed: "+err.getTraceback())
             return err
-        d.addCallbacks(__success, __fail)
+        d.addCallback(__success).addErrback(__fail)
         return d
 
     def getFullPath(self, logical_name):

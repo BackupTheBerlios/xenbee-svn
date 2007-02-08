@@ -141,7 +141,8 @@ class StompClient(LineReceiver):
                 pass
             def _f(arg):
                 pass
-	    self.connect(self.factory.user, self.factory.password).addCallbacks(_s, _f)
+	    self.connect(self.factory.user,
+                         self.factory.password).addCallback(_s).addErrback(_f)
 
     def sendFrame(self, frame):
 	"""Send a frame."""
