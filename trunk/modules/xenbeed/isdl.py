@@ -90,14 +90,14 @@ def decodeTag(tag):
     return (m.group("nsuri"), m.group("local"))
 
 def Tag(local, ns=ISDL_NS):
-    return etree.QName(ns, local).text
+    return "{%s}%s" % (ns, local)
 
 # taken from http://effbot.org/zone/element-lib.htm
 class NS(object):
     def __init__(self, uri):
         self.__uri = uri
     def __getattr__(self, tag):
-        return etree.QName(self.__uri, tag).text
+        return Tag(tag, self.__uri).text
     def __call__(self, path):
         return "/".join([getattr(self, tag) for tag in path.split("/")])
 
