@@ -26,9 +26,7 @@ class UUID:
             self.cmd = "uuidgen"
 
     def next(self):
-        """Returns the next UUID.
-        
-        """
+        """Returns the next UUID."""
         (status, uuid)  = commands.getstatusoutput(self.cmd)
         if status != 0:
             raise RuntimeError("could get UUID: probably the command '%s' could not be run" % (self.cmd))

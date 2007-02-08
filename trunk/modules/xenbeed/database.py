@@ -9,4 +9,7 @@ import logging, os
 log = logging.getLogger(__name__)
 
 # use sqlite
-from pysqlite2 import dbapi2 as dbapi
+try:
+    from pysqlite3 import dbapi2 as dbapi
+except:    
+    from pysqlite2 import dbapi2 as dbapi

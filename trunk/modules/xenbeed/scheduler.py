@@ -71,6 +71,8 @@ class Scheduler:
                 self.__created.append(task)
             elif event == "taskFinished":
                 log.debug("task %s finished" % task.ID())
+                self.__started.remove(task)
+                self.__finished.append(task)
         finally:
             self.unlock()
 
@@ -150,7 +152,7 @@ class Scheduler:
             raise
 
     def taskFailed(self, task, err):
-        log.info("task %s failed" % (task.ID(),err.getErrorMessage()))
+        log.info("task %s failed: %s" % (task.ID(),err.getErrorMessage()))
         self.__failed.append(task)
 
     def __synchronize(self, func, *args, **kw):

@@ -24,9 +24,15 @@ from xenbeed.backend import backend
 from xenbeed import util
 
 from twisted.internet import reactor, threads, task, defer
+from twisted.python import failure
+from urlparse import urlparse
 
 class InstanceError(XenBeeException):
     pass
+
+class InstanceTimedout(InstanceError):
+    def __init__(self, id):
+        self.ID = id
 
 class Instance(object):
     def __init__(self, config, spool, mgr):
@@ -129,15 +135,45 @@ class Instance(object):
 	    (from www.example.com) to the spool directory as 'kernel' and 'disk1'.
 
         """
-        logical_files = {}
         mapping.update(kwords)
 
-        fileList = [(uri, self.getFullPath(name)) for name,uri in mapping.iteritems()]
+        tmpFileList = [(uri, self.getFullPath(name)) for name,uri in mapping.iteritems()]
 
-        from xenbeed.staging import FileSetRetriever
-        retriever = FileSetRetriever(fileList)
+        # check the URIs and replace those starting with "cache:" with their real URIs
 
-        d = retriever.perform()
+        _defers = []
+        def _got_uri(uri, path):
+            return (uri, path)
+
+        for uri, path in tmpFileList:
+            o = urlparse(uri)
+            if o.scheme == "cache":
+                cache_uuid = o.path.split("/")[-1]
+                log.debug("looking up cache-id %s" % cache_uuid)
+                d = self.mgr.cache.lookupByUUID(cache_uuid).addCallback(_got_uri, path)
+            else:
+                # just add the uri as is
+                d = defer.succeed(uri).addCallback(_got_uri, path)
+            _defers.append(d)
+
+        def _cache_finished(results):
+            fileList = []
+            for result, uri_path_pair in results:
+                if result == defer.FAILURE:
+                    raise InstanceError("could not translate cache-uri: %s" % str(uri_path_pair))
+                fileList.append(uri_path_pair)
+            return fileList
+
+        def _retrieve_files(fileList):
+            from xenbeed.staging import FileSetRetriever
+            retriever = FileSetRetriever(fileList)
+            return retriever.perform()
+            
+        dL = defer.DeferredList(_defers)
+        dL.pause()
+        dL.addCallback(_cache_finished)
+        dL.addCallback(_retrieve_files)
+
         def __success(*args):
             log.info("successfully retrieved all files for: "+self.getName())
             self.state = "start-pending"
@@ -146,8 +182,13 @@ class Instance(object):
             self.state = "failed"
             log.error("Retrieval failed: "+err.getTraceback())
             return err
-        d.addCallback(__success).addErrback(__fail)
-        return d
+        dL.addCallback(__success)
+        dL.addErrback(__fail)
+        dL.unpause()
+        return dL
+
+    def __cache_mangle_uris(self, filelist):
+        pass
 
     def getFullPath(self, logical_name):
         return os.path.join(self.getSpool(), logical_name)
@@ -175,6 +216,7 @@ class Instance(object):
             def _s(arg):
                 self.state = "stopped"
                 self.mgr.removeInstance(self)
+                return self
             d.addCallback(_s)
         else:
             raise InstanceError(getName()+" not yet started!")
@@ -233,9 +275,9 @@ class Instance(object):
 
         def __timeout():
             self.state = "failed"
-            _msg = "instance %s did not respond!" % (self.ID())
-            log.warn(_msg)
-            self.__availableDefer.errback(_msg)
+            f = failure.Failure(InstanceTimedout(self.ID()))
+            log.warn("instance %s timed out" % self.ID())
+            self.__availableDefer.errback(f)
 
         def __inst_available(arg):
             # got signal from the backend instance
@@ -272,9 +314,10 @@ class InstanceManager:
 	- create a new one
 
     """
-    def __init__(self):
+    def __init__(self, cache):
         """Initialize the InstanceManager."""
         self.instances = {}
+        self.cache = cache
         self.__iter__ = self.instances.itervalues
 
     def newInstance(self, spool):

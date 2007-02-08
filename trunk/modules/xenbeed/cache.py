@@ -130,7 +130,7 @@ class Cache(object):
 #        cur = self.__db.cursor()
 #        cur.execute("SELECT COUNT(*) FROM files WHERE type = ?", (type,))
 #        return cur.fetchone()[0]
-        
+
     def cache(self, uri, type="data", description="", meta={}, **kw):
         """Retrieve the given uri and cache it."""
         log.debug("caching URI %s" % uri)
@@ -157,9 +157,18 @@ class Cache(object):
         # TODO: check credentials for permission
         if not self.__operationAllowed('remove', entry, cred):
             raise PermissionDenied("not allowed to remove entry %s" % entry)
-        self.__worker.submit("DELETE FROM files WHERE uuid = ?", entry)
+        return self.__worker.submit("DELETE FROM files WHERE uuid = ?", entry)
 
-    def lookupType(self, type):
+    def lookupByUUID(self, uuid):
+        def __buildURI(rows):
+            if not len(rows):
+                raise ValueError("no cache entry found")
+            path = os.path.join(self.__cacheDir, rows[0][0])
+            path = os.path.join(path, "data")
+            return "file://" + path
+        return self.__lookup("uuid = ?", uuid).addCallback(__buildURI)
+        
+    def lookupByType(self, type):
         def __buildTypes(rows):
             return [x[0] for x in rows]
         return self.__lookup("type = ?", type).addCallback(__buildTypes)

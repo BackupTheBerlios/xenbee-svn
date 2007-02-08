@@ -137,13 +137,12 @@ class TaskManager:
 	- create new tasks
 
     """
-    def __init__(self, inst_mgr, cache, spool):
+    def __init__(self, inst_mgr, spool):
         """Initialize the TaskManager."""
         self.tasks = {}
         self.mtx = threading.RLock()
         self.instanceManager = inst_mgr
         self.spool = spool
-        self.cache = cache
         self.observers = [] # they are called when a new task has been created
 
     def notify(self, task, event):
@@ -189,21 +188,11 @@ class TaskManager:
         import isdl
 
 	# boot block
-        imgDef = task.document.find(".//"+isdl.Tag("ImageDefinition", isdl.ISDL_NS))
-	boot = imgDef.find(isdl.Tag("Boot", isdl.ISDL_NS))
+        imgDef = task.document.find("./"+isdl.ISDL("ImageDefinition"))
 	files = {}
-	files["kernel"] = boot.find(".//"+isdl.Tag("Kernel")+
-                                    "/"+isdl.Tag("URI")).text.strip()
-	files["initrd"] = boot.find(".//"+isdl.Tag("Initrd")+
-                                    "/"+isdl.Tag("URI")).text.strip()
-
-	# image block
-	images = imgDef.find(isdl.Tag("Images"))
-
-	bootImage = images.find(isdl.Tag("BootImage"))
-	files["root"] = bootImage.find(".//"+isdl.Tag("Source")+
-                                       "/"+isdl.Tag("URI")).text.strip()
-
+	files["kernel"] = imgDef.findtext(isdl.ISDL("Boot/Kernel/URI"))
+	files["initrd"] = imgDef.findtext(isdl.ISDL("Boot/Initrd/URI"))
+	files["root"] = imgDef.findtext(isdl.ISDL("Images/BootImage/Source/URI"))
 	log.debug(files)
 
         # create spool for task and instance and add files

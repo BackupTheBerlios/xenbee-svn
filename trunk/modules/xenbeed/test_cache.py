@@ -27,7 +27,7 @@ class TestCacheSimple(unittest.TestCase):
         self.__timeout = 10 # 10 sec timeout
 
     def tearDown(self):
-        pass
+        removeDirCompletely(self.cacheDir)
 
     def failed(self, msg=""):
         self.timer.cancel()
@@ -39,26 +39,31 @@ class TestCacheSimple(unittest.TestCase):
         self.timer = reactor.callLater(self.__timeout, self.failed, "timed out")
         
         tmpFile = TempFile(keep=True)
-        data = "test data"
-        tmpFile.write(data)
+        self.data = "test data"
+        tmpFile.write(self.data)
         tmpFile.flush()
 
         # cache the file
-        d = self.cache.cache("file://"+tmpFile.path, type="data", description="test data")
-        registered_fuid = None
-
-        def _check(fuids):
-            global registered_fuid
-            self.failUnless(registered_fuid in fuids)
+        def _check(uri):
+            from urllib import urlopen
+            try:
+                cached_data = urlopen(uri).read()
+                self.assertEqual(self.data, cached_data)
+            except:
+                self.fail()
             reactor.stop()
             
         def _cached(fuid):
-            global registered_fuid
-            registered_fuid = fuid
             os.unlink(tmpFile.path)
-            self.cache.lookupType("data").addCallback(_check)
-        d.addCallback(_cached)
+            self.cache.lookupByUUID(fuid).addCallback(_check)
+        def _failed(err):
+            self.fail(err.getErrorMessage())
+
+        self.cache.cache("file://"+tmpFile.path,
+                         type="data",
+                         description="test data").addCallback(_cached).addErrback(_failed)
         reactor.run()
+
     
 def suite():
     s1 = unittest.makeSuite(TestCacheSimple, "test")

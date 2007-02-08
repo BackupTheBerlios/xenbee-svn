@@ -37,6 +37,6 @@ done
 echo "done."
 echo -n "cleaning up..."
 if [ "$dry" != "yes" -a "$keep" != "yes" ]; then
-	rm -rf $spool/*
+	find  "$spool" -mindepth 1 -type d -print0 | xargs -0 rm -rf
 fi
 echo "done."

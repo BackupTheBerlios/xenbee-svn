@@ -216,7 +216,8 @@ class FileSetRetriever:
         return err
 
     def perform(self):
-        log.debug("retrieving set of files: " + str(self.files))
+        from pprint import pformat
+        log.debug("retrieving set of files: " + pformat(self.files))
         self.lock.acquire()
         for src,dst in self.files:
             stager = DataStager(src, dst)

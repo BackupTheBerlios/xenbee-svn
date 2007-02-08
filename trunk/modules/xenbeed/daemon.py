@@ -52,13 +52,12 @@ class Daemon:
 
         log.info("initializing instance manager...")
         from xenbeed.instance import InstanceManager
-        self.instanceManager = InstanceManager()
+        self.instanceManager = InstanceManager(self.cache)
         log.info("  done.")
 
         log.info("initializing task manager...")
         from xenbeed.task import TaskManager
         self.taskManager = TaskManager(self.instanceManager,
-                                       self.cache,
                                        os.path.join(self.opts.spool, "tasks"))
         log.info("  done.")
 

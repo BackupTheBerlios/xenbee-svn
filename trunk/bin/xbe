@@ -78,8 +78,8 @@ class Command(object):
         """run the specified command."""
         raise RuntimeError("can't execute the base Command.")
 
-    def executeFailed(self, msg):
-        self.failed = (True, msg)
+    def executeFailed(self, exception):
+        self.failed = (True, exception)
 
     def __init__(self, argv):
         """initialize the command.
@@ -129,11 +129,11 @@ class RemoteCommand(Command):
             reactor.stop()
 
     def _handleError(self,err):
-        errcode = int(err.find(isdl.Tag("ErrorCode")).text)
-        errname = (err.find(isdl.Tag("ErrorName")).text or "").strip()
-        errmsg  = (err.find(isdl.Tag("ErrorMessage")).text or "").strip()
+        errcode = int(err.findtext(isdl.ISDL("ErrorCode")))
+        errname = err.findtext(isdl.ISDL("ErrorName"))
+        errmsg  = err.findtext(isdl.ISDL("ErrorMessage"))
         if errcode != 200:
-            self.executeFailed("[Code %d]: %s - %s" % (errcode, errname, errmsg))
+            self.executeFailed(CommandFailed("[Code %d]: %s - %s" % (errcode, errname, errmsg)))
         else:
             print "[Code %d]: %s - %s" % (errcode, errname, errmsg)
             reactor.stop()
@@ -151,8 +151,8 @@ class RemoteCommand(Command):
     def _execute(self):
         raise CommandFailed("please implement me")
 
-    def executeFailed(self, msg):
-        Command.executeFailed(self, msg)
+    def executeFailed(self, exception):
+        Command.executeFailed(self, exception)
         reactor.stop()
 
     def executeRemote(self, cmdstring):
@@ -328,7 +328,7 @@ class Command_showcache(RemoteCommand):
         """handles the cache entries message."""
         ISDL = isdl.NS(isdl.ISDL_NS)
 
-        fmt = "%-44s  %-10s %s"
+        fmt = "%-60s  %-10s %s"
         print fmt % (" URI", "DATA-TYPE", "DESCRIPTION")
         for entry in msg.findall("./"+ISDL("CacheEntries/Entry")):
             uri = entry.findtext(ISDL("URI"))
@@ -391,13 +391,13 @@ class StompClientCmd(StompClient):
 
     def connectFailed(self, reason):
         print >>sys.stderr, "Connection to STOMP server failed!"
-        self.factory.cmd.executeFailed(reason.msg)
+        self.factory.cmd.executeFailed(Exception(reason.msg))
 
     def message(self, msg):
         self.factory.cmd.handleMessage(msg)
 
     def abort(self, failure):
-        self.factory.cmd.executeFailed(failure.getErrorMessage())
+        self.factory.cmd.executeFailed(failure)
 
 def main(argv):
     """The main routine."""
@@ -411,7 +411,7 @@ def main(argv):
                 raise CommandFailed(cmd.failed[1])
         except CommandFailed, cf:
             print >>sys.stderr, "%s:" % sys.argv[0], str(cmd), "failed (details follow)"
-            print >>sys.stderr, "\n".join([ "%s: %s" % (sys.argv[0],s) for s in cf.msg.split('\n')])
+            print >>sys.stderr, "\n".join([ "%s: %s" % (sys.argv[0],s) for s in str(cf.msg).split('\n')])
             return 2
         except:
             from traceback import format_exc

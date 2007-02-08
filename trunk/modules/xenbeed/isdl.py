@@ -22,6 +22,26 @@ ISDL_NS = "http://www.example.com/schemas/isdl/2007/01/isdl"
 JSDL_NS = "http://schemas.ggf.org/jsdl/2005/11/jsdl"
 JSDL_POSIX_NS = "http://schemas.ggf.org/jsdl/2005/11/jsdl-posix"
 
+def decodeTag(tag):
+    m = __tagPattern.match(tag)
+    return (m.group("nsuri"), m.group("local"))
+
+def Tag(local, ns=ISDL_NS):
+    return "{%s}%s" % (ns, local)
+
+# taken from http://effbot.org/zone/element-lib.htm
+class NS(object):
+    def __init__(self, uri):
+        self.__uri = uri
+    def __getattr__(self, tag):
+        return Tag(tag, self.__uri)
+    def __call__(self, path):
+        return "/".join([getattr(self, tag) for tag in path.split("/")])
+
+ISDL = NS(ISDL_NS)
+JSDL = NS(JSDL_NS)
+JSDL_POSIX = NS(JSDL_POSIX_NS)
+
 class XMLProtocol(object):
     """The base class of all here used client-protocols."""
 
@@ -84,22 +104,6 @@ class XMLProtocol(object):
         log.debug("got error:\n%s" % (etree.tostring(err)))
 
 __tagPattern = re.compile(r"^(?P<nsuri>{.*})?(?P<local>.*)$")
-
-def decodeTag(tag):
-    m = __tagPattern.match(tag)
-    return (m.group("nsuri"), m.group("local"))
-
-def Tag(local, ns=ISDL_NS):
-    return "{%s}%s" % (ns, local)
-
-# taken from http://effbot.org/zone/element-lib.htm
-class NS(object):
-    def __init__(self, uri):
-        self.__uri = uri
-    def __getattr__(self, tag):
-        return Tag(tag, self.__uri).text
-    def __call__(self, path):
-        return "/".join([getattr(self, tag) for tag in path.split("/")])
 
 def getChild(elem, name, ns=ISDL_NS):
     return elem.find(Tag(name,ns))
@@ -250,6 +254,6 @@ class XenBEECacheEntries(XenBEEClientMessage):
 
     def addEntry(self, uuid, type, description):
         e = self.createElement("Entry", self.__entries)
-        self.createElement("URI", e, "cache://"+str(uuid))
+        self.createElement("URI", e, "cache://xbe-file-cache/"+str(uuid))
         self.createElement("Type", e, str(type))
         self.createElement("Description", e, str(description))
