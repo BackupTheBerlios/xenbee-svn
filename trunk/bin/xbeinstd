@@ -112,6 +112,7 @@ def main():
         from xenbeed.uuid import uuid
         xbe_uuid = uuid()
         log.warn("could not get my instance id, using: %s" % (xbe_uuid,))
+    log.info("connecting to %s:%d with uuid %s" % (xbe_server, xbe_port, xbe_uuid))
     
     f = StompClientFactory()
     f.instanceId = xbe_uuid
