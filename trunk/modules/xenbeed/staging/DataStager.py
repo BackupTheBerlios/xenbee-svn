@@ -8,7 +8,7 @@ A class that can be used to stage data from a source to a destination.
 __version__ = "$Rev$"
 __author__ = "$Author: petry $"
 
-import pycurl, os, logging, time
+import pycurl, os, os.path, logging, time
 log = logging.getLogger(__name__)
 
 import threading
@@ -87,6 +87,7 @@ class DataStager:
         
         
     def perform_download(self):
+        """Download the file from src to dest."""
         self.tmpdst = self.__tempFileName()
 	self.curl.setopt(pycurl.URL, self.src)
         self.curl.setopt(pycurl.WRITEFUNCTION, self._write)
@@ -94,6 +95,11 @@ class DataStager:
 	try:
 	    log.debug("beginning retrieving uri: %s" % self.src)
 	    start = time.time()
+
+            directory = os.path.dirname(self.tmpdst)
+            if not os.path.exists(directory):
+                os.makedirs(directory)
+        
             self.fp = open(self.tmpdst, "wb")
 	    self.curl.perform()
             self.fp.close()
@@ -279,9 +285,10 @@ class TempFile:
 	self.readlines = self.f.readlines
 	self.flush = self.f.flush
 
-
     def __del__(self):
 	if self.f:
 	    self.f.close()
 	    self.f = None
-	    if not self.keep: os.unlink(self.path)
+	    if not self.keep:
+                import os
+                os.unlink(self.path)

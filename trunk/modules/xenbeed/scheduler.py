@@ -9,19 +9,16 @@ __author__ = "$Author$"
 import logging, threading, sys
 log = logging.getLogger(__name__)
 
-from xenbeed.instance import InstanceManager
-
 # Twisted imports
 from twisted.internet import reactor, task
 
 class Scheduler:
     """The XenBee scheduler."""
 
-    def __init__(self, instMgr, taskMgr):
+    def __init__(self, taskMgr):
 	"""Initialize the scheduler."""
         self.__mtx = threading.RLock()
 
-        self.iMgr = instMgr
         self.tMgr = taskMgr
         self.tMgr.addObserver(self.taskWatch)
 

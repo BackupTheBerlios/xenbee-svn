@@ -22,26 +22,6 @@ ISDL_NS = "http://www.example.com/schemas/isdl/2007/01/isdl"
 JSDL_NS = "http://schemas.ggf.org/jsdl/2005/11/jsdl"
 JSDL_POSIX_NS = "http://schemas.ggf.org/jsdl/2005/11/jsdl-posix"
 
-
-def ChildNodes(node, func=lambda n: n.nodeType == xml.dom.Node.ELEMENT_NODE):
-    for c in filter(func, node.childNodes):
-	yield c
-
-class ElementFilter:
-    def __init__(self, other_filter=None, op=lambda x,y: x and y):
-        self.op = op
-        self.other = other_filter or (lambda x: True)
-
-    def __call__(self, node):
-        return self.op(self.other(node), node.nodeType == xml.dom.Node.ELEMENT_NODE)
-
-class ElementNSFilter(ElementFilter):
-    def __init__(self, ns=ISDL_NS):
-	self.ns = ns
-
-    def __call__(self, n):
-	return n.nodeType == xml.dom.Node.ELEMENT_NODE and n.namespaceURI == self.ns
-
 class XMLProtocol(object):
     """The base class of all here used client-protocols."""
 
@@ -66,7 +46,7 @@ class XMLProtocol(object):
 	    method(*args, **kw)
 	except Exception, e:
 	    self.transport.write(str(XenBEEClientError("request failed: " + str(e),
-                                                            XenBEEClientError.ILLEGAL_REQUEST)))
+                                                            XenBEEClientError.INTERNAL_SERVER_ERROR)))
             raise
 
     def addUnderstood(self, elementName, namespace):
@@ -169,6 +149,9 @@ class XenBEEClientError(XenBEEClientMessage):
     class SUBMISSION_FAILURE:
 	value = 202
 	name = "SUBMISSION FAILURE"
+    class INTERNAL_SERVER_ERROR:
+        value = 500
+        name = "INTERNAL_SERVER_ERROR"
 
     def __init__(self, msg, errcode):
         XenBEEClientMessage.__init__(self)
@@ -250,3 +233,23 @@ class XenBEEInstanceAvailable(XenBEEClientMessage):
         self.instanceId = inst_id
         ia = self.createElement("InstanceAvailable", self.root)
         self.createElement("InstanceID", ia, str(self.instanceId))
+
+class XenBEEListCache(XenBEEClientMessage):
+    """Request to list the cache entries."""
+
+    def __init__(self):
+        XenBEEClientMessage.__init__(self)
+        self.__request = self.createElement("ListCache", self.root)
+
+class XenBEECacheEntries(XenBEEClientMessage):
+    """Message sent to a client when a list of the cache is requested."""
+
+    def __init__(self):
+        XenBEEClientMessage.__init__(self)
+        self.__entries = self.createElement("CacheEntries", self.root)
+
+    def addEntry(self, uuid, type, description):
+        e = self.createElement("Entry", self.__entries)
+        self.createElement("ID", e, str(uuid))
+        self.createElement("Type", e, str(type))
+        self.createElement("Description", e, str(description))

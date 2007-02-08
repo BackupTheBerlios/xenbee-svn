@@ -250,8 +250,7 @@ class Command_kill(RemoteCommand):
 
         for job in self.args:
             # build xml message
-            from xenbeed.isdl import XenBEEClientMessage
-            msg = XenBEEClientMessage()
+            msg = isdl.XenBEEClientMessage()
             kill = msg.createElement("Kill", msg.root)
             msg.createElement("Signal", kill, self.options.signal)
             msg.createElement("JobID", kill, job)
@@ -272,8 +271,7 @@ class Command_status(RemoteCommand):
     def execute(self):
         self.options, self.args = parse_args(self.parser, self.argv)
 
-        from xenbeed.isdl import XenBEEClientMessage
-        msg = XenBEEClientMessage()
+        msg = isdl.XenBEEClientMessage()
         sreq = msg.createElement("StatusRequest", msg.root)
         msg.root.append(sreq)
         self.executeRemote(str(msg))
@@ -305,6 +303,33 @@ class Command_status(RemoteCommand):
         return s
 
 Command_list = Command_status
+
+class Command_showcache(RemoteCommand):
+    """\
+    showcache: lists all cached files
+
+    """
+
+    def __init__(self, argv):
+        """initialize the 'showcache' command."""
+        RemoteCommand.__init__(self, argv)
+        p = self.parser
+
+    def execute(self):
+        self.options, self.args = parse_args(self.parser, self.argv)
+        self.executeRemote(str(isdl.XenBEEListCache()))
+
+    def _handleMessage(self, msg):
+        """handles the cache entries message."""
+        ISDL = isdl.NS(isdl.ISDL_NS)
+
+        fmt = "%-44s  %-10s %s"
+        print fmt % (" URI", "DATA-TYPE", "DESCRIPTION")
+        for entry in msg.findall("./"+ISDL("CacheEntries/Entry")):
+            uri = "cache://" + entry.findtext(ISDL("ID"))
+            type = entry.findtext(ISDL("Type"))
+            desc = entry.findtext(ISDL("Description"))
+            print fmt % (uri, type, desc)
 
 class Command_submit(RemoteCommand):
     """\

@@ -1,5 +1,5 @@
 #!/bin/bash
-spool=/srv/xen-images/xenbee/
+spool=/srv/xen-images/xenbee/tasks
 
 if [ "x$1" == "x-n" ]; then
 	dry="yes"

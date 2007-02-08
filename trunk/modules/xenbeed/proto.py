@@ -30,6 +30,7 @@ class XenBEEClientProtocol(isdl.XMLProtocol):
         self.addUnderstood("ImageSubmission", isdl.ISDL_NS)
         self.addUnderstood("StatusRequest", isdl.ISDL_NS)
         self.addUnderstood("Kill", isdl.ISDL_NS)
+        self.addUnderstood("ListCache", isdl.ISDL_NS)
 
     def do_ImageSubmission(self, elem):
 	"""Handle an image submission."""
@@ -67,6 +68,14 @@ class XenBEEClientProtocol(isdl.XMLProtocol):
                 task.kill(sig)
         self.transport.write(
             str(isdl.XenBEEClientError("signal sent", isdl.XenBEEClientError.OK)))
+
+    def do_ListCache(self, elem):
+        def __sendMessage(entries):
+            msg = isdl.XenBEECacheEntries()
+            for uid, type, desc in entries:
+                msg.addEntry(uid, type, desc)
+            self.transport.write(str(msg))
+        self.factory.cache.getEntries().addCallback(__sendMessage)
 	
 class XenBEEInstanceProtocol(isdl.XMLProtocol):
     """The XBE instance side protocol.
@@ -176,13 +185,14 @@ class XenBEEProtocol(StompClient):
 class XenBEEProtocolFactory(StompClientFactory):
     protocol = XenBEEProtocol
 
-    def __init__(self, scheduler, queue="/queue/xenbee.daemon"):
+    def __init__(self, daemon, queue="/queue/xenbee.daemon"):
 	StompClientFactory.__init__(self, user='daemon', password='none')
 	self.queue = queue
 	self.stomp = None
-        self.scheduler = scheduler
-	self.instanceManager = scheduler.iMgr
-        self.taskManager = scheduler.tMgr
+        self.daemon = daemon
+	self.instanceManager = daemon.instanceManager
+        self.taskManager = daemon.taskManager
+        self.cache = daemon.cache
 
     def clientConnectionFailed(self, connector, reason):
 	log.error("connection to STOMP server failed!: %s" % (str(reason.value)))

@@ -137,12 +137,13 @@ class TaskManager:
 	- create new tasks
 
     """
-    def __init__(self, inst_mgr, base_path="/srv/xen-images/xenbee"):
+    def __init__(self, inst_mgr, cache, spool):
         """Initialize the TaskManager."""
         self.tasks = {}
         self.mtx = threading.RLock()
         self.instanceManager = inst_mgr
-        self.base_path = base_path
+        self.spool = spool
+        self.cache = cache
         self.observers = [] # they are called when a new task has been created
 
     def notify(self, task, event):
@@ -238,10 +239,10 @@ class TaskManager:
     def createSpool(self, _id, doSanityChecks=False):
         """Creates the spool-directory for a new task (using _id).
 
-        The spool looks something like that: <base_path>/UUID(task)/
+        The spool looks something like that: <spool>/UUID(task)/
 
         doSanityChecks -- some small tests to prohibit possible security breachs:
-	    * result path is subdirectory of base-path
+	    * result path is subdirectory of spool
 	    * result path is not a symlink
 
         The spool directory is used to all necessary information about an instance:
@@ -252,14 +253,14 @@ class TaskManager:
         """
         import os, os.path
         
-        path = os.path.normpath(os.path.join(self.base_path, _id))
+        path = os.path.normpath(os.path.join(self.spool, _id))
         if doSanityChecks:
             # perform small santiy checks
-            if not path.startswith(self.base_path):
+            if not path.startswith(self.spool):
                 log.error("creation of spool directory (%s) failed:"+
-                          " does not start with base_path (%s)" % (path, self.base_path))
+                          " does not start with spool (%s)" % (path, self.spool))
                 raise SecurityError("sanity check of spool directory failed:" +
-                                    " not within base_path")
+                                    " not within spool")
             try:
                 import stat
                 if stat.S_ISLNK(os.lstat(path)[stat.ST_MODE]):

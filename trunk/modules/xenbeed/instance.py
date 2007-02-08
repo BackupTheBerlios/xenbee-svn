@@ -272,10 +272,9 @@ class InstanceManager:
 	- create a new one
 
     """
-    def __init__(self, base_path):
+    def __init__(self):
         """Initialize the InstanceManager."""
         self.instances = {}
-        self.base_path = base_path
         self.__iter__ = self.instances.itervalues
 
     def newInstance(self, spool):
@@ -325,43 +324,3 @@ class InstanceManager:
             if inst.getBackendID() == backend_id:
                 return inst
         return None
-
-    def _createSpoolDirectory(self, uuid, doSanityChecks=True):
-        """Creates the spool-directory for a new task.
-
-        The spool looks something like that: <base_path>/UUID(inst)/
-
-        doSanityChecks -- some small tests to prohibit possible security breachs:
-	    * result path is subdirectory of base-path
-	    * result path is not a symlink
-
-        The spool directory is used to all necessary information about an instance:
-	    * kernel, root, swap, additional images
-	    * persistent configuration
-	    * access and security stuff
-
-        """
-        path = os.path.normpath(os.path.join(self.base_path,
-                                             uuid))
-        if doSanityChecks:
-            # perform small santiy checks
-            if not path.startswith(self.base_path):
-                log.error("creation of spool directory (%s) failed: does not start with base_path (%s)" % (path, self.base_path))
-                raise SecurityError("sanity check of spool directory failed: not within base_path")
-            try:
-                import stat
-                if stat.S_ISLNK(os.lstat(path)[stat.ST_MODE]):
-                    log.error("possible security breach: %s is a symlink" % path)
-                    raise SecurityError("possible security breach: %s is a symlink" % path)
-            except: pass
-            if os.path.exists(path):
-                log.error("new spool directory (%s) does already exist, that should never happen!" % path)
-                raise SecurityError("spool directory does already exist: %s" % path)
-
-        # create the directory structure
-        try:
-            os.makedirs(path)
-        except os.error, e:
-            log.error("could not create spool directory: %s: %s" % (path, e))
-            raise InstanceError("could not create spool directory: %s: %s" % (path,e))
-        return path
