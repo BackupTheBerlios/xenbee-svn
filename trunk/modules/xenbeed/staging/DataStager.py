@@ -21,8 +21,6 @@ try:
 except:
     from traceback import format_exception
 
-__all__ = [ 'DataStager', 'FileSetRetriever', 'TempFile' ]
-
 class StagingError(XenBeeException):
     pass
 
@@ -293,3 +291,5 @@ class TempFile:
 	    if not self.keep:
                 import os
                 os.unlink(self.path)
+
+__all__ = [ 'DataStager', 'FileSetRetriever', 'TempFile' ]

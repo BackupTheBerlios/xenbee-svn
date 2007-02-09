@@ -23,8 +23,12 @@ from xenbeed import util
 from xenbeed import fsm
 
 from twisted.internet import reactor
+from twisted.python import failure
 
 class TaskError(XenBeeException):
+    pass
+
+class StopTask(TaskError):
     pass
 
 class Task(object):
@@ -98,14 +102,13 @@ class Task(object):
         self.endTime = time.time()
         self.failReason = reason
         
-        def stopFailed(result):
-            log.fatal("stopping backend instance failed: %s" % result)
-
-            # ignore the failure...
+        def instStopped(result):
+            if isinstance(result, failure.Failure):
+                log.fatal("stopping backend instance failed: %s" % result)
+            else:
+                log.info("backend stopped.")
             return self
-        
-        self.mgr.taskFailed(self)
-        return self.inst.stop().addErrback(stopFailed)
+        return self.inst.stop().addBoth(instStopped)
 
     def do_prepare(self):
         return self.mgr.prepareTask(self)
@@ -119,7 +122,7 @@ class Task(object):
             self.instanceAvailable()
             return self
         def _f(err):
-            self.failed(err)
+            log.error("starting of my instance failed %s" % (err))
             return err
         d.addCallback(_s).addErrback(_f)
         return d
@@ -136,8 +139,10 @@ class Task(object):
     def do_finished(self, exitcode):
         self.endTime = time.time()
         self.exitCode = exitcode
-        self.inst.stop()
-        self.mgr.taskFinished(self)
+        def _s(result):
+            self.mgr.taskFinished(self)
+            return self
+        self.inst.stop().addBoth(_s)
         
 class TaskManager:
     """The task-manager.
@@ -216,8 +221,7 @@ class TaskManager:
             task.filesRetrieved()
             return task
         def _f(err):
-            task.failed("file retrieval for task %s failed %s" %
-                        (task.ID(), str(err.getTraceback())))
+            log.info("file retrieval failed")
             return err
         d.addCallback(_s).addErrback(_f)
         return d

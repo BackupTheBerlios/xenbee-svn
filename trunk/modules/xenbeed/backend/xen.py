@@ -51,13 +51,15 @@ class Backend(object):
         try:
             # try to use libvirt
             import libvirt
+            libvirt.virInitialize()
+            globals()["libvirt"] = libvirt
             
             # register an ErrorCallback
             def errHandler(ctx, error):
-                log.warn("backend error: %s" % (error,))
+                log.debug("backend error: %s" % (error,))
             libvirt.registerErrorHandler(errHandler, None)
 
-            self.libvirtConn = libvirt.open(None)
+            self.con = libvirt.open(None)
             log.info("backend connected to libvirt")
         except:
             log.error("could not connect to xen backend!")
@@ -83,11 +85,11 @@ class Backend(object):
         return commands.getstatusoutput(cmdline)
 
     def _getDomainByName(self, inst):
-        return self.libvirtConn.lookupByName(inst.getName())
+        return self.con.lookupByName(inst.getName())
 
     def _getDomain(self, inst):
         try:
-            if inst.backend_id in self.libvirtConn.listDomainsID():
+            if inst.backend_id in self.con.listDomainsID():
                 d = self._getDomainByName(inst)
             else:
                 raise BackendException("backend domain not found: %s" % inst.getName())

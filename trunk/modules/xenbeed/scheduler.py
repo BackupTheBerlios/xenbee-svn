@@ -25,7 +25,9 @@ class Scheduler:
 
         self.schedulerLoop = task.LoopingCall(self.cycle)
 
+        self.__maxPreparing = 3
         self.__maxActiveInstances = 3
+        self.__activeInstances = 0
 
         self.__created = []
         self.__preparing = []
@@ -52,13 +54,16 @@ class Scheduler:
         started       |   %d
         finished      |   %d
         failed        |   %d
+        --------------+---------
+        active        |   %d
         """ % (len(self.__created),
                len(self.__preparing),
                len(self.__pending),
                len(self.__starting),
                len(self.__started),
                len(self.__finished),
-               len(self.__failed))))
+               len(self.__failed),
+               self.__activeInstances)))
 
     def taskWatch(self, task, event, *args, **kw):
         try:
@@ -70,6 +75,8 @@ class Scheduler:
                 log.debug("task %s finished" % task.ID())
                 self.__started.remove(task)
                 self.__finished.append(task)
+                self.__activeInstances -= 1
+            self.logStatistics()
         finally:
             self.unlock()
 
@@ -88,12 +95,16 @@ class Scheduler:
     def _cycle(self):
         # prepare newly created tasks (i.e. retrieve neccessary files etc.)
         for task in self.__created:
+            if self.__maxPreparing and len(self.__preparing) >= self.__maxPreparing:
+                break
             try:
                 self.lock()
 
                 log.info("preparing task: " + task.ID())
                 self.__created.remove(task)
                 self.__preparing.append(task)
+
+                self.logStatistics()
 
                 def _f(err):
                     self.lock()
@@ -107,19 +118,25 @@ class Scheduler:
 
         for task in self.__pending:
             if self.__maxActiveInstances and \
-                   len(self.__starting) < self.__maxActiveInstances:
+                   self.__activeInstances < self.__maxActiveInstances:
                 self.lock()
                 log.info("starting up instance for task: "+task.ID())
 
                 self.__pending.remove(task)
                 self.__starting.append(task)
+                self.__activeInstances += 1
+                self.logStatistics()
 
                 def instanceStartupFailed(err, t):
                     log.debug("instance starting failed: %s" % err)
                     self.lock()
                     self.__starting.remove(t)
                     self.unlock()
-                    self.taskFailed(t, err)
+                    def dec_active(arg):
+                        self.__activeInstances -= 1
+                        return arg
+                    
+                    t.failed(err).addCallback(dec_active).addCallback(self.taskFailed, err)
                     err.clean()
                     return t
                 
@@ -160,6 +177,7 @@ class Scheduler:
     def taskFailed(self, task, err):
         log.info("task %s failed: %s" % (task.ID(),err.getErrorMessage()))
         self.__failed.append(task)
+        self.logStatistics()
 
     def __synchronize(self, func, *args, **kw):
         try:

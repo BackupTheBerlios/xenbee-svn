@@ -219,7 +219,7 @@ class Instance(object):
             return threads.deferToThread(backend.shutdownInstance,
                                          self).addCallback(self.stopped)
         else:
-            return defer.fail(InstanceError("not yet started"))
+            return defer.succeed(self)
 
     def cleanUp(self):
         """Removes all data belonging to this instance."""
@@ -254,7 +254,13 @@ class Instance(object):
     def __configure(self):
         self.config.setKernel(self.getFullPath("kernel"))
         self.config.setInitrd(self.getFullPath("initrd"))
-        self.config.setMac("00:16:3e:00:00:02")
+        macs = [ "00:16:3e:00:00:01",
+                 "00:16:3e:00:00:02" ]
+        import random
+        mac = random.choice(macs)
+        log.debug("TODO: choose meaningful MAC: %s" % (mac))
+
+        self.config.setMac(mac)
         self.config.addDisk(self.getFullPath("root"), "sda1")
         self.config.addToKernelCommandLine(XBE_SERVER="%s:%d" % (
             "xen-o-matic.itwm.fhrg.fraunhofer.de", 61613))
