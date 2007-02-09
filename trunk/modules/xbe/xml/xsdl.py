@@ -75,19 +75,13 @@ class XMLProtocol(object):
             self.__understood.append(tag)
 
     def messageReceived(self, msg):
-        def _s(results):
-            for r in results:
-                if r[0] == defer.FAILURE:
-                    raise RuntimeError("message could not be handled")
-            return msg
-
         def _f(err):
-            log.warn("message handling failed: %s\n%s" % (err.getErrorMessage(), err.getTraceback()))
-            self.transport.write(str(XenBEEClientError("handling failed: %s" % (str(err.getErrorMessage),),
-                                                       XenBEEClientError.ILLEGAL_REQUEST)))
-            return err
+            errmsg = "message handling failed: %s\n%s" % (err.getErrorMessage(), err.getTraceback())
+            log.warn(errmsg)
+            self.transport.write(str(XenBEEClientError(errmsg)))
+            return msg
         try:
-            return self._messageReceived(msg).addCallback(_s).addErrback(_f)
+            return self._messageReceived(msg).addErrback(_f)
         except Exception, e:
             log.exception("message handling failed")
             self.transport.write(str(XenBEEClientError("handling failed: %s" % (str(e),),
