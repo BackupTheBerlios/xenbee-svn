@@ -205,7 +205,7 @@ class Command_create(RemoteCommand):
         p.add_option("-i", "--image",  dest="image",   type="string", help="the main image to boot")
         p.add_option("-C", "--cpus",   dest="cpus",    type="int",    help="the number of cpus to use", default=1)
         p.add_option("-j", "--jsdl",   dest="jsdl",    type="string", help="a jsdl document", default="-")
-        p.add_option("-K", "--keep",   dest="keep_instance", action="store_true", help="a jsdl document")
+        p.add_option("-K", "--keep",   dest="keep_instance", action="store_true", help="a jsdl document", default=False)
 
     def _execute(self):
         # test for required values

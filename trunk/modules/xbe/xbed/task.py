@@ -22,7 +22,7 @@ from xbe.util.exceptions import *
 from xbe import util
 from xbe.util import fsm
 
-from twisted.internet import reactor
+from twisted.internet import reactor, defer
 from twisted.python import failure
 
 class TaskError(XenBeeException):
@@ -148,9 +148,9 @@ class Task(object):
             return self
         if self.keepInstanceRunning:
             log.debug("keeping the instance alive")
-            return defer.succeed(self).addBoth(instStopped)
+            return defer.succeed(self).addBoth(_s)
         else:
-            return self.inst.stop().addBoth(instStopped)
+            return self.inst.stop().addBoth(_s)
         
 class TaskManager:
     """The task-manager.

@@ -20,12 +20,14 @@ log = logging.getLogger("xbeinstd")
 class ProcProtocol(protocol.ProcessProtocol):
     def __init__(self):
         self.errOutput = []
+        self.stdOutput = []
     
     def connectionMade(self):
         pass
 
     def outReceived(self, data):
         """parse the data and store it in some file."""
+        self.stdOutput.append(data)
 
     def errReceived(self, data):
         log.debug("process-err: %s" % (str(data)))
@@ -65,8 +67,12 @@ class ServerProtocol(xsdl.XMLProtocol):
         tsn = msg.createElement("TaskStatusNotification", msg.root)
         tf = msg.createElement("TaskFinished", tsn)
         msg.createElement("ExitCode", tf, str(status_object.value.exitCode))
-        lastErrLine = "".join(map(str, self.proc.errOutput[-1:]))
-        msg.createElement("ErrorOutput", tf, str(lastErrLine).strip())
+
+        def listToString(_list):
+            return "".join(map(str, _list))
+        stdOutput, errOutput = map(listToString, [self.proc.errOutput, self.proc.stdOutput])
+        msg.createElement("StandardOutput", tf, stdOutput)
+        msg.createElement("ErrorOutput", tf, errOutput)
         self.proc = None
         self.transport.write(str(msg))
 
