@@ -72,7 +72,7 @@ class ServerProtocol(xsdl.XMLProtocol):
 
         def listToString(_list):
             return "".join(map(str, _list))
-        stdOutput, errOutput = map(listToString, [self.proc.errOutput, self.proc.stdOutput])
+        stdOutput, errOutput = map(listToString, [self.proc.stdOutput, self.proc.errOutput])
         msg.createElement("StandardOutput", tf, stdOutput)
         msg.createElement("ErrorOutput", tf, errOutput)
         self.proc = None
