@@ -39,19 +39,19 @@ class ServerProtocol(xsdl.XMLProtocol):
     def __init__(self, transport):
         self.proc = None
         xsdl.XMLProtocol.__init__(self,transport)
-        self.addUnderstood(xsdl.XSDL("JobDefinition"))
+        self.addUnderstood(xsdl.JSDL("JobDefinition"))
 
     def do_JobDefinition(self, job_def):
-        desc = job_def.find(xsdl.XSDL("JobDescription"))
+        desc = job_def.find(xsdl.JSDL("JobDescription"))
 
-        j_name = desc.findtext(xsdl.XSDL("JobIdentification/JobName"))
-        j_desc = desc.findtext(xsdl.XSDL("JobIdentification/Description"))
+        j_name = desc.findtext(xsdl.JSDL("JobIdentification/JobName"))
+        j_desc = desc.findtext(xsdl.JSDL("JobIdentification/Description"))
 
         app = desc.find(xsdl.XSDL("Application"))
         posixApp = desc.find(xsdl.JSDL_POSIXL("POSIXApplication"))
         executable = posixApp.findtext(xsdl.JSDL_POSIX("Executable"))
             
-        args = [(n.text or "").strip() for n in posixApp.findall(xsdl.XSDL("Argument"))]
+        args = [(n.text or "").strip() for n in posixApp.findall(xsdl.JSDL("Argument"))]
         cmdline = [ executable ]
         cmdline.extend(args)
         log.info("executing task: " + `cmdline`)
