@@ -62,13 +62,13 @@ class XMLProtocol(object):
 	    self.transport.write(str(XenBEEClientError("you sent me an illegal request!",
                                                        XenBEEClientError.ILLEGAL_REQUEST)))
 	    log.error("illegal request: " + str(ae))
-            raise
+            return defer.fail(ae)
 	try:
 	    return threads.deferToThread(method, *args, **kw)
 	except Exception, e:
 	    self.transport.write(str(XenBEEClientError("request failed: " + str(e),
                                                        XenBEEClientError.INTERNAL_SERVER_ERROR)))
-            raise
+            return defer.fail(e)
 
     def addUnderstood(self, tag):
         if tag not in self.__understood:
@@ -79,11 +79,13 @@ class XMLProtocol(object):
             for r in results:
                 if r == defer.FAILURE:
                     raise RuntimeError("message could not be handled")
+            return msg
 
         def _f(err):
             log.warn("message handling failed: %s\n%s" % (err.getErrorMessage(), err.getTraceback()))
             self.transport.write(str(XenBEEClientError("handling failed: %s" % (str(err.getErrorMessage),),
                                                        XenBEEClientError.ILLEGAL_REQUEST)))
+            return err
         try:
             return self._messageReceived(msg).addCallback(_s).addErrback(_f)
         except Exception, e:
