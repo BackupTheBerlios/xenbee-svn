@@ -59,6 +59,7 @@ class ServerProtocol(xsdl.XMLProtocol):
         log.info("executing task: " + `cmdline`)
 
         self.proc = ProcProtocol()
+        self.proc.cmdline = cmdline
         self.proc.creator = self
         reactor.spawnProcess(self.proc, cmdline[0], cmdline, {})
 
@@ -67,6 +68,7 @@ class ServerProtocol(xsdl.XMLProtocol):
         tsn = msg.createElement("TaskStatusNotification", msg.root)
         tf = msg.createElement("TaskFinished", tsn)
         msg.createElement("ExitCode", tf, str(status_object.value.exitCode))
+        msg.createElement("CommandLine", tf, str(self.proc.cmdline))
 
         def listToString(_list):
             return "".join(map(str, _list))
