@@ -53,7 +53,7 @@ class ServerProtocol(xsdl.XMLProtocol):
         posixApp = app.find(xsdl.JSDL_POSIX("POSIXApplication"))
         executable = posixApp.findtext(xsdl.JSDL_POSIX("Executable"))
             
-        args = [(n.text or "").strip() for n in posixApp.findall(xsdl.JSDL("Argument"))]
+        args = [(n.text or "").strip() for n in posixApp.findall(xsdl.JSDL_POSIX("Argument"))]
         cmdline = [ executable ]
         cmdline.extend(args)
         log.info("executing task: " + `cmdline`)
