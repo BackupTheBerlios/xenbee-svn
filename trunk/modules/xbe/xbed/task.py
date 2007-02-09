@@ -199,14 +199,14 @@ class TaskManager:
 
     def prepareTask(self, task):
         log.debug("starting preparation of %s" % (task.ID(),))
-        from xbe.xml import isdl
+        from xbe.xml import xsdl
 
 	# boot block
-        imgDef = task.document.find("./"+isdl.ISDL("ImageDefinition"))
+        imgDef = task.document.find("./"+xsdl.XSDL("ImageDefinition"))
 	files = {}
-	files["kernel"] = imgDef.findtext(isdl.ISDL("Boot/Kernel/URI"))
-	files["initrd"] = imgDef.findtext(isdl.ISDL("Boot/Initrd/URI"))
-	files["root"] = imgDef.findtext(isdl.ISDL("Images/BootImage/Source/URI"))
+	files["kernel"] = imgDef.findtext(xsdl.XSDL("Boot/Kernel/URI"))
+	files["initrd"] = imgDef.findtext(xsdl.XSDL("Boot/Initrd/URI"))
+	files["root"] = imgDef.findtext(xsdl.XSDL("Images/BootImage/Source/URI"))
 	log.debug(files)
 
         # create spool for task and instance and add files

@@ -2,13 +2,13 @@
 
 <!-- image submission extension for JSDL -->
 
-<isdl:Message xmlns:isdl="http://www.example.com/schemas/isdl/2007/01/isdl">
-  <isdl:TaskStatusNotification>
-    <isdl:TaskFinished>
-      <isdl:ExitCode>0</isdl:ExitCode>
-    </isdl:TaskFinished>
-  </isdl:TaskStatusNotification>
-</isdl:Message>
+<xsdl:Message xmlns:xsdl="http://www.example.com/schemas/xsdl/2007/01/xsdl">
+  <xsdl:TaskStatusNotification>
+    <xsdl:TaskFinished>
+      <xsdl:ExitCode>0</xsdl:ExitCode>
+    </xsdl:TaskFinished>
+  </xsdl:TaskStatusNotification>
+</xsdl:Message>
 
 <!--
     Local Variables: ***

@@ -1,10 +1,10 @@
 #!/usr/bin/python
 
-import xenbeed, sys
+import xbe, sys
 from twisted.internet import reactor
-xenbeed.initLogging("/tmp/foo")
+xbe.initLogging("/tmp/foo")
 
-from xenbeed.cache import Cache
+from xbe.cached.cache import Cache
 path = "/srv/xen-images/xenbee/cache"
 
 if len(sys.argv) < 3:

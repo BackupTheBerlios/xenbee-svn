@@ -19,7 +19,7 @@ try:
 except:
     from StringIO import StringIO
 
-ISDL_NS = "http://www.example.com/schemas/isdl/2007/01/isdl"
+XSDL_NS = "http://www.example.com/schemas/xsdl/2007/01/xsdl"
 JSDL_NS = "http://schemas.ggf.org/jsdl/2005/11/jsdl"
 JSDL_POSIX_NS = "http://schemas.ggf.org/jsdl/2005/11/jsdl-posix"
 
@@ -27,7 +27,7 @@ def decodeTag(tag):
     m = __tagPattern.match(tag)
     return (m.group("nsuri"), m.group("local"))
 
-def Tag(local, ns=ISDL_NS):
+def Tag(local, ns=XSDL_NS):
     return "{%s}%s" % (ns, local)
 
 # taken from http://effbot.org/zone/element-lib.htm
@@ -39,7 +39,7 @@ class NS(object):
     def __call__(self, path):
         return "/".join([getattr(self, tag) for tag in path.split("/")])
 
-ISDL = NS(ISDL_NS)
+XSDL = NS(XSDL_NS)
 JSDL = NS(JSDL_NS)
 JSDL_POSIX = NS(JSDL_POSIX_NS)
 
@@ -116,7 +116,7 @@ class XMLProtocol(object):
 
 __tagPattern = re.compile(r"^(?P<nsuri>{.*})?(?P<local>.*)$")
 
-def getChild(elem, name, ns=ISDL):
+def getChild(elem, name, ns=XSDL):
     return elem.find(ns(name))
 
 def NodeToString(node):
@@ -128,14 +128,14 @@ def NodeToString(node):
     return buf.getvalue()
         
 class XenBEEMessageFactory:
-    namespace = ISDL_NS
+    namespace = XSDL_NS
     
-    def __init__(self, prefix="isdl"):
+    def __init__(self, prefix="xsdl"):
         self.prefix = prefix
 
 class XenBEEClientMessage:
     """Encapsulates a xml message."""
-    def __init__(self, namespace=ISDL_NS, prefix="isdl"):
+    def __init__(self, namespace=XSDL_NS, prefix="xsdl"):
         """Initialize a XML message using the given namespace and prefix."""
         self.__ns = namespace
         self.__prefix = prefix

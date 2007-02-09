@@ -7,7 +7,7 @@ __version__ = "$Rev: $"
 __author__ = "$Author: $"
 
 import sys
-from xenbeed.daemon import Daemon
+from xbe.xbed.daemon import Daemon
 
 def main():
     daemon = Daemon()

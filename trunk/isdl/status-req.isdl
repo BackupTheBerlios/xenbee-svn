@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- image submission extension for JSDL -->
 
-<isdl:Message xmlns="http://www.example.com/"
-	      xmlns:isdl="http://www.example.com/schemas/isdl/2007/01/isdl"
+<xsdl:Message xmlns="http://www.example.com/"
+	      xmlns:xsdl="http://www.example.com/schemas/xsdl/2007/01/xsdl"
 	      xmlns:jsdl="http://schemas.ggf.org/jsdl/2005/11/jsdl"
 	      xmlns:jsdl-posix="http://schemas.ggf.org/jsdl/2005/11/jsdl-posix"  
 	      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"> 
 
-  <isdl:StatusRequest>
+  <xsdl:StatusRequest>
     
-  </isdl:StatusRequest>
-</isdl:Message>
+  </xsdl:StatusRequest>
+</xsdl:Message>
 
 <!--
 	Local Variables: ***

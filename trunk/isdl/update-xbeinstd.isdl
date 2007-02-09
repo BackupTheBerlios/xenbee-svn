@@ -2,38 +2,38 @@
 
 <!-- image submission extension for JSDL -->
 
-<isdl:Message xmlns="http://www.example.com/"
-	      xmlns:isdl="http://www.example.com/schemas/isdl/2007/01/isdl"
+<xsdl:Message xmlns="http://www.example.com/"
+	      xmlns:xsdl="http://www.example.com/schemas/xsdl/2007/01/xsdl"
 	      xmlns:jsdl="http://schemas.ggf.org/jsdl/2005/11/jsdl"
 	      xmlns:jsdl-posix="http://schemas.ggf.org/jsdl/2005/11/jsdl-posix"  
 	      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"> 
 
-  <isdl:ImageSubmission>
-    <isdl:ImageDefinition>
+  <xsdl:ImageSubmission>
+    <xsdl:ImageDefinition>
 
-      <isdl:Boot>
-	<isdl:Kernel>
-	  <isdl:URI>file:///srv/xen-images/domains/xenhobel-2/kernel</isdl:URI>
-	</isdl:Kernel>
-	<isdl:Initrd>
-	  <isdl:URI>file:///srv/xen-images/domains/xenhobel-2/initrd</isdl:URI>
-	</isdl:Initrd>
-	<isdl:Extra>
+      <xsdl:Boot>
+	<xsdl:Kernel>
+	  <xsdl:URI>file:///srv/xen-images/domains/xenhobel-2/kernel</xsdl:URI>
+	</xsdl:Kernel>
+	<xsdl:Initrd>
+	  <xsdl:URI>file:///srv/xen-images/domains/xenhobel-2/initrd</xsdl:URI>
+	</xsdl:Initrd>
+	<xsdl:Extra>
 	  <!-- extra kernel arguments -->
-	</isdl:Extra>
-      </isdl:Boot>
+	</xsdl:Extra>
+      </xsdl:Boot>
       
-      <isdl:Images>
-       <isdl:BootImage>
-	<isdl:Source>
-	  <isdl:URI>file:///srv/xen-images/domains/xenhobel-2/disk.img</isdl:URI>
-	</isdl:Source>
-	<isdl:TargetDevice>sda1</isdl:TargetDevice>
-	<isdl:MountPoint>/</isdl:MountPoint>
-      </isdl:BootImage>
-     </isdl:Images>
-    </isdl:ImageDefinition>
-  </isdl:ImageSubmission>
+      <xsdl:Images>
+       <xsdl:BootImage>
+	<xsdl:Source>
+	  <xsdl:URI>file:///srv/xen-images/domains/xenhobel-2/disk.img</xsdl:URI>
+	</xsdl:Source>
+	<xsdl:TargetDevice>sda1</xsdl:TargetDevice>
+	<xsdl:MountPoint>/</xsdl:MountPoint>
+      </xsdl:BootImage>
+     </xsdl:Images>
+    </xsdl:ImageDefinition>
+  </xsdl:ImageSubmission>
 
   <jsdl:JobDefinition>
     <jsdl:JobDescription> 
@@ -86,7 +86,7 @@
       </jsdl:DataStaging> 
     </jsdl:JobDescription> 
   </jsdl:JobDefinition> 
-</isdl:Message>
+</xsdl:Message>
 
 <!--
 	Local Variables: ***

@@ -16,11 +16,11 @@ Available subcommands:
        kill
 """
 
-from xenbeed.uuid import uuid
+from xbe.util.uuid import uuid
 
 from twisted.internet import reactor, defer
 from twisted.internet.protocol import ClientCreator
-from stomp.proto import StompClientFactory, StompClient
+from xbe.stomp.proto import StompClientFactory, StompClient
 
 import logging, sys, re, os
 log = logging.getLogger(__name__)
@@ -28,7 +28,7 @@ log = logging.getLogger(__name__)
 from optparse import OptionParser
 from textwrap import dedent
 
-from xenbeed import isdl
+from xbe.xml import xsdl
 from lxml import etree
 
 URI_PATTERN = r'((?P<prot>[a-zA-Z]+)://)?(?P<path>.*)'
@@ -122,16 +122,16 @@ class RemoteCommand(Command):
     def handleMessage(self, msg):
         """handles the given message from the STOMP server."""
         xml = etree.fromstring(msg.body)
-        if xml.find(isdl.ISDL(("Error"))):
-            self._handleError(xml.find(isdl.ISDL("Error")))
+        if xml.find(xsdl.XSDL(("Error"))):
+            self._handleError(xml.find(xsdl.XSDL("Error")))
         else:
             self._handleMessage(xml)
             reactor.stop()
 
     def _handleError(self,err):
-        errcode = int(err.findtext(isdl.ISDL("ErrorCode")))
-        errname = err.findtext(isdl.ISDL("ErrorName"))
-        errmsg  = err.findtext(isdl.ISDL("ErrorMessage"))
+        errcode = int(err.findtext(xsdl.XSDL("ErrorCode")))
+        errname = err.findtext(xsdl.XSDL("ErrorName"))
+        errmsg  = err.findtext(xsdl.XSDL("ErrorMessage"))
         if errcode != 200:
             self.executeFailed(CommandFailed("[Code %d]: %s - %s" % (errcode, errname, errmsg)))
         else:
@@ -220,7 +220,7 @@ class Command_create(RemoteCommand):
         jsdl = etree.parse(jsdlFile)
 
         # build xml message
-        msg = isdl.XenBEEClientMessage()
+        msg = xsdl.XenBEEClientMessage()
         submit = msg.createElement("ImageSubmission", msg.root)
         imgdef = msg.createElement("ImageDefinition", submit)
         boot = msg.createElement("Boot", imgdef)
@@ -256,7 +256,7 @@ class Command_kill(RemoteCommand):
         if not len(self.args):
             raise CommandFailed("at least one 'job-id' is required")
 
-        msg = isdl.XenBEEClientMessage()
+        msg = xsdl.XenBEEClientMessage()
         kill = msg.createElement("Kill", msg.root)
         msg.createElement("Signal", kill, self.options.signal)
         for job in self.args:
@@ -277,14 +277,14 @@ class Command_status(RemoteCommand):
         p = self.parser
 
     def _execute(self):
-        msg = isdl.XenBEEClientMessage()
+        msg = xsdl.XenBEEClientMessage()
         sreq = msg.createElement("StatusRequest", msg.root)
         msg.root.append(sreq)
         return msg
 
     def _handleMessage(self, msg):
         """handles the status message."""
-        slist = msg.find(isdl.ISDL("StatusList"))
+        slist = msg.find(xsdl.XSDL("StatusList"))
         stats = []
         for child in slist:
             stats.append(self._parseStatus(child))
@@ -305,7 +305,7 @@ class Command_status(RemoteCommand):
     def _parseStatus(self, status_elem):
         s = {}
         for child in status_elem:
-            s[isdl.decodeTag(child.tag)[1]] = (child.text or "").strip()
+            s[xsdl.decodeTag(child.tag)[1]] = (child.text or "").strip()
         return s
 
 Command_list = Command_status
@@ -322,26 +322,26 @@ class Command_showcache(RemoteCommand):
         p = self.parser
 
     def _execute(self):
-        return isdl.XenBEEListCache()
+        return xsdl.XenBEEListCache()
 
     def _handleMessage(self, msg):
         """handles the cache entries message."""
-        ISDL = isdl.NS(isdl.ISDL_NS)
+        XSDL = xsdl.NS(xsdl.XSDL_NS)
 
         fmt = "%-60s  %-10s %s"
         print fmt % (" URI", "DATA-TYPE", "DESCRIPTION")
-        for entry in msg.findall("./"+ISDL("CacheEntries/Entry")):
-            uri = entry.findtext(ISDL("URI"))
-            type = entry.findtext(ISDL("Type"))
-            desc = entry.findtext(ISDL("Description"))
+        for entry in msg.findall("./"+XSDL("CacheEntries/Entry")):
+            uri = entry.findtext(XSDL("URI"))
+            type = entry.findtext(XSDL("Type"))
+            desc = entry.findtext(XSDL("Description"))
             print fmt % (uri, type, desc)
 
 class Command_submit(RemoteCommand):
     """\
-    submit: Submit an isdl document
+    submit: Submit an xsdl document
 
     arguments:
-       isdl -- path to an isdl document
+       xsdl -- path to an xsdl document
 
     """
 
@@ -350,9 +350,9 @@ class Command_submit(RemoteCommand):
         RemoteCommand.__init__(self, argv)
 
     def _execute(self):
-        # submit the isdl document
+        # submit the xsdl document
         if not len(self.args):
-            raise CommandFailed("path to isdl document required!")
+            raise CommandFailed("path to xsdl document required!")
         return open(self.args[0]).read()
 
 def printShortHelp():

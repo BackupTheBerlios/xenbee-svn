@@ -6,7 +6,7 @@ import sys, time
 from twisted.internet import reactor
 from twisted.internet.protocol import ClientFactory
 from twisted.internet.stdio import StandardIO
-from stomp.proto import StompClientFactory, StompClient
+from xbe.stomp.proto import StompClientFactory, StompClient
 from twisted.protocols import basic
 from textwrap import dedent
 

@@ -10,14 +10,14 @@ import logging
 log = logging.getLogger(__name__)
 
 from xbe.stomp.proto import StompClient, StompClientFactory, StompTransport
-from xbe.xml import isdl
+from xbe.xml import xsdl
 from lxml import etree
 
 # Twisted imports
 from twisted.internet import reactor
 import threading
 
-class XenBEEClientProtocol(isdl.XMLProtocol):
+class XenBEEClientProtocol(xsdl.XMLProtocol):
     """The XBE client side protocol.
 
     This protocol is spoken between some client (user, script
@@ -25,74 +25,74 @@ class XenBEEClientProtocol(isdl.XMLProtocol):
     """
 
     def __init__(self, client, transport):
-        isdl.XMLProtocol.__init__(self, transport)
+        xsdl.XMLProtocol.__init__(self, transport)
         self.client = client
-        self.addUnderstood(isdl.Tag("ImageSubmission"))
-        self.addUnderstood(isdl.Tag("StatusRequest"))
-        self.addUnderstood(isdl.Tag("Kill"))
-        self.addUnderstood(isdl.Tag("ListCache"))
+        self.addUnderstood(xsdl.Tag("ImageSubmission"))
+        self.addUnderstood(xsdl.Tag("StatusRequest"))
+        self.addUnderstood(xsdl.Tag("Kill"))
+        self.addUnderstood(xsdl.Tag("ListCache"))
 
     def do_ImageSubmission(self, elem):
 	"""Handle an image submission."""
         # run some checks on the received document
-	imgDef = elem.find(isdl.ISDL("ImageDefinition"))
+	imgDef = elem.find(xsdl.XSDL("ImageDefinition"))
 	if not imgDef:
 	    raise Exception("no ImageDefinition found.")
 
         # create a new task object for this submission
         task = self.factory.taskManager.newTask(elem)
         self.transport.write(
-            str(isdl.XenBEEClientError("task submitted: %s" % task.ID(),
-                                       isdl.XenBEEClientError.OK))
+            str(xsdl.XenBEEClientError("task submitted: %s" % task.ID(),
+                                       xsdl.XenBEEClientError.OK))
             )
 
     def do_StatusRequest(self, dom_node):
 	"""Handle status request."""
-        msg = isdl.XenBEEStatusMessage()
+        msg = xsdl.XenBEEStatusMessage()
         map(msg.addStatusForTask, self.factory.taskManager.tasks.values())
         self.transport.write(str(msg))
 
     def do_Kill(self, elem):
-        sig = int(elem.findtext(isdl.ISDL("Signal")))
+        sig = int(elem.findtext(xsdl.XSDL("Signal")))
         if not sig in [ 9, 15 ]:
             raise ValueError("out of range, allowed are (9,15)")
-        for tid in map(lambda t: (t.text or "").strip(), elem.findall(isdl.ISDL("JobID"))):
+        for tid in map(lambda t: (t.text or "").strip(), elem.findall(xsdl.XSDL("JobID"))):
             task = self.factory.taskManager.lookupByID(tid)
             if not task:
                 self.transport.write(            
-                    str(isdl.XenBEEClientError("no such task: %s" % (tid,),
-                                               isdl.XenBEEClientError.ILLEGAL_REQUEST))
+                    str(xsdl.XenBEEClientError("no such task: %s" % (tid,),
+                                               xsdl.XenBEEClientError.ILLEGAL_REQUEST))
                     )
             else:
                 task.kill(sig)
         self.transport.write(
-            str(isdl.XenBEEClientError("signal sent", isdl.XenBEEClientError.OK)))
+            str(xsdl.XenBEEClientError("signal sent", xsdl.XenBEEClientError.OK)))
 
     def do_ListCache(self, elem):
         def __sendMessage(entries):
-            msg = isdl.XenBEECacheEntries()
+            msg = xsdl.XenBEECacheEntries()
             for uid, type, desc in entries:
                 msg.addEntry(uid, type, desc)
             self.transport.write(str(msg))
         self.factory.cache.getEntries().addCallback(__sendMessage)
 	
-class XenBEEInstanceProtocol(isdl.XMLProtocol):
+class XenBEEInstanceProtocol(xsdl.XMLProtocol):
     """The XBE instance side protocol.
 
     This protocol is spoken between an instance and the daemon.
     """
 
     def __init__(self, instid, transport):
-        isdl.XMLProtocol.__init__(self, transport)
+        xsdl.XMLProtocol.__init__(self, transport)
 	self.instid = instid
-        self.addUnderstood(isdl.Tag("InstanceAvailable"))
-        self.addUnderstood(isdl.Tag("TaskStatusNotification"))
+        self.addUnderstood(xsdl.Tag("InstanceAvailable"))
+        self.addUnderstood(xsdl.Tag("TaskStatusNotification"))
 
     def executeTask(self, task):
-        job = task.document.find("./" + isdl.JSDL("JobDefinition"))
+        job = task.document.find("./" + xsdl.JSDL("JobDefinition"))
         if job == None:
             raise RuntimeError("no job definition found for task %s" % (task.ID()))
-        msg = isdl.XenBEEClientMessage()
+        msg = xsdl.XenBEEClientMessage()
         msg.root.append(etree.fromstring(etree.tostring(job)))
 
         log.info("submitting:\n%s" % str(msg))
@@ -107,7 +107,7 @@ class XenBEEInstanceProtocol(isdl.XMLProtocol):
     #                       #
     #########################
     def do_InstanceAvailable(self, dom_node):
-        inst_id = isdl.getChild(dom_node, "InstanceID").text.strip()
+        inst_id = xsdl.getChild(dom_node, "InstanceID").text.strip()
         if inst_id != self.instid:
             raise ValueError("got answer from different instance!")
         inst = self.factory.instanceManager.lookupByUUID(inst_id)
@@ -119,9 +119,9 @@ class XenBEEInstanceProtocol(isdl.XMLProtocol):
         inst.available()
 
     def do_TaskStatusNotification(self, status_elem):
-        fin_elem = isdl.getChild(status_elem, "TaskFinished")
-        exitcode = int(isdl.getChild(fin_elem, "ExitCode").text)
-        errout   = isdl.getChild(fin_elem, "ErrorOutput").text
+        fin_elem = xsdl.getChild(status_elem, "TaskFinished")
+        exitcode = int(xsdl.getChild(fin_elem, "ExitCode").text)
+        errout   = xsdl.getChild(fin_elem, "ErrorOutput").text
         log.info("task finished: code=%d errout='%s'" % (exitcode, errout))
 
         task = self.factory.instanceManager.lookupByUUID(self.instid).task
