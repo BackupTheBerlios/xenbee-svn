@@ -47,8 +47,8 @@ class ServerProtocol(xsdl.XMLProtocol):
         j_name = desc.findtext(xsdl.JSDL("JobIdentification/JobName"))
         j_desc = desc.findtext(xsdl.JSDL("JobIdentification/Description"))
 
-        app = desc.find(xsdl.XSDL("Application"))
-        posixApp = desc.find(xsdl.JSDL_POSIX("POSIXApplication"))
+        app = desc.find(xsdl.JSDL("Application"))
+        posixApp = app.find(xsdl.JSDL_POSIX("POSIXApplication"))
         executable = posixApp.findtext(xsdl.JSDL_POSIX("Executable"))
             
         args = [(n.text or "").strip() for n in posixApp.findall(xsdl.JSDL("Argument"))]
