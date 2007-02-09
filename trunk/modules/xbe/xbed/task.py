@@ -108,7 +108,11 @@ class Task(object):
             else:
                 log.info("backend stopped.")
             return self
-        return self.inst.stop().addBoth(instStopped)
+        if self.keepInstanceRunning:
+            log.debug("keeping the instance alive")
+            return defer.succeed(self).addBoth(instStopped)
+        else:
+            return self.inst.stop().addBoth(instStopped)
 
     def do_prepare(self):
         return self.mgr.prepareTask(self)
@@ -142,7 +146,11 @@ class Task(object):
         def _s(result):
             self.mgr.taskFinished(self)
             return self
-        self.inst.stop().addBoth(_s)
+        if self.keepInstanceRunning:
+            log.debug("keeping the instance alive")
+            return defer.succeed(self).addBoth(instStopped)
+        else:
+            return self.inst.stop().addBoth(instStopped)
         
 class TaskManager:
     """The task-manager.
@@ -200,6 +208,11 @@ class TaskManager:
     def prepareTask(self, task):
         log.debug("starting preparation of %s" % (task.ID(),))
         from xbe.xml import xsdl
+
+        # keep the instance running?
+        task.keepInstanceRunning = task.document.attrib.get(xsdl.Tag("keep-instance")) == "yes"
+        if task.keepInstanceRunning:
+            log.info("keeping the instance alive")
 
 	# boot block
         imgDef = task.document.find("./"+xsdl.XSDL("ImageDefinition"))

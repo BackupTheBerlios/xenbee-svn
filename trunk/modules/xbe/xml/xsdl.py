@@ -81,7 +81,7 @@ class XMLProtocol(object):
                     raise RuntimeError("message could not be handled")
 
         def _f(err):
-            log.warn("message handling failed: %s\n%s" % (err.getErrorMessage(), err.getTraceBack()))
+            log.warn("message handling failed: %s\n%s" % (err.getErrorMessage(), err.getTraceback()))
             self.transport.write(str(XenBEEClientError("handling failed: %s" % (str(err.getErrorMessage),),
                                                        XenBEEClientError.ILLEGAL_REQUEST)))
         try:
@@ -100,7 +100,7 @@ class XMLProtocol(object):
 	    # got an unacceptable message
 #	    self.transport.write(str(XenBEEClientError("you sent me an illegal message!",
 #                                                       XenBEEClientError.ILLEGAL_REQUEST)))
-	    return defer.fail("you sent me an illegal message!")
+	    return defer.fail(RuntimeError("you sent me an illegal message!"))
 
 	if not len(self.__root):
 #	    self.transport.write(str(XenBEEClientError("no elements to handle found, sorry",

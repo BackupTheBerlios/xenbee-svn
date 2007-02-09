@@ -7,13 +7,6 @@ Version: $Revision$
 Author: Alexander Petry <petry@itwm.fhg.de>
 
 Type 'xbe help <subcommand>' for help on a specific subcommand.
-
-Available subcommands:
-
-       help
-       create
-       status
-       kill
 """
 
 from xbe.util.uuid import uuid
@@ -99,6 +92,7 @@ class Command(object):
 
         self.parser = p
 
+    def buildHelp(self):
         from StringIO import StringIO
         help_file = StringIO()
         self.parser.print_help(help_file)
@@ -146,6 +140,7 @@ class RemoteCommand(Command):
 
     def execute(self):
         self.options, self.args = parse_args(self.parser, self.argv)
+        self.buildHelp()
         self.executeRemote(str(self._execute()))
 
     def _execute(self):
@@ -183,7 +178,14 @@ class Command_help(Command):
         if self.subcmd:
             print >>sys.stderr, dedent(self.subcmd.__doc__).strip()
         else:
-            print dedent(__doc__).strip()
+            sb = [dedent(__doc__).strip()]
+            sb.append("")
+            sb.append("available subcommands:")
+            sb.append("")
+            for cls in globals().keys():
+                if cls.startswith("Command_"):
+                    sb.append("   "+cls.split("Command_")[1])
+            print >>sys.stderr, "\n".join(sb)
 
 class Command_create(RemoteCommand):
     """\
@@ -203,6 +205,7 @@ class Command_create(RemoteCommand):
         p.add_option("-i", "--image",  dest="image",   type="string", help="the main image to boot")
         p.add_option("-C", "--cpus",   dest="cpus",    type="int",    help="the number of cpus to use", default=1)
         p.add_option("-j", "--jsdl",   dest="jsdl",    type="string", help="a jsdl document", default="-")
+        p.add_option("-K", "--keep",   dest="keep_instance", action="store_true", help="a jsdl document")
 
     def _execute(self):
         # test for required values
@@ -222,6 +225,8 @@ class Command_create(RemoteCommand):
         # build xml message
         msg = xsdl.XenBEEClientMessage()
         submit = msg.createElement("ImageSubmission", msg.root)
+        submit.attrib[xsdl.Tag("keep-instance")] = ["no", "yes"][self.options.keep_instance]
+        
         imgdef = msg.createElement("ImageDefinition", submit)
         boot = msg.createElement("Boot", imgdef)
         _t = msg.createElement("Kernel", boot)
@@ -364,7 +369,9 @@ def createCommand(argv):
         try:
             clsname = "Command_%s" % argv[0]
             if clsname in globals():
-                return globals()[clsname](argv)
+                cmd = globals()[clsname](argv)
+                cmd.buildHelp()
+                return cmd
             else:
                 raise UnknownCommand(argv[0])
         except UnknownCommand, uc:

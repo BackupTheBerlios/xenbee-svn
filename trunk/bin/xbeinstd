@@ -10,7 +10,7 @@ application execution.
 import sys, os, logging
 from twisted.internet import reactor, protocol, utils
 from twisted.protocols import basic
-from stomp.proto import StompClientFactory, StompClient, StompTransport
+from xbe.stomp.proto import StompClientFactory, StompClient, StompTransport
 from xbe.xml import xsdl
 import xbe
 xbe.initLogging("/tmp/xbeinstd.log")
