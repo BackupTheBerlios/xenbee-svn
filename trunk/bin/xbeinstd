@@ -89,7 +89,7 @@ class TestProtocol(StompClient):
         # parse the xsdl message
         try:
             log.debug("got message from server: %s" % (str(msg)))
-            return self._messageReceived(msg)
+            self._messageReceived(msg).addErrback(log.exception)
         except Exception, e:
             log.exception(e)
 
