@@ -68,7 +68,7 @@ class Task(object):
         return self.fsm.getCurrentState()
 
     def failed(self, reason):
-        self.fsm.consume("failed", reason)
+        return self.fsm.consume("failed", reason)
 
     def filesRetrieved(self):
         self.fsm.consume("files-retrieved")
@@ -97,7 +97,15 @@ class Task(object):
     def do_failed(self, reason):
         self.endTime = time.time()
         self.failReason = reason
+        
+        def stopFailed(result):
+            log.fatal("stopping backend instance failed: %s" % result)
+
+            # ignore the failure...
+            return self
+        
         self.mgr.taskFailed(self)
+        return self.inst.stop().addErrback(stopFailed)
 
     def do_prepare(self):
         return self.mgr.prepareTask(self)
@@ -128,6 +136,7 @@ class Task(object):
     def do_finished(self, exitcode):
         self.endTime = time.time()
         self.exitCode = exitcode
+        self.inst.stop()
         self.mgr.taskFinished(self)
         
 class TaskManager:

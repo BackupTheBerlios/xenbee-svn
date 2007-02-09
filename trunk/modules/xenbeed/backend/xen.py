@@ -51,12 +51,13 @@ class Backend(object):
         try:
             # try to use libvirt
             import libvirt
-            self.libvirtConn = libvirt.open(None)
             
             # register an ErrorCallback
             def errHandler(ctx, error):
                 log.warn("backend error: %s" % (error,))
             libvirt.registerErrorHandler(errHandler, None)
+
+            self.libvirtConn = libvirt.open(None)
             log.info("backend connected to libvirt")
         except:
             log.error("could not connect to xen backend!")
@@ -205,17 +206,17 @@ class Backend(object):
         
         returns the state reached, or None otherwise.
         """
-        from time import time
-        end = time() + timeout
+        import time
+        end = int(time.time() + timeout)
         while True:
             s = self.getStatus(inst)
             if s in states:
                 log.debug("backend: reached state: %s" % (getStateName(s)))
                 return s
-            if time() >= end:
+            if int(time.time()) >= end:
                 break
             log.debug("backend: waiting for one of: %s currently in: %s" % (map(getStateName, states), getStateName(s)))
-            sleep(0.5)
+            time.sleep(1)
         return None
 
     def shutdownInstance(self, inst):
@@ -230,5 +231,6 @@ class Backend(object):
             domain.shutdown()
         finally:
             self.releaseLock()
-        if not self.waitState(inst, (BE_INSTANCE_NOSTATE, BE_INSTANCE_SHUTOFF), timeout=60*2):
-            raise BackendException("shutdown failed after 2minutes.")
+        if self.waitState(inst, (BE_INSTANCE_NOSTATE, BE_INSTANCE_SHUTOFF), timeout=60*2) is None:
+            raise BackendException("shutdown timedout")
+        return True

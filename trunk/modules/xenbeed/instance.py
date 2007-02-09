@@ -188,9 +188,6 @@ class Instance(object):
         dL.unpause()
         return dL
 
-    def __cache_mangle_uris(self, filelist):
-        pass
-
     def getFullPath(self, logical_name):
         return os.path.join(self.getSpool(), logical_name)
 
@@ -210,18 +207,18 @@ class Instance(object):
         """Return all information known about the backend instance."""
         return backend.getInfo(self)
 
+    def stopped(self, result):
+        self.state = "stopped"
+        self.mgr.removeInstance(self)
+        return self
+
     def stop(self):
         """Stop the instance."""
-        if self.state == "started":
-            d = threads.deferToThread(backend.shutdownInstance, self)
-            def _s(arg):
-                self.state = "stopped"
-                self.mgr.removeInstance(self)
-                return self
-            d.addCallback(_s)
+        if self.state in ["started", "available"]:
+            return threads.deferToThread(backend.shutdownInstance,
+                                         self).addCallback(self.stopped)
         else:
-            raise InstanceError(getName()+" not yet started!")
-        return d
+            return defer.fail(InstanceError("not yet started"))
 
     def cleanUp(self):
         """Removes all data belonging to this instance."""
@@ -275,16 +272,18 @@ class Instance(object):
         self.__configure()
 
         def timeout(deferred):
-            self.state = "failed"
             log.warn("instance %s timed out" % self.ID())
             deferred.errback(InstanceTimedout("instance timedout", self.ID()))
 
         def cancelTimer(arg, timer):
             # got signal from the backend instance
+            self.state = "available"
             timer.cancel()
             return arg
             
-        self.__availableTimer = reactor.callLater(self.__availableTimeout, timeout, self.__availableDefer)
+        self.__availableTimer = reactor.callLater(self.__availableTimeout,
+                                                  timeout,
+                                                  self.__availableDefer)
         self.__availableDefer.addCallback(cancelTimer, self.__availableTimer)
         
         # use the backend to start
