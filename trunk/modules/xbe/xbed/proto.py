@@ -9,8 +9,8 @@ __author__ = "$Author: petry $"
 import logging
 log = logging.getLogger(__name__)
 
-from stomp.proto import StompClient, StompClientFactory, StompTransport
-from xenbeed import isdl
+from xbe.stomp.proto import StompClient, StompClientFactory, StompTransport
+from xbe.xml import isdl
 from lxml import etree
 
 # Twisted imports

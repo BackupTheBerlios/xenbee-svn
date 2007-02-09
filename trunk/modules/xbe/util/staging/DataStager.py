@@ -15,7 +15,7 @@ import threading
 from twisted.internet import threads, defer
 from twisted.python import failure
 
-from xenbeed.exceptions import XenBeeException
+from xbe.util.exceptions import XenBeeException
 try:
     from traceback import format_exc as format_exception
 except:

@@ -89,8 +89,8 @@ class Scheduler:
     def cycle(self):
         try:
             self._cycle()
-        except:
-            log.exception()
+        except Exception, e:
+            log.exception("exception in scheduler loop:")
 
     def _cycle(self):
         # prepare newly created tasks (i.e. retrieve neccessary files etc.)

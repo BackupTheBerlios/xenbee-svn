@@ -17,8 +17,8 @@ try:
 except:
     from traceback import format_exception
 
-from xenbeed.exceptions import *
-from xenbeed.backend.status import *
+from xbe.util.exceptions import *
+from xbe.xbed.backend.status import *
 
 
 class BackendInstance(object):

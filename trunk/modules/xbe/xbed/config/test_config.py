@@ -11,7 +11,7 @@ __author__ = "$Author: petry $"
 
 
 import unittest, os, sys
-from xenbeed.config.xen import InstanceConfig, ConfigurationError, LibVirtXMLConfigGenerator
+from xbe.xbed.config.xen import InstanceConfig, ConfigurationError, LibVirtXMLConfigGenerator
 
 class TestInstanceConfig(unittest.TestCase):
     def setUp(self):

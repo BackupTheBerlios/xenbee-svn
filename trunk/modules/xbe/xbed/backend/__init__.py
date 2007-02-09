@@ -14,7 +14,7 @@ def initBackend(backendType="xen"):
     if backend:
         raise RuntimeError("backend already initialized!")
     try:
-        mod = __import__("xenbeed.backend.%s" % backendType, globals(), locals(), ["Backend"])
+        mod = __import__("xbe.xbed.backend.%s" % backendType, globals(), locals(), ["Backend"])
         backend = mod.Backend()
     except:
         raise

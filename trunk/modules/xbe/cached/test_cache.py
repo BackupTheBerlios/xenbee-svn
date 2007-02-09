@@ -7,16 +7,17 @@ __author__ = "$Author$"
 
 import os, time
 import unittest
-from xenbeed.staging.DataStager import TempFile
-from xenbeed import cache
-from xenbeed.util import removeDirCompletely
-from xenbeed.uuid import uuid
+
+from xbe.util.staging.DataStager import TempFile
+from xbe.cached import cache
+from xbe.util import removeDirCompletely
+from xbe.util.uuid import uuid
 from twisted.internet import reactor
 
 log = TempFile()
 try:
-    import xenbeed
-    xenbeed.initLogging(log.path)
+    import xbe.xbed
+    xbe.xbed.initLogging(log.path)
 except:
     pass
 

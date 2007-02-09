@@ -9,9 +9,9 @@ __author__ = "$Author: petry $"
 import unittest, os, sys, logging
 log = logging.getLogger(__name__)
 
-from xenbeed.instance import Instance, InstanceManager
-from xenbeed import util
-from xenbeed import disk
+from xbe.xbed.instance import Instance, InstanceManager
+from xbe import util
+from xbe.util import disk
 
 class TestInstanceManager(unittest.TestCase):
     def setUp(self):
@@ -73,7 +73,7 @@ class TestInstanceManager(unittest.TestCase):
         inst.start()
         state = inst.getBackendState()
 
-        from xenbeed.backend import status
+        from xbe.xbed.backend import status
         self.assertTrue(state in (status.BE_INSTANCE_RUNNING, status.BE_INSTANCE_BLOCKED))
 
         # shut the instance down
@@ -115,7 +115,7 @@ class TestInstanceManager(unittest.TestCase):
         inst.start()
         state = inst.getBackendState()
 
-        from xenbeed.backend import status
+        from xbe.xbed.backend import status
         self.assertTrue(state in (status.BE_INSTANCE_RUNNING, status.BE_INSTANCE_BLOCKED))
 
         # shut the instance down

@@ -19,9 +19,9 @@ try:
 except:
     from traceback import format_exception
 
-from xenbeed.exceptions import *
-from xenbeed.backend import backend
-from xenbeed import util
+from xbe.util.exceptions import *
+from xbe.xbed.backend import backend
+from xbe import util
 
 from twisted.internet import reactor, threads, task, defer
 from twisted.python import failure
@@ -113,7 +113,7 @@ class Instance(object):
             log.error("a file with the logical name '%s' does already exist." % logical_name)
             raise InstanceError("logical file '%s' already exists." % logical)
 
-        from xenbeed.staging import DataStager
+        from xbe.util.staging import DataStager
         try:
             ds = DataStager(uri, dst)
             ds.perform(asynchronous=False)
@@ -166,7 +166,7 @@ class Instance(object):
             return fileList
 
         def _retrieve_files(fileList):
-            from xenbeed.staging import FileSetRetriever
+            from xbe.util.staging import FileSetRetriever
             retriever = FileSetRetriever(fileList)
             return retriever.perform()
             
@@ -198,7 +198,7 @@ class Instance(object):
     def getBackendState(self):
         """Return the backend state of this instance.
 
-        see: xenbeed.backend.status
+        see: xbe.xbed.backend.status
 
         """
         return backend.getStatus(self)
@@ -335,8 +335,8 @@ class InstanceManager:
         This instance does not have any files assigned.
 
         """
-        from xenbeed.config.xen import InstanceConfig
-        from xenbeed.uuid import uuid
+        from xbe.xbed.config.xen import InstanceConfig
+        from xbe.util.uuid import uuid
         icfg = InstanceConfig(uuid())
 
         try:

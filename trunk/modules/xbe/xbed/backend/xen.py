@@ -23,9 +23,9 @@ try:
 except:
     from traceback import format_exception
 
-from xenbeed.config.xen import XenConfigGenerator
-from xenbeed.exceptions import *
-from xenbeed.backend.status import *
+from xbe.xbed.config.xen import XenConfigGenerator
+from xbe.xbed.backend.status import *
+from xbe.util.exceptions import *
 
 class BackendDomainInfo:
     """The python version of virDomainInfo.
@@ -121,7 +121,7 @@ class Backend(object):
             VIR_DOMAIN_CRASHED = 6 : the domain is crashed
         }
 
-        That are currently the same as in xenbeed.backend.status.
+        That are currently the same as in xbe.xbed.backend.status.
         """
         try:
             return self.getInfo(inst).state
@@ -205,7 +205,7 @@ class Backend(object):
     def waitState(self, inst, states=(BE_INSTANCE_SHUTOFF), timeout=60):
         """wait until the instance reached one of the given states.
 
-        states -- a list of states (xenbeed.backend.status)
+        states -- a list of states (xbe.xbed.backend.status)
         timeout -- the maximum time that may elapse before an error is returned
         
         returns the state reached, or None otherwise.

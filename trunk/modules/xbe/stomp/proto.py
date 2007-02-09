@@ -11,7 +11,9 @@ from twisted.protocols.basic import LineReceiver
 from twisted.internet import defer, reactor
 from twisted.internet.protocol import ReconnectingClientFactory
 from textwrap import dedent
-from xenbeed.uuid import uuid
+
+from xbe.util.uuid import uuid
+
 import errno
 
 __all__ = [ 'StompClient', 'Message', 'StompClientFactory' ]

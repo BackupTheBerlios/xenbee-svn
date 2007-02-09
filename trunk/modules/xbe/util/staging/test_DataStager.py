@@ -15,7 +15,7 @@ __version__ = "$Rev$"
 __author__ = "$Author: petry $"
 
 import unittest, os, sys
-from xenbeed.staging import DataStager, TempFile
+from xbe.util.staging import DataStager, TempFile
 
 class TestDataStager(unittest.TestCase):
 	def setUp(self):

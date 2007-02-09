@@ -18,9 +18,9 @@ try:
 except:
     from traceback import format_exception
 
-from xenbeed.exceptions import *
-from xenbeed import util
-from xenbeed import fsm
+from xbe.util.exceptions import *
+from xbe import util
+from xbe.util import fsm
 
 from twisted.internet import reactor
 from twisted.python import failure
@@ -168,7 +168,7 @@ class TaskManager:
 
     def newTask(self, document):
         """Returns a new task."""
-        from xenbeed.uuid import uuid
+        from xbe.util.uuid import uuid
         self.mtx.acquire()
 
         task = Task(uuid(), self, document)
@@ -199,7 +199,7 @@ class TaskManager:
 
     def prepareTask(self, task):
         log.debug("starting preparation of %s" % (task.ID(),))
-        import isdl
+        from xbe.xml import isdl
 
 	# boot block
         imgDef = task.document.find("./"+isdl.ISDL("ImageDefinition"))

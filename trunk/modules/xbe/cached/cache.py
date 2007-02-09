@@ -8,8 +8,8 @@ __author__ = "$Author$"
 import logging, os, os.path, threading
 log = logging.getLogger(__name__)
 
-from xenbeed.uuid import uuid
-from xenbeed.database import dbapi
+from xbe.util.uuid import uuid
+from xbe.util.database import dbapi
 from twisted.internet import defer
 from Queue import Queue
 
@@ -205,7 +205,7 @@ class Cache(object):
         return dst
 
     def __retrieveFile(self, uri, dst):
-        from xenbeed.staging import DataStager
+        from xbe.util.staging import DataStager
         ds = DataStager(uri, dst)
         return ds.perform()
 
