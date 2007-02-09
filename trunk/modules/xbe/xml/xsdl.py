@@ -78,7 +78,8 @@ class XMLProtocol(object):
         def _f(err):
             errmsg = "message handling failed: %s\n%s" % (err.getErrorMessage(), err.getTraceback())
             log.warn(errmsg)
-            self.transport.write(str(XenBEEClientError(errmsg)))
+            self.transport.write(str(XenBEEClientError(errmsg,
+                                                       XenBEEClientError.ILLEGAL_REQUEST)))
             return msg
         try:
             return self._messageReceived(msg).addErrback(_f)
