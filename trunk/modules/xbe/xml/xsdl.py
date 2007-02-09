@@ -77,7 +77,7 @@ class XMLProtocol(object):
     def messageReceived(self, msg):
         def _s(results):
             for r in results:
-                if r == defer.FAILURE:
+                if r[0] == defer.FAILURE:
                     raise RuntimeError("message could not be handled")
             return msg
 
@@ -108,10 +108,10 @@ class XMLProtocol(object):
 #	    self.transport.write(str(XenBEEClientError("no elements to handle found, sorry",
 #                                                       XenBEEClientError.ILLEGAL_REQUEST)))
 	    return defer.fail("no elements to handle found, sorry")
-        dl = []
+        
         for child in filter(lambda x: x.tag in self.__understood, self.__root):
-            dl.append(self.dispatch(decodeTag(child.tag)[1], child))
-        return defer.DeferredList(dl)
+            return self.dispatch(decodeTag(child.tag)[1], child)
+        return defer.fail(ValueError("no acceptable tag found"))
     
     def do_Error(self, err):
         log.debug("got error:\n%s" % (etree.tostring(err)))
