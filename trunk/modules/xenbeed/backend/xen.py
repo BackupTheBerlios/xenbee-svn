@@ -86,13 +86,12 @@ class Backend(object):
         return self.libvirtConn.lookupByName(inst.getName())
 
     def _getDomain(self, inst):
-        import libvirt.libvirtError
         try:
             if inst.backend_id in self.libvirtConn.listDomainsID():
                 d = self._getDomainByName(inst)
             else:
                 raise BackendException("backend domain not found: %s" % inst.getName())
-        except libvirt.libvirtError, le:
+        except Exception, le:
             raise BackendException("backend domain not found: %s" % inst.getName(), le)
         return d
 
@@ -234,6 +233,6 @@ class Backend(object):
             domain.shutdown()
         finally:
             self.releaseLock()
-        if self.waitState(inst, (BE_INSTANCE_NOSTATE, BE_INSTANCE_SHUTOFF), timeout=60*2) is None:
-            raise BackendException("shutdown timedout")
+        if self.waitState(inst, (BE_INSTANCE_NOSTATE, BE_INSTANCE_SHUTOFF), timeout=60*2) == None:
+            raise BackendException("shutdown timed out")
         return True
