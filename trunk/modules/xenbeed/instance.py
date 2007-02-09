@@ -31,8 +31,9 @@ class InstanceError(XenBeeException):
     pass
 
 class InstanceTimedout(InstanceError):
-    def __init__(self, id):
-        self.ID = id
+    def __init__(self, msg, id):
+        InstanceError.__init__(self, msg)
+        self.id = id
 
 class Instance(object):
     def __init__(self, config, spool, mgr):
@@ -59,8 +60,8 @@ class Instance(object):
         
         # on instance-startup, a timer is created which results in notifying a failure
         # if the instance does not respond within __availableTimeout seconds
-        self.__availableTimeout = 5*60
-        self.__availableTimer = None # the defered timer
+        self.__availableTimeout = 1*60
+        self.__availableTimer = None # the deferred timer
         self.__availableDefer = defer.Deferred()
 
         self.spool = spool
@@ -273,37 +274,39 @@ class Instance(object):
 
         self.__configure()
 
-        def __timeout():
+        def timeout(deferred):
             self.state = "failed"
-            f = failure.Failure(InstanceTimedout(self.ID()))
             log.warn("instance %s timed out" % self.ID())
-            self.__availableDefer.errback(f)
+            deferred.errback(InstanceTimedout("instance timedout", self.ID()))
 
-        def __inst_available(arg):
+        def cancelTimer(arg, timer):
             # got signal from the backend instance
-            self.__availableTimer.cancel()
+            timer.cancel()
             return arg
             
-        self.__availableDefer.addCallback(__inst_available)
-        self.__availableTimer = reactor.callLater(self.__availableTimeout, __timeout)
+        self.__availableTimer = reactor.callLater(self.__availableTimeout, timeout, self.__availableDefer)
+        self.__availableDefer.addCallback(cancelTimer, self.__availableTimer)
         
         # use the backend to start
 	def __started(backendId):
 	    self.state = "started"
             self.setBackendID(backendId)
             self.startTime = time.time()
+            return self
         def __failed(err):
             self.state = "failed"
             log.error("starting failed: " + err.getErrorMessage())
             self.__availableTimer.cancel()
-            self.__availableDefer.errback("starting failed: " + err.getErrorMessage())
+            self.__availableDefer.errback(err)
+            return self
         threads.deferToThread(backend.createInstance, self).addCallback(__started).addErrback(__failed)
             
         return self.__availableDefer
 
     def available(self):
         """Callback called when the instance has notified us."""
-        self.__availableDefer.callback(self)
+        if not self.__availableDefer.called:
+            self.__availableDefer.callback(self)
 
 class InstanceManager:
     """The instance-manager.

@@ -67,8 +67,8 @@ class Task(object):
     def state(self):
         return self.fsm.getCurrentState()
 
-    def failed(self, extra_msg):
-        self.fsm.consume("failed", extra_msg)
+    def failed(self, reason):
+        self.fsm.consume("failed", reason)
 
     def filesRetrieved(self):
         self.fsm.consume("files-retrieved")
@@ -84,7 +84,7 @@ class Task(object):
 
     def kill(self, signal=15):
         log.debug("TODO: send kill signal to task?")
-        return self.failed("killed")
+        return self.failed(TaskError("killed"))
 
     def execute(self):
         log.debug("executing %s" % self.ID())
@@ -94,8 +94,9 @@ class Task(object):
         return self.fsm.consume("finished", exitcode)
 
     # FSM callbacks
-    def do_failed(self, msg):
-        self.extra_msg = msg
+    def do_failed(self, reason):
+        self.endTime = time.time()
+        self.failReason = reason
         self.mgr.taskFailed(self)
 
     def do_prepare(self):
@@ -110,8 +111,7 @@ class Task(object):
             self.instanceAvailable()
             return self
         def _f(err):
-            log.err("instance could not be started: %s" % (err.getErrorMessage()))
-            self.failed("instance could not be started: %s" % (err.getErrorMessage()))
+            self.failed(err)
             return err
         d.addCallback(_s).addErrback(_f)
         return d

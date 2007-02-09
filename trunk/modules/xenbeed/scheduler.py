@@ -11,6 +11,7 @@ log = logging.getLogger(__name__)
 
 # Twisted imports
 from twisted.internet import reactor, task
+from twisted.python import failure
 
 class Scheduler:
     """The XenBee scheduler."""
@@ -35,10 +36,6 @@ class Scheduler:
         self.__failed = []
 
         self.schedulerLoop.start(.5)
-
-    def debug(self, event):
-        self.logStatistics()
-        log.debug("%s: mtx_locked: %s, thread: %s" % (event, self.__mtx._is_owned(), self.__mtx._RLock__owner))
 
     def logStatistics(self):
         from textwrap import dedent
@@ -77,16 +74,18 @@ class Scheduler:
             self.unlock()
 
     def lock(self):
-        self.debug("LOCKING")
         self.__mtx.acquire()
-        self.debug("LOCKED")
 
     def unlock(self):
-        self.debug("UN-LOCKING")
         self.__mtx.release()
-        self.debug("UN-LOCKED")
 
     def cycle(self):
+        try:
+            self._cycle()
+        except:
+            log.exception()
+
+    def _cycle(self):
         # prepare newly created tasks (i.e. retrieve neccessary files etc.)
         for task in self.__created:
             try:
@@ -112,29 +111,35 @@ class Scheduler:
                 self.lock()
                 log.info("starting up instance for task: "+task.ID())
 
-                try:
-                    self.__pending.remove(task)
-                    self.__starting.append(task)
-                except Exception, e:
-                    log.exception(e)
-                    raise
+                self.__pending.remove(task)
+                self.__starting.append(task)
 
-                def _f(err):
+                def instanceStartupFailed(err, t):
+                    log.debug("instance starting failed: %s" % err)
                     self.lock()
-                    self.__starting.remove(task)
+                    self.__starting.remove(t)
                     self.unlock()
-                    self.taskFailed(task, err)
-                task.startInstance().addCallback(self.taskCanBeExecuted).addErrback(_f)
+                    self.taskFailed(t, err)
+                    err.clean()
+                    return t
+                
+                d = task.startInstance()
+                d.addCallback(self.taskCanBeExecuted)
+                d.addErrback(instanceStartupFailed, task)
                 self.unlock()
 
     def taskPrepared(self, task):
         try:
-            self.lock()
-            log.info("task %s has been prepared, moving it from preparing to pending" % (task.ID(),))
-            self.__preparing.remove(task)
-            self.__pending.append(task)
-        finally:
-            self.unlock()
+            try:
+                self.lock()
+                log.info("task %s has been prepared, moving it from preparing to pending" % (task.ID(),))
+                self.__preparing.remove(task)
+                self.__pending.append(task)
+            finally:
+                self.unlock()
+        except:
+            log.exception()
+            return failure.Failure()
 
     def taskCanBeExecuted(self, task):
         try:
@@ -149,7 +154,8 @@ class Scheduler:
                 self.unlock()
         except Exception, e:
             log.exception(e)
-            raise
+            return failure.Failure()
+        return task
 
     def taskFailed(self, task, err):
         log.info("task %s failed: %s" % (task.ID(),err.getErrorMessage()))

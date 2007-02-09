@@ -11,6 +11,7 @@ log = logging.getLogger(__name__)
 
 from time import gmtime, strftime
 from lxml import etree
+from twisted.internet import defer, threads
 import re
 
 try:
@@ -52,31 +53,39 @@ class XMLProtocol(object):
         # a list of ({uri}localName) tuples that are
         # understood by the protocol
         self.__understood = []
-        self.addUnderstood("Error", ISDL_NS)
+        self.addUnderstood(Tag("Error"))
 
     def dispatch(self, func, *args, **kw):
 	try:
 	    method = getattr(self, "do_" + func)
 	except AttributeError, ae:
 	    self.transport.write(str(XenBEEClientError("you sent me an illegal request!",
-                                                            XenBEEClientError.ILLEGAL_REQUEST)))
+                                                       XenBEEClientError.ILLEGAL_REQUEST)))
 	    log.error("illegal request: " + str(ae))
             raise
 	try:
-	    method(*args, **kw)
+	    return threads.deferToThread(method, *args, **kw)
 	except Exception, e:
 	    self.transport.write(str(XenBEEClientError("request failed: " + str(e),
-                                                            XenBEEClientError.INTERNAL_SERVER_ERROR)))
+                                                       XenBEEClientError.INTERNAL_SERVER_ERROR)))
             raise
 
-    def addUnderstood(self, elementName, namespace):
-        tag = Tag(elementName, namespace)
+    def addUnderstood(self, tag):
         if tag not in self.__understood:
             self.__understood.append(tag)
 
     def messageReceived(self, msg):
+        def _s(results):
+            for r in results:
+                if r == defer.FAILURE:
+                    raise RuntimeError("message could not be handled")
+
+        def _f(err):
+            log.warn("message handling failed: %s\n%s" % (err.getErrorMessage(), err.getTraceBack()))
+            self.transport.write(str(XenBEEClientError("handling failed: %s" % (str(err.getErrorMessage),),
+                                                       XenBEEClientError.ILLEGAL_REQUEST)))
         try:
-            return self._messageReceived(msg)
+            return self._messageReceived(msg).addCallback(_s).addErrback(_f)
         except Exception, e:
             log.exception("message handling failed")
             self.transport.write(str(XenBEEClientError("handling failed: %s" % (str(e),),
@@ -87,26 +96,28 @@ class XMLProtocol(object):
 	self.__root = etree.fromstring(msg.body)
         
 	# check the message
-	if self.__root.tag != (Tag("Message", ISDL_NS)):
+        if self.__root.tag != Tag("Message"):
 	    # got an unacceptable message
-	    self.transport.write(str(XenBEEClientError("you sent me an illegal message!",
-                                                       XenBEEClientError.ILLEGAL_REQUEST)))
-	    return
+#	    self.transport.write(str(XenBEEClientError("you sent me an illegal message!",
+#                                                       XenBEEClientError.ILLEGAL_REQUEST)))
+	    return defer.fail("you sent me an illegal message!")
 
 	if not len(self.__root):
-	    self.transport.write(str(XenBEEClientError("no elements to handle found, sorry",
-                                                       XenBEEClientError.ILLEGAL_REQUEST)))
-	    return
+#	    self.transport.write(str(XenBEEClientError("no elements to handle found, sorry",
+#                                                       XenBEEClientError.ILLEGAL_REQUEST)))
+	    return defer.fail("no elements to handle found, sorry")
+        dl = []
         for child in filter(lambda x: x.tag in self.__understood, self.__root):
-            self.dispatch(decodeTag(child.tag)[1], child)
-
+            dl.append(self.dispatch(decodeTag(child.tag)[1], child))
+        return defer.DeferredList(dl)
+    
     def do_Error(self, err):
         log.debug("got error:\n%s" % (etree.tostring(err)))
 
 __tagPattern = re.compile(r"^(?P<nsuri>{.*})?(?P<local>.*)$")
 
-def getChild(elem, name, ns=ISDL_NS):
-    return elem.find(Tag(name,ns))
+def getChild(elem, name, ns=ISDL):
+    return elem.find(ns(name))
 
 def NodeToString(node):
     node.normalize()
@@ -128,7 +139,7 @@ class XenBEEClientMessage:
         """Initialize a XML message using the given namespace and prefix."""
         self.__ns = namespace
         self.__prefix = prefix
-        self.root = etree.Element(Tag("Message", self.__ns), nsmap={ prefix: namespace } )
+        self.root = etree.Element(Tag("Message", namespace), nsmap={ prefix: namespace } )
 
     def createElement(self, tag, parent=None, text=None):
         """Utility function to create a new element for this message."""

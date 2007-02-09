@@ -39,20 +39,20 @@ class ServerProtocol(isdl.XMLProtocol):
     def __init__(self, transport):
         self.proc = None
         isdl.XMLProtocol.__init__(self,transport)
-        self.addUnderstood("JobDefinition", isdl.JSDL_NS)
+        self.addUnderstood(isdl.ISDL("JobDefinition"))
 
     def do_JobDefinition(self, job_def):
-        desc = job_def.find(isdl.Tag("JobDescription", isdl.JSDL_NS))
-        ident = desc.find(isdl.Tag("JobIdentification", isdl.JSDL_NS))
-        name = (ident.find(isdl.Tag("JobName", isdl.JSDL_NS)).text or "").strip()
-        j_desc = (ident.find(isdl.Tag("Description", isdl.JSDL_NS)).text or "").strip()
+        desc = job_def.find(isdl.ISDL("JobDescription"))
 
-        app = desc.find(isdl.Tag("Application", isdl.JSDL_NS))
-        posixApp = app.find(isdl.Tag("POSIXApplication", isdl.JSDL_POSIX_NS))
-        posixExecutable = (posixApp.find(isdl.Tag("Executable", isdl.JSDL_POSIX_NS)).text or "").strip()
+        j_name = desc.findtext(isdl.ISDL("JobIdentification/JobName"))
+        j_desc = desc.findtext(isdl.ISDL("JobIdentification/Description"))
+
+        app = desc.find(isdl.ISDL("Application"))
+        posixApp = desc.find(isdl.JSDL_POSIXL("POSIXApplication"))
+        executable = posixApp.findtext(isdl.JSDL_POSIX("Executable"))
             
-        args = [(n.text or "").strip() for n in posixApp.findall(isdl.Tag("Argument", isdl.JSDL_POSIX_NS))]
-        cmdline = [ posixExecutable ]
+        args = [(n.text or "").strip() for n in posixApp.findall(isdl.ISDL("Argument"))]
+        cmdline = [ executable ]
         cmdline.extend(args)
         log.info("executing task: " + `cmdline`)
 

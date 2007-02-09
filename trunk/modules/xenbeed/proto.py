@@ -27,15 +27,15 @@ class XenBEEClientProtocol(isdl.XMLProtocol):
     def __init__(self, client, transport):
         isdl.XMLProtocol.__init__(self, transport)
         self.client = client
-        self.addUnderstood("ImageSubmission", isdl.ISDL_NS)
-        self.addUnderstood("StatusRequest", isdl.ISDL_NS)
-        self.addUnderstood("Kill", isdl.ISDL_NS)
-        self.addUnderstood("ListCache", isdl.ISDL_NS)
+        self.addUnderstood(isdl.Tag("ImageSubmission"))
+        self.addUnderstood(isdl.Tag("StatusRequest"))
+        self.addUnderstood(isdl.Tag("Kill"))
+        self.addUnderstood(isdl.Tag("ListCache"))
 
     def do_ImageSubmission(self, elem):
 	"""Handle an image submission."""
         # run some checks on the received document
-	imgDef = elem.find(isdl.Tag("ImageDefinition", isdl.ISDL_NS))
+	imgDef = elem.find(isdl.ISDL("ImageDefinition"))
 	if not imgDef:
 	    raise Exception("no ImageDefinition found.")
 
@@ -53,11 +53,10 @@ class XenBEEClientProtocol(isdl.XMLProtocol):
         self.transport.write(str(msg))
 
     def do_Kill(self, elem):
-        sig = int(elem.find(isdl.Tag("Signal")).text)
+        sig = int(elem.findtext(isdl.ISDL("Signal")))
         if not sig in [ 9, 15 ]:
             raise ValueError("out of range, allowed are (9,15)")
-        for t in elem.findall(isdl.Tag("JobID")):
-            tid = (t.text or "").strip()
+        for tid in map(lambda t: (t.text or "").strip(), elem.findall(isdl.ISDL("JobID"))):
             task = self.factory.taskManager.lookupByID(tid)
             if not task:
                 self.transport.write(            
@@ -86,11 +85,11 @@ class XenBEEInstanceProtocol(isdl.XMLProtocol):
     def __init__(self, instid, transport):
         isdl.XMLProtocol.__init__(self, transport)
 	self.instid = instid
-        self.addUnderstood("InstanceAvailable", isdl.ISDL_NS)
-        self.addUnderstood("TaskStatusNotification", isdl.ISDL_NS)
+        self.addUnderstood(isdl.Tag("InstanceAvailable"))
+        self.addUnderstood(isdl.Tag("TaskStatusNotification"))
 
     def executeTask(self, task):
-        job = task.document.find(".//" + isdl.Tag("JobDefinition", isdl.JSDL_NS))
+        job = task.document.find("./" + isdl.JSDL("JobDefinition"))
         if job == None:
             raise RuntimeError("no job definition found for task %s" % (task.ID()))
         msg = isdl.XenBEEClientMessage()

@@ -122,8 +122,8 @@ class RemoteCommand(Command):
     def handleMessage(self, msg):
         """handles the given message from the STOMP server."""
         xml = etree.fromstring(msg.body)
-        if xml.find(isdl.Tag("Error")):
-            self._handleError(xml.find(isdl.Tag("Error")))
+        if xml.find(isdl.ISDL(("Error"))):
+            self._handleError(xml.find(isdl.ISDL("Error")))
         else:
             self._handleMessage(xml)
             reactor.stop()
@@ -284,7 +284,7 @@ class Command_status(RemoteCommand):
 
     def _handleMessage(self, msg):
         """handles the status message."""
-        slist = msg.find(isdl.Tag("StatusList"))
+        slist = msg.find(isdl.ISDL("StatusList"))
         stats = []
         for child in slist:
             stats.append(self._parseStatus(child))
