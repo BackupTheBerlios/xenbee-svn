@@ -82,21 +82,24 @@ class Backend(object):
         cmdline = "xm " + "'%s' " % cmd + " ".join(map(lambda x: "'%s'" % x, args))
         return commands.getstatusoutput(cmdline)
 
+    def _getDomainByName(self, inst):
+        return self.libvirtConn.lookupByName(inst.getName())
+
     def _getDomain(self, inst):
+        import libvirt.libvirtError
         try:
-            self.acquireLock()
-            try:
-                d = self.libvirtConn.lookupByName(inst.getName())
-            finally:
-                self.releaseLock()
-        except libvirt.libvirtError:
-            raise BackendException("backend domain not found: %s" % inst.getName())
+            if inst.backend_id in self.libvirtConn.listDomainsID():
+                d = self._getDomainByName(inst)
+            else:
+                raise BackendException("backend domain not found: %s" % inst.getName())
+        except libvirt.libvirtError, le:
+            raise BackendException("backend domain not found: %s" % inst.getName(), le)
         return d
 
     def retrieveID(self, inst):
         """Retrieves the backend id for the given instance or -1."""
         try:
-            return self._getDomain(inst).ID()
+            return self._getDomainByName(inst).ID()
         except:
             return -1
 

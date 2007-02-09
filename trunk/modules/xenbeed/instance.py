@@ -209,6 +209,7 @@ class Instance(object):
 
     def stopped(self, result):
         self.state = "stopped"
+        self.backend_id = -1
         self.mgr.removeInstance(self)
         return self
 

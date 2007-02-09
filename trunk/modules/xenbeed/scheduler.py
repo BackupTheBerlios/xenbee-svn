@@ -107,7 +107,7 @@ class Scheduler:
 
         for task in self.__pending:
             if self.__maxActiveInstances and \
-                   len(self.__started) < self.__maxActiveInstances:
+                   len(self.__starting) < self.__maxActiveInstances:
                 self.lock()
                 log.info("starting up instance for task: "+task.ID())
 
