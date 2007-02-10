@@ -7,9 +7,9 @@ __author__ = "$Author$"
 
 import logging, logging.handlers, sys, os.path
 
-def initLogging(logfile='/tmp/xenbeed.log'):
+def initLogging(logfile='/tmp/xbe.log'):
     if sys.hexversion >= 0x2040200:
-	# treadName available
+	# threadName available
 	thread = ":%(threadName)s"
     else:
 	thread = ""
@@ -19,7 +19,7 @@ def initLogging(logfile='/tmp/xenbeed.log'):
     # see: http://sourceforge.net/tracker/index.php?func=detail&aid=1652788&group_id=5470&atid=105470
     logging.currentframe = lambda: sys._getframe(3)
 
-    _fileHdlr = logging.FileHandler(logfile, 'a')
+    _fileHdlr = logging.FileHandler(logfile, 'w+b')
     _fileHdlr.setLevel(logging.DEBUG)
     _fileHdlr.setFormatter(logging.Formatter(
         '%(asctime)s [%(process)d]' + thread + ' %(name)s:%(lineno)d %(levelname)-8s %(message)s'))
