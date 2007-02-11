@@ -6,6 +6,7 @@ import pwd, grp
 
 SUCCESS = 0
 FAILURE = 1
+RUNNING = 2
 
 if hasattr(os, "devnull"):
     REDIRECT_TO = os.devnull
@@ -14,25 +15,39 @@ else:
 
 class Daemon(object):
     MAXFD = 1024
-    def __init__(self, pidfile, daemonize=True, workdir="/", umask=0, user="nobody", group="nogroup"):
+    def __init__(self, pidfile, name=sys.argv[0], daemonize=True, workdir="/", umask=0, user="nobody", group="nogroup"):
         self.pidfile = pidfile
         self.daemonize=daemonize
         self.workdir = workdir
         self.umask = umask
         self.user = user
         self.group = group
-        self.parser = OptionParser()
-        self.setFunction(self.run)
+        self.name = name
+        self.parser = OptionParser(usage="usage: %prog start|stop|status|help [options]", add_help_option=False)
+
+        self.__daemon = None
+
+    def main(self, argv=sys.argv):
+        if len(argv) > 1:
+            req_type = argv.pop(1)
+        else:
+            self.error("Type '"+self.name+" help' for usage.")
+        self.__configure(argv)
+        self.handle_request(req_type)
 
     def handle_request(self, req_type):
         try:
             req = getattr(self, "do_%s" % req_type)
         except AttributeError:
-            self.error("usage: " + sys.argv[0] + " [options] start|stop|restart")
+            self.error(self.parser.get_usage().strip())
         req()
 
     def setFunction(self, f, *args, **kw):
-        self.__daemon, self.__daemonArgs, self.__daemonKwords = (f, args, kw)
+        """Set the function the daemon should execute.
+
+        Normally this will be your main() method.
+        """
+        self.__daemon = (f, args, kw)
 
     def status(self):
         """I check my current status.
@@ -64,6 +79,10 @@ class Daemon(object):
         if not msg is None:
             print >>sys.stdout, msg
         sys.exit(SUCCESS)
+
+    def do_help(self):
+        """I print some helpful information about this daemon."""
+        self.parser.print_help()
     
     def do_stop(self):
         """I stop the process whose pid is stored in the file pointed to by self.pidfile."""
@@ -101,11 +120,11 @@ class Daemon(object):
         try:
             pid, running = self.status()
             if pid >= 0 and running:
-                self.success("alive with pid %d" % pid)
+                self.success(self.name + " is alive with pid %d" % pid)
         except Exception, e:
             self.error("unknown: %s" % e)
         else:
-            self.error("dead")
+            self.error(self.name + " is dead")
 
     def __check_parameters(self):
         """checks and sanitizes some parameters.
@@ -129,7 +148,7 @@ class Daemon(object):
                 gid = grp.getgrgid(self.group).gr_gid
         except KeyError, e:
             raise Exception("no such group: '%s'" % (str(self.user)))
-        self.runas = ((uid, self.user), (gid, self.group))
+        self.runas = {"user": (uid, self.user), "group": (gid, self.group)}
 
     def do_restart(self):
         """Restart the daemon."""
@@ -145,7 +164,7 @@ class Daemon(object):
         try:
             pid, running = self.status()
             if pid >= 0 and running:
-                self.error("process already running with pid %d" % pid)
+                self.error("process already running with pid %d" % pid, exitcode=RUNNING)
         except Exception, e:
             pass
 
@@ -153,12 +172,11 @@ class Daemon(object):
             self.__check_parameters()
         except Exception, e:
             self.error(e)
-            
         
         if self.daemonize:
             self._daemonize()
         self.__startup()
-        self.__run()
+        sys.exit(self.__run())
 
     def _daemonize(self):
         """Daemonizes the current process.
@@ -255,10 +273,25 @@ class Daemon(object):
         # set a new umask
         os.umask(self.umask)
 
-        self._setup_priviledged()
-        self.drop_priviledges()
-        self._setup_unpriviledged()
+        try:
+            # the first steps may fail and thus need
+            # to write to stderr
+            self.write_pid()
 
+            # close the streams but let them open, if we run
+            # in 'non-daemon' mode (i.e. for debugging purposes)
+            if self.daemonize:
+                self.__close_streams()
+
+            self.setup_logging()
+
+            self._setup_priviledged()
+            self.drop_priviledges()
+            self._setup_unpriviledged()
+        except Exception, e:
+            self.error("E: setup failed: %s" % e)
+
+    def __close_streams(self):
         # Resource usage information.
         import resource
         maxfd = resource.getrlimit(resource.RLIMIT_NOFILE)[1]
@@ -287,7 +320,10 @@ class Daemon(object):
         os.dup2(0, 2)  # standard error (2)
 
     def __run(self):
-        self.__daemon(self.__daemonArgs, self.__daemonKwords)
+        if self.__daemon:
+            return self.__daemon[0](*self.__daemon[1], **self.__daemon[2])
+        else:
+            return self.run()
 
     def write_pid(self):
         """this method is called before dropping priviledges"""
@@ -298,12 +334,10 @@ class Daemon(object):
         pass
         
     def drop_priviledges(self):
-        os.setgid(self.runas[1][0])
-        os.setuid(self.runas[0][0])
+        os.setgid(self.runas["group"][0])
+        os.setuid(self.runas["user"][0])
 
     def _setup_priviledged(self):
-        self.setup_logging()
-        self.write_pid()
 
         # user specified stuff
         self.setup_priviledged()
@@ -314,12 +348,38 @@ class Daemon(object):
         self.setup_unpriviledged()
 
     # handler methods, that one can override in a subclass
+    def __configure(self, argv):
+        self.argv = argv
+        self.opts, self.args = self.parser.parse_args(argv)
+        self.configure()
+
+    def configure(self):
+        """Called before anything is done.
+
+        You can use this function to change the behaviour of the
+        daemon before it starts.
+
+        This function is called after the parser has parsed the
+        arguments. The results are in self.opts and self.args
+        """
+        pass
+    
     def setup_priviledged(self):
-        """Called when we are about to setup ourself but have not dropped our priviledges yet."""
+        """Called when we are about to setup ourself.
+
+         * daemonization was successful
+         * priviledges of the starting user still effective.
+         * logging has been set up
+         * pidfile has been written
+        """
         pass
 
     def setup_unpriviledged(self):
-        """Priviledges have been dropped."""
+        """Called when we are about to setup ourself.
+
+        * called directly after setup_priviledged()
+        * new user/group ids are in effect
+        """
         pass
 
     def run(self, *args, **kw):
@@ -329,14 +389,17 @@ class Daemon(object):
         """
         raise RuntimeError("either specify a function to run with 'setFunction()' or override this method!")
 
-def f(*args, **kw):
-    out = open ("/tmp/test-out", "wb")
-    for i in xrange(60):
-        print >>out, i
+def f(testfile="/tmp/test-out", verb="hello", duration=60):
+    out = open(testfile, "wb")
+    for i in xrange(duration):
+        print >>out, verb, i
         out.flush()
         time.sleep(1)
+    return 0
 
 if __name__ == "__main__":
     d = Daemon("/tmp/foobar", daemonize=True, user="nobody", group="nogroup")
-    d.setFunction(f, "foo", "bar")
-    d.handle_request(sys.argv[1])
+    d.setFunction(f, duration=10)
+    d.main()
+
+__all__ = [ "SUCCESS", "FAILURE", "RUNNING", "Daemon" ]

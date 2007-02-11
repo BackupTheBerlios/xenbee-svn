@@ -7,11 +7,10 @@ __version__ = "$Rev: $"
 __author__ = "$Author: $"
 
 import sys
-from xbe.xbed.daemon import Daemon
 
-def main():
-    daemon = Daemon()
-    return daemon.run()
-    
+# add some temporary module paths
+sys.path.append("/root/xenbee/modules")
+
+from xbe.xbed.daemon import main
 if __name__ == "__main__":
-    sys.exit(main())
+    main(sys.argv)

@@ -9,35 +9,43 @@ import logging
 log = logging.getLogger(__name__)
 
 import sys, os.path
+from xbe.util.daemon import Daemon
 
 # Twisted imports
 from twisted.python import threadable
 threadable.init()
 from twisted.internet import reactor
 
-import xbe
 from xbe.xbed.proto import XenBEEProtocol, XenBEEProtocolFactory
 from urlparse import urlparse
 from optparse import OptionParser
 
-class Daemon:
+class XBEDaemon(Daemon):
     def __init__(self, argv=sys.argv):
 	"""Initializes the Daemon."""
-        self.argv = argv
-        p = OptionParser()
+        Daemon.__init__(self, pidfile="/var/run/xbed.pid", umask=0007, name="xbed", user="root", group="root")
+        p = self.parser
         p.add_option("-H", "--host", dest="host", type="string", default="localhost", help="the STOMP server")
         p.add_option("-p", "--port", dest="port", type="int", default=61613, help="the STOMP port")
         p.add_option("-b", "--backend", dest="backend", type="string", default="xen", help="the backend to be used")
         p.add_option("-s", "--spool", dest="spool", type="string", default="/srv/xen-images/xenbee", help="the spool directory to use")
         p.add_option("-l", "--logfile", dest="logfile", type="string", default="/var/log/xenbee/xbed.log", help="the logfile to use")
+        p.add_option("-D", "--no-daemonize", dest="daemonize", action="store_false", default=True, help="do not daemonize")
+        p.add_option("--pidfile", dest="pidfile", type="string", default="/var/run/xbed.pid", help="the pidfile to use")
 
-        self.opts, self.args = p.parse_args(self.argv)
-        global xbe
+    def configure(self):
+        self.daemonize = self.opts.daemonize
+        self.pidfile = self.opts.pidfile
+
+    def setup_logging(self):
+        import xbe
         try:
             xbe.initLogging(self.opts.logfile)
         except IOError, ioe:
-            print >>sys.stderr, "E:", ioe
-            sys.exit(1)
+            raise Exception("%s: %s" % (ioe.strerror, ioe.filename))
+
+    def setup_priviledged(self):
+	log.info("setting up the XenBEE daemon")
         
         log.info("initializing the `%s' backend..." % self.opts.backend)
         import xbe.xbed.backend
@@ -64,16 +72,19 @@ class Daemon:
         from xbe.xbed.scheduler import Scheduler
         self.scheduler = Scheduler(self.taskManager)
         log.info("  done.")
-        
-    def run(self, daemonize=False):
-	""""""
-	log.info("starting up the XenBEE daemon")
-        
-        # connect to stomp server
+
+        log.info("initializing reactor...")
         reactor.connectTCP(self.opts.host,
                            self.opts.port,
                            XenBEEProtocolFactory(self,
                                                  queue="/queue/xenbee.daemon"))
+        log.info("  done.")
+        
+    def run(self, *args, **kw):
+	""""""
         reactor.exitcode = 0
         reactor.run()
         return reactor.exitcode
+
+def main(argv):
+    XBEDaemon().main(argv)
