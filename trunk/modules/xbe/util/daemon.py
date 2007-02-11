@@ -55,14 +55,14 @@ class Daemon(object):
         return int(open(self.pidfile).read())
 
     def error(self, msg, exitcode=FAILURE):
-        """I signal a erroneous execution."""
+        """I print the message and exit with exitcode."""
         print >>sys.stderr, msg
         sys.exit(exitcode)
 
-    def success(self, msg = None, *args):
-        """I signal a successful execution."""
+    def success(self, msg = None):
+        """I print message and exit with SUCCESS"""
         if not msg is None:
-            print >>sys.stdout, msg % args
+            print >>sys.stdout, msg
         sys.exit(SUCCESS)
     
     def do_stop(self):
@@ -108,25 +108,39 @@ class Daemon(object):
             self.error("dead")
 
     def __check_parameters(self):
+        """checks and sanitizes some parameters.
+
+        * user and groups may be given as "names" or "ids",
+          this function handles both cases.
+        """
+        
         # check the uids
-        if isinstance(self.user, basestring):
-            uid = pwd.getpwnam(self.user).pw_uid
-        else:
-            uid = pwd.getpwuid(self.user).pw_uid
-            
-        if isinstance(self.group, basestring):
-            gid = grp.getgrnam(self.group).gr_gid
-        else:
-            gid = grp.getgrgid(self.group).gr_gid
-            
+        try:
+            if isinstance(self.user, basestring):
+                uid = pwd.getpwnam(self.user).pw_uid
+            else:
+                uid = pwd.getpwuid(self.user).pw_uid
+        except KeyError, e:
+            raise Exception("no such user: '%s'" % (str(self.user)))
+        try:
+            if isinstance(self.group, basestring):
+                gid = grp.getgrnam(self.group).gr_gid
+            else:
+                gid = grp.getgrgid(self.group).gr_gid
+        except KeyError, e:
+            raise Exception("no such group: '%s'" % (str(self.user)))
         self.runas = ((uid, self.user), (gid, self.group))
 
     def do_restart(self):
+        """Restart the daemon."""
         self.handle_request("stop")
         self.handle_request("start")
 
     def do_start(self):
-        """Start the daemon."""
+        """Start the daemon.
+
+        * checks if a process for the given pidfile is still running and fails accordingly
+        """
         # check if one is running
         try:
             pid, running = self.status()
@@ -134,8 +148,12 @@ class Daemon(object):
                 self.error("process already running with pid %d" % pid)
         except Exception, e:
             pass
-        
-        self.__check_parameters()
+
+        try:
+            self.__check_parameters()
+        except Exception, e:
+            self.error(e)
+            
         
         if self.daemonize:
             self._daemonize()
@@ -143,6 +161,14 @@ class Daemon(object):
         self.__run()
 
     def _daemonize(self):
+        """Daemonizes the current process.
+
+        Forks several times to disconnect from parent and terminal and
+        makes itself a session leader.
+
+        the code is slightly adopted from that found on:
+           http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/278731
+        """
         # Fork a child  process so the parent can  exit.  This returns
         # control to  the command-line  or shell.  It  also guarantees
         # that the child will not be a process group leader, since the
@@ -216,7 +242,14 @@ class Daemon(object):
             os._exit(0)
             
     def __startup(self):
-        """common code for both cases, daemonize or not."""
+        """common code for both cases, daemonize or not.
+
+        essentially it does the following:
+            * change to the working directory
+            * set the umask
+            * close all filedescriptors
+            * redirect stdin,stdout,stderr to /dev/null
+        """
         # change to working directory
         os.chdir(self.workdir)
         # set a new umask
@@ -261,6 +294,7 @@ class Daemon(object):
         open(self.pidfile, "w").write(str(os.getpid()))
 
     def setup_logging(self):
+        """initialize what is needed to have logging available."""
         pass
         
     def drop_priviledges(self):
@@ -288,8 +322,12 @@ class Daemon(object):
         """Priviledges have been dropped."""
         pass
 
-    def run(self):
-        pass
+    def run(self, *args, **kw):
+        """The default function run by the daemon.
+
+        Override it or specify one with setFunction()
+        """
+        raise RuntimeError("either specify a function to run with 'setFunction()' or override this method!")
 
 def f(*args, **kw):
     out = open ("/tmp/test-out", "wb")
@@ -299,6 +337,6 @@ def f(*args, **kw):
         time.sleep(1)
 
 if __name__ == "__main__":
-    d = Daemon("/tmp/foobar", daemonize=True)
+    d = Daemon("/tmp/foobar", daemonize=True, user="nobody", group="nogroup")
     d.setFunction(f, "foo", "bar")
     d.handle_request(sys.argv[1])
