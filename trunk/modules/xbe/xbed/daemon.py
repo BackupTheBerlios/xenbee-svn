@@ -16,9 +16,7 @@ from twisted.python import threadable
 threadable.init()
 from twisted.internet import reactor
 
-from xbe.xbed.proto import XenBEEProtocol, XenBEEProtocolFactory
-from urlparse import urlparse
-from optparse import OptionParser
+from xbe.xbed.proto import XenBEEDaemonProtocolFactory
 
 class XBEDaemon(Daemon):
     def __init__(self, argv=sys.argv):
@@ -77,8 +75,8 @@ class XBEDaemon(Daemon):
         log.info("initializing reactor...")
         reactor.connectTCP(self.opts.host,
                            self.opts.port,
-                           XenBEEProtocolFactory(self,
-                                                 queue="/queue/xenbee.daemon"))
+                           XenBEEDaemonProtocolFactory(self,
+                                                       queue="/queue/xenbee.daemon"))
         log.info("  done.")
         
     def run(self, *args, **kw):

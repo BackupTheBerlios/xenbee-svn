@@ -6,16 +6,12 @@ The Xen Based Execution Environment protocol
 __version__ = "$Rev$"
 __author__ = "$Author: petry $"
 
-import logging
+import logging, re
 log = logging.getLogger(__name__)
 
-from xbe.stomp.proto import StompClient, StompClientFactory, StompTransport
 from xbe.xml import xsdl
+from xbe.proto import XenBEEProtocolFactory, XenBEEProtocol
 from lxml import etree
-
-# Twisted imports
-from twisted.internet import reactor
-import threading
 
 class XenBEEClientProtocol(xsdl.XMLProtocol):
     """The XBE client side protocol.
@@ -147,90 +143,36 @@ class XenBEEInstanceProtocol(xsdl.XMLProtocol):
         task.status_elem = status_elem
         task.finished(exitcode)
 
-class XenBEEProtocol(StompClient):
-    """Processing input received by the STOMP server."""
+class _XBEDProtocol(XenBEEProtocol):
+    def post_connect(self):
+        pass
 
-    def __init__(self):
-	self.factory = None
-	StompClient.__init__(self)
-
-    def connectedReceived(self, _):
-	self.factory.stomp = self
-	# i am connected to the stomp server
-	log.debug("successfully connected to STOMP server, avaiting your commands.")
-        self.setReplyTo(self.factory.queue)
-	self.subscribe(self.factory.queue, auto_ack=True)
-        self.subscribe('/topic/ActiveMQ.Advisory.Consumer.Queue.>')
-
-    def _advisoryReceived(self, msg):
-        return
+class XenBEEDaemonProtocolFactory(XenBEEProtocolFactory):
+    protocol = _XBEDProtocol
     
-    def _messageReceived(self, msg):
-        # check if we got an advisory from the activemq server
-        if msg.header.get("type", "no") == "Advisory":
-            return self._advisoryReceived(msg)
-        log.debug("got message:\n%s" % (str(msg),))
-
-        # use the reply-to field
-        try:
-            replyTo = msg.header["reply-to"]
-        except KeyError:
-	    log.warn("illegal message received")
-            raise
-
-        momIdentifier = replyTo.replace("/queue/", "")
-
-        try:
-            domain, clientType, clientId = momIdentifier.split(".", 2)
-        except ValueError, ve:
-            raise ValueError("illegal reply-to queue, must be of the form: /queue/xenbee.[type].[id]")
-        if domain != "xenbee":
-            raise ValueError("wrong subqueue: "+str(domain))
-        if clientType == "client":
-	    # request from some client
-	    self.factory.newClient(msg, clientId, replyTo)
-	elif clientType == "instance":
-	    # message from an instance
-	    self.factory.newInstance(msg, clientId, replyTo)
-	else:
-            log.warn("illegal client type: %s" % clientType)
-            
-    def messageReceived(self, msg):
-        try:
-            return self._messageReceived(msg)
-        except:
-            log.exception("message handling failed")
-
-    def errorOccured(self, msg, detail):
-	log.error("error-message: '%s', details: '%s'" % (msg, detail))
-
-class XenBEEProtocolFactory(StompClientFactory):
-    protocol = XenBEEProtocol
-
     def __init__(self, daemon, queue="/queue/xenbee.daemon"):
-	StompClientFactory.__init__(self, user='daemon', password='none')
-	self.queue = queue
-	self.stomp = None
-        self.daemon = daemon
+	XenBEEProtocolFactory.__init__(self, daemon, queue)
+
 	self.instanceManager = daemon.instanceManager
         self.taskManager = daemon.taskManager
         self.cache = daemon.cache
 
-    def clientConnectionFailed(self, connector, reason):
-	log.error("connection to STOMP server failed!: %s" % (str(reason.value)))
-	if 'twisted.internet.error.ConnectionRefusedError' in reason.parents:
-            log.info("shutting the server down...")
-            reactor.exitcode = 1
-            reactor.stop()
-	else:
-	    StompClientFactory.clientConnectionFailed(self, connector, reason)
+    def dispatchToProtocol(self, transport, msg, domain, sourceType, sourceId=None):
+        if domain != "xenbee":
+            raise ValueError("illegal domain: %s, expected 'xenbee'" % domain)
+        if sourceId is None:
+            raise ValueError(
+                "illegal reply-to value, must be of the form: /(queue|topic)/xenbee.[type].[id]")
+        getattr(self, "new"+sourceType.capitalize())(transport, msg, sourceId)
 
-    def newClient(self, msg, client, replyto):
-	clientProtocol = XenBEEClientProtocol(client, StompTransport(self.stomp, replyto))
+    def newClient(self, transport, msg, client):
+        log.debug("new client connected: %s" % client)
+	clientProtocol = XenBEEClientProtocol(client, transport)
 	clientProtocol.factory = self
-        reactor.callInThread(clientProtocol.messageReceived, msg)
+        clientProtocol.messageReceived(msg)
 
-    def newInstance(self, msg, instId, replyto):
-        instProtocol = XenBEEInstanceProtocol(instId, StompTransport(self.stomp, replyto))
+    def newInstance(self, transport, msg, inst):
+        log.debug("new instance connected: %s" % inst)
+        instProtocol = XenBEEInstanceProtocol(inst, transport)
 	instProtocol.factory = self
-        reactor.callInThread(instProtocol.messageReceived, msg)
+        instProtocol.messageReceived(msg)

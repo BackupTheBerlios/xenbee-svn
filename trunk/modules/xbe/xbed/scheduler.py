@@ -37,7 +37,7 @@ class Scheduler:
         self.__finished = []
         self.__failed = []
 
-        self.schedulerLoop.start(.5)
+        self.schedulerLoop.start(0.5)
 
     def logStatistics(self):
         from textwrap import dedent

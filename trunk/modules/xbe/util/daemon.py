@@ -35,12 +35,8 @@ class Daemon(object):
         self.__configure(argv)
         self.handle_request(req_type)
 
-    def handle_request(self, req_type):
-        try:
-            req = getattr(self, "do_%s" % req_type)
-        except AttributeError:
-            self.error(self.parser.get_usage().strip())
-        req()
+    def handle_request(self, req_type, *args, **kw):
+        getattr(self, "do_%s" % req_type, "do_help")(*args, **kw)
 
     def setFunction(self, f, *args, **kw):
         """Set the function the daemon should execute.
@@ -291,7 +287,6 @@ class Daemon(object):
                 self.__close_streams()
 
             self.setup_logging()
-
             self._setup_priviledged()
             self.drop_priviledges()
             self._setup_unpriviledged()

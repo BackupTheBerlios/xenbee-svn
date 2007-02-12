@@ -13,4 +13,5 @@ sys.path.append("/root/xenbee/modules")
 
 from xbe.xbed.daemon import main
 if __name__ == "__main__":
-    main(sys.argv)
+    import profile
+    profile.run("main(sys.argv)", "/tmp/xbed.profile")

@@ -10,17 +10,7 @@
       <jsdl:JobName>My Test invocation</jsdl:JobName>
       <jsdl:JobAnnotation>xbe-task-UUID</jsdl:JobAnnotation>
       <jsdl:Description>a simple test invocation</jsdl:Description> 
-    </jsdl:JobIdentification> 
-    <jsdl:Application> 
-      <jsdl:ApplicationName>ls</jsdl:ApplicationName> 
-      <jsdl-posix:POSIXApplication> 
-	<jsdl-posix:Executable>/bin/ls</jsdl-posix:Executable> 
-	<jsdl-posix:Argument>-lah</jsdl-posix:Argument> 
-	<jsdl-posix:Argument>/</jsdl-posix:Argument> 
-	<jsdl-posix:Input>input.dat</jsdl-posix:Input> 
-	<jsdl-posix:Output>output1.txt</jsdl-posix:Output> 
-      </jsdl-posix:POSIXApplication> 
-    </jsdl:Application> 
+    </jsdl:JobIdentification>
     <jsdl:Resources> 
       <jsdl:IndividualPhysicalMemory> 
 	<jsdl:LowerBoundedRange>2097152.0</jsdl:LowerBoundedRange> 
@@ -52,7 +42,7 @@
       <jsdl:Target> 
 	<jsdl:URI>rsync://spoolmachine/userdir</jsdl:URI> 
       </jsdl:Target> 
-    </jsdl:DataStaging> 
+    </jsdl:DataStaging>
   </jsdl:JobDescription>
   
   <xsdl:InstanceDefinition  xmlns:xsdl="http://www.example.com/schemas/xsdl/2007/01/xsdl">
@@ -69,7 +59,7 @@
 	</xsdl:File>
       </xsdl:Files>
 
-      <xsdl:StartupParameter>
+      <xsdl:StartupParameters>
 	<xsdl:Kernel xsdl:file-ref="file-1"/>
 	<xsdl:KernelParameter xsdl:param=""><!-- value --></xsdl:KernelParameter>
 	<xsdl:Initrd xsdl:file-ref="file-2"/>
@@ -77,12 +67,22 @@
 	  <!-- the first image gets the image from which we boot (sda1) -->
 	  <xsdl:Image xsdl:file-ref="file-3" xsdl:mount-point="/"/>
 	</xsdl:Images>
-      </xsdl:StartupParameter>
+      </xsdl:StartupParameters>
 
-      <xsdl:RuntimeParameter>
+      <xsdl:RuntimeParameters>
 	<xsdl:keep-running/>
-      </xsdl:RuntimeParameter>
+      </xsdl:RuntimeParameters>
 
+      <jsdl:Application> 
+	<jsdl:ApplicationName>ls</jsdl:ApplicationName> 
+	<jsdl-posix:POSIXApplication> 
+	  <jsdl-posix:Executable>/bin/ls</jsdl-posix:Executable> 
+	  <jsdl-posix:Argument>-lah</jsdl-posix:Argument> 
+	  <jsdl-posix:Argument>/</jsdl-posix:Argument> 
+	  <jsdl-posix:Input>input.dat</jsdl-posix:Input> 
+	  <jsdl-posix:Output>output1.txt</jsdl-posix:Output> 
+	</jsdl-posix:POSIXApplication> 
+      </jsdl:Application> 
     </xsdl:InstanceDescription>
   </xsdl:InstanceDefinition>
 

@@ -147,14 +147,14 @@ class Instance(object):
         from pprint import pformat
 	log.debug("files to retrieve:\n" + pformat(files))
 
-        kernel_id = inst_desc.find(xsdl.XSDL("StartupParameter/Kernel")).attrib[xsdl.Tag("file-ref")]
+        kernel_id = inst_desc.find(xsdl.XSDL("StartupParameters/Kernel")).attrib[xsdl.Tag("file-ref")]
         kernel_params = dict(
             [ (p.attrib[xsdl.Tag("param")], p.text)
-              for p in inst_desc.findall(xsdl.XSDL("StartupParameter/KernelParameter")) ])
-        initrd_id = inst_desc.find(xsdl.XSDL("StartupParameter/Initrd")).attrib[xsdl.Tag("file-ref")]
-        images = [ img.attrib[xsdl.Tag("file-ref")] for img in inst_desc.findall(xsdl.XSDL("StartupParameter/Images/Image")) ]
+              for p in inst_desc.findall(xsdl.XSDL("StartupParameters/KernelParameter")) ])
+        initrd_id = inst_desc.find(xsdl.XSDL("StartupParameters/Initrd")).attrib[xsdl.Tag("file-ref")]
+        images = [ img.attrib[xsdl.Tag("file-ref")] for img in inst_desc.findall(xsdl.XSDL("StartupParameters/Images/Image")) ]
 
-        self.keep_running = inst_desc.find(xsdl.XSDL("RuntimeParameter/keep-running")) is not None
+        self.keep_running = inst_desc.find(xsdl.XSDL("RuntimeParameters/keep-running")) is not None
 
         ctr = 1
         for img in images:

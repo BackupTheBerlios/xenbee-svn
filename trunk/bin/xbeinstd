@@ -7,133 +7,14 @@ application execution.
 
 """
 
-import sys, os, logging
-from twisted.internet import reactor, protocol, utils
-from twisted.protocols import basic
-from xbe.stomp.proto import StompClientFactory, StompClient, StompTransport
-from xbe.xml import xsdl
-import xbe
-xbe.initLogging("/tmp/xbeinstd.log")
+__version__ = "$Rev: 91 $"
+__author__ = "$Author: petry $"
 
-log = logging.getLogger("xbeinstd")
+import sys
 
-class ProcProtocol(protocol.ProcessProtocol):
-    def __init__(self):
-        self.errOutput = []
-        self.stdOutput = []
-    
-    def connectionMade(self):
-        pass
+# add some temporary module paths
+sys.path.append("/root/xenbee/modules")
 
-    def outReceived(self, data):
-        """parse the data and store it in some file."""
-        self.stdOutput.append(data)
-
-    def errReceived(self, data):
-        log.debug("process-err: %s" % (str(data)))
-        self.errOutput.append(data)
-
-    def processEnded(self, status_object):
-        log.debug("process ended: %s" % str(status_object))
-        self.creator.processEnded(status_object)
-
-class ServerProtocol(xsdl.XMLProtocol):
-    def __init__(self, transport):
-        self.proc = None
-        xsdl.XMLProtocol.__init__(self,transport)
-        self.addUnderstood(xsdl.JSDL("JobDefinition"))
-
-    def do_JobDefinition(self, job_def):
-        desc = job_def.find(xsdl.JSDL("JobDescription"))
-
-        j_name = desc.findtext(xsdl.JSDL("JobIdentification/JobName"))
-        j_desc = desc.findtext(xsdl.JSDL("JobIdentification/Description"))
-
-        app = desc.find(xsdl.JSDL("Application"))
-        posixApp = app.find(xsdl.JSDL_POSIX("POSIXApplication"))
-        executable = posixApp.findtext(xsdl.JSDL_POSIX("Executable"))
-            
-        args = [(n.text or "").strip() for n in posixApp.findall(xsdl.JSDL_POSIX("Argument"))]
-        cmdline = [ executable ]
-        cmdline.extend(args)
-        log.info("executing task: " + `cmdline`)
-
-        self.proc = ProcProtocol()
-        self.proc.cmdline = cmdline
-        self.proc.creator = self
-        reactor.spawnProcess(self.proc, cmdline[0], cmdline, {})
-
-    def processEnded(self, status_object):
-        msg = xsdl.XenBEEClientMessage()
-        tsn = msg.createElement("TaskStatusNotification", msg.root)
-        tf = msg.createElement("TaskFinished", tsn)
-        msg.createElement("ExitCode", tf, str(status_object.value.exitCode))
-        msg.createElement("CommandLine", tf, str(self.proc.cmdline))
-
-        def listToString(_list):
-            return "".join(map(str, _list))
-        stdOutput, errOutput = map(listToString, [self.proc.stdOutput, self.proc.errOutput])
-        msg.createElement("StandardOutput", tf, stdOutput)
-        msg.createElement("ErrorOutput", tf, errOutput)
-        self.proc = None
-        self.transport.write(str(msg))
-
-        log.info("process ended: code:%d err:'%s'" % (status_object.value.exitCode, lastErrLine))
-        
-class TestProtocol(StompClient):
-    def connectedReceived(self, frame):
-        log.info("connected to server")
-        self.setReplyTo(self.factory.queue)
-        self.subscribe(self.factory.queue, exclusive=True)
-        log.info("notifying xbe daemon, that i am available now")
-        try:
-            self.send(self.factory.serverQueue,
-                      str(xsdl.XenBEEInstanceAvailable(self.factory.instanceId)))
-        except:
-            log.exception("send failed")
-            raise
-
-    def messageReceived(self, msg):
-        # parse the xsdl message
-        try:
-            log.debug("got message from server: %s" % (str(msg)))
-            self._messageReceived(msg).addErrback(log.exception)
-        except Exception, e:
-            log.exception(e)
-
-    def _messageReceived(self, msg):
-        p = ServerProtocol(StompTransport(self, "/queue/xenbee.daemon"))
-        return p.messageReceived(msg)
-
-def main():
-    # get information about our host
-    try:
-        xbe_server, xbe_port = os.environ["XBE_SERVER"].split(":")
-        xbe_port = int(xbe_port)
-    except ValueError, ve:
-        xbe_server, xbe_port = os.environ["XBE_SERVER"], 61613
-    except KeyError:
-        xbe_server, xbe_port = "localhost", 61613
-        log.warn("running in local mode with server at %s:%d" % (xbe_server,xbe_port))
-    except:
-        log.exception("could not interpret $XBE_SERVER")
-        
-    try:
-        xbe_uuid = os.environ["XBE_UUID"]
-    except KeyError:
-        from xbe.util.uuid import uuid
-        xbe_uuid = uuid()
-        log.warn("could not get my instance id, using: %s" % (xbe_uuid,))
-    log.info("connecting to %s:%d with uuid %s" % (xbe_server, xbe_port, xbe_uuid))
-    
-    f = StompClientFactory()
-    f.instanceId = xbe_uuid
-    f.protocol = TestProtocol
-    f.serverQueue = '/queue/xenbee.daemon'
-    f.queue = '/queue/xenbee.instance.%s' % (xbe_uuid,)
-    reactor.connectTCP(xbe_server, xbe_port, f)
-    reactor.run()
-    return 0
-
-if __name__ == '__main__':
-    sys.exit(main())
+from xbe.xbeinstd.daemon import main
+if __name__ == "__main__":
+    main(sys.argv)
