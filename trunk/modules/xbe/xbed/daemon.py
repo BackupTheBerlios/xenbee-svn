@@ -41,6 +41,7 @@ class XBEDaemon(Daemon):
         import xbe
         try:
             xbe.initLogging(self.opts.logfile)
+            self.log_error = log.fatal
         except IOError, ioe:
             raise Exception("%s: %s" % (ioe.strerror, ioe.filename))
 

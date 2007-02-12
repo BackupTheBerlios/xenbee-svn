@@ -11,7 +11,7 @@ class XenBeeException(Exception):
 
 class BackendException(XenBeeException):
     def __init__(self, msg, err=None):
-        XenBEEException.__init__(self, msg)
+        XenBeeException.__init__(self, msg)
         self.err = err
 
 class InstanceCreationError(BackendException):

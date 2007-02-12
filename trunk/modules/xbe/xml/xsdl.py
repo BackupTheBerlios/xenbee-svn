@@ -94,15 +94,10 @@ class XMLProtocol(object):
         
 	# check the message
         if self.__root.tag != Tag("Message"):
-	    # got an unacceptable message
-#	    self.transport.write(str(XenBEEClientError("you sent me an illegal message!",
-#                                                       XenBEEClientError.ILLEGAL_REQUEST)))
-	    return defer.fail(RuntimeError("you sent me an illegal message!"))
+            return self.dispatch(decodeTag(self.__root.tag)[1], self.__root)
 
 	if not len(self.__root):
-#	    self.transport.write(str(XenBEEClientError("no elements to handle found, sorry",
-#                                                       XenBEEClientError.ILLEGAL_REQUEST)))
-	    return defer.fail("no elements to handle found, sorry")
+	    return defer.fail(ValueError("no elements to handle found, sorry"))
         
         for child in filter(lambda x: x.tag in self.__understood, self.__root):
             return self.dispatch(decodeTag(child.tag)[1], child)

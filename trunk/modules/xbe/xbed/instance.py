@@ -22,6 +22,7 @@ except:
 from xbe.util.exceptions import *
 from xbe.xbed.backend import backend
 from xbe import util
+from xbe.xml import xsdl
 
 from twisted.internet import reactor, threads, task, defer
 from twisted.python import failure
@@ -36,7 +37,7 @@ class InstanceTimedout(InstanceError):
         self.id = id
 
 class Instance(object):
-    def __init__(self, config, spool, mgr):
+    def __init__(self, xml_doc, config, spool, mgr):
         """Initialize a new instance.
 
         config -- an InstanceConfig object that holds all necessary
@@ -55,7 +56,7 @@ class Instance(object):
         if not p.match(config.getInstanceName()):
             raise InstanceError("instance name is not a UUID: %s" % config.getInstanceName())
         self.config = config
-
+        self.xml_definition = xml_doc
         self.state = "created"
         
         # on instance-startup, a timer is created which results in notifying a failure
@@ -122,6 +123,65 @@ class Instance(object):
             raise InstanceError("could not retrieve %s: %s" % (uri, str(e)))
         return dst
 
+
+    def __parseFiles(self, elem):
+        files = {}
+        for f in elem.findall(xsdl.XSDL("File")):
+            fid = f.attrib[xsdl.Tag("id")]
+            uri = f.findtext(xsdl.XSDL("URI"))
+            if uri == None:
+                raise ValueError("no URI given for file: "+fid)
+            files[fid] = { "URI": uri, "name": fid }
+        return files
+
+    def prepare(self):
+        log.debug("starting preparation of instance %s" % (self.ID(),))
+
+        inst_desc = self.xml_definition.find(xsdl.XSDL("InstanceDescription"))
+
+        # put all File element into a dictionary
+        #   id -> {URI, name}
+        # the name defaults to the id and can be changed later
+        files = self.__parseFiles(inst_desc.find(xsdl.XSDL("Files")))
+
+        from pprint import pformat
+	log.debug("files to retrieve:\n" + pformat(files))
+
+        kernel_id = inst_desc.find(xsdl.XSDL("StartupParameter/Kernel")).attrib[xsdl.Tag("file-ref")]
+        kernel_params = dict(
+            [ (p.attrib[xsdl.Tag("param")], p.text)
+              for p in inst_desc.findall(xsdl.XSDL("StartupParameter/KernelParameter")) ])
+        initrd_id = inst_desc.find(xsdl.XSDL("StartupParameter/Initrd")).attrib[xsdl.Tag("file-ref")]
+        images = [ img.attrib[xsdl.Tag("file-ref")] for img in inst_desc.findall(xsdl.XSDL("StartupParameter/Images/Image")) ]
+
+        self.keep_running = inst_desc.find(xsdl.XSDL("RuntimeParameter/keep-running")) is not None
+
+        ctr = 1
+        for img in images:
+            self.config.addDisk(self.getFullPath(img), "sda"+str(ctr))
+            ctr += 1
+        self.config.setKernel(self.getFullPath(kernel_id))
+        self.config.setInitrd(self.getFullPath(initrd_id))
+
+        self.config.addToKernelCommandLine(XBE_SERVER="%s:%d" % (
+            "xen-o-matic.itwm.fhrg.fraunhofer.de", 61613))
+        self.config.addToKernelCommandLine(XBE_UUID="%s" % (self.getName(),))
+        for k,v in kernel_params.iteritems():
+            if v is not None:
+                self.config.addToKernelCommandLine("%s=%s" % (k,v))
+            else:
+                self.config.addToKernelCommandLine("%s" % (k))
+
+        macs = [ "00:16:3e:00:00:01",
+                 "00:16:3e:00:00:02" ]
+        import random
+        mac = random.choice(macs)
+        log.debug("TODO: choose meaningful MAC: %s" % (mac))
+        self.config.setMac(mac)
+    
+        return self.addFiles(
+            dict([ (f["name"], f["URI"]) for f in files.values()] ))
+        
     def addFiles(self, mapping={}, **kwords):
         """Add several files to this instance.
 
@@ -158,6 +218,7 @@ class Instance(object):
             _defers.append(d)
 
         def _cache_finished(results):
+            log.debug("cache lookup finished")
             fileList = []
             for result, uri_path_pair in results:
                 if result == defer.FAILURE:
@@ -166,25 +227,28 @@ class Instance(object):
             return fileList
 
         def _retrieve_files(fileList):
+            log.debug("starting retriever")
             from xbe.util.staging import FileSetRetriever
             retriever = FileSetRetriever(fileList)
             return retriever.perform()
             
         dL = defer.DeferredList(_defers)
+
+        def _log_failure(err):
+            self.state = "failed"
+            log.error("retrieval failed: "+err.getTraceback())
+        for _d in _defers:
+            _d.addErrback(_log_failure)
+            
         dL.pause()
         dL.addCallback(_cache_finished)
         dL.addCallback(_retrieve_files)
 
-        def __success(*args):
+        def __dl_callback(arg):
             log.info("successfully retrieved all files for: "+self.getName())
             self.state = "start-pending"
-            return True
-        def __fail(err):
-            self.state = "failed"
-            log.error("Retrieval failed: "+err.getTraceback())
-            return err
-        dL.addCallback(__success)
-        dL.addErrback(__fail)
+            return self
+        dL.addCallback(__dl_callback)
         dL.unpause()
         return dL
 
@@ -251,21 +315,6 @@ class Instance(object):
     def startable(self):
         return self.state == "start-pending"
 
-    def __configure(self):
-        self.config.setKernel(self.getFullPath("kernel"))
-        self.config.setInitrd(self.getFullPath("initrd"))
-        macs = [ "00:16:3e:00:00:01",
-                 "00:16:3e:00:00:02" ]
-        import random
-        mac = random.choice(macs)
-        log.debug("TODO: choose meaningful MAC: %s" % (mac))
-
-        self.config.setMac(mac)
-        self.config.addDisk(self.getFullPath("root"), "sda1")
-        self.config.addToKernelCommandLine(XBE_SERVER="%s:%d" % (
-            "xen-o-matic.itwm.fhrg.fraunhofer.de", 61613))
-        self.config.addToKernelCommandLine(XBE_UUID="%s" % (self.getName(),))
-    
     def start(self):
         """Starts a new backend instance.
 
@@ -275,8 +324,6 @@ class Instance(object):
 
         """
         self.state = "starting"
-
-        self.__configure()
 
         def timeout(deferred):
             log.warn("instance %s timed out" % self.ID())
@@ -329,7 +376,7 @@ class InstanceManager:
         self.cache = cache
         self.__iter__ = self.instances.itervalues
 
-    def newInstance(self, spool):
+    def newInstance(self, xml_doc, spool):
         """Returns a new instance.
 
         This instance does not have any files assigned.
@@ -340,7 +387,7 @@ class InstanceManager:
         icfg = InstanceConfig(uuid())
 
         try:
-            inst = Instance(icfg, spool, self)
+            inst = Instance(xml_doc, icfg, spool, self)
         except:
             log.error(format_exception())
             raise

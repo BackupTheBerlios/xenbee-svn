@@ -31,6 +31,22 @@ class XenBEEClientProtocol(xsdl.XMLProtocol):
         self.addUnderstood(xsdl.Tag("StatusRequest"))
         self.addUnderstood(xsdl.Tag("Kill"))
         self.addUnderstood(xsdl.Tag("ListCache"))
+        self.addUnderstood(xsdl.Tag("JobDefinition", xsdl.JSDL_NS))
+
+    def do_JobDefinition(self, job):
+        log.debug("got new job")
+
+        # does the job have our InstanceDefinition element?
+        # otherwise drop the job
+        if not job.find(xsdl.XSDL("InstanceDefinition")):
+            raise ValueError("no InstanceDefinition found.")
+
+        # we should be able to handle the job
+        task = self.factory.taskManager.newTask(job)
+        self.transport.write(
+            str(xsdl.XenBEEClientError("task submitted: %s" % task.ID(),
+                                       xsdl.XenBEEClientError.OK))
+            )
 
     def do_ImageSubmission(self, elem):
 	"""Handle an image submission."""
@@ -89,8 +105,11 @@ class XenBEEInstanceProtocol(xsdl.XMLProtocol):
         self.addUnderstood(xsdl.Tag("TaskStatusNotification"))
 
     def executeTask(self, task):
-        job = task.document.find("./" + xsdl.JSDL("JobDefinition"))
-        if job == None:
+        if task.document.tag != xsdl.Tag("JobDefinition", xsdl.JSDL_NS):
+            job = task.document.find(xsdl.JSDL("JobDefinition"))
+        else:
+            job = task.document
+        if job is None:
             raise RuntimeError("no job definition found for task %s" % (task.ID()))
         msg = xsdl.XenBEEClientMessage()
         msg.root.append(etree.fromstring(etree.tostring(job)))
@@ -160,7 +179,11 @@ class XenBEEProtocol(StompClient):
             raise
 
         momIdentifier = replyTo.replace("/queue/", "")
-        domain, clientType, clientId = momIdentifier.split(".", 2)
+
+        try:
+            domain, clientType, clientId = momIdentifier.split(".", 2)
+        except ValueError, ve:
+            raise ValueError("illegal reply-to queue, must be of the form: /queue/xenbee.[type].[id]")
         if domain != "xenbee":
             raise ValueError("wrong subqueue: "+str(domain))
         if clientType == "client":

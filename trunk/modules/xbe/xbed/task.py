@@ -108,7 +108,7 @@ class Task(object):
             else:
                 log.info("backend stopped.")
             return self
-        if self.keepInstanceRunning:
+        if self.inst.keep_running:
             log.debug("keeping the instance alive")
             return defer.succeed(self).addBoth(instStopped)
         else:
@@ -146,7 +146,7 @@ class Task(object):
         def _s(result):
             self.mgr.taskFinished(self)
             return self
-        if self.keepInstanceRunning:
+        if self.inst.keep_running:
             log.debug("keeping the instance alive")
             return defer.succeed(self).addBoth(_s)
         else:
@@ -206,30 +206,18 @@ class TaskManager:
         return self.tasks.get(ID)
 
     def prepareTask(self, task):
-        log.debug("starting preparation of %s" % (task.ID(),))
+        log.debug("starting preparation of task %s" % (task.ID(),))
         from xbe.xml import xsdl
 
-        # keep the instance running?
-        task.keepInstanceRunning = task.document.attrib.get(xsdl.Tag("keep-instance")) == "yes"
-        if task.keepInstanceRunning:
-            log.info("keeping the instance alive")
+        inst_desc = task.document.find("./"+xsdl.XSDL("InstanceDefinition"))
 
-	# boot block
-        imgDef = task.document.find("./"+xsdl.XSDL("ImageDefinition"))
-	files = {}
-	files["kernel"] = imgDef.findtext(xsdl.XSDL("Boot/Kernel/URI"))
-	files["initrd"] = imgDef.findtext(xsdl.XSDL("Boot/Initrd/URI"))
-	files["root"] = imgDef.findtext(xsdl.XSDL("Images/BootImage/Source/URI"))
-	log.debug(files)
-
-        # create spool for task and instance and add files
+        # create spool for task and instance and prepare it
         task.spool = self.createSpool(task.ID())
-        inst = self.instanceManager.newInstance(task.spool)
+        inst = self.instanceManager.newInstance(inst_desc, task.spool)
 
-        task.inst = inst
-        inst.task = task
-
-        d = inst.addFiles(files)
+        task.inst, inst.task = inst, task
+        d = inst.prepare()
+        
         def _s(arg):
             task.filesRetrieved()
             return task

@@ -69,9 +69,16 @@ class Daemon(object):
     def getpid(self):
         return int(open(self.pidfile).read())
 
+    def log_error(self, msg):
+        """I log the message to stderr.
+
+        Override me to do something different.
+        """
+        print >>sys.stderr, msg
+
     def error(self, msg, exitcode=FAILURE):
         """I print the message and exit with exitcode."""
-        print >>sys.stderr, msg
+        self.log_error(msg.strip())
         sys.exit(exitcode)
 
     def success(self, msg = None):
@@ -289,7 +296,8 @@ class Daemon(object):
             self.drop_priviledges()
             self._setup_unpriviledged()
         except Exception, e:
-            self.error("E: setup failed: %s" % e)
+            from traceback import format_exc
+            self.error("E: setup failed: %s:\n%s" % (e, format_exc(e)))
 
     def __close_streams(self):
         # Resource usage information.

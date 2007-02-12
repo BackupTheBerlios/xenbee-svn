@@ -175,7 +175,7 @@ class Scheduler:
         return task
 
     def taskFailed(self, task, err):
-        log.info("task %s failed: %s" % (task.ID(),err.getErrorMessage()))
+        log.info("task %s failed:\n%s\n%s" % (task.ID(),err.getErrorMessage(), err.getTraceback()))
         self.__failed.append(task)
         self.logStatistics()
 

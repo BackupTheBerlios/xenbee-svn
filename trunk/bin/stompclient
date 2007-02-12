@@ -27,20 +27,12 @@ class Client(StompClient):
         self.header = {}
         global stompClient
         stompClient = self
-        self.replyTo = None
 
     def send(self, *args, **kw):
         kw.update(self.header)
         kw["timestamp"] = int(time.time()*1000)
         StompClient.send(self, *args, **kw)
 
-    def reply(self, *args, **kw):
-        if self.replyTo:
-            self.send(self.replyTo, *args, **kw)
-        else:
-            raise RuntimeError("no reply-to has been given")
-        self.replyTo = None
-        
     def connectedReceived(self, frame):
 	StandardIO(CommandLineProtocol(prompt=""))
         print "connected to stomp server"
@@ -53,7 +45,6 @@ class Client(StompClient):
             stdioClient.sendLine("%s: %s" % (k,v))
         stdioClient.sendLine("")
         stdioClient.sendLine(msg.body)
-        self.replyTo = msg.header.get("reply-to", None)
     
     def messageReceived(self, msg):
         try:
@@ -103,6 +94,8 @@ class CommandLineProtocol(basic.LineReceiver):
         self.transport.write(self.prompt)
 
     def do_inreply(self, *args, **kw):
+        raise RuntimeError("command disabled")
+    
         if not len(args):
             raise ValueError("cannot reply with empty command")
         if not stompClient.replyTo:

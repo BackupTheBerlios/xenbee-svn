@@ -55,9 +55,8 @@
     </jsdl:DataStaging> 
   </jsdl:JobDescription>
   
-  <xsdl:ImageDefinition xmlns:xsdl="http://www.example.com/schemas/xsdl/2007/01/xsdl">
-    <xsdl:ImageDescription>
-
+  <xsdl:InstanceDefinition  xmlns:xsdl="http://www.example.com/schemas/xsdl/2007/01/xsdl">
+    <xsdl:InstanceDescription>
       <xsdl:Files>
 	<xsdl:File xsdl:id="file-1">
 	  <xsdl:URI>file:///srv/xen-images/domains/xenhobel-2/kernel</xsdl:URI>
@@ -66,22 +65,26 @@
 	  <xsdl:URI>file:///srv/xen-images/domains/xenhobel-2/initrd</xsdl:URI>
 	</xsdl:File>
 	<xsdl:File xsdl:id="file-3">
-	  <xsdl:URI>file:///srv/xen-images/domains/xenhobel-2/disk.img</xsdl:URI>
+	  <xsdl:URI>file:///srv/xen-images/base.img</xsdl:URI>
 	</xsdl:File>
       </xsdl:Files>
 
-      <xsdl:StartupInformation>
+      <xsdl:StartupParameter>
 	<xsdl:Kernel xsdl:file-ref="file-1"/>
-	<xsdl:KernelParameter></xsdl:KernelParameter>
-
+	<xsdl:KernelParameter xsdl:param=""><!-- value --></xsdl:KernelParameter>
 	<xsdl:Initrd xsdl:file-ref="file-2"/>
 	<xsdl:Images>
 	  <!-- the first image gets the image from which we boot (sda1) -->
 	  <xsdl:Image xsdl:file-ref="file-3" xsdl:mount-point="/"/>
 	</xsdl:Images>
-      </xsdl:StartupInformation>
-    </xsdl:ImageDescription>
-  </xsdl:ImageDefinition>
+      </xsdl:StartupParameter>
+
+      <xsdl:RuntimeParameter>
+	<xsdl:keep-running/>
+      </xsdl:RuntimeParameter>
+
+    </xsdl:InstanceDescription>
+  </xsdl:InstanceDefinition>
 
 </jsdl:JobDefinition> 
 
