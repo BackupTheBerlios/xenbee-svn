@@ -267,9 +267,12 @@ class Instance(object):
         """
         return backend.getStatus(self)
 
-    def getBackendInfo(self):
+    def getInfo(self):
         """Return all information known about the backend instance."""
-        return backend.getInfo(self)
+        binfo = backend.getInfo(self)
+        binfo.ips = getattr(self, 'ips', [])
+        binfo.fqdn = getattr(self, 'fqdn', 'n/a')
+        return binfo
 
     def stopped(self, result):
         self.state = "stopped"

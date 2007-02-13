@@ -254,7 +254,7 @@ class XenBEEStatusMessage(XenBEEClientMessage):
         status = self.createElement("Status", self.statusList)
 
         try:
-            info = task.inst.getBackendInfo()
+            info = task.inst.getInfo()
         except:
             info = None
         
@@ -266,9 +266,16 @@ class XenBEEStatusMessage(XenBEEClientMessage):
         if info:
             _c("Memory", info.memory)
             _c("CPUTime", info.cpuTime)
+            if len(info.ips):
+                _c("IP", info.ips[0])
+            else:
+                _c("IP", 'n/a')
+            _c("FQDN", info.fqdn)
         else:
             _c("Memory", "N/A")
             _c("CPUTime", "N/A")
+            _c("IP", 'n/a')
+            _c("FQDN", 'n/a')
         if hasattr(task, "startTime"):
             _c("StartTime", str(task.startTime))
         else:

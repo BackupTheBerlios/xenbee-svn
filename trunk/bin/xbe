@@ -317,8 +317,9 @@ class Command_status(RemoteCommand):
             stats.append(self._parseStatus(child))
 
 #        strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime(task.startTime)))
-        fmt = "%(ID)-36s  %(User)-10s %(Submitted)-14s %(StartTime)-14s %(EndTime)-14s %(State)-10s %(ExitCode)s"
+        fmt = "%(ID)-36s %(IP)-15s %(User)-10s %(Submitted)-14s %(StartTime)-14s %(EndTime)-14s %(State)-10s %(ExitCode)s"
         hdr = { "ID": "TASK ID",
+                "IP": "IP-ADDRESS",
                 "User": "USER",
                 "Submitted": "SUBMITTED",
                 "StartTime": "STARTTIME",
