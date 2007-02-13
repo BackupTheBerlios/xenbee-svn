@@ -36,7 +36,7 @@ class Daemon(object):
         self.handle_request(req_type)
 
     def handle_request(self, req_type, *args, **kw):
-        getattr(self, "do_%s" % req_type, "do_help")(*args, **kw)
+        getattr(self, "do_%s" % req_type, self.do_help)(*args, **kw)
 
     def setFunction(self, f, *args, **kw):
         """Set the function the daemon should execute.

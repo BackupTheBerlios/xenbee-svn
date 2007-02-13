@@ -5,7 +5,7 @@ The XenBee instance daemon.
 __version__ = "$Rev$"
 __author__ = "$Author$"
 
-import sys, logging, os
+import sys, logging, os, os.path
 log = logging.getLogger(__name__)
 
 from xbe.util.daemon import Daemon
@@ -41,7 +41,7 @@ class XBEInstDaemon(Daemon):
             xbe_server, xbe_port = server.split(":")
             xbe_port = int(xbe_port)
         except ValueError, ve:
-            xbe_server, xbe_port = server, 61613
+            return server, 61613
 
     def configure(self):
         self.daemonize = self.opts.daemonize
@@ -58,6 +58,8 @@ class XBEInstDaemon(Daemon):
             thread = ":%(threadName)s"
         else:
             thread = ""
+        if not os.path.exists(os.path.dirname(self.opts.logfile)):
+            os.makedirs(os.path.dirname(self.opts.logfile))
 
         _fileHdlr = logging.FileHandler(self.opts.logfile, 'w+b')
         _fileHdlr.setLevel(logging.DEBUG)
