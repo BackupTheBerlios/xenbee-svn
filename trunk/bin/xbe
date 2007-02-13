@@ -33,14 +33,10 @@ class NoPrintOptionParser(OptionParser):
         raise CommandFailed(msg)
 
 class CommandFailed(Exception):
-    def __init__(self, msg):
-        Exception.__init__(self)
-        self.msg = msg
+    pass
 
 class UnknownCommand(Exception):
-    def __init__(self, msg):
-        Exception.__init__(self)
-        self.msg = msg
+    pass
 
 def parse_args_stderr_hack(parser, argv):
     try:
@@ -116,18 +112,18 @@ class RemoteCommand(Command):
     def handleMessage(self, msg):
         """handles the given message from the STOMP server."""
         xml = etree.fromstring(msg.body)
-        if xml.find(xsdl.XSDL(("Error"))):
-            self._handleError(xml.find(xsdl.XSDL("Error")))
+        if xml[0].tag == xsdl.Tag("Error"):
+            self._handleError(xml[0])
         else:
-            self._handleMessage(xml)
+            self._handleMessage(xml[0])
             reactor.stop()
 
-    def _handleError(self,err):
+    def _handleError(self, err):
         errcode = int(err.findtext(xsdl.XSDL("ErrorCode")))
         errname = err.findtext(xsdl.XSDL("ErrorName"))
         errmsg  = err.findtext(xsdl.XSDL("ErrorMessage"))
         if errcode != 200:
-            self.executeFailed(CommandFailed("[Code %d]: %s - %s" % (errcode, errname, errmsg)))
+            raise CommandFailed("[Code %d]: %s - %s" % (errcode, errname, errmsg))
         else:
             print "[Code %d]: %s - %s" % (errcode, errname, errmsg)
             reactor.stop()
@@ -220,29 +216,56 @@ class Command_create(RemoteCommand):
             jsdlFile = sys.stdin
         else:
             jsdlFile = open(self.options.jsdl)
-        jsdl = etree.parse(jsdlFile)
+        jsdl = etree.parse(jsdlFile).getroot()
+        
 
         # build xml message
-        msg = xsdl.XenBEEClientMessage()
-        submit = msg.createElement("ImageSubmission", msg.root)
-        submit.attrib[xsdl.Tag("keep-instance")] = ["no", "yes"][self.options.keep_instance]
-        
-        imgdef = msg.createElement("ImageDefinition", submit)
-        boot = msg.createElement("Boot", imgdef)
-        _t = msg.createElement("Kernel", boot)
-        msg.createElement("URI", _t, self.options.kernel)
-        _t = msg.createElement("Initrd", boot)
-        msg.createElement("URI", _t, self.options.initrd)
-        msg.createElement("Extra", boot)
+        inst_def = etree.Element(xsdl.XSDL("InstanceDefinition"), nsmap={"xsdl": xsdl.XSDL_NS})
+        inst_des = etree.SubElement(inst_def, xsdl.XSDL("InstanceDescription"))
 
-        imgs = msg.createElement("Images", imgdef)
-        bootimg = msg.createElement("BootImage", imgs)
-        bootimgsrc = msg.createElement("Source", bootimg)
-        msg.createElement("URI", bootimgsrc, self.options.image)
+        # add all files that have to be retrieved
+        files = etree.SubElement(inst_des, xsdl.XSDL("Files"))
 
-        submit.append(jsdl.getroot())
+        fileMap = {}
+        ctr = 1
+        for uri in [self.options.kernel, self.options.initrd, self.options.image]:
+            ref = "file-%d" % (ctr,)
+            f_elem = etree.SubElement(files, xsdl.XSDL("File"))
+            f_elem.attrib[xsdl.Tag("id")] = ref
+            etree.SubElement(f_elem, xsdl.XSDL("URI")).text = uri
+
+            fileMap[uri] = ref
+            ctr += 1
+
+        # startup parameters
+        startup = etree.SubElement(inst_des, xsdl.XSDL("StartupParameters"))
+        kernel = etree.SubElement(startup, xsdl.XSDL("Kernel"))
+        kernel.attrib[xsdl.Tag("file-ref")] = fileMap[self.options.kernel]
+
+        kernel = etree.SubElement(startup, xsdl.XSDL("Initrd"))
+        kernel.attrib[xsdl.Tag("file-ref")] = fileMap[self.options.initrd]
+
+        images = etree.SubElement(startup, xsdl.XSDL("Images"))
+        for image in [self.options.image]:
+            i_elem = etree.SubElement(images, xsdl.XSDL("Image"))
+            i_elem.attrib[xsdl.Tag("file-ref")] = fileMap[image]
+
+        # runtime parameter
+        runtime = etree.SubElement(inst_des, xsdl.XSDL("RuntimeParameters"))
+        if self.options.keep_instance:
+            etree.SubElement(runtime, xsdl.XSDL("keep-running"))
+
+        # move the jsdl:Application to the instance
+        jsdl_job_desc = jsdl.find(xsdl.JSDL("JobDescription"))
+        jsdl_app = jsdl_job_desc.find(xsdl.JSDL("Application"))
         
-        return msg
+        jsdl_job_desc.remove(jsdl_app)
+        inst_des.append(jsdl_app)
+
+        # append the instance definition to the jsdl document's root
+        jsdl.append(inst_def)
+        
+        return etree.tostring(jsdl)
 
 class Command_kill(RemoteCommand):
     """\
@@ -287,9 +310,8 @@ class Command_status(RemoteCommand):
         msg.root.append(sreq)
         return msg
 
-    def _handleMessage(self, msg):
+    def _handleMessage(self, slist):
         """handles the status message."""
-        slist = msg.find(xsdl.XSDL("StatusList"))
         stats = []
         for child in slist:
             stats.append(self._parseStatus(child))
@@ -331,14 +353,12 @@ class Command_showcache(RemoteCommand):
 
     def _handleMessage(self, msg):
         """handles the cache entries message."""
-        XSDL = xsdl.NS(xsdl.XSDL_NS)
-
         fmt = "%-60s  %-10s %s"
         print fmt % (" URI", "DATA-TYPE", "DESCRIPTION")
-        for entry in msg.findall("./"+XSDL("CacheEntries/Entry")):
-            uri = entry.findtext(XSDL("URI"))
-            type = entry.findtext(XSDL("Type"))
-            desc = entry.findtext(XSDL("Description"))
+        for entry in msg.findall(xsdl.XSDL("Entry")):
+            uri = entry.findtext(xsdl.XSDL("URI"))
+            type = entry.findtext(xsdl.XSDL("Type"))
+            desc = entry.findtext(xsdl.XSDL("Description"))
             print fmt % (uri, type, desc)
 
 class Command_submit(RemoteCommand):
@@ -375,7 +395,7 @@ def createCommand(argv):
             else:
                 raise UnknownCommand(argv[0])
         except UnknownCommand, uc:
-            print >>sys.stderr, "Unknown command: '%s'" % uc.msg
+            print >>sys.stderr, "Unknown command: '%s'" % uc
             return None
         except:
             from traceback import format_exc
@@ -422,7 +442,7 @@ def main(argv):
                 raise CommandFailed(cmd.failed[1])
         except CommandFailed, cf:
             print >>sys.stderr, "%s:" % sys.argv[0], str(cmd), "failed (details follow)"
-            print >>sys.stderr, "\n".join([ "%s: %s" % (sys.argv[0],s) for s in str(cf.msg).split('\n')])
+            print >>sys.stderr, "\n".join([ "%s: %s" % (sys.argv[0],s) for s in str(cf.message).split('\n')])
             return 2
         except:
             from traceback import format_exc

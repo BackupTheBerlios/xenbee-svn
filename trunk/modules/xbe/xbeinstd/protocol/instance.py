@@ -54,20 +54,61 @@ class XBEInstProtocol(xsdl.XMLProtocol):
         log.info("process ended: code:%d\nout:'%s'\nerr:'%s'" % (status_object.value.exitCode, stdOutput, errOutput))
 
 class _InstProtocol(XenBEEProtocol):
+    def _discover_ips(self):
+        # since we were able to connect to the STOMP server, we simply
+        # connect here a second time ;-)  but this time we just use it
+        # to discover our own ips:
+        import socket
+
+        ips = []
+        for family, desc in [ (socket.AF_INET6, "ipv6"),
+                              (socket.AF_INET, "ipv4")]:
+            log.info("trying %s..." % desc)
+
+            s = socket.socket(family, socket.SOCK_STREAM)
+
+            s.bind(('', 0)) # bind to all interfaces, arbitrary port
+
+            # now connect the socket to our STOMP server
+            try:
+                stompServer = (self.factory.daemon.xbe_host,
+                               self.factory.daemon.xbe_port)
+                s.connect(stompServer)
+            except (socket.gaierror, socket.error), e:
+                log.info("could not connect to %s:%d" % (stompServer))
+                continue
+                
+            # connect was successful, now get the needed information from the socket
+            sock_nam = s.getsockname()
+            ips.append(sock_nam[0])
+
+            s.close()
+            del s
+            break
+
+        # for each discovered ip, resolve it to a fqdn
+        fqdns = {}
+        for ip in ips:
+            try:
+                hostname, aliaslist, ipaddrlist = socket.gethostbyaddr(ip)
+                info = fqdns.get(hostname, [])
+                info.extend(ipaddrlist)
+                fqdns[hostname] = info
+            except socket.herror:
+                pass
+        return fqdns
+    
     def post_connect(self):
         log.info("notifying xbe daemon, that i am available now")
         try:
             msg = xsdl.XenBEEInstanceAvailable(self.factory.instanceId)
-
-            # get my IP
-            from socket import gethostbyaddr, gethostname
             try:
-                fqdn, _, ips = gethostbyaddr(gethostname())
+                fqdn, ips = self._discover_ips().popitem()
+                # simply take random one
+                msg.setNetworkInfo(fqdn, ips)
             except Exception, e:
-                log.exception(e)
-                fqdn, ips = "N/A", []
-            msg.setNetworkInfo(fqdn, ips)
-
+                log.error("could not discover my ips: %s", e)
+                msg.setNetworkInfo('n/a', [])
             self.send(self.factory.server_queue, str(msg))
         except Exception, e:
             log.exception("send failed: %s" % e)
@@ -80,6 +121,7 @@ class XenBEEInstProtocolFactory(XenBEEProtocolFactory):
 	XenBEEProtocolFactory.__init__(self, daemon, my_queue)
         self.p = None
         self.server_queue = server_queue
+        self.daemon = daemon
 
     def dispatchToProtocol(self, transport, msg, domain, sourceType, sourceId=None):
         if domain != "xenbee":

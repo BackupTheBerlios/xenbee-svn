@@ -11,6 +11,7 @@ log = logging.getLogger(__name__)
 from xbe.util.uuid import uuid
 from xbe.util.database import dbapi
 from twisted.internet import defer
+from twisted.python import failure
 from Queue import Queue
 
 class DBWorker(threading.Thread):
@@ -40,14 +41,20 @@ class DBWorker(threading.Thread):
         q = self.queue
         while True:
             stmt, args, d = q.get()
+            log.debug("got work to do: '%s'" % (stmt))
             try:
                 cur = self.con.cursor()
                 cur.execute(stmt, args)
                 self.con.commit()
                 d.callback(cur.fetchall())
-            except:
-                d.errback()
+            except dbapi.DatabaseError, dbe:
+                log.fatal("data base error: %s" % dbe)
+                d.errback(failure.Failure(dbe))
+            except Exception, e:
+                log.error("task could not be fullfilled: %s" % e)
+                d.errback(failure.Failure(e))
             q.task_done()
+            log.debug("finished with this piece")
 
     def _initDB(self, path):
         con = dbapi.connect(path)

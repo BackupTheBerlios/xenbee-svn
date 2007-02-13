@@ -63,12 +63,17 @@ class XenBEEClientProtocol(xsdl.XMLProtocol):
         return xsdl.XenBEEError("signal sent", xsdl.ErrorCode.OK)
 
     def do_ListCache(self, elem):
+        log.debug("retrieving cache list...")
         def __buildMessage(entries):
             msg = xsdl.XenBEECacheEntries()
             for uid, type, desc in entries:
                 msg.addEntry(uid, type, desc)
+            log.debug(str(msg))
             return msg
-        return self.factory.cache.getEntries().addCallback(__buildMessage)
+        self.factory.cache.getEntries(
+            ).addCallback(__buildMessage).addBoth(
+            self.transformResultToMessage).addCallback(self.sendMessage)
+        return None
 	
 class XenBEEInstanceProtocol(xsdl.XMLProtocol):
     """The XBE instance side protocol.
@@ -131,7 +136,7 @@ class XenBEEInstanceProtocol(xsdl.XMLProtocol):
         log.info("task finished:\ncode=%d\nstdout='%s'\nerrout='%s'" % (exitcode, stdout, errout))
 
         task = self.factory.instanceManager.lookupByUUID(self.instid).task
-        task.status_elem = status_elem
+        task.status_elem = status
         task.finished(exitcode)
 
 class _XBEDProtocol(XenBEEProtocol):

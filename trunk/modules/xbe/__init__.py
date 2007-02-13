@@ -25,17 +25,17 @@ def initLogging(logfile='/tmp/xbe.log'):
         '%(asctime)s [%(process)d]' + thread + ' %(name)s:%(lineno)d %(levelname)-8s %(message)s'))
     logging.getLogger().addHandler(_fileHdlr)
 
-#    _syslogHdlr = logging.handlers.SysLogHandler()
-#    _syslogHdlr.setLevel(logging.WARN)
-#    _syslogHdlr.setFormatter(logging.Formatter(
-#        '[%(process)d]' + thread + ' %(name)-12s:%(lineno)d %(levelname)-8s %(message)s'))
-#    logging.getLogger().addHandler(_syslogHdlr)
+    _syslogHdlr = logging.handlers.SysLogHandler()
+    _syslogHdlr.setLevel(logging.FATAL)
+    _syslogHdlr.setFormatter(logging.Formatter(
+        '[%(process)d]' + thread + ' %(name)-12s:%(lineno)d %(levelname)-8s %(message)s'))
+    logging.getLogger().addHandler(_syslogHdlr)
 
-#    _stderrHdlr = logging.StreamHandler(sys.stderr)
-#    _stderrHdlr.setLevel(logging.ERROR)
-#    _stderrHdlr.setFormatter(logging.Formatter(
-#        '[%(process)d]' + thread + ' %(name)-12s: %(levelname)-8s %(message)s'))
-#    logging.getLogger().addHandler(_stderrHdlr)
+    _stderrHdlr = logging.StreamHandler(sys.stderr)
+    _stderrHdlr.setLevel(logging.WARN)
+    _stderrHdlr.setFormatter(logging.Formatter(
+        '[%(process)d]' + thread + ' %(name)-12s: %(levelname)-8s %(message)s'))
+    logging.getLogger().addHandler(_stderrHdlr)
 
     # activate overall logging of messages with DEBUG-level
     logging.getLogger().setLevel(logging.DEBUG)

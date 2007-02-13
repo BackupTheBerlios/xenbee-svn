@@ -73,7 +73,7 @@ class XMLProtocol(object):
         if tag not in self.__understood:
             self.__understood.append(tag)
 
-    def _cb_transformResultToMessage(self, result):
+    def transformResultToMessage(self, result):
         if isinstance(result, failure.Failure):
             result = XenBEEError(result.getErrorMessage(),
                                  ErrorCode.INTERNAL_SERVER_ERROR)
@@ -87,7 +87,7 @@ class XMLProtocol(object):
         # result is now a XenBEEMessage
         return result
 
-    def _cb_sendMessage(self, msg):
+    def sendMessage(self, msg):
         if msg is None:
             log.debug("nothing to answer...")
         else:
@@ -105,8 +105,8 @@ class XMLProtocol(object):
         """
         
         d = self._messageReceived(msg)
-        d.addBoth(self._cb_transformResultToMessage)
-        d.addCallback(self._cb_sendMessage)
+        d.addBoth(self.transformResultToMessage)
+        d.addCallback(self.sendMessage)
         return d
 
     def _messageReceived(self, msg):
