@@ -4,11 +4,12 @@ see: http://stomp.codehaus.org/Protocol
 
 """
 
-import re, threading, time, os
+import re, threading, time, os, logging
+log = logging.getLogger(__name__)
 
 # twisted imports
 from twisted.protocols.basic import LineReceiver
-from twisted.internet import defer, reactor
+from twisted.internet import defer, reactor, threads
 from twisted.internet.protocol import ReconnectingClientFactory
 from textwrap import dedent
 
@@ -104,7 +105,7 @@ class StompTransport:
 
     def write(self, data, *args, **kw):
 	"""Write data to the destination queue."""
-        self.stomp.send(self.queue, data, *args, **kw)
+        return threads.deferToThread(self.stomp.send, self.queue, data, *args, **kw)
         
 class StompClient(LineReceiver):
     """Implementation of the STOMP protocol - client side.
@@ -150,6 +151,7 @@ class StompClient(LineReceiver):
 	"""Send a frame."""
         try:
             self.mtx.acquire()
+            log.debug("sending frame: %s" % (frame))
             self.transport.write(str(frame))
         finally:
             self.mtx.release()
@@ -364,9 +366,9 @@ class StompClient(LineReceiver):
                 f.header["expires"] = long((time.time() * 1000) + ttl)
             else:
                 f.header["expires"] = 0
-            self.sendFrame(f)
         finally:
             self.mtx.release()
+        self.sendFrame(f)
 
     def subscribe(self, queue, exclusive=False, auto_ack=True):
 	"""Subscribe to queue 'queue'.

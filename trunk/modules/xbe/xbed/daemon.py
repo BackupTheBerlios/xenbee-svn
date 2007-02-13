@@ -11,13 +11,6 @@ log = logging.getLogger(__name__)
 import sys, os.path
 from xbe.util.daemon import Daemon
 
-# Twisted imports
-from twisted.python import threadable
-threadable.init()
-from twisted.internet import reactor
-
-from xbe.xbed.proto import XenBEEDaemonProtocolFactory
-
 class XBEDaemon(Daemon):
     def __init__(self, argv=sys.argv):
 	"""Initializes the Daemon."""
@@ -44,7 +37,12 @@ class XBEDaemon(Daemon):
             raise Exception("%s: %s" % (ioe.strerror, ioe.filename))
 
     def setup_priviledged(self):
-	log.info("setting up the XenBEE daemon")
+	log.info("Setting up the XenBEE daemon")
+
+        log.info("initializing twisted...")
+        from twisted.python import threadable
+        threadable.init()
+        log.info("  done.")
         
         log.info("initializing the `%s' backend..." % self.opts.backend)
         import xbe.xbed.backend
@@ -72,6 +70,9 @@ class XBEDaemon(Daemon):
         self.scheduler = Scheduler(self.taskManager)
         log.info("  done.")
 
+        from twisted.internet import reactor
+        from xbe.xbed.proto import XenBEEDaemonProtocolFactory
+
         log.info("initializing reactor...")
         reactor.connectTCP(self.opts.host,
                            self.opts.port,
@@ -81,6 +82,7 @@ class XBEDaemon(Daemon):
         
     def run(self, *args, **kw):
 	""""""
+        from twisted.internet import reactor
         reactor.exitcode = 0
         reactor.run()
         return reactor.exitcode

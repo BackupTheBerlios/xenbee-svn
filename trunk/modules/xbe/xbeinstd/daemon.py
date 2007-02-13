@@ -10,11 +10,6 @@ log = logging.getLogger(__name__)
 
 from xbe.util.daemon import Daemon
 from xbe.util.uuid import uuid
-from twisted.python import threadable
-threadable.init()
-from twisted.internet import reactor
-
-from xbe.xbeinstd.protocol.instance import XenBEEInstProtocolFactory
 
 class XBEInstDaemon(Daemon):
     def __init__(self, argv=sys.argv):
@@ -35,13 +30,13 @@ class XBEInstDaemon(Daemon):
         if server is None:
             xbe_server, xbe_port = "localhost", 61613
             log.warn("running in local mode with server at %s:%d" % (xbe_server,xbe_port))
-            return xbe_server, xbe_port
-
-        try:
-            xbe_server, xbe_port = server.split(":")
-            xbe_port = int(xbe_port)
-        except ValueError, ve:
-            return server, 61613
+        else:
+            try:
+                xbe_server, xbe_port = server.split(":")
+                xbe_port = int(xbe_port)
+            except ValueError, ve:
+                xbe_server, xbe_port = server, 61613
+        return xbe_server, xbe_port
 
     def configure(self):
         self.daemonize = self.opts.daemonize
@@ -71,8 +66,13 @@ class XBEInstDaemon(Daemon):
         self.log_error = log.fatal
 
     def setup_priviledged(self):
-	log.info("setting up the XenBEE instance daemon")
-        
+	log.info("Setting up the XenBEE instance daemon")
+
+        log.info("initializing the twisted framework...")
+        from twisted.python import threadable
+        threadable.init()
+        log.info("  done.")
+
         # set up the uuid
         if self.opts.uuid is None:
             self.opts.uuid = uuid()
@@ -83,20 +83,23 @@ class XBEInstDaemon(Daemon):
         try:
             self.xbe_host, self.xbe_port = self.__parseServer(self.opts.server)
         except Exception, e:
-            self.error("could not interpret server: %s" % self.opts.server)
+            self.error("could not interpret server: %s: %s" % (self.opts.server, e))
         
         log.info("initializing reactor...")
+        from twisted.internet import reactor
+        from xbe.xbeinstd.protocol.instance import XenBEEInstProtocolFactory
+
         f = XenBEEInstProtocolFactory(self,
                                       my_queue=self.queue, server_queue="/queue/xenbee.daemon")
         f.instanceId = self.opts.uuid
         reactor.connectTCP(self.xbe_host,
                            self.xbe_port,
                            f)
-            
         log.info("  done.")
         
     def run(self, *args, **kw):
 	""""""
+        from twisted.internet import reactor
         reactor.exitcode = 0
         reactor.run()
         return reactor.exitcode

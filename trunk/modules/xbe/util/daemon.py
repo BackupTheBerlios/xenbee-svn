@@ -281,7 +281,7 @@ class Daemon(object):
             # to write to stderr
             self.write_pid()
 
-            # close the streams but let them open, if we run
+            # close all filedescriptors, but let them open, if we run
             # in 'non-daemon' mode (i.e. for debugging purposes)
             if self.daemonize:
                 self.__close_streams()
@@ -294,14 +294,14 @@ class Daemon(object):
             from traceback import format_exc
             self.error("E: setup failed: %s:\n%s" % (e, format_exc(e)))
 
-    def __close_streams(self):
+    def __close_streams(self, minfd=0, maxfd=0):
         # Resource usage information.
         import resource
-        maxfd = resource.getrlimit(resource.RLIMIT_NOFILE)[1]
+        maxfd = maxfd or resource.getrlimit(resource.RLIMIT_NOFILE)[1]
         if (maxfd == resource.RLIM_INFINITY):
             maxfd = Daemon.MAXFD
         # Iterate through and close all file descriptors.
-        for fd in range(0, maxfd):
+        for fd in range(minfd, maxfd):
             try:
                 os.close(fd)
             except OSError:# ERROR, fd wasn't open to begin with (ignored)

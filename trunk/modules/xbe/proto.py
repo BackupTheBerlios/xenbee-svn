@@ -72,10 +72,11 @@ class XenBEEProtocolFactory(StompClientFactory):
     def dispatchToProtocol(self, transport, msg, domain, sourceType, sourceId=None):
         """Called when a message is received.
 
-        @param msg - the original message
-        @param replyTo - the replyTo header entry (i.e. /queue/xenbee.client.<UUID>)
-        @param sourceType - the type of client that sent the message (i.e. 'client')
-        @param sourceId - the source identifier (some UUID)
+        @param transport - the transport over which the client is reachable
+        @param msg - the message that we received
+        @param domain - the first part of the MOM-identifier (e.g. xenbee.daemon -> domain is 'xenbee')
+        @param sourceType - the type of client that sent the message (e.g. xenbee.client.foo -> type is 'client')
+        @param sourceId - the source identifier (e.g. xenbee.client.12345 -> id is 12345)
         """
         raise NotImplementedError("dispatchToProtocol must be overridded in subclass")
 

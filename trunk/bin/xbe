@@ -13,7 +13,7 @@ from xbe.util.uuid import uuid
 
 from twisted.internet import reactor, defer
 from twisted.internet.protocol import ClientCreator
-from xbe.stomp.proto import StompClientFactory, StompClient
+from xbe.stomp.proto import StompClientFactory, StompClient, reason as StompErrorReason
 
 import logging, sys, re, os
 log = logging.getLogger(__name__)
@@ -404,7 +404,11 @@ class StompClientCmd(StompClient):
         self.factory.cmd.handleMessage(msg)
 
     def abort(self, failure):
-        self.factory.cmd.executeFailed(failure)
+        if isinstance(failure.value, StompErrorReason):
+            err = "%s [%d]" % (failure.value.msg, failure.value.errcode)
+        else:
+            err = failure.getErrorMessage()
+        self.factory.cmd.executeFailed(err)
 
 def main(argv):
     """The main routine."""

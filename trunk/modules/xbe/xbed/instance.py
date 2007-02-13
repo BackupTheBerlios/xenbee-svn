@@ -356,8 +356,10 @@ class Instance(object):
             
         return self.__availableDefer
 
-    def available(self):
-        """Callback called when the instance has notified us."""
+    def available(self, fqdn, ips):
+        """Callback called when the 'real' instance has notified us."""
+        self.fqdn = fqdn
+        self.ips = ips
         if not self.__availableDefer.called:
             self.__availableDefer.callback(self)
 

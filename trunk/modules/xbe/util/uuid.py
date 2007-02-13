@@ -29,7 +29,8 @@ class UUID:
         """Returns the next UUID."""
         (status, uuid)  = commands.getstatusoutput(self.cmd)
         if status != 0:
-            raise RuntimeError("could get UUID: probably the command '%s' could not be run" % (self.cmd))
+            raise RuntimeError(
+                "could get UUID: probably the command '%s' could not be run" % (self.cmd))
         return uuid.lower()
 
     def __call__(self):
