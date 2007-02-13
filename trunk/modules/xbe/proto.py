@@ -31,8 +31,6 @@ class XenBEEProtocol(StompClient):
 
     def _messageReceived(self, msg):
         # check if we got an advisory from the activemq server
-        if msg.header.get("type", "unknown") == "Advisory":
-            return self._advisoryReceived(msg)
         log.debug("got message:\n%s" % (str(msg),))
 
         # use the reply-to field

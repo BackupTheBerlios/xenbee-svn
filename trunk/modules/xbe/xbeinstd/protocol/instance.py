@@ -57,8 +57,18 @@ class _InstProtocol(XenBEEProtocol):
     def post_connect(self):
         log.info("notifying xbe daemon, that i am available now")
         try:
-            self.send(self.factory.server_queue,
-                      str(xsdl.XenBEEInstanceAvailable(self.factory.instanceId)))
+            msg = xsdl.XenBEEInstanceAvailable(self.factory.instanceId)
+
+            # get my IP
+            from socket import gethostbyaddr, gethostname
+            try:
+                fqdn, _, ips = gethostbyaddr(gethostname())
+            except Exception, e:
+                log.exception(e)
+                fqdn, ips = "N/A", []
+            msg.setNetworkInfo(fqdn, ips)
+
+            self.send(self.factory.server_queue, str(msg))
         except Exception, e:
             log.exception("send failed: %s" % e)
             raise

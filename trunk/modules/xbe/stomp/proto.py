@@ -338,7 +338,7 @@ class StompClient(LineReceiver):
 
     # client protocol
 
-    def send(self, queue, msg = '', ttl=0, **kw):
+    def send(self, queue, msg, ttl=0, **kw):
 	"""Send a message to a specific queue.
 
 	header -- a dictionary of header fields

@@ -12,6 +12,7 @@ log = logging.getLogger(__name__)
 from time import gmtime, strftime
 from lxml import etree
 from twisted.internet import defer, threads
+from twisted.python import failure
 import re
 
 try:
@@ -43,6 +44,9 @@ XSDL = NS(XSDL_NS)
 JSDL = NS(JSDL_NS)
 JSDL_POSIX = NS(JSDL_POSIX_NS)
 
+class TagNotUnderstood(Exception):
+    pass
+
 class XMLProtocol(object):
     """The base class of all here used client-protocols."""
 
@@ -55,54 +59,75 @@ class XMLProtocol(object):
         self.__understood = []
         self.addUnderstood(Tag("Error"))
 
-    def dispatch(self, func, *args, **kw):
+    def dispatch(self, elem, *args, **kw):
 	try:
-	    method = getattr(self, "do_" + func)
-	except AttributeError, ae:
-	    self.transport.write(str(XenBEEClientError("you sent me an illegal request!",
-                                                       XenBEEClientError.ILLEGAL_REQUEST)))
-	    log.error("illegal request: " + str(ae))
-            return defer.fail(ae)
-	try:
-	    return threads.deferToThread(method, *args, **kw)
+            if elem.tag not in self.__understood:
+                raise TagNotUnderstood("i cannot handle elements with the %s tag" % (elem.tag))
+            method_name = "do_%s" % (decodeTag(elem.tag)[1])
+	    method = getattr(self, method_name)
 	except Exception, e:
-	    self.transport.write(str(XenBEEClientError("request failed: " + str(e),
-                                                       XenBEEClientError.INTERNAL_SERVER_ERROR)))
             return defer.fail(e)
+        return threads.deferToThread(method, elem, *args, **kw)
 
     def addUnderstood(self, tag):
         if tag not in self.__understood:
             self.__understood.append(tag)
 
+    def _cb_transformResultToMessage(self, result):
+        if isinstance(result, failure.Failure):
+            result = XenBEEError(result.getErrorMessage(),
+                                 ErrorCode.INTERNAL_SERVER_ERROR)
+        if result is None:
+            # do not reply, so return None
+            return None
+        if not isinstance(result, XenBEEMessage):
+            result = XenBEEError(repr(result),
+                                 ErrorCode.INTERNAL_SERVER_ERROR)
+
+        # result is now a XenBEEMessage
+        return result
+
+    def _cb_sendMessage(self, msg):
+        if msg is None:
+            log.debug("nothing to answer...")
+        else:
+            assert isinstance(msg, XenBEEMessage)
+            self.transport.write(msg.to_xml())
+        return msg
+
     def messageReceived(self, msg):
-        def _f(err):
-            errmsg = "message handling failed: %s\n%s" % (err.getErrorMessage(), err.getTraceback())
-            log.warn(errmsg)
-            self.transport.write(str(XenBEEClientError(errmsg,
-                                                       XenBEEClientError.ILLEGAL_REQUEST)))
-            return msg
-        try:
-            return self._messageReceived(msg).addErrback(_f)
-        except Exception, e:
-            log.exception("message handling failed")
-            self.transport.write(str(XenBEEClientError("handling failed: %s" % (str(e),),
-                                                       XenBEEClientError.ILLEGAL_REQUEST)))
+        """Handle an incoming XML message.
+
+        The message handling code works as follows:
+
+             * a method is looked up according to the 'tag' of the root element
+               or the first direct child that 
+        """
+        
+        d = self._messageReceived(msg)
+        d.addBoth(self._cb_transformResultToMessage)
+        d.addCallback(self._cb_sendMessage)
+        return d
 
     def _messageReceived(self, msg):
 	"""Handle a received message."""
-	self.__root = etree.fromstring(msg.body)
-        
-	# check the message
-        if self.__root.tag != Tag("Message"):
-            return self.dispatch(decodeTag(self.__root.tag)[1], self.__root)
+        try:
+            r = etree.fromstring(msg.body)
+            self.__root = r
 
-	if not len(self.__root):
-	    return defer.fail(ValueError("no elements to handle found, sorry"))
-        
-        for child in filter(lambda x: x.tag in self.__understood, self.__root):
-            return self.dispatch(decodeTag(child.tag)[1], child)
-        return defer.fail(ValueError("no acceptable tag found"))
-    
+            # check the message
+            if r.tag != Tag("Message"):
+                return self.dispatch(r)
+
+            if len(r) > 1:
+                return defer.fail(
+                    ValueError(
+                    "too many elements found (%d), sorry (only one subelement supported)" % (len(r))))
+            return self.dispatch(r[0])
+        except Exception, e:
+            return defer.fail(failure.Failure(e))
+
+    # some default xml-element handler
     def do_Error(self, err):
         log.debug("got error:\n%s" % (etree.tostring(err)))
 
@@ -119,13 +144,7 @@ def NodeToString(node):
     buf.seek(0,0)
     return buf.getvalue()
         
-class XenBEEMessageFactory:
-    namespace = XSDL_NS
-    
-    def __init__(self, prefix="xsdl"):
-        self.prefix = prefix
-
-class XenBEEClientMessage:
+class XenBEEMessage(object):
     """Encapsulates a xml message."""
     def __init__(self, namespace=XSDL_NS, prefix="xsdl"):
         """Initialize a XML message using the given namespace and prefix."""
@@ -144,35 +163,68 @@ class XenBEEClientMessage:
     def __str__(self):
         return etree.tostring(self.root)
 
-class XenBEEClientError(XenBEEClientMessage):
-    """Encapsulates errors using XML."""
-    
+    def to_s(self):
+        return str(self)
+    def to_xml(self):
+        return self.to_s()
+
+class ErrorCode:
     class OK:
 	value = 200
 	name = "OK"
+        short_msg = "everything ok"
+        long_msg  = short_msg
     class ILLEGAL_REQUEST:
-	value = 201
+	value = 400
 	name = "ILLEGAL REQUEST"
+        short_msg = "you sent me an illegal request"
+        long_msg  = short_msg
     class SUBMISSION_FAILURE:
-	value = 202
+	value = 401
 	name = "SUBMISSION FAILURE"
+        short_msg = "you sent me an illegal request"
+        long_msg  = short_msg
+    class TASK_LOOKUP_FAILURE:
+        value = 404
+        name = "TASK_LOOKUP_FAILURE"
+        short_msg = "the task-id you sent could not be mapped to a task"
+        long_msg  = short_msg
+    class INSTANCE_LOOKUP_FAILURE:
+        value = 405
+        name = "INSTANCE_LOOKUP_FAILURE"
+        short_msg = "the task-id you sent could not be mapped to a task"
+        long_msg  = short_msg
+
+    class SIGNAL_OUT_OF_RANGE:
+        value = 450
+        name = "SIGNAL_OUT_OF_RANGE"
+        short_msg = "the signal you have sent was out of range"
+        long_msg  = short_msg
+
+
     class INTERNAL_SERVER_ERROR:
         value = 500
         name = "INTERNAL_SERVER_ERROR"
-
+        short_msg = "you sent me an illegal request"
+        long_msg  = short_msg
+    
+    
+class XenBEEError(XenBEEMessage):
+    """Encapsulates errors using XML."""
+    
     def __init__(self, msg, errcode):
-        XenBEEClientMessage.__init__(self)
+        XenBEEMessage.__init__(self)
         self.msg = msg
         self.errcode = errcode
-        self.toxml()
 
-    def toxml(self):
 	error = self.createElement("Error", self.root)
-#        error["code"] = str(self.errcode.value)
-#        error["name"] = str(self.errcode.name)
+        error.attrib[Tag("code")] = str(self.errcode.value)
 	errorCode = self.createElement("ErrorCode", error, str(self.errcode.value))
 	errorName = self.createElement("ErrorName", error, self.errcode.name)
 	errorMessage = self.createElement("ErrorMessage", error, self.msg)
+
+class XenBEEClientMessage(XenBEEMessage):
+    pass
 
 class XenBEEStatusMessage(XenBEEClientMessage):
     """Encapsulates the status of all known tasks.
@@ -240,6 +292,14 @@ class XenBEEInstanceAvailable(XenBEEClientMessage):
         self.instanceId = inst_id
         ia = self.createElement("InstanceAvailable", self.root)
         self.createElement("InstanceID", ia, str(self.instanceId))
+        self.nodeInfo = self.createElement("NodeInformation", ia)
+
+    def setNetworkInfo(self, fqdn, ips):
+        netinfo = self.createElement("Network", self.nodeInfo)
+        self.createElement("FQDN", netinfo, fqdn)
+        ipinfo = self.createElement("IPList", netinfo)
+        for ip in ips:
+            self.createElement("IP", ipinfo, ip)
 
 class XenBEEListCache(XenBEEClientMessage):
     """Request to list the cache entries."""
