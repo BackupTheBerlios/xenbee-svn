@@ -10,21 +10,23 @@
     <xbe:ReturnPath xsdl:transport-type="stomp">/queue/xenbee.client.foo</xbe:ReturnPath>
     <xbe-sec:SecurityInformation xmlns:xbe-sec="http://www.example.com/schemas/xbe/2007/01/xbe-sec">
       <dsig:Signature xmlns:dsig="http://www.w3.org/2000/09/xmldsig#">
-	  <dsig:SignatureValue>0123456789</dsig:SignatureValue>
 	  <dsig:KeyInfo>
 	    <dsig:X509Certificate>
-	      <!-- base64 encoded certificate -->
+	      <!-- base64 encoded certificate (DER) -->
 	    </dsig:X509Certificate>
 	  </dsig:KeyInfo>
+	  <dsig:SignatureValue>0123456789</dsig:SignatureValue>
       </dsig:Signature>
     </xbe-sec:SecurityInformation>
   </xbe:MessageHeader>
   
   <xbe:MessageBody>
-    <xsdl:Kill>
-      <xsdl:Signal>15</xsdl:Signal>
-      <xsdl:JobID>c9111c8f-efcc-4645-bf5b-b1f47a5fa73f</xsdl:JobID>
-    </xsdl:Kill>
+    <xbe-sec:CipherData xmlns:xbe-sec="http://www.example.com/schemas/xbe/2007/01/xbe-sec">
+      <!-- the base64 encoded cipher for the real message body -->
+      <xbe-sec:CipherValue>
+
+      </xbe-sec:CipherValue>
+    </xbe-sec:CipherData>
   </xbe:MessageBody>
 </xbe:Message>
 

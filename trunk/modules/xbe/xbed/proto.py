@@ -23,11 +23,11 @@ class XenBEEClientProtocol(xsdl.XMLProtocol):
     def __init__(self, client, transport):
         xsdl.XMLProtocol.__init__(self, transport)
         self.client = client
-        self.addUnderstood(xsdl.Tag("ImageSubmission"))
-        self.addUnderstood(xsdl.Tag("StatusRequest"))
-        self.addUnderstood(xsdl.Tag("Kill"))
-        self.addUnderstood(xsdl.Tag("ListCache"))
-        self.addUnderstood(xsdl.Tag("JobDefinition", xsdl.JSDL_NS))
+        self.addUnderstood(xsdl.XSDL("ImageSubmission"))
+        self.addUnderstood(xsdl.XSDL("StatusRequest"))
+        self.addUnderstood(xsdl.XSDL("Kill"))
+        self.addUnderstood(xsdl.XSDL("ListCache"))
+        self.addUnderstood(xsdl.JSDL("JobDefinition"))
 
     def do_JobDefinition(self, job):
         log.debug("got new job")
@@ -84,11 +84,11 @@ class XenBEEInstanceProtocol(xsdl.XMLProtocol):
     def __init__(self, instid, transport):
         xsdl.XMLProtocol.__init__(self, transport)
 	self.instid = instid
-        self.addUnderstood(xsdl.Tag("InstanceAvailable"))
-        self.addUnderstood(xsdl.Tag("TaskStatusNotification"))
+        self.addUnderstood(xsdl.XSDL("InstanceAvailable"))
+        self.addUnderstood(xsdl.XSDL("TaskStatusNotification"))
 
     def executeTask(self, task):
-        if task.document.tag != xsdl.Tag("JobDefinition", xsdl.JSDL_NS):
+        if task.document.tag != xsdl.JSDL("JobDefinition"):
             job = task.document.find(xsdl.JSDL("JobDefinition"))
         else:
             job = task.document
@@ -188,7 +188,6 @@ class XenBEEDaemonProtocolFactory(XenBEEProtocolFactory):
         d = p.messageReceived(msg)
 
         # log sent answers
-        d.addCallback(str)
         d.addCallback(self.logCallback,
                       log.debug, "sending answer to %(client)s: %(result)s",
                       {"client": id})
@@ -199,8 +198,9 @@ class XenBEEDaemonProtocolFactory(XenBEEProtocolFactory):
                      { "client":id, "message": str(msg)})
 
     def logCallback(self, result, logfunc, fmt, dictionary, *args, **kw):
-        dictionary["result"] = result
-        logfunc(fmt, dictionary, *args, **kw)
+        if result is not None:
+            dictionary["result"] = result
+            logfunc(fmt, dictionary, *args, **kw)
             
     def clientMessage(self, transport, msg, client):
         self.__messageHelper(client, msg, transport,

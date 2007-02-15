@@ -1,0 +1,90 @@
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number: 2 (0x2)
+        Signature Algorithm: sha1WithRSAEncryption
+        Issuer: CN=XBE Server CA, C=DE, ST=Rheinland-Pfalz, L=Kaiserslautern, O=Fraunhofer ITWM/emailAddress=petry@itwm.fhg.de
+        Validity
+            Not Before: Feb 15 20:35:52 2007 GMT
+            Not After : Feb 15 20:35:52 2008 GMT
+        Subject: C=DE, ST=Rheinland-Pfalz, O=Fraunhofer ITWM, OU=Persons, CN=test user 1/emailAddress=petry@itwm.fhg.de
+        Subject Public Key Info:
+            Public Key Algorithm: rsaEncryption
+            RSA Public Key: (2048 bit)
+                Modulus (2048 bit):
+                    00:c4:2a:6e:c8:af:19:0a:e6:59:84:9a:01:db:a5:
+                    c9:c3:d9:4f:30:4b:da:60:4e:aa:64:75:b1:1b:04:
+                    49:15:95:0f:69:40:ce:94:c4:ea:a6:9d:c8:7c:68:
+                    d4:c9:26:cf:2b:1b:08:77:ef:6c:9f:fe:af:40:89:
+                    b0:52:8e:5f:ab:78:ea:5b:1f:7c:9c:b7:61:02:3d:
+                    27:ca:91:dc:44:1c:56:50:cf:5a:5e:10:12:be:17:
+                    5f:94:75:07:52:99:84:9e:6a:7a:76:7c:fe:f4:2a:
+                    38:b1:db:82:38:7b:c4:ad:14:4c:04:55:7a:66:5c:
+                    6e:3d:e9:1c:d5:6d:ae:5c:28:ca:dd:05:ff:a0:32:
+                    0f:07:3a:b0:3e:c9:e1:43:0f:c2:1a:3b:cb:f1:40:
+                    ca:84:b2:ad:de:54:5a:c7:ff:2a:50:2f:ba:0f:7d:
+                    8c:0d:b4:78:e9:67:c7:28:eb:1c:20:0a:72:fe:db:
+                    c2:b0:ab:e2:94:95:79:6d:14:a2:7c:15:df:f2:66:
+                    a7:b5:75:c2:ab:84:d5:7c:92:db:45:60:ae:a3:0b:
+                    eb:b4:ec:08:a6:2b:2c:39:89:f6:13:83:5b:e5:ef:
+                    ee:7c:87:26:a3:64:14:6b:d8:cd:f1:55:50:5f:9e:
+                    67:40:fb:68:83:e3:0b:8d:e9:1c:41:2f:ab:11:18:
+                    f4:07
+                Exponent: 65537 (0x10001)
+        X509v3 extensions:
+            X509v3 Basic Constraints: 
+                CA:FALSE
+            X509v3 Subject Key Identifier: 
+                77:84:C4:D4:AD:76:83:64:9E:96:2C:40:E5:1A:C7:47:6E:D6:7F:9B
+            X509v3 Authority Key Identifier: 
+                keyid:A6:66:0C:66:BA:E4:BB:B1:73:64:8F:2B:F0:C8:CB:89:1C:8D:60:BF
+                DirName:/CN=XBE Server CA/C=DE/ST=Rheinland-Pfalz/L=Kaiserslautern/O=Fraunhofer ITWM/emailAddress=petry@itwm.fhg.de
+                serial:DD:39:25:87:0C:B5:FD:B3
+
+            Netscape CA Revocation Url: 
+                http://xen-o-matic.itwm.fhrg.fraunhofer.de/xbe/ca-crl.pem
+    Signature Algorithm: sha1WithRSAEncryption
+        15:c5:a3:a7:ba:cc:b5:92:ee:c6:23:f2:41:1b:7b:b6:c4:f5:
+        da:23:04:fe:f9:ac:5c:60:52:3e:0f:3f:d3:9a:34:25:56:9e:
+        b8:28:72:0f:cd:57:f8:b3:22:fb:ca:58:e2:59:68:90:77:2e:
+        98:9d:b8:8d:5e:ea:cd:ff:97:5f:03:79:a3:4d:b8:b6:94:6a:
+        17:86:a6:a5:82:d5:45:08:b5:5c:4b:b6:03:c4:f6:32:91:bd:
+        fd:82:ea:e7:2d:47:d9:5d:c8:bf:a4:cc:99:f4:59:eb:95:75:
+        e4:e3:39:fd:de:f1:48:8d:6b:c9:96:a9:26:3a:7b:63:5e:07:
+        f4:7f:f8:5a:8c:dc:03:ec:c9:68:fb:ab:56:0d:d9:a3:e2:43:
+        bb:cb:3a:37:f3:83:d5:57:ef:8d:45:9c:9b:21:3f:5d:a6:f3:
+        87:43:07:dc:17:1b:06:46:2f:30:3a:88:26:16:5e:7d:4f:24:
+        5a:07:d8:f7:b5:62:67:da:8c:5d:05:ff:00:31:35:96:14:cb:
+        d0:1f:6d:d5:1e:7c:fd:b1:9e:38:7c:18:b6:1b:f6:8d:5b:09:
+        7a:64:02:5b:3b:29:c2:cb:23:47:93:8d:5d:0f:5d:22:f8:f3:
+        00:a6:33:70:ab:2e:0b:ed:7d:2c:38:63:7d:58:d4:d9:f6:c1:
+        18:a7:53:94
+-----BEGIN CERTIFICATE-----
+MIIE4jCCA8qgAwIBAgIBAjANBgkqhkiG9w0BAQUFADCBlDEWMBQGA1UEAxMNWEJF
+IFNlcnZlciBDQTELMAkGA1UEBhMCREUxGDAWBgNVBAgTD1JoZWlubGFuZC1QZmFs
+ejEXMBUGA1UEBxMOS2Fpc2Vyc2xhdXRlcm4xGDAWBgNVBAoTD0ZyYXVuaG9mZXIg
+SVRXTTEgMB4GCSqGSIb3DQEJARYRcGV0cnlAaXR3bS5maGcuZGUwHhcNMDcwMjE1
+MjAzNTUyWhcNMDgwMjE1MjAzNTUyWjCBizELMAkGA1UEBhMCREUxGDAWBgNVBAgT
+D1JoZWlubGFuZC1QZmFsejEYMBYGA1UEChMPRnJhdW5ob2ZlciBJVFdNMRAwDgYD
+VQQLEwdQZXJzb25zMRQwEgYDVQQDEwt0ZXN0IHVzZXIgMTEgMB4GCSqGSIb3DQEJ
+ARYRcGV0cnlAaXR3bS5maGcuZGUwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEK
+AoIBAQDEKm7IrxkK5lmEmgHbpcnD2U8wS9pgTqpkdbEbBEkVlQ9pQM6UxOqmnch8
+aNTJJs8rGwh372yf/q9AibBSjl+reOpbH3yct2ECPSfKkdxEHFZQz1peEBK+F1+U
+dQdSmYSeanp2fP70Kjix24I4e8StFEwEVXpmXG496RzVba5cKMrdBf+gMg8HOrA+
+yeFDD8IaO8vxQMqEsq3eVFrH/ypQL7oPfYwNtHjpZ8co6xwgCnL+28Kwq+KUlXlt
+FKJ8Fd/yZqe1dcKrhNV8kttFYK6jC+u07AimKyw5ifYTg1vl7+58hyajZBRr2M3x
+VVBfnmdA+2iD4wuN6RxBL6sRGPQHAgMBAAGjggFEMIIBQDAJBgNVHRMEAjAAMB0G
+A1UdDgQWBBR3hMTUrXaDZJ6WLEDlGsdHbtZ/mzCByQYDVR0jBIHBMIG+gBSmZgxm
+uuS7sXNkjyvwyMuJHI1gv6GBmqSBlzCBlDEWMBQGA1UEAxMNWEJFIFNlcnZlciBD
+QTELMAkGA1UEBhMCREUxGDAWBgNVBAgTD1JoZWlubGFuZC1QZmFsejEXMBUGA1UE
+BxMOS2Fpc2Vyc2xhdXRlcm4xGDAWBgNVBAoTD0ZyYXVuaG9mZXIgSVRXTTEgMB4G
+CSqGSIb3DQEJARYRcGV0cnlAaXR3bS5maGcuZGWCCQDdOSWHDLX9szBIBglghkgB
+hvhCAQQEOxY5aHR0cDovL3hlbi1vLW1hdGljLml0d20uZmhyZy5mcmF1bmhvZmVy
+LmRlL3hiZS9jYS1jcmwucGVtMA0GCSqGSIb3DQEBBQUAA4IBAQAVxaOnusy1ku7G
+I/JBG3u2xPXaIwT++axcYFI+Dz/TmjQlVp64KHIPzVf4syL7yljiWWiQdy6YnbiN
+XurN/5dfA3mjTbi2lGoXhqalgtVFCLVcS7YDxPYykb39gurnLUfZXci/pMyZ9Fnr
+lXXk4zn93vFIjWvJlqkmOntjXgf0f/hajNwD7Mlo+6tWDdmj4kO7yzo384PVV++N
+RZybIT9dpvOHQwfcFxsGRi8wOogmFl59TyRaB9j3tWJn2oxdBf8AMTWWFMvQH23V
+Hnz9sZ44fBi2G/aNWwl6ZAJbOynCyyNHk41dD10i+PMApjNwqy4L7X0sOGN9WNTZ
+9sEYp1OU
+-----END CERTIFICATE-----

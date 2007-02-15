@@ -20,34 +20,7 @@ try:
 except:
     from StringIO import StringIO
 
-XBE_NS  = "http://www.example.com/schemas/xbe/2007/01/xbe"
-XSDL_NS = "http://www.example.com/schemas/xbe/2007/01/xsdl"
-JSDL_NS = "http://schemas.ggf.org/jsdl/2005/11/jsdl"
-JSDL_POSIX_NS = "http://schemas.ggf.org/jsdl/2005/11/jsdl-posix"
-DSIG_NS = "http://www.w3.org/2000/09/xmldsig#"
-
-def decodeTag(tag):
-    m = __tagPattern.match(tag)
-    return (m.group("nsuri"), m.group("local"))
-
-def Tag(local, ns=XSDL_NS):
-    return "{%s}%s" % (ns, local)
-
-# taken from http://effbot.org/zone/element-lib.htm
-class NS(object):
-    def __init__(self, uri):
-        self.__uri = uri
-    def __getattr__(self, tag):
-        return Tag(tag, self.__uri)
-    def __call__(self, path):
-        return "/".join([getattr(self, tag) for tag in path.split("/")])
-
-XSDL = NS(XSDL_NS)
-JSDL = NS(JSDL_NS)
-JSDL_POSIX = NS(JSDL_POSIX_NS)
-
-class TagNotUnderstood(Exception):
-    pass
+from xbe.xml.namespaces import *
 
 class XMLProtocol(object):
     """The base class of all here used client-protocols."""
@@ -59,17 +32,11 @@ class XMLProtocol(object):
         # a list of ({uri}localName) tuples that are
         # understood by the protocol
         self.__understood = []
-        self.addUnderstood(Tag("Error"))
+        self.addUnderstood(XSDL("Error"))
 
     def dispatch(self, elem, *args, **kw):
-	try:
-            if elem.tag not in self.__understood:
-                raise TagNotUnderstood("i cannot handle elements with the %s tag" % (elem.tag))
-            method_name = "do_%s" % (decodeTag(elem.tag)[1])
-	    method = getattr(self, method_name)
-	except Exception, e:
-            return defer.fail(e)
-        return threads.deferToThread(method, elem, *args, **kw)
+        method = getattr(self, "do_%s" % (decodeTag(elem.tag)[1]))
+        return method(elem, *args, **kw)
 
     def addUnderstood(self, tag):
         if tag not in self.__understood:
@@ -105,59 +72,44 @@ class XMLProtocol(object):
              * a method is looked up according to the 'tag' of the root element
                or the first direct child that 
         """
-        
-        d = self._messageReceived(msg)
+        d = defer.maybeDeferred(self._messageReceived, msg)
         d.addBoth(self.transformResultToMessage)
         d.addCallback(self.sendMessage)
         return d
 
     def _messageReceived(self, msg):
 	"""Handle a received message."""
-        try:
-            r = etree.fromstring(msg.body)
-            self.__root = r
-
-            # check the message
-            if r.tag != Tag("Message"):
-                return self.dispatch(r)
-
-            if len(r) > 1:
-                return defer.fail(
-                    ValueError(
-                    "too many elements found (%d), sorry (only one subelement supported)" % (len(r))))
-            return self.dispatch(r[0])
-        except Exception, e:
-            return defer.fail(failure.Failure(e))
+        return self.dispatch(etree.fromstring(msg.body))
 
     # some default xml-element handler
+    #
+    def do_Message(self, msg):
+        # handle a XBE-Message
+        #
+        # try to split the message up into header and body
+        #
+        # else handle just the first element
+        header = msg.find(XBE("MessageHeader"))
+        if header is not None:
+            log.debug("got new style message")
+        else:
+            return self.dispatch(msg[0])
+        
     def do_Error(self, err):
         log.debug("got error:\n%s" % (etree.tostring(err)))
 
-__tagPattern = re.compile(r"^(?P<nsuri>{.*})?(?P<local>.*)$")
-
-def getChild(elem, name, ns=XSDL):
-    return elem.find(ns(name))
-
-def NodeToString(node):
-    node.normalize()
-    buf = StringIO()
-    PrettyPrint(node, indent='  ', stream=buf)
-    buf.flush()
-    buf.seek(0,0)
-    return buf.getvalue()
-        
 class XenBEEMessage(object):
     """Encapsulates a xml message."""
     def __init__(self, namespace=XSDL_NS, prefix="xsdl"):
         """Initialize a XML message using the given namespace and prefix."""
-        self.__ns = namespace
+        self.__ns = NS(namespace)
         self.__prefix = prefix
-        self.root = etree.Element(Tag("Message", namespace), nsmap={ prefix: namespace } )
+        self.root = etree.Element(self.__ns("Message"), nsmap={ prefix: namespace})
 
     def createElement(self, tag, parent=None, text=None):
         """Utility function to create a new element for this message."""
         if parent == None: parent = self.root
-        e = etree.SubElement(parent, Tag(tag, self.__ns))
+        e = etree.SubElement(parent, self.__ns(tag))
         if text != None:
             e.text = str(text)
         return e
@@ -220,7 +172,7 @@ class XenBEEError(XenBEEMessage):
         self.errcode = errcode
 
 	error = self.createElement("Error", self.root)
-        error.attrib[Tag("code")] = str(self.errcode.value)
+        error.attrib[XSDL("code")] = str(self.errcode.value)
 	errorCode = self.createElement("ErrorCode", error, str(self.errcode.value))
 	errorName = self.createElement("ErrorName", error, self.errcode.name)
 	errorMessage = self.createElement("ErrorMessage", error, self.msg)

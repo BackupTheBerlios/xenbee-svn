@@ -14,76 +14,6 @@ from twisted.internet import defer
 from twisted.python import failure
 from twisted.enterprise.adbapi import ConnectionPool
 
-from Queue import Queue
-
-class DBWorker(threading.Thread):
-    def __init__(self, dbpath):
-        threading.Thread.__init__(self)
-        self.path = dbpath
-        self.queue = Queue()
-        self.con = None
-
-    def submit(self, stmt, *args):
-        d = self.submit_nowait(stmt, *args)
-        self.queue.join()
-        return d
-    
-    def submit_nowait(self, stmt, *args):
-        d = defer.Deferred()
-        self.queue.put( (stmt, args, d) )
-        return d
-
-    def wait(self):
-        self.queue.join()
-
-    def run(self):
-        # open database
-        self.con = self._initDB(self.path)
-
-        q = self.queue
-        while True:
-            stmt, args, d = q.get()
-            log.debug("got work to do: '%s', %s" % (stmt, args))
-            try:
-                cur = self.con.cursor()
-                cur.execute(stmt, args)
-                self.con.commit()
-                res = cur.fetchall()
-                log.debug("result: %s" % str(res))
-                d.callback(res)
-            except dbapi.DatabaseError, dbe:
-                log.fatal("data base error: %s" % dbe)
-                d.errback(failure.Failure(dbe))
-            except Exception, e:
-                log.error("task could not be fullfilled: %s" % e)
-                d.errback(failure.Failure(e))
-            q.task_done()
-            log.debug("finished with this piece")
-
-    def _initDB(self, path):
-        con = dbapi.connect(path)
-        self._initTables(con)
-        return con
-
-    def _initTables(self, con):
-        cur = con.cursor()
-
-        try:
-            # create table here
-            #
-            #  id (pkey)    | uuid    | type |
-            cur.execute("""
-            CREATE TABLE files (
-               uuid varchar NOT NULL,
-               type varchar NOT NULL DEFAULT "data",
-               description varchar DEFAULT "",
-               primary key (uuid)
-            )""")
-        except:
-            # table already exists
-            pass
-        con.commit()
-                        
 class CacheException(Exception):
     pass
 
@@ -116,6 +46,28 @@ class Cache(object):
         self.__cacheDir = cache_dir
         self.__db = ConnectionPool("pysqlite2.dbapi2", os.path.join(cache_dir, "cache.db"))
 
+    def __initTables(self, transaction):
+        try:
+            # create table here
+            #
+            #  id (pkey)    | uuid    | type | description | uri
+            transaction.execute("""
+            CREATE TABLE files (
+               uuid varchar NOT NULL,
+               type varchar NOT NULL DEFAULT "data",
+               uri varchar NOT NULL,
+               description varchar DEFAULT "",
+               hash varchar DEFAULT "",
+               primary key (uuid)
+            )""")
+            log.info("table 'files' has been created.")
+        except Exception, e:
+            log.debug(e)
+        return True
+
+    def initializeDatabase(self):
+        return self.__db.runInteraction(self.__initTables)
+
 #        # log statistics
 #        sb = [ "",
 #               "Cache statistics",
@@ -146,13 +98,13 @@ class Cache(object):
         try:
             m = getattr(self, "cache_%s" % (type))
         except AttributeError, ae:
-            raise InvalidTypeException(type)
+            return defer.fail(failure.Failure(InvalidTypeException(type)))
         try:
             meta.update(kw)
             meta["description"] = description
             return m(uri, **meta)
-        except Exception:
-            raise
+        except Exception, e:
+            return defer.fail(failure.Failure(e))
 
     def getEntries(self):
         return self.__db.runQuery("SELECT uuid, type, description FROM files")
@@ -167,6 +119,7 @@ class Cache(object):
         if not self.__operationAllowed('remove', entry, cred):
             return defer.fail(failure.Failure(
                 PermissionDenied("not allowed to remove entry %s" % entry)))
+        
         return self.__db.runOperation("DELETE FROM files WHERE uuid = ?", (entry,))
 
     def lookupByUUID(self, uuid):
@@ -193,11 +146,42 @@ class Cache(object):
         uid = uuid()
         dst = self.__buildFileName(uid)
 
-        # define the callbacks
-        def _s(arg): # success
-            self.__insertEntry(uid, type, **meta_info)
-            return uid
-        return self.__retrieveFile(uri, dst).addCallback(_s)
+        # the following sequence does the following:
+        #     - use a DataStager to retrieve the uri (returns 'dst' path)
+        #     - after that, compute a hash value for the dst (returns (path, hash) tuple)
+        #     - transform 'dst' into a local file uri (returns (uri, hash))
+        #     - insert into the DB
+        # the function returns a Deferred which fires the 'uuid' of the entry
+        return self.__retrieveFile(uri, dst)\
+               .addCallback(self.__cb_computeHash)\
+               .addCallback(lambda ph: ("file://"+ph[0], ph[1]))\
+               .addCallback(self.__cb_insertEntry, uid, type, **meta_info)\
+               .addCallback(lambda _: uid)\
+               .addErrback(self.__cb_cleanUpFileOnError, dst)
+
+    def __cb_cleanUpFileOnError(self, err, dst):
+        log.error("something went wrong: %s" % (err.getErrorMessage()))
+        # remove the file from the cache directory
+        directory = os.path.dirname(dst)
+        log.info("removing cache entry from filesystem: %s" % (directory))
+        from xbe.util import removeDirCompletely as rm_rf
+        rm_rf(directory)
+        return err
+
+    def __cb_computeHash(self, path):
+        import hashlib
+        algo = hashlib.sha1()
+        algo.update(open(path).read())
+        return (path, algo.hexdigest())
+
+    def __cb_insertEntry(self, uri_hash, uid, type, **meta_info):
+        return self.__db.runOperation("""\
+            INSERT INTO files (uuid, type, uri, hash, description)
+                    VALUES (?, ?, ?, ?, ?)""", (uid,
+                                                type,
+                                                uri_hash[0],
+                                                uri_hash[1],
+                                                meta_info["description"]))
 
     def cache_data(self, uri, **meta_info):
         return self.__cache_helper(uri, "data", **meta_info)
@@ -217,8 +201,3 @@ class Cache(object):
         from xbe.util.staging import DataStager
         ds = DataStager(uri, dst)
         return ds.perform()
-
-    def __insertEntry(self, uid, type, **meta_info):
-        return self.__db.runOperation("""\
-            INSERT INTO files (uuid, type, description)
-                    VALUES (?, ?, ?)""", (uid, type, meta_info["description"]))
