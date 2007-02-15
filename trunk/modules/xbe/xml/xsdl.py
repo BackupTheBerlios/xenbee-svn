@@ -20,9 +20,11 @@ try:
 except:
     from StringIO import StringIO
 
-XSDL_NS = "http://www.example.com/schemas/xsdl/2007/01/xsdl"
+XBE_NS  = "http://www.example.com/schemas/xbe/2007/01/xbe"
+XSDL_NS = "http://www.example.com/schemas/xbe/2007/01/xsdl"
 JSDL_NS = "http://schemas.ggf.org/jsdl/2005/11/jsdl"
 JSDL_POSIX_NS = "http://schemas.ggf.org/jsdl/2005/11/jsdl-posix"
+DSIG_NS = "http://www.w3.org/2000/09/xmldsig#"
 
 def decodeTag(tag):
     m = __tagPattern.match(tag)

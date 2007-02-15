@@ -16,13 +16,27 @@ class XBEDaemon(Daemon):
 	"""Initializes the Daemon."""
         Daemon.__init__(self, pidfile="/var/run/xbed.pid", umask=0007, name="xbed", user="root", group="root")
         p = self.parser
-        p.add_option("-H", "--host", dest="host", type="string", default="localhost", help="the STOMP server")
-        p.add_option("-p", "--port", dest="port", type="int", default=61613, help="the STOMP port")
-        p.add_option("-b", "--backend", dest="backend", type="string", default="xen", help="the backend to be used")
-        p.add_option("-s", "--spool", dest="spool", type="string", default="/srv/xen-images/xenbee", help="the spool directory to use")
-        p.add_option("-l", "--logfile", dest="logfile", type="string", default="/var/log/xenbee/xbed.log", help="the logfile to use")
-        p.add_option("-D", "--no-daemonize", dest="daemonize", action="store_false", default=True, help="do not daemonize")
-        p.add_option("--pidfile", dest="pidfile", type="string", default="/var/run/xbed.pid", help="the pidfile to use")
+        p.add_option(
+            "-H", "--host", dest="host", type="string", default="localhost",
+            help="the STOMP server")
+        p.add_option(
+            "-p", "--port", dest="port", type="int", default=61613,
+            help="the STOMP port")
+        p.add_option(
+            "-b", "--backend", dest="backend", type="string", default="xen",
+            help="the backend to be used")
+        p.add_option(
+            "-s", "--spool", dest="spool", type="string", default="/srv/xen-images/xenbee",
+            help="the spool directory to use")
+        p.add_option(
+            "-l", "--logfile", dest="logfile", type="string", default="/var/log/xenbee/xbed.log",
+            help="the logfile to use")
+        p.add_option(
+            "-D", "--no-daemonize", dest="daemonize", action="store_false", default=True,
+            help="do not daemonize")
+        p.add_option(
+            "--pidfile", dest="pidfile", type="string", default="/var/run/xbed.pid",
+            help="the pidfile to use")
 
     def configure(self):
         self.daemonize = self.opts.daemonize
@@ -69,6 +83,13 @@ class XBEDaemon(Daemon):
         from xbe.xbed.scheduler import Scheduler
         self.scheduler = Scheduler(self.taskManager)
         log.info("  done.")
+
+        log.info("initializing login portal...")
+        from twisted.cred.port import Portal
+        from twisted.cred.checkers import FilePasswordDB
+#        self.portal = Portal
+#        checker = FilePasswordDB("/root/xenbee/etc/passwd")
+#        self.portal.registerChecker(checker)
 
         from twisted.internet import reactor
         from xbe.xbed.proto import XenBEEDaemonProtocolFactory
