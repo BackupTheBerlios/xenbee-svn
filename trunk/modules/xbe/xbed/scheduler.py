@@ -111,7 +111,7 @@ class Scheduler:
                     self.__preparing.remove(task)
                     # XXX: task has failed
                     self.unlock()
-                    self.taskFailed(task, err)
+                    task.failed(err)
                 task.prepare().addCallback(self.taskPrepared).addErrback(_f)
             finally:
                 self.unlock()

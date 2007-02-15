@@ -12,6 +12,8 @@ from xbe.util.uuid import uuid
 from xbe.util.database import dbapi
 from twisted.internet import defer
 from twisted.python import failure
+from twisted.enterprise.adbapi import ConnectionPool
+
 from Queue import Queue
 
 class DBWorker(threading.Thread):
@@ -41,12 +43,14 @@ class DBWorker(threading.Thread):
         q = self.queue
         while True:
             stmt, args, d = q.get()
-            log.debug("got work to do: '%s'" % (stmt))
+            log.debug("got work to do: '%s', %s" % (stmt, args))
             try:
                 cur = self.con.cursor()
                 cur.execute(stmt, args)
                 self.con.commit()
-                d.callback(cur.fetchall())
+                res = cur.fetchall()
+                log.debug("result: %s" % str(res))
+                d.callback(res)
             except dbapi.DatabaseError, dbe:
                 log.fatal("data base error: %s" % dbe)
                 d.errback(failure.Failure(dbe))
@@ -110,9 +114,7 @@ class Cache(object):
             if not stat.S_ISDIR(os.stat(cache_dir)[stat.ST_MODE]):
                 raise RuntimeError("`%s' already exists and does not seem to be a directory!" % _dir)
         self.__cacheDir = cache_dir
-        self.__worker = DBWorker(os.path.join(cache_dir, "cache.db"))
-        self.__worker.setDaemon(True)
-        self.__worker.start()
+        self.__db = ConnectionPool("pysqlite2.dbapi2", os.path.join(cache_dir, "cache.db"))
 
 #        # log statistics
 #        sb = [ "",
@@ -153,7 +155,7 @@ class Cache(object):
             raise
 
     def getEntries(self):
-        return self.__worker.submit("SELECT uuid, type, description FROM files")
+        return self.__db.runQuery("SELECT uuid, type, description FROM files")
 
     def remove(self, entry, cred=None):
         """Remove a given entry from the cache.
@@ -163,17 +165,17 @@ class Cache(object):
         """
         # TODO: check credentials for permission
         if not self.__operationAllowed('remove', entry, cred):
-            raise PermissionDenied("not allowed to remove entry %s" % entry)
-        return self.__worker.submit("DELETE FROM files WHERE uuid = ?", entry)
+            return defer.fail(failure.Failure(
+                PermissionDenied("not allowed to remove entry %s" % entry)))
+        return self.__db.runOperation("DELETE FROM files WHERE uuid = ?", (entry,))
 
     def lookupByUUID(self, uuid):
         def __buildURI(rows):
             if not len(rows):
-                raise ValueError("no cache entry found")
-            path = os.path.join(self.__cacheDir, rows[0][0])
-            path = os.path.join(path, "data")
+                raise LookupError("no cache entry found for uuid: %s" % (uuid,))
+            path = self.__buildFileName(rows[0][0])
             return "file://" + path
-        return self.__lookup("uuid = ?", uuid).addCallback(__buildURI)
+        return self.__lookup("uuid = ?", (uuid,)).addCallback(__buildURI)
         
     def lookupByType(self, type):
         def __buildTypes(rows):
@@ -181,7 +183,7 @@ class Cache(object):
         return self.__lookup("type = ?", type).addCallback(__buildTypes)
 
     def __lookup(self, where_clause, *args):
-        return self.__worker.submit("SELECT uuid FROM files WHERE %s" % (where_clause), *args)
+        return self.__db.runQuery("SELECT uuid FROM files WHERE %s" % (where_clause), *args)
 
     def __operationAllowed(self, operation, entry, cred):
         log.info("TODO: implement credentials")
@@ -217,6 +219,6 @@ class Cache(object):
         return ds.perform()
 
     def __insertEntry(self, uid, type, **meta_info):
-        return self.__worker.submit("""\
+        return self.__db.runOperation("""\
             INSERT INTO files (uuid, type, description)
-                    VALUES (?, ?, ?)""", uid, type, meta_info["description"])
+                    VALUES (?, ?, ?)""", (uid, type, meta_info["description"]))

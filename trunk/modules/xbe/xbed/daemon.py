@@ -85,7 +85,7 @@ class XBEDaemon(Daemon):
         log.info("  done.")
 
         log.info("initializing login portal...")
-        from twisted.cred.port import Portal
+        from twisted.cred.portal import Portal
         from twisted.cred.checkers import FilePasswordDB
 #        self.portal = Portal
 #        checker = FilePasswordDB("/root/xenbee/etc/passwd")

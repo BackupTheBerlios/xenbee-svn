@@ -8,7 +8,7 @@ from xbe.cached.cache import Cache
 path = "/srv/xen-images/xenbee/cache"
 
 if len(sys.argv) < 3:
-    print >>sys.stderr, "usage:", sys.argv[0], "file", "{image,kernel,initrd,data}", "[description]"
+    print >>sys.stderr, "usage:", sys.argv[0], "uri", "{image,kernel,initrd,data}", "[description]"
     sys.exit(1)
 
 uri, fileType = sys.argv[1:3]
@@ -28,5 +28,5 @@ def _f(err):
     print err.getErrorMessage()
     reactor.stop()
 
-cache.cache("file://"+uri, fileType, desc).addCallback(_s).addErrback(_f)
+cache.cache(uri, fileType, desc).addCallback(_s).addErrback(_f)
 reactor.run()
