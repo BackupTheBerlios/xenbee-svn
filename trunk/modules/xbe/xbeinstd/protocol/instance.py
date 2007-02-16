@@ -8,25 +8,26 @@ from twisted.internet import reactor
 from xbe.proto import XenBEEProtocolFactory, XenBEEProtocol
 from xbe.xbeinstd.protocol.process import XBEProcessProtocol
 from xbe.xml import xsdl
+from xbe.xml.namespaces import XBE, XSDL, JSDL, JSDL_POSIX
 
 class XBEInstProtocol(xsdl.XMLProtocol):
     def __init__(self, transport):
         self.proc = None
         xsdl.XMLProtocol.__init__(self,transport)
-        self.addUnderstood(xsdl.JSDL("JobDefinition"))
+        self.addUnderstood(JSDL("JobDefinition"))
 
     def do_JobDefinition(self, job_def):
-        desc = job_def.find(xsdl.JSDL("JobDescription"))
+        desc = job_def.find(JSDL("JobDescription"))
 
-        j_name = desc.findtext(xsdl.JSDL("JobIdentification/JobName"))
-        j_desc = desc.findtext(xsdl.JSDL("JobIdentification/Description"))
+        j_name = desc.findtext(JSDL("JobIdentification/JobName"))
+        j_desc = desc.findtext(JSDL("JobIdentification/Description"))
 
-        app = job_def.find(xsdl.XSDL("InstanceDefinition/InstanceDescription") + "/" +
-                           xsdl.JSDL("Application"))
-        posixApp = app.find(xsdl.JSDL_POSIX("POSIXApplication"))
-        executable = posixApp.findtext(xsdl.JSDL_POSIX("Executable"))
+        app = job_def.find(XSDL("InstanceDefinition/InstanceDescription") + "/" +
+                           JSDL("Application"))
+        posixApp = app.find(JSDL_POSIX("POSIXApplication"))
+        executable = posixApp.findtext(JSDL_POSIX("Executable"))
             
-        args = [(n.text or "").strip() for n in posixApp.findall(xsdl.JSDL_POSIX("Argument"))]
+        args = [(n.text or "").strip() for n in posixApp.findall(JSDL_POSIX("Argument"))]
         cmdline = [ executable ]
         cmdline.extend(args)
         log.info("executing task: " + `cmdline`)

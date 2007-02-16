@@ -22,6 +22,7 @@ from optparse import OptionParser
 from textwrap import dedent
 
 from xbe.xml import xsdl
+from xbe.xml.namespaces import XBE, XSDL, JSDL
 from lxml import etree
 
 URI_PATTERN = r'((?P<prot>[a-zA-Z]+)://)?(?P<path>.*)'
@@ -112,16 +113,16 @@ class RemoteCommand(Command):
     def handleMessage(self, msg):
         """handles the given message from the STOMP server."""
         xml = etree.fromstring(msg.body)
-        if xml[0].tag == xsdl.Tag("Error"):
+        if xml[0].tag == XBE("Error"):
             self._handleError(xml[0])
         else:
             self._handleMessage(xml[0])
             reactor.stop()
 
     def _handleError(self, err):
-        errcode = int(err.findtext(xsdl.XSDL("ErrorCode")))
-        errname = err.findtext(xsdl.XSDL("ErrorName"))
-        errmsg  = err.findtext(xsdl.XSDL("ErrorMessage"))
+        errcode = int(err.findtext(XSDL("ErrorCode")))
+        errname = err.findtext(XSDL("ErrorName"))
+        errmsg  = err.findtext(XSDL("ErrorMessage"))
         if errcode != 200:
             raise CommandFailed("[Code %d]: %s - %s" % (errcode, errname, errmsg))
         else:
@@ -220,44 +221,44 @@ class Command_create(RemoteCommand):
         
 
         # build xml message
-        inst_def = etree.Element(xsdl.XSDL("InstanceDefinition"), nsmap={"xsdl": xsdl.XSDL_NS})
-        inst_des = etree.SubElement(inst_def, xsdl.XSDL("InstanceDescription"))
+        inst_def = etree.Element(XSDL("InstanceDefinition"), nsmap={"xsdl": XSDL_NS})
+        inst_des = etree.SubElement(inst_def, XSDL("InstanceDescription"))
 
         # add all files that have to be retrieved
-        files = etree.SubElement(inst_des, xsdl.XSDL("Files"))
+        files = etree.SubElement(inst_des, XSDL("Files"))
 
         fileMap = {}
         ctr = 1
         for uri in [self.options.kernel, self.options.initrd, self.options.image]:
             ref = "file-%d" % (ctr,)
-            f_elem = etree.SubElement(files, xsdl.XSDL("File"))
-            f_elem.attrib[xsdl.Tag("id")] = ref
-            etree.SubElement(f_elem, xsdl.XSDL("URI")).text = uri
+            f_elem = etree.SubElement(files, XSDL("File"))
+            f_elem.attrib[XSDL("id")] = ref
+            etree.SubElement(f_elem, XSDL("URI")).text = uri
 
             fileMap[uri] = ref
             ctr += 1
 
         # startup parameters
-        startup = etree.SubElement(inst_des, xsdl.XSDL("StartupParameters"))
-        kernel = etree.SubElement(startup, xsdl.XSDL("Kernel"))
-        kernel.attrib[xsdl.Tag("file-ref")] = fileMap[self.options.kernel]
+        startup = etree.SubElement(inst_des, XSDL("StartupParameters"))
+        kernel = etree.SubElement(startup, XSDL("Kernel"))
+        kernel.attrib[XSDL("file-ref")] = fileMap[self.options.kernel]
 
-        kernel = etree.SubElement(startup, xsdl.XSDL("Initrd"))
-        kernel.attrib[xsdl.Tag("file-ref")] = fileMap[self.options.initrd]
+        kernel = etree.SubElement(startup, XSDL("Initrd"))
+        kernel.attrib[XSDL("file-ref")] = fileMap[self.options.initrd]
 
-        images = etree.SubElement(startup, xsdl.XSDL("Images"))
+        images = etree.SubElement(startup, XSDL("Images"))
         for image in [self.options.image]:
-            i_elem = etree.SubElement(images, xsdl.XSDL("Image"))
-            i_elem.attrib[xsdl.Tag("file-ref")] = fileMap[image]
+            i_elem = etree.SubElement(images, XSDL("Image"))
+            i_elem.attrib[XSDL("file-ref")] = fileMap[image]
 
         # runtime parameter
-        runtime = etree.SubElement(inst_des, xsdl.XSDL("RuntimeParameters"))
+        runtime = etree.SubElement(inst_des, XSDL("RuntimeParameters"))
         if self.options.keep_instance:
-            etree.SubElement(runtime, xsdl.XSDL("keep-running"))
+            etree.SubElement(runtime, XSDL("keep-running"))
 
         # move the jsdl:Application to the instance
-        jsdl_job_desc = jsdl.find(xsdl.JSDL("JobDescription"))
-        jsdl_app = jsdl_job_desc.find(xsdl.JSDL("Application"))
+        jsdl_job_desc = jsdl.find(JSDL("JobDescription"))
+        jsdl_app = jsdl_job_desc.find(JSDL("Application"))
         
         jsdl_job_desc.remove(jsdl_app)
         inst_des.append(jsdl_app)
@@ -356,10 +357,10 @@ class Command_showcache(RemoteCommand):
         """handles the cache entries message."""
         fmt = "%-60s  %-10s %s"
         print fmt % (" URI", "DATA-TYPE", "DESCRIPTION")
-        for entry in msg.findall(xsdl.XSDL("Entry")):
-            uri = entry.findtext(xsdl.XSDL("URI"))
-            type = entry.findtext(xsdl.XSDL("Type"))
-            desc = entry.findtext(xsdl.XSDL("Description"))
+        for entry in msg.findall(XSDL("Entry")):
+            uri = entry.findtext(XSDL("URI"))
+            type = entry.findtext(XSDL("Type"))
+            desc = entry.findtext(XSDL("Description"))
             print fmt % (uri, type, desc)
 
 class Command_submit(RemoteCommand):

@@ -6,6 +6,8 @@ Several important namespaces
 __version__ = "$Rev$"
 __author__ = "$Author$"
 
+import re
+
 # taken from http://effbot.org/zone/element-lib.htm
 class NS(object):
     def __init__(self, uri):
@@ -26,6 +28,7 @@ def decodeTag(tag):
 
 
 XBE_NS  = "http://www.example.com/schemas/xbe/2007/01/xbe"
+XBE_SEC_NS  = "http://www.example.com/schemas/xbe/2007/01/xbe-sec"
 XSDL_NS = "http://www.example.com/schemas/xbe/2007/01/xsdl"
 JSDL_NS = "http://schemas.ggf.org/jsdl/2005/11/jsdl"
 JSDL_POSIX_NS = "http://schemas.ggf.org/jsdl/2005/11/jsdl-posix"
@@ -35,3 +38,5 @@ XBE  = NS(XBE_NS)
 XSDL = NS(XSDL_NS)
 JSDL = NS(JSDL_NS)
 JSDL_POSIX = NS(JSDL_POSIX_NS)
+DSIG = NS(DSIG_NS)
+XBE_SEC = NS(XBE_SEC_NS)
