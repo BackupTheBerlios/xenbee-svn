@@ -23,7 +23,7 @@ except:
 from xbe.xml.namespaces import *
 
 class XMLProtocol(object):
-    """The base class of all here used client-protocols."""
+    """The base class of all client-protocols that are used here."""
 
     def __init__(self, transport):
         self.transport = transport
@@ -92,6 +92,7 @@ class XMLProtocol(object):
         header = msg.find(XBE("MessageHeader"))
         if header is not None:
             log.debug("got new style message")
+            
         else:
             return self.dispatch(msg[0])
         

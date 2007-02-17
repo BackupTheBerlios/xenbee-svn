@@ -5,7 +5,7 @@
 __version__ = "$Rev$"
 __author__ = "$Author$"
 
-import unittest, os, sys
+import unittest, os, sys, base64
 from xbe.xml.security import *
 from lxml import etree
 from xbe.xml.namespaces import XBE
@@ -22,6 +22,10 @@ class ExampleData(object):
 	return X509Certificate.load(ExampleData.cert,
 				    ExampleData.priv_key)
     get_sample_cert = classmethod(get_sample_cert)
+
+    text = """The quick brown fox jumps over the lazy dog"""
+    text_sig = """NKfK302gpJwtXe5nnUs3dVjUktnrcVPiJn7xH/LMGjGFTZ+2+482NkxoTHikdrvemBagunBwxKBXTrmntcpUz/kPVNAHdO9Ola/YImIRZntiS3GQ4/OGODaQ4jlnPQPsolNwRdZVzBFY8pbFl0KoQqgcK2367mVWF2FEZmArZRlx3C1Yhqy9AUWfbF78ERFfRE7D5jIIz1FJlZVMw2L7h53Awu1Rw1agvkgR0yvLhWe7rcFNQUFziqJuDEzk7KFq+oH38Hx+VPqWXoLI3JFS1N+d6aaMJKOR6ynjRGUXb+iWlUAdAmLhT8vktcqu/mrhh8omqpqK2NTldJ9NoV5bKA=="""
+    
 
     cert = """\
 -----BEGIN CERTIFICATE-----
@@ -197,8 +201,7 @@ Yj30VN3oen0CEF/RMt8D
 class TestCertificate(unittest.TestCase):
 
     def setUp(self):
-	self.data = "The quick brown fox jumps over the lazy dog"
-	self.data_sig = """NKfK302gpJwtXe5nnUs3dVjUktnrcVPiJn7xH/LMGjGFTZ+2+482NkxoTHikdrvemBagunBwxKBXTrmntcpUz/kPVNAHdO9Ola/YImIRZntiS3GQ4/OGODaQ4jlnPQPsolNwRdZVzBFY8pbFl0KoQqgcK2367mVWF2FEZmArZRlx3C1Yhqy9AUWfbF78ERFfRE7D5jIIz1FJlZVMw2L7h53Awu1Rw1agvkgR0yvLhWe7rcFNQUFziqJuDEzk7KFq+oH38Hx+VPqWXoLI3JFS1N+d6aaMJKOR6ynjRGUXb+iWlUAdAmLhT8vktcqu/mrhh8omqpqK2NTldJ9NoV5bKA=="""
+
         self.ca = X509Certificate.load(ExampleData.ca_cert)
         
     def test_load(self):
@@ -211,13 +214,13 @@ class TestCertificate(unittest.TestCase):
     def test_signing(self):
 	"""Tests whether siging as such works."""
 	cert = ExampleData.get_sample_cert()
-	sig = cert.msg_signature(self.data)
-	self.assertEqual(self.data_sig, sig)
+	sig = cert.msg_signature(ExampleData.text)
+	self.assertEqual(ExampleData.text_sig, sig)
 
     def test_validate(self):
 	cert = ExampleData.get_sample_cert()
 	try:
-	    cert.msg_validate(self.data, self.data_sig)
+	    cert.msg_validate(ExampleData.text, ExampleData.text_sig)
 	except Exception:
 	    self.fail("validation failed")
 
@@ -281,29 +284,42 @@ class TestSecurityLayer(unittest.TestCase):
         m = self.__build_empty_body_message()
         bod = m.find(XBE("MessageBody"))
         etree.SubElement(bod, "TestData").text = \
-                              "The quick brown fox jumps over the lazy dog"
+                              """The quick brown fox jumps over the lazy dog"""
         return m
 
-    def test_sign_encrypt(self):
-        pipe = X509SecurityLayer(self.cert, self.cert, []) # encrypt to myself
-        msg = pipe.sign_encrypt(self.msg)
-    
-    def test_validate_decrypt(self):
-        pipe = X509SecurityLayer(self.cert, self.cert, [self.ca]) # encrypt to myself
-        recv_msg = pipe.validate_decrypt(
-            pipe.sign_encrypt(self.msg))
+    def test_sign(self):
+        pipe = X509SecurityLayer(self.cert, self.cert, [])
+        msg = pipe.sign(self.msg)
+        expected_sig = "fLKOiUJUc2ZpOpELRYFK0woiH5l8z4CHiArnOYH5sr1EO3PLx+SpfDaY9kUPE7m3gXQSZjlWPm/9LkeGTKYyZyLA4xuL/Jma9kpCZplW6A38HyJzxek5E4lq1gtDjaIlvrA4bGgLFWF8rljIxX+T4O3QQvvRAeXTSs3pxeRJ+ioYxaN8/TfNLS93oN159EsgT5ZHjtdT8NjlyAft7uL7ZsllAgxQmoRiM+mD4BmQp1eEmwq28sp0ssaP2xat9K7pjG4Fxsq15FV1m7fbAMi52Qp5aRb8+nboaA7Xt6A2HUH2vT2Sl1n76K01qXv5SIdj/Zt9f3BV+e0OogOzqv5jIg=="
+        sig = msg.findtext(XBE("MessageHeader")+"/"+
+                       XBE_SEC("SecurityInformation")+"/"+
+                       DSIG("Signature/SignatureValue"))
+        self.assertEqual(expected_sig, sig)
 
-        # compare only the body
-        b_sent = self.msg.find(XBE("MessageBody"))
-        b_recv = recv_msg.find(XBE("MessageBody"))
-        self.assertEqual(etree.tostring(b_sent), etree.tostring(b_recv))
+    def test_validate(self):
+        pipe = X509SecurityLayer(self.cert, self.cert, [self.ca]) # encrypt to myself
+        recv_msg = pipe.validate(pipe.sign(self.msg))
+
+    def test_novalidate(self):
+        pipe = X509SecurityLayer(self.cert, self.cert, [])
+        try:
+            recv_msg = pipe.validate(pipe.sign(self.msg))
+        except ValidationError, ve:
+            pass
+        else:
+            self.fail("ValidationError expected")
+
+    def test_noinclude_cert(self):
+        pipe = X509SecurityLayer(self.cert, None, [self.ca])
+        send_msg = pipe.sign(self.msg, include_certificate=True)
+        recv_msg = pipe.validate(send_msg)
+        print etree.tostring(recv_msg)
 
     def test_validate_decrypt_empty_body(self):
         pipe = X509SecurityLayer(self.cert, self.cert, [self.ca]) # encrypt to myself
         msg = self.__build_empty_body_message()
-        recv_msg = pipe.validate_decrypt(
-            pipe.sign_encrypt(msg))
-
+        recv_msg = pipe.validate_and_decrypt(
+            pipe.sign_and_encrypt(msg))
         # compare only the body
         b_sent = msg.find(XBE("MessageBody"))
         b_recv = recv_msg.find(XBE("MessageBody"))
@@ -312,19 +328,61 @@ class TestSecurityLayer(unittest.TestCase):
     def test_validate_decrypt_no_body(self):
         pipe = X509SecurityLayer(self.cert, self.cert, [self.ca]) # encrypt to myself
         msg = self.__build_no_body_message()
-        recv_msg = pipe.validate_decrypt(
-            pipe.sign_encrypt(msg))
+        recv_msg = pipe.validate_and_decrypt(
+            pipe.sign_and_encrypt(msg))
 
         # compare only the body
         b_sent = msg.find(XBE("MessageBody"))
         b_recv = recv_msg.find(XBE("MessageBody"))
         self.assertTrue(b_sent == None and b_recv == None)
         
+    def test_validate_decrypt_long_body(self):
+        pipe = X509SecurityLayer(self.cert, self.cert, [self.ca]) # encrypt to myself
+        msg = self.__build_empty_body_message()
+        bod = msg.find(XBE("MessageBody"))
+        bod.text = ExampleData.cert * 10
+
+        enc_msg = pipe.sign_and_encrypt(msg)
+        recv_msg = pipe.validate_and_decrypt(enc_msg)
+
+        # compare only the body
+        b_sent = msg.find(XBE("MessageBody"))
+        b_recv = recv_msg.find(XBE("MessageBody"))
+        self.assertEqual(etree.tostring(b_sent), etree.tostring(b_recv))
+
+class TestCipher(unittest.TestCase):
+    def setUp(self):
+        self.cert = ExampleData.get_sample_cert()
+        self.ca = X509Certificate.load(ExampleData.ca_cert)
+
+    def tearDown(self):
+        pass
+
+    def test_cipher_encrypt(self):
+        enc = Cipher(key="01234", IV="0", do_encryption=True)
+        expected = "Eaes3PgLelEOzQTyf8VBXuurFkeqOnKEfCL+hMi6JPq0UsT7Lj8oWY4w8E/W+8yU"
+        encrypted = base64.b64encode(enc(ExampleData.text))
+        self.assertEqual(expected, encrypted)
+
+    def test_cipher_decrypt(self):
+        expected = ExampleData.text
+        encrypted = "Eaes3PgLelEOzQTyf8VBXuurFkeqOnKEfCL+hMi6JPq0UsT7Lj8oWY4w8E/W+8yU"
+        dec = Cipher(key="01234", IV="0", do_encryption=False)
+        decrypted = dec(base64.b64decode(encrypted))
+        self.assertEqual(expected, decrypted)
+
+    def test_cipher_encrypt_decrypt(self):
+        long_data = ExampleData.cert * 10
+        enc = Cipher(do_encryption=True)
+        dec = Cipher(key=enc.key(), do_encryption=False)
+        self.assertEqual(long_data, dec(enc(long_data)))
+        
 
 def suite():
     s1 = unittest.makeSuite(TestCertificate, 'test')
     s2 = unittest.makeSuite(TestSecurityLayer, 'test')
-    return unittest.TestSuite((s1,s2))
+    s3 = unittest.makeSuite(TestCipher, 'test')
+    return unittest.TestSuite((s1,s2,s3))
 
 if __name__ == '__main__':
     unittest.main()

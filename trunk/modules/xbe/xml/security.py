@@ -6,11 +6,11 @@ The Xen Based Execution Environment XML Messages
 __version__ = "$Rev$"
 __author__ = "$Author$"
 
-import logging
+import logging, random
 log = logging.getLogger(__name__)
 
 import base64, hashlib
-from M2Crypto import X509, RSA, BIO, m2
+from M2Crypto import X509, RSA, BIO, m2, EVP
 from lxml import etree
 from xbe.xml import cloneDocument
 from xbe.xml.namespaces import XBE, DSIG, XBE_SEC
@@ -35,7 +35,7 @@ class PrivateKeyCheckFailed(ValueError):
 class X509Certificate(object):
     """This class wraps around the M2Crypto.X509 class."""
 
-    def __init__(self, m2_x509, priv_key=None):
+    def __init__(self, m2_x509, priv_key=None, padding=RSA.pkcs1_padding):
         """Initialize a X.509 certificate using a M2Crypto X509 instance.
 
         if priv_key is given, too, this class may be used to sign/encrypt data.
@@ -49,6 +49,7 @@ class X509Certificate(object):
         if priv_key and not isinstance(priv_key, RSA.RSA):
             raise KeyCheckFailed("the private key must be a M2Crypto.RSA instance.")
         self.__priv_key = priv_key
+        self.__padding = padding
         
     def subject(self):
         return self.__x509.get_subject()
@@ -134,10 +135,10 @@ class X509Certificate(object):
 
         if encode is True (default), return the value in base64 encoding.
         """
-        cipher = self.pub_key().public_encrypt(data, 1)
+        cipher = self.pub_key().public_encrypt(data, self.__padding)
         if encode: cipher = base64.b64encode(cipher)
         return cipher
-
+        
     def msg_decrypt(self, cipher, decode=True):
         """return the decrypted value of the cipher.
 
@@ -147,7 +148,7 @@ class X509Certificate(object):
         if self.priv_key() is None:
             raise RuntimeError("decryption requires a private key, sorry.")
         if decode: cipher = base64.b64decode(cipher)
-        return self.priv_key().private_decrypt(cipher, 1)
+        return self.priv_key().private_decrypt(cipher, self.__padding)
 
     def as_der(self, encode=True):
         """return the x509 certificate as a X509_Stack in DER encoding."""
@@ -184,7 +185,69 @@ class X509Certificate(object):
         key = key_path and RSA.load_key(key_path)
         return cls(x509, key)
     load_from_files = classmethod(load_from_files)
-    
+
+class Cipher(object):
+    """wraps the EVP.Cipher class.
+
+    This class is needed to generate a symetric cipher algorithm. This
+    algorithm is then used to encrypt huge amounts of data using a
+    randomly generated key. The recipient gets the key encrypted with
+    his public-key.
+    """
+
+    ALG_DES_EDE3_CBC = "des_ede3_cbc"
+    def __init__(self, key=None, IV="", algorithm=ALG_DES_EDE3_CBC, do_encryption=None, encoding=None):
+        """Initialize a new Cipher object, that can be used to encrypt arbitrary data.
+
+        if key is None, asume encryption and generate a random key (128bit).
+        if do_encryption is None and key is None, asume encryption mode
+        if do_encryption is None and key is not None, asume decryption
+        if do_encryption is True, encrypt data
+        if do_encryption is False, decrypt data
+
+        encoding is a python-callable, that gets called on the data after/before encryption/decryption
+        the default is base64
+        """
+        if key is None:
+            # generate random key
+            key = str(random.randint(0,  0xffffffffffffffffffffffffffffffff))
+            if do_encryption is None:
+                # asume encryption
+                do_encryption = True
+            if encoding is None:
+                encoding = base64.b64encode
+        elif key is not None and do_encryption is None:
+            # asume decryption
+            do_encryption = False
+            if encoding is None:
+                encoding = base64.b64decode
+        assert (do_encryption is not None)
+
+        if encoding is None:
+            encoding = [base64.b64decode, base64.b64encode][do_encryption]
+        self.__encoding = encoding
+        self.__key = key
+        self.__IV = IV
+        self.__algorithm = algorithm
+        self.__evp_cipher = EVP.Cipher(algorithm, key, IV, op=int(do_encryption))
+
+    def key(self):
+        return self.__key
+    def IV(self):
+        return self.__IV
+
+    def __call__(self, data, final_part=True):
+        """calls the cipher algorithm with data and returns the result.
+
+        if final_part is True (default), concatenate the result of
+        'final' (call to the underlying implementation).
+        """
+        result = []
+        result.append(self.__evp_cipher.update(data))
+        if final_part:
+            result.append(self.__evp_cipher.final())
+        return "".join(result)
+
 class CertificateStore(object):
     instance = None
 
@@ -229,12 +292,24 @@ class ISecurityLayer(Interface):
     decrypt(msg)
     """
 
-    def sign_encrypt(msg):
+    def sign(msg, include_certificate):
+        """signs the given message."""
+
+    def validate(msg):
+        """validates the message using the signature within the message."""
+
+    def encrypt(msg):
+        """encrypt the given message."""
+
+    def decrypt(msg):
+        """decrypt the given message."""
+
+    def sign_and_encrypt(msg, include_certificate):
         """encrypts the message and adds a signature to the given message.
 
         returns the signed + encrypted."""
 
-    def validate_decrypt(msg):
+    def validate_and_decrypt(msg):
         """validates and decrypts the given msg.
 
         returns the validated and decrypted message.
@@ -248,10 +323,16 @@ class NullSecurityLayer:
     """
     implements(ISecurityLayer)
     
-    def sign_encrypt(self, msg):
+    def sign_and_encrypt(self, msg, include_certificate):
         return msg
 
-    def validate_decrypt(self, msg):
+    def validate_and_decrypt(self, msg):
+        return msg
+
+    def sign(self, msg, include_certificate):
+        return msg
+
+    def validate(self, msg):
         return msg
 
 class X509SecurityLayer:
@@ -278,13 +359,62 @@ class X509SecurityLayer:
         if not isinstance(my_cert, X509Certificate):
             raise CertificateCheckFailed("X509Certificate required, you gave me: %s" % (my_cert))
         self.__my_cert = my_cert
-        if not isinstance(other_cert, X509Certificate):
+        if other_cert and not isinstance(other_cert, X509Certificate):
             raise CertificateCheckFailed("X509Certificate required, you gave me: %s" % (other_cert))
         self.__other_cert = other_cert
         self.__ca_certs = ca_certs
 
 
-    def sign_encrypt(self, _msg):
+    def sign(self, msg, include_certificate=False):
+        _msg = cloneDocument(msg)
+        hdr = _msg.find(XBE("MessageHeader"))
+        if hdr is None:
+            raise ValueError("the message requires a header!")
+        nsmap = { "xbe": str(XBE),
+                  "xbe-sec": str(XBE_SEC),
+                  "dsig": str(DSIG) }
+        # append securityInformation
+        sec_info = etree.SubElement(hdr, XBE_SEC("SecurityInformation"), nsmap=nsmap)
+        dsig_sig = etree.SubElement(sec_info, DSIG("Signature"), nsmap=nsmap)
+        if include_certificate:
+            dsig_key = etree.SubElement(dsig_sig, DSIG("KeyInfo"))
+            etree.SubElement(dsig_key, DSIG("X509Certificate")).text = self.__my_cert.as_der()
+
+        # sign the whole message as it is right now and put it into the header
+        signature = self.__my_cert.msg_signature(etree.tostring(_msg))
+        etree.SubElement(dsig_sig, DSIG("SignatureValue")).text = signature
+        
+        return _msg
+
+    def validate(self, msg):
+        _msg = cloneDocument(msg)
+        
+        # validate everything
+        hdr = _msg.find(XBE("MessageHeader"))
+        sec_info = hdr.find(XBE_SEC("SecurityInformation"))
+        dsig = sec_info.find(DSIG("Signature"))
+
+        cert_text = dsig.findtext(DSIG("KeyInfo/X509Certificate"))
+        if cert_text:
+            self.__other_cert = X509Certificate.load_der(cert_text)
+        x509 = self.__other_cert
+
+        signature_value = dsig.find(DSIG("SignatureValue"))
+        dsig.remove(signature_value)
+
+        valid = False
+        # validate the x509 certificate
+        for ca in self.__ca_certs:
+            if ca.validate_certificate(x509):
+                valid = True; break
+        if not valid:
+            raise ValidationError("X.509 certificate could not be validated")
+            
+        # validate the signature
+        x509.msg_validate(etree.tostring(_msg), signature_value.text)
+        return _msg
+
+    def encrypt(self, msg):
         """Signs and encrypts the given messgage.
 
         my_cert needs to hold a X509 certificate *and* a private key.
@@ -304,105 +434,60 @@ class X509SecurityLayer:
         The result will look like:
         
         <xbe:Message>
-           <xbe:MessageHeader>
-              <xbe-sec:SecurityInformation>
-                  <dsig:Signature>
-                     <dsig:KeyInfo>
-                        <dsig:X509Certificate>
-                         <!-- base64 DER encoding of 'my_cert' -->
-                        </dsig:X509Certificate>
-                     </dsig:KeyInfo>
-                     <dsig:SignatureValue>
-                        <!-- base64 encoded signature of the whole message -->
-                     </dsig:SignatureValue>
-                  </dsig:Signature>
-              </xbe-sec:SecurityInformation>
-           </xbe:MessageHeader>
-           <xbe:MessageBody>
-              <xbe-sec:CipherData>
-                 <xbe-sec:CipherValue>
-                    <!-- base64 encoded encryption of real body -->
-                 </xbe-sec:CipherValue>
-              </xbe-sec:CipherData>
-           </xbe:MessageBody>
+          <xbe-sec:CipherData>
+            <!-- the following key is encrypted using the public key -->
+            <xbe-sec:CipherKey>base64 encoded encrypted symetric key</xbe-sec:CipherKey>
+            <xbe-sec:CipherValue>
+              <!-- base64 encoded encryption of real body using CipherKey -->
+            </xbe-sec:CipherValue>
+          </xbe-sec:CipherData>
         </xbe:Message>
         """
-        msg = cloneDocument(_msg)
-        hdr = msg.find(XBE("MessageHeader"))
-        if hdr is None:
-            raise ValueError("the message requires a header: '%s'" % (etree.tostring(hdr)))
-        bod = msg.find(XBE("MessageBody"))
-        if bod and len(bod) > 1:
-            raise ValueError("only one child element allowed in body.")
+        # generate a Cipher algorithm
+        cipher = Cipher(do_encryption=True, algorithm=Cipher.ALG_DES_EDE3_CBC)
+        
+        # encrypt the whole message
+        enc_message = base64.b64encode(cipher(etree.tostring(msg)))
+        # encrypt the key using the public key of our recipient
+        enc_key = self.__other_cert.msg_encrypt(cipher.key())
+        del cipher
 
         nsmap = { "xbe": str(XBE),
-                  "xbe-sec": str(XBE_SEC),
-                  "dsig": str(DSIG) }
+                  "xbe-sec": str(XBE_SEC) }
+
+        # create a new message and append necessary information
+        _msg = etree.Element(XBE("Message"), nsmap=nsmap)
+        cipher_data = etree.SubElement(_msg, XBE_SEC("CipherData"))
+        etree.SubElement(cipher_data, XBE_SEC("CipherKey")).text = enc_key
+#        etree.SubElement(cipher_data, XBE_SEC("CipherAlgorithm")).text = Cipher.ALG_DES_EDE3_CBC
+        etree.SubElement(cipher_data, XBE_SEC("CipherValue")).text = enc_message
         
-        # append securityInformation
-        sec_info = etree.SubElement(hdr, XBE_SEC("SecurityInformation"), nsmap=nsmap)
-        dsig_sig = etree.SubElement(sec_info, DSIG("Signature"), nsmap=nsmap)
-        dsig_key = etree.SubElement(dsig_sig, DSIG("KeyInfo"))
-        etree.SubElement(dsig_key, DSIG("X509Certificate")).text = self.__my_cert.as_der()
+        return _msg
 
-        # sign the whole message as it is right now and put it into the header
-        signature = self.__my_cert.msg_signature(etree.tostring(msg))
-        etree.SubElement(dsig_sig, DSIG("SignatureValue")).text = signature
-        
-        if bod is None or len(bod) == 0:
-            # empty body may be ignored
-            return msg
-        # encrypt the element
-        element = bod[0]
-        cipher = self.__other_cert.msg_encrypt(etree.tostring(element))
+    def decrypt(self, msg):
+        cipher_data = msg.find(XBE_SEC("CipherData"))
+        if cipher_data is None:
+            raise SecurityError("could not find CipherData")
+        enc_key = cipher_data.findtext(XBE_SEC("CipherKey"))
+        key = self.__my_cert.msg_decrypt(enc_key)
 
-        # remove it from the tree and replace it by the CipherData
-        bod.remove(element)
-        cipher_data = etree.SubElement(bod, XBE_SEC("CipherData"), nsmap=nsmap)
-        etree.SubElement(cipher_data, XBE_SEC("CipherValue")).text = cipher
-        
-        return msg
+        # create Cipher algorithm
+        decipher = Cipher(key=key, do_encryption=False)
 
-    def validate_decrypt(self, _msg):
-        msg = cloneDocument(_msg)
-        # decrypt the body, if there is one
-        bod = msg.find(XBE("MessageBody"))
-        if bod and len(bod) != 0:
-            cipher_data = bod.find(XBE_SEC("CipherData"))
-            if cipher_data is None:
-                raise SecurityError("could not find CipherData!")
-            bod.remove(cipher_data)
-            
-            cipher_value = cipher_data.find(XBE_SEC("CipherValue"))
-            cipher = cipher_value.text
-            cleartext = self.__my_cert.msg_decrypt(cipher)
+        real_msg = decipher(
+            base64.b64decode(
+            cipher_data.findtext(XBE_SEC("CipherValue"))))
 
-            # parse as xml
-            real_body = etree.fromstring(cleartext)
-            bod.append(real_body)
+        return etree.fromstring(real_msg)
 
-        # validate everything
-        hdr = msg.find(XBE("MessageHeader"))
-        sec_info = hdr.find(XBE_SEC("SecurityInformation"))
-        dsig = sec_info.find(DSIG("Signature"))
-        cert_text = dsig.find(DSIG("KeyInfo/X509Certificate")).text
-        x509 = X509Certificate.load_der(cert_text)
+    def sign_and_encrypt(self, msg, include_certificate=False):
+        return self.encrypt(self.sign(msg, include_certificate))
 
-        signature_value = dsig.find(DSIG("SignatureValue"))
-        dsig.remove(signature_value)
+    def validate_and_decrypt(self, msg):
+        return self.validate(self.decrypt(msg))
 
-        # validate the x509 certificate
-        if len(self.__ca_certs):
-            ca = self.__ca_certs[0]
-            if not ca.validate_certificate(x509):
-                raise ValidationError("X.509 certificate could not be validated")
-
-        # validate the signature
-        x509.msg_validate(etree.tostring(msg), signature_value.text)
-        return msg
-
-__all__ = [
-    "ValidationError", "CertificateCheckFailed", "CertificateVerificationFailed",
-    "PrivateKeyCheckFailed", "X509Certificate", "CertificateStore", "ISecurityLayer",
-    "NullSecurityLayer", "X509SecurityLayer" ]
+#__all__ = [
+#    "ValidationError", "CertificateCheckFailed", "CertificateVerificationFailed",
+#    "PrivateKeyCheckFailed", "X509Certificate", "CertificateStore", "ISecurityLayer",
+#    "NullSecurityLayer", "X509SecurityLayer", "Cipher" ]
     

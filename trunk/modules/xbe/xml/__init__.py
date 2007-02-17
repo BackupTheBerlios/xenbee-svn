@@ -1,8 +1,9 @@
 """The xml module."""
 
 from lxml import etree
+import copy
 
 def cloneDocument(doc):
-    return etree.fromstring(etree.tostring(doc))
+    return copy.deepcopy(doc)
 
 __all__ = [ "cloneDocument" ]

@@ -6,8 +6,6 @@ Several important namespaces
 __version__ = "$Rev$"
 __author__ = "$Author$"
 
-import re
-
 # taken from http://effbot.org/zone/element-lib.htm
 class NS(object):
     def __init__(self, uri):
@@ -21,10 +19,11 @@ class NS(object):
     def __repr__(self):
         return self.__class__.__name__ + "('%s')" % str(self)
 
-__tagPattern = re.compile(r"^(?P<nsuri>{.*})?(?P<local>.*)$")
 def decodeTag(tag):
-    m = __tagPattern.match(tag)
-    return (m.group("nsuri"), m.group("local"))
+    if tag[0] == '{':
+        return tag[1:].split("}")
+    else:
+        return None, tag
 
 
 XBE_NS  = "http://www.example.com/schemas/xbe/2007/01/xbe"
