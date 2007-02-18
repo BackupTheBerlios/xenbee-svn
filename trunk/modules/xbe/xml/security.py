@@ -52,10 +52,10 @@ class X509Certificate(object):
         self.__padding = padding
         
     def subject(self):
-        return self.__x509.get_subject()
+        return self.__x509.get_subject().as_text()
 
     def issuer(self):
-        return self.__x509.get_issuer()
+        return self.__x509.get_issuer().as_text()
 
     def m2_x509(self):
         return self.__x509
@@ -350,7 +350,7 @@ class X509SecurityLayer:
          * receiver certificate + private key (for decryption)
 
     The information is kept in generic placeholders, so that the
-    SecurityPipe may refer to them uniformly.
+    SecurityLayer may refer to them uniformly.
 
     And of course the CA-certificate for validation.
     """
@@ -384,9 +384,11 @@ class X509SecurityLayer:
         signature = self.__my_cert.msg_signature(etree.tostring(_msg))
         etree.SubElement(dsig_sig, DSIG("SignatureValue")).text = signature
         
-        return _msg
+        return (_msg, signature)
 
     def validate(self, msg):
+        if isinstance(msg, tuple):
+            msg = msg[0]
         _msg = cloneDocument(msg)
         
         # validate everything
@@ -396,20 +398,28 @@ class X509SecurityLayer:
 
         cert_text = dsig.findtext(DSIG("KeyInfo/X509Certificate"))
         if cert_text:
-            self.__other_cert = X509Certificate.load_der(cert_text)
+            if self.__other_cert:
+                # check if they are the same, else raise an error
+                if self.__other_cert.as_der() != cert_text:
+                    raise SecurityError("the included certificate does not match the saved certificate.")
+            else:
+                valid = False
+                # validate the x509 certificate
+                cert = X509Certificate.load_der(cert_text)
+                for ca in self.__ca_certs:
+                    if ca.validate_certificate(cert):
+                        valid = True; break
+                if not valid:
+                    raise ValidationError("X.509 certificate could not be validated")
+                self.__other_cert = cert
+
         x509 = self.__other_cert
+        if x509 is None:
+            raise ValidationError("cannot verify message, since i do not have the matching certificate")
 
         signature_value = dsig.find(DSIG("SignatureValue"))
         dsig.remove(signature_value)
 
-        valid = False
-        # validate the x509 certificate
-        for ca in self.__ca_certs:
-            if ca.validate_certificate(x509):
-                valid = True; break
-        if not valid:
-            raise ValidationError("X.509 certificate could not be validated")
-            
         # validate the signature
         x509.msg_validate(etree.tostring(_msg), signature_value.text)
         return _msg
@@ -457,7 +467,9 @@ class X509SecurityLayer:
 
         # create a new message and append necessary information
         _msg = etree.Element(XBE("Message"), nsmap=nsmap)
-        cipher_data = etree.SubElement(_msg, XBE_SEC("CipherData"))
+        etree.SubElement(_msg, XBE("MessageHeader"))
+        bod = etree.SubElement(_msg, XBE("MessageBody"))
+        cipher_data = etree.SubElement(bod, XBE_SEC("CipherData"))
         etree.SubElement(cipher_data, XBE_SEC("CipherKey")).text = enc_key
 #        etree.SubElement(cipher_data, XBE_SEC("CipherAlgorithm")).text = Cipher.ALG_DES_EDE3_CBC
         etree.SubElement(cipher_data, XBE_SEC("CipherValue")).text = enc_message
@@ -465,7 +477,7 @@ class X509SecurityLayer:
         return _msg
 
     def decrypt(self, msg):
-        cipher_data = msg.find(XBE_SEC("CipherData"))
+        cipher_data = msg.find(XBE("MessageBody")+"/"+XBE_SEC("CipherData"))
         if cipher_data is None:
             raise SecurityError("could not find CipherData")
         enc_key = cipher_data.findtext(XBE_SEC("CipherKey"))
@@ -481,10 +493,11 @@ class X509SecurityLayer:
         return etree.fromstring(real_msg)
 
     def sign_and_encrypt(self, msg, include_certificate=False):
-        return self.encrypt(self.sign(msg, include_certificate))
+        return self.encrypt(self.sign(msg, include_certificate)[0])
 
     def validate_and_decrypt(self, msg):
         return self.validate(self.decrypt(msg))
+
 
 #__all__ = [
 #    "ValidationError", "CertificateCheckFailed", "CertificateVerificationFailed",

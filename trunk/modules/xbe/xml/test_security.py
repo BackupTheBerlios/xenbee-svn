@@ -289,19 +289,16 @@ class TestSecurityLayer(unittest.TestCase):
 
     def test_sign(self):
         pipe = X509SecurityLayer(self.cert, self.cert, [])
-        msg = pipe.sign(self.msg)
+        msg, sig = pipe.sign(self.msg)
         expected_sig = "fLKOiUJUc2ZpOpELRYFK0woiH5l8z4CHiArnOYH5sr1EO3PLx+SpfDaY9kUPE7m3gXQSZjlWPm/9LkeGTKYyZyLA4xuL/Jma9kpCZplW6A38HyJzxek5E4lq1gtDjaIlvrA4bGgLFWF8rljIxX+T4O3QQvvRAeXTSs3pxeRJ+ioYxaN8/TfNLS93oN159EsgT5ZHjtdT8NjlyAft7uL7ZsllAgxQmoRiM+mD4BmQp1eEmwq28sp0ssaP2xat9K7pjG4Fxsq15FV1m7fbAMi52Qp5aRb8+nboaA7Xt6A2HUH2vT2Sl1n76K01qXv5SIdj/Zt9f3BV+e0OogOzqv5jIg=="
-        sig = msg.findtext(XBE("MessageHeader")+"/"+
-                       XBE_SEC("SecurityInformation")+"/"+
-                       DSIG("Signature/SignatureValue"))
         self.assertEqual(expected_sig, sig)
 
     def test_validate(self):
         pipe = X509SecurityLayer(self.cert, self.cert, [self.ca]) # encrypt to myself
         recv_msg = pipe.validate(pipe.sign(self.msg))
 
-    def test_novalidate(self):
-        pipe = X509SecurityLayer(self.cert, self.cert, [])
+    def test_novalidate_noca(self):
+        pipe = X509SecurityLayer(self.cert, None, [])
         try:
             recv_msg = pipe.validate(pipe.sign(self.msg))
         except ValidationError, ve:
@@ -309,11 +306,36 @@ class TestSecurityLayer(unittest.TestCase):
         else:
             self.fail("ValidationError expected")
 
+    def test_novalidate_not_signed_by_ca(self):
+        cert = X509Certificate.load(ExampleData.self_signed_cert,
+                                    ExampleData.priv_key)
+        pipe = X509SecurityLayer(cert, None, [self.ca])
+        try:
+            recv_msg = pipe.validate(pipe.sign(self.msg, include_certificate=True))
+        except ValidationError, ve:
+            pass
+        else:
+            self.fail("ValidationError expected")
+
     def test_noinclude_cert(self):
         pipe = X509SecurityLayer(self.cert, None, [self.ca])
-        send_msg = pipe.sign(self.msg, include_certificate=True)
-        recv_msg = pipe.validate(send_msg)
-        print etree.tostring(recv_msg)
+        send_msg = pipe.sign(self.msg, include_certificate=False)[0]
+        try:
+            recv_msg = pipe.validate(send_msg)
+        except ValidationError, ve:
+            pass
+        else:
+            self.fail("ValidationError expected")
+
+    def test_include_cert(self):
+        pipe = X509SecurityLayer(self.cert, None, [self.ca])
+        send_msg = pipe.sign(self.msg, include_certificate=True)[0]
+        try:
+            recv_msg = pipe.validate(send_msg)
+        except ValidationError, ve:
+            self.fail("ValidationError should not occur, since certificate has been included.")
+        else:
+            pass
 
     def test_validate_decrypt_empty_body(self):
         pipe = X509SecurityLayer(self.cert, self.cert, [self.ca]) # encrypt to myself
