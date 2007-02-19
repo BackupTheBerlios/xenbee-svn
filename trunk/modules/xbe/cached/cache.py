@@ -107,7 +107,7 @@ class Cache(object):
             return defer.fail(failure.Failure(e))
 
     def getEntries(self):
-        return self.__db.runQuery("SELECT uuid, type, description FROM files")
+        return self.__db.runQuery("SELECT uuid, uri, hash, type, description FROM files")
 
     def remove(self, entry, cred=None):
         """Remove a given entry from the cache.

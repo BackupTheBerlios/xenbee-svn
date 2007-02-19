@@ -300,7 +300,7 @@ class TestSecurityLayer(unittest.TestCase):
     def test_novalidate_noca(self):
         pipe = X509SecurityLayer(self.cert, None, [])
         try:
-            recv_msg = pipe.validate(pipe.sign(self.msg))
+            recv_msg = pipe.validate(pipe.sign(self.msg, include_certificate=True))
         except ValidationError, ve:
             pass
         else:
@@ -322,7 +322,7 @@ class TestSecurityLayer(unittest.TestCase):
         send_msg = pipe.sign(self.msg, include_certificate=False)[0]
         try:
             recv_msg = pipe.validate(send_msg)
-        except ValidationError, ve:
+        except CertificateMissing:
             pass
         else:
             self.fail("ValidationError expected")
@@ -381,24 +381,26 @@ class TestCipher(unittest.TestCase):
         pass
 
     def test_cipher_encrypt(self):
-        enc = Cipher(key="01234", IV="0", do_encryption=True)
-        expected = "Eaes3PgLelEOzQTyf8VBXuurFkeqOnKEfCL+hMi6JPq0UsT7Lj8oWY4w8E/W+8yU"
+        enc = Cipher(key="01234", IV="01234", do_encryption=True)
+        expected = "E73YSx2GFpKGdfP3ftkIqE0jJqH8kgcIx26A/VZ1LMk89kPFml5A4B+baoZOgb4m"
         encrypted = base64.b64encode(enc(ExampleData.text))
         self.assertEqual(expected, encrypted)
 
     def test_cipher_decrypt(self):
         expected = ExampleData.text
-        encrypted = "Eaes3PgLelEOzQTyf8VBXuurFkeqOnKEfCL+hMi6JPq0UsT7Lj8oWY4w8E/W+8yU"
-        dec = Cipher(key="01234", IV="0", do_encryption=False)
+        # this encrypted text should match the expected text, if decrypting it with
+        # key and IV set to "01234"
+        encrypted = "E73YSx2GFpKGdfP3ftkIqE0jJqH8kgcIx26A/VZ1LMk89kPFml5A4B+baoZOgb4m"
+        dec = Cipher(key="01234", IV="01234", do_encryption=False)
         decrypted = dec(base64.b64decode(encrypted))
         self.assertEqual(expected, decrypted)
 
     def test_cipher_encrypt_decrypt(self):
         long_data = ExampleData.cert * 10
         enc = Cipher(do_encryption=True)
-        dec = Cipher(key=enc.key(), do_encryption=False)
+        dec = Cipher(key=enc.key(), IV=enc.IV(), do_encryption=False)
         self.assertEqual(long_data, dec(enc(long_data)))
-        
+
 
 def suite():
     s1 = unittest.makeSuite(TestCertificate, 'test')
@@ -407,4 +409,8 @@ def suite():
     return unittest.TestSuite((s1,s2,s3))
 
 if __name__ == '__main__':
+#    s1 = unittest.makeSuite(TestSecurityLayer, 'test_special_decrypt')
+#    runner = unittest.TextTestRunner()
+#    runner.run(s1)
+#    sys.exit(1)
     unittest.main()

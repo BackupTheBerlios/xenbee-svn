@@ -9,47 +9,55 @@ __author__ = "$Author: petry $"
 import logging, re, time, threading
 log = logging.getLogger(__name__)
 
-from xbe.xml import xsdl
 from xbe.proto import XenBEEProtocolFactory, XenBEEProtocol
 from lxml import etree
-
-class XenBEEClientProtocol(xsdl.XMLProtocol):
+from xbe.xml.security import X509SecurityLayer, X509Certificate, SecurityError
+from xbe.xml.namespaces import *
+from xbe.xml import xsdl, message, protocol
+            
+class XenBEEClientProtocol(protocol.XMLProtocol):
     """The XBE client side protocol.
 
     This protocol is spoken between some client (user, script
     etc.). The protocol is based on XML
     """
 
-    def __init__(self, client, transport):
-        xsdl.XMLProtocol.__init__(self, transport)
+    def __init__(self, client):
+        protocol.XMLProtocol.__init__(self)
         self.client = client
-        self.addUnderstood(xsdl.XSDL("ImageSubmission"))
-        self.addUnderstood(xsdl.XSDL("StatusRequest"))
-        self.addUnderstood(xsdl.XSDL("Kill"))
-        self.addUnderstood(xsdl.XSDL("ListCache"))
-        self.addUnderstood(xsdl.JSDL("JobDefinition"))
+#        self.addUnderstood(XSDL("ImageSubmission"))
+#        self.addUnderstood(XSDL("StatusRequest"))
+#        self.addUnderstood(XSDL("Kill"))
+#        self.addUnderstood(XSDL("ListCache"))
+#        self.addUnderstood(JSDL("JobDefinition"))
 
-    def do_JobDefinition(self, job):
+    def connectionMade(self):
+        log.debug("client %s has connected" % (self.client))
+    
+    def do_JobDefinition(self, job, *args, **kw):
         log.debug("got new job")
 
         # does the job have our InstanceDefinition element?
         # otherwise drop the job
-        if not job.find(xsdl.XSDL("InstanceDefinition")):
+        if not job.find(XSDL("InstanceDefinition")):
             return xsdl.XenBEEError("no InstanceDefinition found.",
-                                    xsdl.ErrorCode.ILLEGAL_REQUEST)
+                                        xsdl.ErrorCode.ILLEGAL_REQUEST)
 
         # we should be able to handle the job
         task = self.factory.taskManager.newTask(job)
         return xsdl.XenBEEError("task submitted: %s" % task.ID(),
                                 xsdl.ErrorCode.OK)
 
-    def do_StatusRequest(self, dom_node):
+    def do_StatusRequest(self, dom_node, *args, **kw):
 	"""Handle status request."""
-        msg = xsdl.XenBEEStatusMessage()
+        msg = xml.xsdl.XenBEEStatusMessage()
         map(msg.addStatusForTask, self.factory.taskManager.tasks.values())
         return msg
 
-    def do_Kill(self, elem):
+    def do_Kill(self, elem, *args, **kw):
+        kill = message.MessageBuilder.from_xml(elem.getroottree())
+        log.warn("got kill")
+        return
         sig = int(elem.findtext(xsdl.XSDL("Signal")))
         if not sig in [ 9, 15 ]:
             return xsdl.XenBEEError("Signal out of range, allowed are (9,15)",
@@ -62,34 +70,35 @@ class XenBEEClientProtocol(xsdl.XMLProtocol):
         task.kill(sig)
         return xsdl.XenBEEError("signal sent", xsdl.ErrorCode.OK)
 
-    def do_ListCache(self, elem):
+    def do_ListCache(self, elem, *args, **kw):
         log.debug("retrieving cache list...")
         def __buildMessage(entries):
-            msg = xsdl.XenBEECacheEntries()
-            for uid, type, desc in entries:
-                msg.addEntry(uid, type, desc)
-            log.debug(str(msg))
+            msg = message.CacheEntries()
+            for uid, uri, hash, type, desc in entries:
+                logical_uri = "cache://xbe-file-cache/%s" % (str(uid))
+                msg.add(logical_uri, hash, type, desc)
             return msg
         self.factory.cache.getEntries(
             ).addCallback(__buildMessage).addBoth(
             self.transformResultToMessage).addCallback(self.sendMessage)
         return None
+
 	
-class XenBEEInstanceProtocol(xsdl.XMLProtocol):
+class XenBEEInstanceProtocol(protocol.XMLProtocol):
     """The XBE instance side protocol.
 
     This protocol is spoken between an instance and the daemon.
     """
 
     def __init__(self, instid, transport):
-        xsdl.XMLProtocol.__init__(self, transport)
+        protocol.XMLProtocol.__init__(self, transport)
 	self.instid = instid
-        self.addUnderstood(xsdl.XSDL("InstanceAvailable"))
-        self.addUnderstood(xsdl.XSDL("TaskStatusNotification"))
+        self.addUnderstood(XSDL("InstanceAvailable"))
+        self.addUnderstood(XSDL("TaskStatusNotification"))
 
     def executeTask(self, task):
-        if task.document.tag != xsdl.JSDL("JobDefinition"):
-            job = task.document.find(xsdl.JSDL("JobDefinition"))
+        if task.document.tag != JSDL("JobDefinition"):
+            job = task.document.find(JSDL("JobDefinition"))
         else:
             job = task.document
         if job is None:
@@ -108,8 +117,8 @@ class XenBEEInstanceProtocol(xsdl.XMLProtocol):
     # Message handling part #
     #                       #
     #########################
-    def do_InstanceAvailable(self, inst_avail):
-        inst_id = inst_avail.findtext(xsdl.XSDL("InstanceID"))
+    def do_InstanceAvailable(self, inst_avail, *args, **kw):
+        inst_id = inst_avail.findtext(XSDL("InstanceID"))
         if inst_id != self.instid:
             raise ValueError("got answer from different instance!")
 
@@ -121,18 +130,18 @@ class XenBEEInstanceProtocol(xsdl.XMLProtocol):
             raise ValueError("no task belongs to this instance")
 
         # retrieve network information
-        fqdn = inst_avail.findtext(xsdl.XSDL("NodeInformation/Network/FQDN"))
-        ips = [ ip.text for ip in inst_avail.findall(xsdl.XSDL("NodeInformation/Network/IPList/IP")) ]
+        fqdn = inst_avail.findtext(XSDL("NodeInformation/Network/FQDN"))
+        ips = [ ip.text for ip in inst_avail.findall(XSDL("NodeInformation/Network/IPList/IP")) ]
         log.debug("instance %s available at %s [%s]" % (inst_id, fqdn, ",".join(ips)))
 
         inst.protocol = self
         inst.available(fqdn, ips)
 
-    def do_TaskStatusNotification(self, status):
-        fin_elem = status.find(xsdl.XSDL("TaskFinished"))
-        exitcode = int(fin_elem.findtext(xsdl.XSDL("ExitCode")))
-        stdout = fin_elem.findtext(xsdl.XSDL("StandardOutput"))
-        errout = fin_elem.findtext(xsdl.XSDL("ErrorOutput"))
+    def do_TaskStatusNotification(self, status, *args, **kw):
+        fin_elem = status.find(XSDL("TaskFinished"))
+        exitcode = int(fin_elem.findtext(XSDL("ExitCode")))
+        stdout = fin_elem.findtext(XSDL("StandardOutput"))
+        errout = fin_elem.findtext(XSDL("ErrorOutput"))
         log.info("task finished:\ncode=%d\nstdout='%s'\nerrout='%s'" % (exitcode, stdout, errout))
 
         task = self.factory.instanceManager.lookupByUUID(self.instid).task
@@ -147,8 +156,8 @@ class XenBEEDaemonProtocolFactory(XenBEEProtocolFactory):
     protocol = _XBEDProtocol
     
     def __init__(self, daemon, queue="/queue/xenbee.daemon"):
-	XenBEEProtocolFactory.__init__(self, daemon, queue)
-
+	XenBEEProtocolFactory.__init__(self, queue, "daemon", "test1234")
+        self.daemon = daemon
         self.__protocolRemovalTimeout = 60
         self.__clientProtocols = {}
         self.__clientMutex = threading.RLock()
@@ -159,6 +168,9 @@ class XenBEEDaemonProtocolFactory(XenBEEProtocolFactory):
 	self.instanceManager = daemon.instanceManager
         self.taskManager = daemon.taskManager
         self.cache = daemon.cache
+        self.portal = daemon.portal
+        self.cert = daemon.certificate
+        self.ca_cert = daemon.ca_certificate
 
         from twisted.internet import task
         self.__cleanupLoop = task.LoopingCall(self.__cleanupOldProtocols)
@@ -174,17 +186,19 @@ class XenBEEDaemonProtocolFactory(XenBEEProtocolFactory):
                 "illegal reply-to value, must be of the form: /(queue|topic)/xenbee.[type].[id]")
         getattr(self, (sourceType.lower()+"Message"))(transport, msg, sourceId)
 
-    def __messageHelper(self, id, msg, trnsprt, protocols, mtx, cls):
+    def __messageHelper(self, id, msg, trnsprt, protocols, mtx, cls, *args, **kw):
         try:
             mtx.acquire()
             p = protocols.get(id)
             if p is None:
-                p = cls(id, trnsprt)
+                p = cls(*args, **kw)
                 p.factory = self
                 protocols[id] = p
+                p.makeConnection(trnsprt)
             p.timeOflastReceive = time.time()
         finally:
             mtx.release()
+        log.debug("got message for %r" % (p,))
         d = p.messageReceived(msg)
 
         # log sent answers
@@ -206,13 +220,16 @@ class XenBEEDaemonProtocolFactory(XenBEEProtocolFactory):
         self.__messageHelper(client, msg, transport,
                              self.__clientProtocols,
                              self.__clientMutex,
-                             XenBEEClientProtocol)
+                             protocol.SecureProtocol,
+                             self.cert,
+                             self.ca_cert,
+                             XenBEEClientProtocol, client)
 
     def instanceMessage(self, transport, msg, inst):
         self.__messageHelper(inst, msg, transport,
                              self.__instanceProtocols,
                              self.__instanceMutex,
-                             XenBEEInstanceProtocol)
+                             XenBEEInstanceProtocol, inst)
 
 
     # clean up registered protocols after some inactivity threshold

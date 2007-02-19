@@ -25,8 +25,6 @@ from xbe.xml import xsdl
 from xbe.xml.namespaces import XBE, XSDL, JSDL
 from lxml import etree
 
-URI_PATTERN = r'((?P<prot>[a-zA-Z]+)://)?(?P<path>.*)'
-
 class NoPrintOptionParser(OptionParser):
     def __init__(self, usage=None, add_help_option=True):
         OptionParser.__init__(self,usage=usage, add_help_option=add_help_option, prog="")
@@ -38,28 +36,6 @@ class CommandFailed(Exception):
 
 class UnknownCommand(Exception):
     pass
-
-def parse_args_stderr_hack(parser, argv):
-    try:
-        # WARNIG: hack to avoid printing to stderr
-        stderr_hack = sys.stderr
-
-        from StringIO import StringIO
-        sys.stderr = StringIO()
-
-        options, args = parser.parse_args(argv)
-        sys.stderr = stderr_hack
-    except:
-        msg, sys.stderr = sys.stderr, stderr_hack
-        msg.seek(0)
-        lines = [ l.strip() for l in msg.readlines()[2:] ]
-        raise CommandFailed("\n".join(lines))
-    return (options, args)
-
-def parse_args_normal(parser, argv):
-    return parser.parse_args(argv)
-parse_args = parse_args_normal
-    
 
 class Command(object):
     """The base class for commands."""
@@ -83,9 +59,11 @@ class Command(object):
         self.argv = argv[1:]
 
         p = NoPrintOptionParser(usage="usage: %s [options]" % self.name, add_help_option=False)
-        p.add_option("-H", "--host", dest="host", type="string",
+        p.add_option("-H", "--host",
+                     dest="host", type="string",
                      default="xen-o-matic.itwm.fhrg.fraunhofer.de", help="STOMP server to use")
-        p.add_option("-P", "--port", dest="port", type="int",    default=61613, help="STOMP server to use")
+        p.add_option("-P", "--port",
+                     dest="port", type="int",    default=61613, help="STOMP server to use")
 
         self.parser = p
 
@@ -105,15 +83,19 @@ class RemoteCommand(Command):
         """Initialize some common options for remote commands."""
         Command.__init__(self, argv)
         p = self.parser
-        p.add_option("-u", "--username", dest="user",  type="string", help="the username to use")
-        p.add_option("-p", "--password", dest="pass",  type="string", help="the password to use")
-        p.add_option("-t", "--timeout", dest="timeout", type="int", default=5, help="time to wait for an answer from server")
-        p.add_option("--cert", dest="cert",  type="string", help="the certificate to use")
+        p.add_option("-u", "--username",
+                     dest="user",  type="string", help="the username to use")
+        p.add_option("-p", "--password",
+                     dest="pass",  type="string", help="the password to use")
+        p.add_option("-t", "--timeout",
+                     dest="timeout", type="int", default=5, help="number of seconds to wait for an answer from server")
+        p.add_option("--cert",
+                     dest="cert",  type="string", help="the certificate to use")
         
     def handleMessage(self, msg):
         """handles the given message from the STOMP server."""
         xml = etree.fromstring(msg.body)
-        if xml[0].tag == XBE("Error"):
+        if xml[0].tag == XSDL("Error"):
             self._handleError(xml[0])
         else:
             self._handleMessage(xml[0])
@@ -136,7 +118,7 @@ class RemoteCommand(Command):
         pass
 
     def execute(self):
-        self.options, self.args = parse_args(self.parser, self.argv)
+        self.options, self.args = self.parser.parse_args(self.argv)
         self.buildHelp()
         self.executeRemote(str(self._execute()))
 
@@ -152,7 +134,7 @@ class RemoteCommand(Command):
         f.protocol = StompClientCmd
         f.cmd = self
         f.msg = cmdstring
-        f.clientId = uuid()
+        f.clientId = 2 #uuid()
         f.serverQueue = '/queue/xenbee.daemon'
         f.queue = '/queue/xenbee.client.%s' % (f.clientId,)
         reactor.connectTCP(self.options.host, self.options.port, f)
@@ -416,7 +398,8 @@ class StompClientCmd(StompClient):
         self.setReplyTo(self.factory.queue)
         self.subscribe(self.factory.queue, exclusive=True)
         self.send(self.factory.serverQueue, self.factory.msg)
-        self.receive(time_out=self.factory.cmd.options.timeout).addCallback(self.message).addErrback(self.abort)
+        self.receive(
+            time_out=self.factory.cmd.options.timeout).addCallback(self.message).addErrback(self.abort)
 
     def connectFailed(self, reason):
         print >>sys.stderr, "Connection to STOMP server failed!"

@@ -11,9 +11,9 @@ from xbe.xml import xsdl
 from xbe.xml.namespaces import XBE, XSDL, JSDL, JSDL_POSIX
 
 class XBEInstProtocol(xsdl.XMLProtocol):
-    def __init__(self, transport):
+    def __init__(self):
         self.proc = None
-        xsdl.XMLProtocol.__init__(self,transport)
+        xsdl.XMLProtocol.__init__(self)
         self.addUnderstood(JSDL("JobDefinition"))
 
     def do_JobDefinition(self, job_def):

@@ -15,7 +15,8 @@ else:
 
 class Daemon(object):
     MAXFD = 1024
-    def __init__(self, pidfile, name=sys.argv[0], daemonize=True, workdir="/", umask=0, user="nobody", group="nogroup"):
+    def __init__(self, pidfile, name=sys.argv[0],
+                 daemonize=True, workdir="/", umask=0, user="nobody", group="nogroup"):
         self.pidfile = pidfile
         self.daemonize=daemonize
         self.workdir = workdir
@@ -23,7 +24,8 @@ class Daemon(object):
         self.user = user
         self.group = group
         self.name = name
-        self.parser = OptionParser(usage="usage: %prog start|stop|status|help [options]", add_help_option=False)
+        self.parser = OptionParser(
+            usage="usage: %prog start|stop|status|help [options]", add_help_option=False)
 
         self.__daemon = None
 
@@ -101,7 +103,7 @@ class Daemon(object):
                 return
 
         # process still running, so try to terminate it
-        trials = 3
+        trials = 5
         while trials:
             # send TERM signal
             try:
@@ -109,7 +111,7 @@ class Daemon(object):
             except OSError, oe:
                 if oe.errno != errno.ESRCH:
                     self.error(oe.message)
-            time.sleep(1)
+            time.sleep(0.2)
             trials -= 1
 
         # process did not cooperate, so kill it

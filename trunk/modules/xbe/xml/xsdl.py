@@ -13,7 +13,7 @@ from time import gmtime, strftime
 from lxml import etree
 from twisted.internet import defer, threads
 from twisted.python import failure
-import re
+from xbe.xml import message
 
 try:
     from cStringIO import StringIO
@@ -21,83 +21,6 @@ except:
     from StringIO import StringIO
 
 from xbe.xml.namespaces import *
-
-class XMLProtocol(object):
-    """The base class of all client-protocols that are used here."""
-
-    def __init__(self, transport):
-        self.transport = transport
-        self.factory = None
-
-        # a list of ({uri}localName) tuples that are
-        # understood by the protocol
-        self.__understood = []
-        self.addUnderstood(XSDL("Error"))
-
-    def dispatch(self, elem, *args, **kw):
-        method = getattr(self, "do_%s" % (decodeTag(elem.tag)[1]))
-        return method(elem, *args, **kw)
-
-    def addUnderstood(self, tag):
-        if tag not in self.__understood:
-            self.__understood.append(tag)
-
-    def transformResultToMessage(self, result):
-        if isinstance(result, failure.Failure):
-            result = XenBEEError(result.getErrorMessage(),
-                                 ErrorCode.INTERNAL_SERVER_ERROR)
-        if result is None:
-            # do not reply, so return None
-            return None
-        if not isinstance(result, XenBEEMessage):
-            result = XenBEEError(repr(result),
-                                 ErrorCode.INTERNAL_SERVER_ERROR)
-
-        # result is now a XenBEEMessage
-        return result
-
-    def sendMessage(self, msg):
-        if msg is None:
-            log.debug("nothing to answer...")
-        else:
-            assert isinstance(msg, XenBEEMessage)
-            self.transport.write(msg.to_xml())
-        return msg
-
-    def messageReceived(self, msg):
-        """Handle an incoming XML message.
-
-        The message handling code works as follows:
-
-             * a method is looked up according to the 'tag' of the root element
-               or the first direct child that 
-        """
-        d = defer.maybeDeferred(self._messageReceived, msg)
-        d.addBoth(self.transformResultToMessage)
-        d.addCallback(self.sendMessage)
-        return d
-
-    def _messageReceived(self, msg):
-	"""Handle a received message."""
-        return self.dispatch(etree.fromstring(msg.body))
-
-    # some default xml-element handler
-    #
-    def do_Message(self, msg):
-        # handle a XBE-Message
-        #
-        # try to split the message up into header and body
-        #
-        # else handle just the first element
-        header = msg.find(XBE("MessageHeader"))
-        if header is not None:
-            log.debug("got new style message")
-            
-        else:
-            return self.dispatch(msg[0])
-        
-    def do_Error(self, err):
-        log.debug("got error:\n%s" % (etree.tostring(err)))
 
 class XenBEEMessage(object):
     """Encapsulates a xml message."""
@@ -120,8 +43,8 @@ class XenBEEMessage(object):
 
     def to_s(self):
         return str(self)
-    def to_xml(self):
-        return self.to_s()
+    def as_xml(self):
+        return self.root
 
 class ErrorCode:
     class OK:
@@ -156,6 +79,17 @@ class ErrorCode:
         short_msg = "the signal you have sent was out of range"
         long_msg  = short_msg
 
+    class SECURITY_ERROR:
+        value = 460
+        name = "SECURITY_ERROR"
+        short_msg = "general security violation"
+        long_msg = short_msg
+        
+    class UNAUTHORIZED:
+        value = 461
+        name = "UNAUTHORIZED"
+        short_msg = "you are not authorized"
+        long_msg = short_msg
 
     class INTERNAL_SERVER_ERROR:
         value = 500

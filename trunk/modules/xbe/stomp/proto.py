@@ -9,7 +9,7 @@ log = logging.getLogger(__name__)
 
 # twisted imports
 from twisted.protocols.basic import LineReceiver
-from twisted.internet import defer, reactor, threads
+from twisted.internet import defer, reactor, threads, protocol, interfaces
 from twisted.internet.protocol import ReconnectingClientFactory
 from textwrap import dedent
 
@@ -105,7 +105,7 @@ class StompTransport:
 
     def write(self, data, *args, **kw):
 	"""Write data to the destination queue."""
-        return threads.deferToThread(self.stomp.send, self.queue, data, *args, **kw)
+        return threads.deferToThread(self.stomp.send, self.queue, str(data), *args, **kw)
         
 class StompClient(LineReceiver):
     """Implementation of the STOMP protocol - client side.
@@ -118,7 +118,7 @@ class StompClient(LineReceiver):
     auto_connect = True
     timeout = 10 # timeout of ten seconds for an answer
 
-    def __init__(self):
+    def __init__(self, username='', password=''):
 	"""Initializes the client."""
 	self.frame = None
 	self.state = "disconnected"
@@ -134,18 +134,35 @@ class StompClient(LineReceiver):
         self.mtx = threading.RLock()
         self.timeoutTimer = None
 
+        self.user = username
+        self.password = password
+
     def setReplyTo(self, replyTo):
         self.replyTo = replyTo
 
-    def connectionMade(self):
-	"""Called when connection has been established."""
+    def makeConnection(self, transport):
+        self.transport = transport
+        
 	if self.auto_connect and self.state == "disconnected":
             def _s(arg):
-                pass
+                self.connected = 1
+                self.connectionMade()
             def _f(arg):
                 pass
 	    self.connect(self.factory.user,
                          self.factory.password).addCallback(_s).addErrback(_f)
+        
+
+    def connectionMade(self):
+	"""Called when connection has been established."""
+        pass
+#	if self.auto_connect and self.state == "disconnected":
+#            def _s(arg):
+#                pass
+#            def _f(arg):
+#                pass
+#	    self.connect(self.factory.user,
+#                         self.factory.password).addCallback(_s).addErrback(_f)
 
     def sendFrame(self, frame):
 	"""Send a frame."""
@@ -263,11 +280,11 @@ class StompClient(LineReceiver):
 	self.state = "connected"
         if self.timeoutTimer:
             self.timeoutTimer.cancel()
-            self.timeoutTimer = None
+            del self.timeoutTimer
 	self.connectedReceived(frame)
 	if self.connectDefer:
 	    self.connectDefer.callback(frame)
-	    self.connectDefer = None
+	    del self.connectDefer
 
     def connect(self, user, password, time_out=timeout):
 	"""Connect to the STOMP server, using 'user' and 'password'."""
@@ -452,6 +469,60 @@ class StompClientFactory(ReconnectingClientFactory):
 
     def clientConnectionFailed(self, connector, reason):
 	reactor.stop()
+
+class ProtocolTransportMixin:
+    """This class has been taken from twisted.conch.telnet."""
+    def write(self, bytes):
+        self.transport.write(bytes)
+
+    def writeSequence(self, seq):
+        self.transport.writeSequence(seq)
+
+    def loseConnection(self):
+        self.transport.loseConnection()
+
+    def getHost(self):
+        return self.transport.getHost()
+
+    def getPeer(self):
+        return self.transport.getPeer()
+
+class StompTransport2(StompClient, ProtocolTransportMixin):
+    disconnecting = False
+
+    protocolFactory = None
+    protocol = None
+
+    def __init__(self, protocolFactory=None, *a, **kw):
+        StompClient.__init__(self)
+        if protocolFactory is not None:
+            self.protocolFactory = protocolFactory
+            self.protocolFactoryArgs = a
+            self.protocolFactoryKwArgs = kw
+
+    def connectionMade(self):
+        self.subscribe(self.queue)
+        if self.protocolFactory is not None:
+            self.protocol = self.protocolFactory(*self.protocolFactoryArgs, **self.protocolFactoryKwArgs)
+            log.debug("connected protocol: %r" % (self.protocol))
+            try:
+                factory = self.factory
+            except AttributeError:
+                pass
+            else:
+                self.protocol.factory = factory
+            self.protocol.makeConnection(self)
+
+    def connectionLost(self, reason):
+        StompClient.connectionLost(self, reason)
+        if self.protocol is not None:
+            try:
+                self.protocol.connectionLost(reason)
+            finally:
+                del self.protocol
+        
+    def write(self, bytes):
+        ProtocolTransportMixin.write(self, bytes)
 
 def selftest(host="localhost", port=61613):
     class StompClientTest(StompClient):

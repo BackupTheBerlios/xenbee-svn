@@ -8,7 +8,7 @@ __author__ = "$Author$"
 import logging
 log = logging.getLogger(__name__)
 
-import sys, os.path
+import sys, os.path, os
 from xbe.util.daemon import Daemon
 
 class XBEDaemon(Daemon):
@@ -37,10 +37,29 @@ class XBEDaemon(Daemon):
         p.add_option(
             "--pidfile", dest="pidfile", type="string", default="/var/run/xbed.pid",
             help="the pidfile to use")
+        p.add_option(
+            "--key", dest="p_key", type="string",
+            help="path to the private key")
+        p.add_option(
+            "--x509", dest="x509", type="string",
+            help="path to the x509 certificate")
+        p.add_option(
+            "--ca-cert", dest="ca_cert", type="string",
+            help="path to the CA x509 certificate")
 
     def configure(self):
         self.daemonize = self.opts.daemonize
         self.pidfile = self.opts.pidfile
+
+        if self.opts.x509 is None:
+            self.opts.x509 = os.path.join(os.environ["XBED_HOME"],
+                                          "etc", "xbed", "xbed.pem")
+        if self.opts.p_key is None:
+            self.opts.p_key = os.path.join(os.environ["XBED_HOME"],
+                                           "etc", "xbed", "private", "xbed-key.pem")
+        if self.opts.ca_cert is None:
+            self.opts.ca_cert = os.path.join(os.environ["XBED_HOME"],
+                                             "etc", "CA", "ca-cert.pem")
 
     def setup_logging(self):
         import xbe
@@ -52,6 +71,22 @@ class XBEDaemon(Daemon):
 
     def setup_priviledged(self):
 	log.info("Setting up the XenBEE daemon")
+
+        log.info("initializing certificates...")
+        # read in the certificate and private-key
+        from xbe.xml.security import X509Certificate
+        self.ca_certificate = X509Certificate.load_from_files(self.opts.ca_cert)
+        subj_comp = dict([ c.split("=", 1) for c in self.ca_certificate.subject().split(", ")])
+        log.info("   CA certificate: %s" % (subj_comp["CN"]))
+
+        cert = X509Certificate.load_from_files(self.opts.x509,
+                                               self.opts.p_key)
+        if not self.ca_certificate.validate_certificate(cert):
+            self.error("the given x509 certificate has not been signed by the given CA")
+        self.certificate = cert
+        subj_comp = dict([ c.split("=", 1) for c in self.certificate.subject().split(", ")])
+        log.info("   my certificate: %s" % (subj_comp["CN"]))
+        log.info("  done.")
 
         log.info("initializing twisted...")
         from twisted.python import threadable
@@ -88,7 +123,7 @@ class XBEDaemon(Daemon):
         log.info("initializing login portal...")
         from twisted.cred.portal import Portal
         from twisted.cred.checkers import FilePasswordDB
-#        self.portal = Portal
+        self.portal = Portal(realm=None)
 #        checker = FilePasswordDB("/root/xenbee/etc/passwd")
 #        self.portal.registerChecker(checker)
 
