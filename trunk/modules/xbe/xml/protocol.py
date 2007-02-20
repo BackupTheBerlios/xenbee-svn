@@ -6,7 +6,7 @@ import logging
 log = logging.getLogger(__name__)
 
 from xbe.xml.namespaces import *
-from xbe.xml import xsdl, message
+from xbe.xml import message, errcode
 from xbe.xml.security import X509SecurityLayer, X509Certificate, SecurityError
 
 from lxml import etree
@@ -31,7 +31,7 @@ class XMLTransport(StringTransport):
             msg = msg.as_str()
         if msg is not None:
             StringTransport.write(self, msg)
-        return msg
+        return None
 
 class XMLProtocol(object):
     """The base class of all client-protocols that are used here."""
@@ -42,7 +42,6 @@ class XMLProtocol(object):
         # a list of ({uri}localName) tuples that are
         # understood by the protocol
         self.__understood = []
-        self.addUnderstood(XSDL("Error"))
 
     def makeConnection(self, transport):
         self.connected = 1
@@ -62,20 +61,18 @@ class XMLProtocol(object):
 
     def transformResultToMessage(self, result):
         log.debug("transforming result '%r'" % result)
-        if isinstance(result, failure.Failure):
-            log.warn("failure occured: %s\n%s" % (result.getErrorMessage(), result.getTraceback()))
-            result = xsdl.XenBEEError("%s:\n:%s" % (result.getErrorMessage(), result.getTraceback()),
-                                      xsdl.ErrorCode.INTERNAL_SERVER_ERROR)
         if result is None:
             # do not reply, so return None
             return None
-        if not isinstance(result, (xsdl.XenBEEMessage, message.Message)):
-            result = xsdl.XenBEEError(repr(result),
-                                      xsdl.ErrorCode.INTERNAL_SERVER_ERROR)
 
-        result = result.as_xml()
-        # result is now a XML Message
-        return result
+        if isinstance(result, failure.Failure):
+            log.warn("failure occured: %s\n%s" % (result.getErrorMessage(), result.getTraceback()))
+            result = message.Error(errcode.INTERNAL_SERVER_ERROR,
+                                   result.getErrorMessage())
+        assert isinstance(result, message.Message), "attempted to transform strange result"
+
+        # return the xml document
+        return result.as_xml()
 
     def sendMessage(self, msg):
         if msg is not None:
@@ -94,6 +91,7 @@ class XMLProtocol(object):
         else:
             xml = msg
         # validate xml against schema
+        log.warn("TODO: validate against XML-Schema")
         assert (isinstance(xml, (etree._Element, etree._ElementTree)))
 
         # build xbe.xml.message
@@ -123,7 +121,7 @@ class XMLProtocol(object):
 
     # some default xml-element handler
     #
-    def do_Message(self, msg):
+    def do_Message(self, msg, *args, **kw):
         # handle a XBE-Message
         #
         # decompose into header and body
@@ -131,12 +129,12 @@ class XMLProtocol(object):
         if hdr is not None:
             bod = msg.find(XBE("MessageBody"))
             if bod and len(bod):
-                return self.dispatch(bod[0])
+                return self.dispatch(bod[0], *args, **kw)
             else:
                 log.debug("got message with missing or empty body, ignoring it.")
         else:
             log.warn("Deprecation: messages must now contain Header and Body elements")
-            return self.dispatch(msg[0])
+            return self.dispatch(msg[0], *args, **kw)
 
     def do_Error(self, err):
         log.debug("got error:\n%s" % (etree.tostring(err)))
@@ -213,10 +211,8 @@ class SecureProtocol(XMLProtocol):
         bod = msg.find(XBE("MessageBody"))
 
         if hdr is None:
-            log.error("illegal message: '%r'" % (etree.tostring(msg)))
+            log.error("ignoring illegal message: '%r'" % (etree.tostring(msg)))
             return
-#            return xsdl.XenBEEError("illegal message",
-#                                    xsdl.ErrorCode.INTERNAL_SERVER_ERROR)
 
         if not bod or not len(bod):
             log.debug("got empty message, checking signature...")
@@ -227,8 +223,7 @@ class SecureProtocol(XMLProtocol):
                     self.__handshake_complete()
             except SecurityError, se:
                 log.debug("got a message from not-validatable source: %s" % (" ".join(se.args)))
-                return xsdl.XenBEEError("you are not authorized: %s" % se.message,
-                                        xsdl.ErrorCode.UNAUTHORIZED)
+                return message.Error(errcode.UNAUTHORIZED)
             return
         
         if bod and len(bod):
@@ -253,8 +248,7 @@ class SecureProtocol(XMLProtocol):
         try:
             real_msg = self.securityLayer.validate(real_msg)
         except SecurityError, se:
-            return xsdl.XenBEEError("you are not authorized: %s" % se.message,
-                                    xsdl.ErrorCode.UNAUTHORIZED)
+            return message.Error(errcode.UNAUTHORIZED)
         log.debug("received application data: %s" % real_msg.tag)
         try:
             rv = self.protocol.messageReceived(real_msg)

@@ -1,6 +1,7 @@
 """The protocol spoken by the commandline tool."""
 
 import logging, sys, os, os.path
+from pprint import pprint
 log = logging.getLogger(__name__)
 
 # log to stderr
@@ -24,9 +25,21 @@ class ClientXMLProtocol(protocol.XMLProtocol):
     def connectionMade(self):
         """send initialization stuff"""
         log.info("client protocol connected")
-        msg = message.Kill(task_id="1")
-        print msg
+        msg = message.StatusRequest()
         self.sendMessage(msg.as_xml())
+        msg = message.ListCache()
+        self.sendMessage(msg.as_xml())
+
+    def do_CacheEntries(self, elem, *args, **kw):
+        cache_entries = message.MessageBuilder.from_xml(elem.getroottree())
+        print "got cache entries:"
+        pprint(cache_entries.entries())
+
+    def do_StatusList(self, elem, *args, **kw):
+        status_list = message.MessageBuilder.from_xml(elem.getroottree())
+        print "got status list:"
+        pprint(status_list.entries())
+        
 
 class ClientProtocol(XenBEEProtocol):
     def post_connect(self):

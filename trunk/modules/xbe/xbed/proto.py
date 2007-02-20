@@ -13,7 +13,7 @@ from xbe.proto import XenBEEProtocolFactory, XenBEEProtocol
 from lxml import etree
 from xbe.xml.security import X509SecurityLayer, X509Certificate, SecurityError
 from xbe.xml.namespaces import *
-from xbe.xml import xsdl, message, protocol
+from xbe.xml import xsdl, message, protocol, errcode
             
 class XenBEEClientProtocol(protocol.XMLProtocol):
     """The XBE client side protocol.
@@ -25,11 +25,6 @@ class XenBEEClientProtocol(protocol.XMLProtocol):
     def __init__(self, client):
         protocol.XMLProtocol.__init__(self)
         self.client = client
-#        self.addUnderstood(XSDL("ImageSubmission"))
-#        self.addUnderstood(XSDL("StatusRequest"))
-#        self.addUnderstood(XSDL("Kill"))
-#        self.addUnderstood(XSDL("ListCache"))
-#        self.addUnderstood(JSDL("JobDefinition"))
 
     def connectionMade(self):
         log.debug("client %s has connected" % (self.client))
@@ -40,35 +35,34 @@ class XenBEEClientProtocol(protocol.XMLProtocol):
         # does the job have our InstanceDefinition element?
         # otherwise drop the job
         if not job.find(XSDL("InstanceDefinition")):
-            return xsdl.XenBEEError("no InstanceDefinition found.",
-                                        xsdl.ErrorCode.ILLEGAL_REQUEST)
-
+            return message.Error(errcode.ILLEGAL_REQUEST,
+                                 "no InstanceDefinition found.")
         # we should be able to handle the job
         task = self.factory.taskManager.newTask(job)
-        return xsdl.XenBEEError("task submitted: %s" % task.ID(),
-                                xsdl.ErrorCode.OK)
+        return message.Error(errcode.OK,
+                             "task submitted: %s" % task.ID())
 
     def do_StatusRequest(self, dom_node, *args, **kw):
 	"""Handle status request."""
-        msg = xml.xsdl.XenBEEStatusMessage()
-        map(msg.addStatusForTask, self.factory.taskManager.tasks.values())
-        return msg
+        status_list = message.StatusList()
+        map(status_list.add, self.factory.taskManager.tasks.values())
+        return status_list
 
     def do_Kill(self, elem, *args, **kw):
         kill = message.MessageBuilder.from_xml(elem.getroottree())
-        log.warn("got kill")
-        return
-        sig = int(elem.findtext(xsdl.XSDL("Signal")))
-        if not sig in [ 9, 15 ]:
-            return xsdl.XenBEEError("Signal out of range, allowed are (9,15)",
-                                    xsdl.ErrorCode.SIGNAL_OUT_OF_RANGE)
-        tid = elem.find(xsdl.XSDL("JobID"))
-        task = self.factory.taskManager.lookupByID(tid)
+        task = self.factory.taskManager.lookupByID(kill.task_id())
         if not task:
-            return xsdl.XenBEEError("no such task: %s" % (tid,),
-                                    xsdl.ErrorCode.TASK_LOOKUP_FAILURE)
-        task.kill(sig)
-        return xsdl.XenBEEError("signal sent", xsdl.ErrorCode.OK)
+            return message.Error(errcode.TASK_LOOKUP_FAILURE,
+                                 "no such task: %s" % (tid,),)
+        task.kill(kill.signal())
+#        sig = int(elem.findtext(xsdl.XSDL("Signal")))
+#        if not sig in [ 9, 15 ]:
+#            return xsdl.XenBEEError("Signal out of range, allowed are (9,15)",
+#                                    xsdl.ErrorCode.SIGNAL_OUT_OF_RANGE)
+#        tid = elem.find(xsdl.XSDL("JobID"))
+#        task = self.factory.taskManager.lookupByID(tid)
+#        task.kill(sig)
+#        return xsdl.XenBEEError("signal sent", xsdl.ErrorCode.OK)
 
     def do_ListCache(self, elem, *args, **kw):
         log.debug("retrieving cache list...")

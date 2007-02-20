@@ -27,9 +27,25 @@ class MessageParserError(ValueError):
     pass
 
 class MessageBuilder(object):
+    """Transforms xml documents back to its Message instance."""
     builder_map = {}
 
     def register(cls, klass):
+        """Register a new Message class.
+
+        klass.tag is used to identify the matching body element:
+        Example:
+           suppose the following message:
+           
+           <Message>
+              <MessageHeader/>
+              <MessageBody><Foo/>
+           </Message>
+
+           A class registering with 'Foo' will be used to transform
+           'Foo' back to a Foo-instance.
+           
+        """
         MessageBuilder.builder_map[klass.tag] = klass
     register = classmethod(register)
 
@@ -51,7 +67,12 @@ class MessageBuilder(object):
     xml_parts = classmethod(xml_parts)
 
     def from_xml(cls, xml_document):
-        """A convenience method, that can be used to transform a xml document into a Message."""
+        """A factory method, that can be used to transform a xml
+        document the matching Message instance.
+
+        @param xml_document a etree.Element or etree.ElementTree
+        @return the matching Message instance or a failure.Failure instance
+        """
         root, hdr, body = MessageBuilder.xml_parts(xml_document)
         if not body or not len(body):
             tag = None
@@ -62,10 +83,10 @@ class MessageBuilder(object):
             try:
                 result = builder.from_xml(root, hdr, body)
             except Exception, e:
-                result = failure.Failure(e)
+                raise
             return result
         else:
-            raise LookupError("could not find builder for tag '%s'" % (tag,))
+            return failure.Failure(LookupError("could not find builder for tag '%s'" % (tag,)))
     from_xml = classmethod(from_xml)
 
 
@@ -86,7 +107,8 @@ class SimpleMessage(Message):
     pass
 
 class Error(SimpleMessage):
-    tag = XBE("Error")
+    ns  = XBE
+    tag = ns("Error")
     
     def __init__(self, code=errcode.OK, msg=None):
         self.info = errcode.info[code]
@@ -97,17 +119,17 @@ class Error(SimpleMessage):
         root, hdr, body = MessageBuilder.xml_parts()
 	error = etree.SubElement(body, self.tag)
         
-        error.attrib[XBE("code")] = str(self.code)
-	etree.SubElement(error, XBE("ErrorName")).text = self.info[0]
-        etree.SubElement(error, XBE("ErrorDescription")).text = self.info[1]
+        error.attrib[Error.ns("code")] = str(self.code)
+	etree.SubElement(error, self.ns("ErrorName")).text = self.info[0]
+        etree.SubElement(error, self.ns("ErrorDescription")).text = self.info[1]
         if self.message is not None:
-            etree.SubElement(error, XBE("ErrorMessage")).text = self.msg
+            etree.SubElement(error, self.ns("ErrorMessage")).text = self.message
         return root
 
     def from_xml(cls, root, hdr, body):
         error = body.find(self.tag)
-        code = int(error.attrib[XBE("code")])
-        msg = error.findtext(XBE("ErrorMessage"))
+        code = int(error.attrib[cls.ns("code")])
+        msg = error.findtext(cls.ns("ErrorMessage"))
         return cls(code, msg)
     from_xml = classmethod(from_xml)
 MessageBuilder.register(Error)        
@@ -192,27 +214,33 @@ class CacheEntries(BaseServerMessage):
         self.__entries = []
 
     def add(self, uri, hash, type="data", description=""):
-        self.__entries.append( (uri, hash, type, description) )
+        self.__entries.append({"URI": uri,
+                               "HashValue": hash,
+                               "Type": type,
+                               "Description": description})
+
+    def entries(self):
+        return self.__entries
 
     def as_xml(self):
         root, hdr, body = MessageBuilder.xml_parts()
         entries = etree.SubElement(body, self.tag)
-        for uri, hash, type, description in self.__entries:
+        for entry in self.__entries:
             e = etree.SubElement(entries, XBE("Entry"))
-            etree.SubElement(e, XBE("URI")).text = uri
-            etree.SubElement(e, XBE("HashValue")).text = hash
-            etree.SubElement(e, XBE("Type")).text = str(type)
-            etree.SubElement(e, XBE("Description")).text = str(description)
+            for key, value in entry.iteritems():
+                etree.SubElement(e, XBE(key)).text = str(value)
         return root
+    
     def from_xml(cls, root, hdr, body):
         cache_entries = cls()
-        entries = body.find(self.tag)
+        entries = body.find(cls.tag)
         for entry in entries:
-            uri = entry.findtext(XBE("URI"))
-            hash = entry.findtext(XBE("HashValue"))
-            type = entry.findtext(XBE("Type"))
-            desc = entry.findtext(XBE("Description"))
-            cache_entries.add(uri, hash, type, desc)
+            entry_info = {}
+            for info_elem in entry:
+                key = decodeTag(info_elem.tag)[1]
+                value = info_elem.text
+                entry_info[key] = value
+            cache_entries.__entries.append(entry_info)
         return cache_entries
     from_xml = classmethod(from_xml)
 MessageBuilder.register(CacheEntries)
@@ -235,12 +263,17 @@ class Kill(BaseClientMessage):
     
     def __init__(self, task_id=None, signal=15):
         BaseClientMessage.__init__(self)
-        self.task_id = task_id
-        self.signal = signal
+        self.__task_id = task_id
+        self.__signal = signal
+
+    def signal(self):
+        return self.__signal
+    def task_id(self):
+        return self.__task_id
 
     def as_xml(self):
         try:
-            signal = int(self.signal)
+            signal = int(self.signal())
         except ValueError:
             raise ValueError("signal must be an integer")
         if signal not in (0, 9, 15):
@@ -248,9 +281,8 @@ class Kill(BaseClientMessage):
         root, hdr, body = MessageBuilder.xml_parts()
         kill = etree.SubElement(body, self.tag)
         kill.attrib[XBE("signal")] = str(signal)
-        etree.SubElement(kill, XBE("Task")).text = self.task_id
+        etree.SubElement(kill, XBE("Task")).text = self.task_id()
         return root
-
     def from_xml(cls, root, hdr, body):
         kill = body.find(self.tag)
         if kill is None:
@@ -262,6 +294,74 @@ class Kill(BaseClientMessage):
     from_xml = classmethod(from_xml)
 MessageBuilder.register(Kill)
 
+class StatusRequest(BaseClientMessage):
+    """Request the status of a single task or all.
+
+    body consists of 'StatusRequest' with a potential attribute
+    'task-id' which identifies the desired task.
+    """
+    tag = XBE("StatusRequest")
+    
+    def __init__(self, task_id=None):
+        BaseClientMessage.__init__(self)
+        self.__task_id = task_id
+
+    def task_id(self):
+        return self.__task_id
+    
+    def as_xml(self):
+        root, hdr, body = MessageBuilder.xml_parts()
+        sr = etree.SubElement(body, self.tag)
+        if self.task_id() is not None:
+            sr.attrib[XBE("task-id")] = self.task_id()
+        return root
+    def from_xml(cls, root, hdr, body):
+        sr = body.find(cls.tag)
+        task_id = sr.attrib.get(XBE("task-id"))
+        return cls(task_id)
+    from_xml = classmethod(from_xml)
+MessageBuilder.register(StatusRequest)
+
+class StatusList(BaseServerMessage):
+    """Answers the RequestStatus message.
+
+    Holds a list of status information objects.
+    """
+    tag = XBE("StatusList")
+    
+    def __init__(self):
+        BaseServerMessage.__init__(self)
+        self.__entries = []
+
+    def add(self, task):
+        self.__entries.append({"TaskID": task.ID(),
+                               "Submitted": task.tstamp})
+
+    def entries(self):
+        return self.__entries
+
+    def as_xml(self):
+        root, hdr, body = MessageBuilder.xml_parts()
+        entries = etree.SubElement(body, self.tag)
+        for entry in self.__entries:
+            e = etree.SubElement(entries, XBE("Status"))
+            for key, value in entry.iteritems():
+                etree.SubElement(e, XBE(key)).text = str(value)
+        return root
+    
+    def from_xml(cls, root, hdr, body):
+        cache_entries = cls()
+        entries = body.find(cls.tag)
+        for entry in entries:
+            entry_info = {}
+            for info_elem in entry:
+                key = decodeTag(info_elem.tag)[1]
+                value = info_elem.text
+                entry_info[key] = value
+            cache_entries.__entries.append(entry_info)
+        return cache_entries
+    from_xml = classmethod(from_xml)
+MessageBuilder.register(StatusList)
 
 #############################
 #
