@@ -76,7 +76,6 @@ class XMLProtocol(object):
 
     def sendMessage(self, msg):
         if msg is not None:
-            log.info("sending via %r" % self.transport)
             assert (isinstance(msg, (etree._Element, etree._ElementTree)),
                     "message to be sent must be XML")
             try:
@@ -148,12 +147,8 @@ class SecureXMLTransport(XMLTransport):
     def write(self, msg):
         if isinstance(msg, message.Message):
             msg = msg.as_xml()
-        log.debug("type of message: %s" % type(msg))
-        log.debug("signing message...")
         _msg = self.securityLayer.sign(msg)[0]
-        log.debug("encrypting message...")
         _msg = self.securityLayer.encrypt(_msg)
-        log.debug("writing message...")
         return XMLTransport.write(self, _msg)
 
 class SecureProtocol(XMLProtocol):

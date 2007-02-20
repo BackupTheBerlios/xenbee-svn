@@ -3,9 +3,9 @@
 OK = 200
 ILLEGAL_REQUEST = 400
 SUBMISSION_FAILURE = 401
+JOB_ALREADY_RUNNING = 402
 TASK_LOOKUP_FAILURE = 404
 INSTANCE_LOOKUP_FAILURE = 405
-
 SIGNAL_OUT_OF_RANGE = 450
 SECURITY_ERROR = 460
 UNAUTHORIZED = 461
@@ -17,6 +17,8 @@ info = {
                       "you sent me an illegal request", None),
     SUBMISSION_FAILURE: ("SUBMISSION FAILURE",
                          "you sent me an illegal request", None),
+    JOB_ALREADY_RUNNING: ("JOB ALREADY RUNNING",
+                         "a job is already running on this instance", None),
     TASK_LOOKUP_FAILURE: ("TASK_LOOKUP_FAILURE",
                           "the task-id you sent could not be mapped to a task", None),
     INSTANCE_LOOKUP_FAILURE: ("INSTANCE_LOOKUP_FAILURE",

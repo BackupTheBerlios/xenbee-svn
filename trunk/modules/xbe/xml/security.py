@@ -6,7 +6,7 @@ The Xen Based Execution Environment XML Messages
 __version__ = "$Rev$"
 __author__ = "$Author$"
 
-import logging, random
+import logging, random, os
 log = logging.getLogger(__name__)
 
 import base64, hashlib
@@ -205,7 +205,7 @@ class Cipher(object):
     def __init__(self, key=None, IV=None, algorithm=ALG_DES_EDE3_CBC, do_encryption=None, encoding=None):
         """Initialize a new Cipher object, that can be used to encrypt arbitrary data.
 
-        if key is None, asume encryption and generate a random key (128bit).
+        if key is None, asume encryption and generate a random key (128 byte).
         if do_encryption is None and key is None, asume encryption mode
         if do_encryption is None and key is not None, asume decryption
         if do_encryption is True, encrypt data
@@ -216,7 +216,7 @@ class Cipher(object):
         """
         if key is None:
             # generate random key
-            key = str(random.randint(0,  0xffffffffffffffffffffffffffffffff))
+            key = self.__random_value()
             if do_encryption is None:
                 # asume encryption
                 do_encryption = True
@@ -231,7 +231,7 @@ class Cipher(object):
             if not do_encryption:
                 raise ValueError("I need the initial vector for decryption")
             # generate a random initial vector
-            IV = str(random.randint(0,  0xffffffffffffffffffffffffffffffff))
+            IV = self.__random_value()
             
         assert (do_encryption is not None)
 
@@ -242,6 +242,14 @@ class Cipher(object):
         self.__IV = IV
         self.__algorithm = algorithm
         self.__evp_cipher = EVP.Cipher(algorithm, key, IV, op=int(do_encryption))
+
+    def __random_value(self, nbytes=128):
+        if nbytes <= 0:
+            raise ValueError("nbytes must be greater than zero: %d" % nbytes)
+        try:
+            return os.urandom(nbytes)
+        except NotImplementedError:
+            return str(random.randint(0, int("ff"*nbytes, 16)))
 
     def key(self):
         return self.__key

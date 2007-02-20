@@ -98,14 +98,22 @@ class StompTransport:
     its data.
     """
     
-    def __init__(self, stompConn, queue):
-	"""Initialize the transport."""
+    def __init__(self, stompConn, queue, ttl=15*60*1000):
+	"""Initialize the transport.
+
+        @param stompConn, the stomp protocol to be used
+        @param queue the destination queue
+        @param ttl the default TTL for sent messages (defaults to 15min)
+        """
 	self.stomp = stompConn
 	self.queue = queue
+        self.ttl = ttl
 
     def write(self, data, *args, **kw):
 	"""Write data to the destination queue."""
-        return threads.deferToThread(self.stomp.send, self.queue, str(data), *args, **kw)
+        return threads.deferToThread(self.stomp.send,
+                                     self.queue,
+                                     str(data), self.ttl, *args, **kw)
         
 class StompClient(LineReceiver):
     """Implementation of the STOMP protocol - client side.
@@ -257,10 +265,20 @@ class StompClient(LineReceiver):
 	if f.remainingBytes() == 0:
 	    self.closeFrame(data)
 
+    def has_expired(self, frame):
+        expires = long(frame.header.get("expires", 0))
+        now = long(time.time()*1000)
+        if expires is not None and expires > 0:
+            return now > expires
+        return False
+    
     def handleFrame(self, frame):
 	if frame.type == "CONNECTED":
 	    self.handle_CONNECTED(frame)
 	elif frame.type == "MESSAGE":
+            if self.has_expired(frame):
+                log.debug("throwing away expired frame")
+                return
 	    msg = Message(frame.header, frame.data, frame.header["destination"])
             if self.defer:
                 if self.timeoutTimer:

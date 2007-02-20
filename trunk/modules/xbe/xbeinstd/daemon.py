@@ -89,9 +89,8 @@ class XBEInstDaemon(Daemon):
         from twisted.internet import reactor
         from xbe.xbeinstd.protocol.instance import XenBEEInstProtocolFactory
 
-        f = XenBEEInstProtocolFactory(self,
+        f = XenBEEInstProtocolFactory(self, self.opts.uuid,
                                       my_queue=self.queue, server_queue="/queue/xenbee.daemon")
-        f.instanceId = self.opts.uuid
         reactor.connectTCP(self.xbe_host,
                            self.xbe_port,
                            f)

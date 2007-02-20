@@ -15,11 +15,6 @@ from twisted.internet import defer, threads
 from twisted.python import failure
 from xbe.xml import message
 
-try:
-    from cStringIO import StringIO
-except:
-    from StringIO import StringIO
-
 from xbe.xml.namespaces import *
 
 class XenBEEMessage(object):
@@ -45,72 +40,6 @@ class XenBEEMessage(object):
         return str(self)
     def as_xml(self):
         return self.root
-
-class ErrorCode:
-    class OK:
-	value = 200
-	name = "OK"
-        short_msg = "everything ok"
-        long_msg  = short_msg
-    class ILLEGAL_REQUEST:
-	value = 400
-	name = "ILLEGAL REQUEST"
-        short_msg = "you sent me an illegal request"
-        long_msg  = short_msg
-    class SUBMISSION_FAILURE:
-	value = 401
-	name = "SUBMISSION FAILURE"
-        short_msg = "you sent me an illegal request"
-        long_msg  = short_msg
-    class TASK_LOOKUP_FAILURE:
-        value = 404
-        name = "TASK_LOOKUP_FAILURE"
-        short_msg = "the task-id you sent could not be mapped to a task"
-        long_msg  = short_msg
-    class INSTANCE_LOOKUP_FAILURE:
-        value = 405
-        name = "INSTANCE_LOOKUP_FAILURE"
-        short_msg = "the task-id you sent could not be mapped to a task"
-        long_msg  = short_msg
-
-    class SIGNAL_OUT_OF_RANGE:
-        value = 450
-        name = "SIGNAL_OUT_OF_RANGE"
-        short_msg = "the signal you have sent was out of range"
-        long_msg  = short_msg
-
-    class SECURITY_ERROR:
-        value = 460
-        name = "SECURITY_ERROR"
-        short_msg = "general security violation"
-        long_msg = short_msg
-        
-    class UNAUTHORIZED:
-        value = 461
-        name = "UNAUTHORIZED"
-        short_msg = "you are not authorized"
-        long_msg = short_msg
-
-    class INTERNAL_SERVER_ERROR:
-        value = 500
-        name = "INTERNAL_SERVER_ERROR"
-        short_msg = "you sent me an illegal request"
-        long_msg  = short_msg
-    
-    
-class XenBEEError(XenBEEMessage):
-    """Encapsulates errors using XML."""
-    
-    def __init__(self, msg, errcode):
-        XenBEEMessage.__init__(self)
-        self.msg = msg
-        self.errcode = errcode
-
-	error = self.createElement("Error", self.root)
-        error.attrib[XSDL("code")] = str(self.errcode.value)
-	errorCode = self.createElement("ErrorCode", error, str(self.errcode.value))
-	errorName = self.createElement("ErrorName", error, self.errcode.name)
-	errorMessage = self.createElement("ErrorMessage", error, self.msg)
 
 class XenBEEClientMessage(XenBEEMessage):
     pass
@@ -178,41 +107,3 @@ class XenBEEStatusMessage(XenBEEClientMessage):
             _c("ExitCode", str(task.exitCode))
         else:
             _c("ExitCode", "N/A")
-            
-
-class XenBEEInstanceAvailable(XenBEEClientMessage):
-    """The message sent by an instance upon startup."""
-
-    def __init__(self, inst_id):
-        XenBEEClientMessage.__init__(self)
-        self.instanceId = inst_id
-        ia = self.createElement("InstanceAvailable", self.root)
-        self.createElement("InstanceID", ia, str(self.instanceId))
-        self.nodeInfo = self.createElement("NodeInformation", ia)
-
-    def setNetworkInfo(self, fqdn, ips):
-        netinfo = self.createElement("Network", self.nodeInfo)
-        self.createElement("FQDN", netinfo, fqdn)
-        ipinfo = self.createElement("IPList", netinfo)
-        for ip in ips:
-            self.createElement("IP", ipinfo, ip)
-
-class XenBEEListCache(XenBEEClientMessage):
-    """Request to list the cache entries."""
-
-    def __init__(self):
-        XenBEEClientMessage.__init__(self)
-        self.__request = self.createElement("ListCache", self.root)
-
-class XenBEECacheEntries(XenBEEClientMessage):
-    """Message sent to a client when a list of the cache is requested."""
-
-    def __init__(self):
-        XenBEEClientMessage.__init__(self)
-        self.__entries = self.createElement("CacheEntries", self.root)
-
-    def addEntry(self, uuid, type, description):
-        e = self.createElement("Entry", self.__entries)
-        self.createElement("URI", e, "cache://xbe-file-cache/"+str(uuid))
-        self.createElement("Type", e, str(type))
-        self.createElement("Description", e, str(description))

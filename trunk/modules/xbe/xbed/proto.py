@@ -111,27 +111,22 @@ class XenBEEInstanceProtocol(protocol.XMLProtocol):
     # Message handling part #
     #                       #
     #########################
-    def do_InstanceAvailable(self, inst_avail, *args, **kw):
-        inst_id = inst_avail.findtext(XSDL("InstanceID"))
+    def do_InstanceAvailable(self, xml, *args, **kw):
+        inst_avail = message.MessageBuilder.from_xml(xml.getroottree())
+        inst_id = inst_avail.inst_id()
+
         if inst_id != self.instid:
             raise ValueError("got answer from different instance!")
 
         inst = self.factory.instanceManager.lookupByUUID(inst_id)
         if not inst:
-            return xsdl.XenBEEError("no such instance",
-                                    xsdl.ErrorCode.INSTANCE_LOOKUP_FAILURE)
+            return message.Error(errcode.INSTANCE_LOOKUP_FAILURE)
         if inst.task == None:
             raise ValueError("no task belongs to this instance")
-
-        # retrieve network information
-        fqdn = inst_avail.findtext(XSDL("NodeInformation/Network/FQDN"))
-        ips = [ ip.text for ip in inst_avail.findall(XSDL("NodeInformation/Network/IPList/IP")) ]
-        log.debug("instance %s available at %s [%s]" % (inst_id, fqdn, ",".join(ips)))
-
         inst.protocol = self
-        inst.available(fqdn, ips)
+        inst.available(inst_avail)
 
-    def do_TaskStatusNotification(self, status, *args, **kw):
+    def do_TaskFinished(self, status, *args, **kw):
         fin_elem = status.find(XSDL("TaskFinished"))
         exitcode = int(fin_elem.findtext(XSDL("ExitCode")))
         stdout = fin_elem.findtext(XSDL("StandardOutput"))

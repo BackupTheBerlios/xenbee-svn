@@ -38,12 +38,11 @@ class XenBEEProtocol(StompClient):
     def connectedReceived(self, _):
 	# i am connected to the stomp server
 	log.debug("successfully connected to STOMP server, avaiting your commands.")
+        self.factory.stompConnectionMade(self)
+
+        log.error("TODO: move the subscription code to the client protocol")
         self.setReplyTo(self.factory.queue)
 	self.subscribe(self.factory.queue, auto_ack=True, exclusive=True)
-        self.post_connect()
-
-    def post_connect(self):
-        pass
 
     def _messageReceived(self, msg):
         # check if we got an advisory from the activemq server
@@ -105,3 +104,7 @@ class XenBEEProtocolFactory(StompClientFactory):
             reactor.stop()
 	else:
 	    StompClientFactory.clientConnectionFailed(self, connector, reason)
+
+    def stompConnectionMade(self, stomp_protocol):
+        """called when we are connected to the STOMP server"""
+        pass

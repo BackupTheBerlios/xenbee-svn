@@ -41,34 +41,32 @@ class ClientXMLProtocol(protocol.XMLProtocol):
         pprint(status_list.entries())
         
 
-class ClientProtocol(XenBEEProtocol):
-    def post_connect(self):
-        # schedule timer and send CertificateRequest/LoginRequest...
-
-        # notify the upper layer, that it may connect now
-        self.factory.xml_protocol.makeConnection(
-            protocol.XMLTransport(StompTransport(self, self.factory.server_queue)))
-        self.factory.xml_protocol.init_handshake()
-
 class ClientProtocolFactory(XenBEEProtocolFactory):
-    protocol = ClientProtocol
-    
     def __init__(self, id, certificate, ca_cert):
         XenBEEProtocolFactory.__init__(self, "/queue/xenbee.client.%s" % (id), "test-user-1")
         self.client_id = id
         self.server_queue = "/queue/xenbee.daemon"
         self.cert = certificate
         self.ca_cert = ca_cert
-        self.xml_protocol = protocol.SecureProtocol(self.cert, self.ca_cert, ClientXMLProtocol)
-        self.xml_protocol.factory = self
-
+        
     def dispatchToProtocol(self, transport, msg, domain, sourceType, sourceId=None):
         if "/queue/%s.%s" % (domain, sourceType) != self.server_queue:
             raise RuntimeError("illegal source of message: %s" % (sourceType))
-        if self.xml_protocol is None:
-            self.xml_protocol.makeConnection(transport)
         d = defer.maybeDeferred(self.xml_protocol.messageReceived, msg)
         d.addErrback(log.error)
+
+    def stompConnectionMade(self, stomp_protocol):
+        try:
+            self.xml_protocol
+        except AttributeError:
+            self.xml_protocol = protocol.SecureProtocol(self.cert,
+                                                        self.ca_cert,
+                                                        ClientXMLProtocol)
+#            stomp_protocol.subscribe("foo")
+            self.xml_protocol.factory = self
+            self.xml_protocol.makeConnection(
+                protocol.XMLTransport(StompTransport(stomp_protocol, self.server_queue)))
+            self.xml_protocol.init_handshake()
 
 if __name__ == "__main__":
     path = os.path.join(os.environ["HOME"], ".xbe", "cert")
