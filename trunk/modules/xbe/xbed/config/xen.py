@@ -102,16 +102,6 @@ class InstanceConfig:
         return self.diskImages
 
     def setMac(self, mac):
-        try:
-            mac = mac.strip().lower()
-        except:
-            raise ConfigurationError("invalid mac: %s" % mac)
-
-        import re
-        mac_pattern = r"^([0-9a-f]{1,2}:){5}[0-9a-f]{1,2}$"
-        p = re.compile(mac_pattern)
-        if not p.match(mac):
-            raise ConfigurationError("invalid mac: %s" % mac)
         self.mac = mac
     def getMac(self):
         return self.mac

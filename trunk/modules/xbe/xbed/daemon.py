@@ -46,20 +46,34 @@ class XBEDaemon(Daemon):
         p.add_option(
             "--ca-cert", dest="ca_cert", type="string",
             help="path to the CA x509 certificate")
+        p.add_option(
+            "--mac-file", dest="mac_file", type="string",
+            help="path to a file, that contains available mac addresses.")
 
     def configure(self):
         self.daemonize = self.opts.daemonize
         self.pidfile = self.opts.pidfile
 
+        __search_prefix = [ "/etc",
+                            "/etc/xbed",
+                            os.path.join(os.environ["XBED_HOME"], "etc"),
+                            os.path.join(os.environ["XBED_HOME"], "etc", "xbed") ]
+
+        def __locate_file(path):
+            for prefix in __search_prefix:
+                p = os.path.join(prefix, path)
+                if os.path.exists(p):
+                    return p
+            return None
+
         if self.opts.x509 is None:
-            self.opts.x509 = os.path.join(os.environ["XBED_HOME"],
-                                          "etc", "xbed", "xbed.pem")
+            self.opts.x509 = __locate_file("xbed.pem")
         if self.opts.p_key is None:
-            self.opts.p_key = os.path.join(os.environ["XBED_HOME"],
-                                           "etc", "xbed", "private", "xbed-key.pem")
+            self.opts.p_key = __locate_file(os.path.join("private", "xbed-key.pem"))
         if self.opts.ca_cert is None:
-            self.opts.ca_cert = os.path.join(os.environ["XBED_HOME"],
-                                             "etc", "CA", "ca-cert.pem")
+            self.opts.ca_cert = __locate_file(os.path.join("CA", "ca-cert.pem"))
+        if self.opts.mac_file is None:
+            self.opts.mac_file = __locate_file("mac-addresses")
 
     def setup_logging(self):
         import xbe
@@ -106,7 +120,7 @@ class XBEDaemon(Daemon):
 
         log.info("initializing instance manager...")
         from xbe.xbed.instance import InstanceManager
-        self.instanceManager = InstanceManager(self.cache)
+        self.instanceManager = InstanceManager(self)
         log.info("  done.")
 
         log.info("initializing task manager...")

@@ -21,6 +21,7 @@ except:
 
 from xbe.util.exceptions import *
 from xbe.xbed.backend import backend
+from xbe.xbed.resource import MacAddressPool
 from xbe import util
 from xbe.xml import xsdl
 
@@ -172,12 +173,8 @@ class Instance(object):
             else:
                 self.config.addToKernelCommandLine("%s" % (k))
 
-        macs = [ "00:16:3e:00:00:01",
-                 "00:16:3e:00:00:02" ]
-        import random
-        mac = random.choice(macs)
-        log.debug("TODO: choose meaningful MAC: %s" % (mac))
-        self.config.setMac(mac)
+        log.warn("TODO: move mac choosing somewhere else, this is an evil hack!")
+        self.mgr.macPool.acquire().addCallback(self.config.setMac)
     
         return self.addFiles(
             dict([ (f["name"], f["URI"]) for f in files.values()] ))
@@ -271,7 +268,6 @@ class Instance(object):
         """Return all information known about the backend instance."""
         binfo = backend.getInfo(self)
         binfo.ips = getattr(self, 'ips', [])
-        binfo.fqdn = getattr(self, 'fqdn', 'n/a')
         return binfo
 
     def stopped(self, result):
@@ -283,6 +279,7 @@ class Instance(object):
     def stop(self):
         """Stop the instance."""
         if self.state in ["started", "available"]:
+            self.mgr.macPool.release(self.config.getMac())
             return threads.deferToThread(backend.shutdownInstance,
                                          self).addCallback(self.stopped)
         else:
@@ -361,10 +358,8 @@ class Instance(object):
 
     def available(self, inst_avail_msg):
         """Callback called when the 'real' instance has notified us."""
-        log.debug("%s is now available at %s [%s]" % (self.ID(),
-                                                      inst_avail_msg.fqdn(),
-                                                      ", ".join(inst_avail_msg.ips())))
-        self.fqdn = inst_avail_msg.fqdn()
+        log.debug("%s is now available at [%s]" % (self.ID(),
+                                                   ", ".join(inst_avail_msg.ips())))
         self.ips = inst_avail_msg.ips()
         if not self.__availableDefer.called:
             self.__availableDefer.callback(self)
@@ -378,10 +373,12 @@ class InstanceManager:
 	- create a new one
 
     """
-    def __init__(self, cache):
+    def __init__(self, daemon):
         """Initialize the InstanceManager."""
+        self.macPool = MacAddressPool.from_file(daemon.opts.mac_file)
+        log.debug("initialized mac address pool with %d MACs" % (len(self.macPool)))
         self.instances = {}
-        self.cache = cache
+        self.cache = daemon.cache
         self.__iter__ = self.instances.itervalues
 
     def newInstance(self, xml_doc, spool):
