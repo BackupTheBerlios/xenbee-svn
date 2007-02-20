@@ -1,0 +1,10 @@
+#
+# MAC addresses available for this XBE server
+#
+00:16:3e:00:00:01      # xenhobel-1
+00:16:3e:00:00:02      # xenhobel-2
+
+# additional macs that don't have an IP yet
+#00:16:3e:00:00:03
+#00:16:3e:00:00:04
+#00:16:3e:00:00:05

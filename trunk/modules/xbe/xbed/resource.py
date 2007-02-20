@@ -42,6 +42,10 @@ class _Item:
         self.status = status
     def is_free(self):
         return self.status == _Item.FREE
+    def __str__(self):
+        return self.is_free() and "free" or "used"
+    def __repr__(self):
+        return str(self)
 
 class Pool(object):
     """A generic pool for any kind of object.
@@ -67,6 +71,11 @@ class Pool(object):
         """return the size of the pool."""
         return len(self.__pool)
 
+    def __str__(self):
+        """print the pool entries and their current status."""
+        from pprint import pformat
+        return pformat(self.__pool)
+    
     def free(self):
         """ free() -> int
 
@@ -233,7 +242,27 @@ class MacAddressPool(ValidatingPool):
     mac_validator.
       
     allowed MAC addresses must match the following regex:
-            "^([0-9a-f]{1,2}:){5}[0-9a-f]{1,2}$"    
+            "^([0-9a-f]{1,2}:){5}[0-9a-f]{1,2}$"
+
+    defines a from_file classmethod that reads in a list of
+    mac-addresses from a file.
     """
     def __init__(self):
-        ValidatingPool(mac_validator)
+        ValidatingPool.__init__(self, mac_validator)
+
+    def from_file(cls, file):
+        """reads a file which contains a list of mac addresses (each
+        on a single line).
+
+        lines starting with '#' are ignored
+        """
+        pool = cls()
+        if isinstance(file, basestring):
+            f = open(file)
+        else:
+            f = file
+        for line in f.readlines():
+            mac = line.split("#", 1)[0].strip().lower()
+            if len(mac): pool.add(mac)
+        return pool
+    from_file = classmethod(from_file)
