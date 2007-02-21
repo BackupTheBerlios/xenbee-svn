@@ -32,6 +32,9 @@ class XBEDaemon(Daemon):
             "-l", "--logfile", dest="logfile", type="string", default="/var/log/xenbee/xbed.log",
             help="the logfile to use")
         p.add_option(
+            "-L", "--logconf", dest="log_conf", type="string",
+            help="configuration file for the logging module")
+        p.add_option(
             "-D", "--no-daemonize", dest="daemonize", action="store_false", default=True,
             help="do not daemonize")
         p.add_option(
@@ -49,6 +52,10 @@ class XBEDaemon(Daemon):
         p.add_option(
             "--mac-file", dest="mac_file", type="string",
             help="path to a file, that contains available mac addresses.")
+        p.add_option(
+            "--url", dest="url", type="string",
+            default="stomp://xen-o-matic.itwm.fhrg.fraunhofer.de/xenbee.daemon",
+            help="the url through which I'am reachable")
 
     def configure(self):
         self.daemonize = self.opts.daemonize
@@ -74,11 +81,19 @@ class XBEDaemon(Daemon):
             self.opts.ca_cert = __locate_file(os.path.join("CA", "ca-cert.pem"))
         if self.opts.mac_file is None:
             self.opts.mac_file = __locate_file("mac-addresses")
+        if self.opts.log_conf is None:
+            self.opts.log_conf = __locate_file("logging.rc")
 
     def setup_logging(self):
         import xbe
         try:
-            xbe.initLogging(self.opts.logfile)
+            if os.path.exists(self.opts.log_conf):
+                # try to use the logconf file
+                from logging.config import fileConfig
+                fileConfig(self.opts.log_conf)
+            else:
+                # fall back and use a simple logfile
+                xbe.initLogging(self.opts.logfile)
             self.log_error = log.fatal
         except IOError, ioe:
             raise Exception("%s: %s" % (ioe.strerror, ioe.filename))

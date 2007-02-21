@@ -127,8 +127,8 @@ class InstanceConfig:
         if not m: raise ConfigurationError("invalid mem: %s" % mem)
 
                                      # interpret trailing characters
-        modTable = { "b" : 1,        # b - Just bytes
-                     "k" : 1024,     # k - Kilo bytes
+        modTable = { "b" : 1024**0,  # b - Just bytes
+                     "k" : 1024**1,  # k - Kilo bytes
                      "m" : 1024**2,  # m - Mega bytes
                      "g" : 1024**3 } # g - Giga bytes
         self.memory = int(m.group("bytes")) * modTable.get(m.group("modifier"), 1)
@@ -141,8 +141,8 @@ class InstanceConfig:
         in a different scale than the default bytes. Examples are: b,
         k, m or g.
         """
-        modTable = { "b" : 1,
-                     "k" : 1024,
+        modTable = { "b" : 1024**0,
+                     "k" : 1024**1,
                      "m" : 1024**2,
                      "g" : 1024**3 }
         if not unit in modTable.keys():
