@@ -65,32 +65,8 @@ class Cache(object):
             log.debug(e)
         return True
 
-    def initializeDatabase(self):
+    def initialize(self):
         return self.__db.runInteraction(self.__initTables)
-
-#        # log statistics
-#        sb = [ "",
-#               "Cache statistics",
-#               "================",
-#               "" ]
-#        for type,stat in self.getTypeStatistics("image", "kernel", "initrd", "data").iteritems():
-#            sb.append("%s:" % (type))
-#            for k, v in stat.iteritems():
-#                sb.append("\t%s: %s" % (k, v))
-#        log.info("\n".join(sb))
-#
-#    def getTypeStatistics(self, *types):
-#        stats = {}
-#        for t in types:
-#            s = {}
-#            s["entries"] = self.__getNumEntries(t)
-#            stats[t] = s
-#        return stats
-#
-#    def __getNumEntries(self, type):
-#        cur = self.__db.cursor()
-#        cur.execute("SELECT COUNT(*) FROM files WHERE type = ?", (type,))
-#        return cur.fetchone()[0]
 
     def cache(self, uri, type="data", description="", meta={}, **kw):
         """Retrieve the given uri and cache it."""

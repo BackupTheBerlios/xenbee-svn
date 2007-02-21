@@ -73,6 +73,11 @@ if __name__ == "__main__":
     cert = X509Certificate.load_from_files(os.path.join(path, "user.pem"),
                                            os.path.join(path, "private", "user-key.pem"))
     ca_cert = X509Certificate.load_from_files("/root/xenbee/etc/CA/ca-cert.pem")
+
+#    path = os.path.join(os.environ["HOME"], "tmp", "x.509")
+#    cert = X509Certificate.load_from_files(os.path.join(path, "signer.pem"),
+#                                           os.path.join(path, "signer_key.pem"))
+#   ca_cert = X509Certificate.load_from_files("/root/xenbee/etc/CA/ca-cert.pem")
     
     f = ClientProtocolFactory(id="2", certificate=cert, ca_cert=ca_cert)
     reactor.connectTCP("localhost", 61613, f)

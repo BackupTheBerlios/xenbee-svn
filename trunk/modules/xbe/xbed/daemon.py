@@ -130,7 +130,7 @@ class XBEDaemon(Daemon):
         log.info("initializing the file cache...")
         from xbe.cached.cache import Cache
         self.cache = Cache(os.path.join(self.opts.spool, "cache"))
-        self.cache.initializeDatabase().addErrback(str).addCallback(self.error)
+        self.cache.initialize().addBoth(str).addErrback(self.error)
         log.info("  done.")
 
         log.info("initializing instance manager...")

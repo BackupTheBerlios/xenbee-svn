@@ -135,8 +135,11 @@ class XMLProtocol(object):
             log.warn("Deprecation: messages must now contain Header and Body elements")
             return self.dispatch(msg[0], *args, **kw)
 
-    def do_Error(self, err):
-        log.debug("got error:\n%s" % (etree.tostring(err)))
+    def do_Error(self, err, *args, **kw):
+        log.error("got error:\n%s" % (etree.tostring(err)))
+        log.error("args: %s" % (args))
+        log.error("kw: %s" % (kw))
+        
 
 
 class SecureXMLTransport(XMLTransport):
@@ -263,7 +266,7 @@ class SecureProtocol(XMLProtocol):
                 self.__handshake_complete()
         except Exception, e:
             log.warn("got a certificate request from an invalid source: %s" % e.message)
-            raise
+            return message.Error(errcode.UNAUTHORIZED, "invalid certificate")
         return message.Certificate(self.securityLayer)
 
     def init_handshake(self):
