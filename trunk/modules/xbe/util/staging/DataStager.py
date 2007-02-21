@@ -225,17 +225,9 @@ class FileSetRetriever:
         return self.defer
 
 import stat
-
+from tempfile import mkstemp
 class TempFile:
-    """Provides a temporary file that gets unlinked if no longer needed.
-
-    WARNING: This implementation uses the os.tmpnam() function to generate
-	a random file name, but this could lead to a symlink attack.
-
-	It tries its best to avoid such an attack by verifying after
-	opening whether the file is a symlink or not.
-
-    """
+    """Provides a temporary file that gets unlinked if no longer needed."""
 
     def __init__(self, keep=False):
 	"""Initializes a temporary file.
