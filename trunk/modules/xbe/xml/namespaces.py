@@ -7,6 +7,8 @@ __version__ = "$Rev$"
 __author__ = "$Author$"
 
 # taken from http://effbot.org/zone/element-lib.htm
+# and added the __str__ method, which returns the uri
+#
 class NS(object):
     def __init__(self, uri):
         self.__uri = uri
@@ -32,6 +34,8 @@ XSDL_NS = "http://www.example.com/schemas/xbe/2007/01/xsdl"
 JSDL_NS = "http://schemas.ggf.org/jsdl/2005/11/jsdl"
 JSDL_POSIX_NS = "http://schemas.ggf.org/jsdl/2005/11/jsdl-posix"
 DSIG_NS = "http://www.w3.org/2000/09/xmldsig#"
+OGSA_BES_ACTIVITY_NS = "http://schemas.ggf.org/bes/2006/08/bes-activity"
+CALANA_STATE_NS = "http://www.example.com/schemas/calana/2007/01/calana_state"
 
 XBE  = NS(XBE_NS)
 XSDL = NS(XSDL_NS)
@@ -39,3 +43,5 @@ JSDL = NS(JSDL_NS)
 JSDL_POSIX = NS(JSDL_POSIX_NS)
 DSIG = NS(DSIG_NS)
 XBE_SEC = NS(XBE_SEC_NS)
+BES_ACTIVITY=NS(OGSA_BES_ACTIVITY_NS)
+CALANA_STATE = NS(CALANA_STATE_NS)

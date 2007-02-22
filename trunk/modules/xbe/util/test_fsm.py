@@ -6,7 +6,7 @@ __version__ = "$Rev: 14 $"
 __author__ = "$Author: petry $"
 
 import unittest
-from xenbeed.fsm import FSM, FSMError
+from xbe.util.fsm import FSM, FSMError
 
 class TestFSM(unittest.TestCase):
     def setUp(self):

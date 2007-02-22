@@ -126,8 +126,11 @@ class TestMakeImage(unittest.TestCase):
         self.assertEqual("hello world!", data)
         
 def suite():
-    s1 = unittest.makeSuite(TestDiskFunctions, "test")
-    return unittest.TestSuite((s1,))
+    s1 = unittest.makeSuite(TestMakeSparse, "test")
+    s2 = unittest.makeSuite(TestMakeSwap, "test")
+    s3 = unittest.makeSuite(TestMakeGuessFSType, "test")
+    s4 = unittest.makeSuite(TestMakeMakeImage, "test")
+    return unittest.TestSuite((s1,s2,s3,s4))
 
 if __name__ == "__main__":
     unittest.main()

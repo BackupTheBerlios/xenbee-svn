@@ -6,7 +6,7 @@ __version__ = "$Rev$"
 __author__ = "$Author$"
 
 import unittest, os, sys
-from xbe.xml import message, errcode
+from xbe.xml import message, errcode, bes
 from lxml import etree
 from xbe.xml.namespaces import *
 
@@ -99,14 +99,14 @@ class TestServerMessages(unittest.TestCase):
 
     def test_StatusList_as_xml(self):
         msg = message.StatusList()
-        msg.add(id="task-1", submitted_tstamp=1171983221, state="pending")
+        msg.add(id="task-1", submitted_tstamp=1171983221, state="Pending")
         xml = msg.as_xml()
         elem = xml.find(XBE("MessageBody")+"/"+msg.tag)
         self.assertNotEqual(elem, None)
         self.assertEqual(elem.findtext(XBE("Status/TaskID")), "task-1")
         self.assertEqual(int(elem.findtext(XBE("Status/Submitted"))), 1171983221)
-        self.assertEqual(elem.findtext(XBE("Status/State")), "pending")
-
+        state = bes.toXBETaskState(elem.find(XBE("Status/State"))[0])
+        self.assertEqual(state, "Pending")
 
     def test_StatusList_from_xml(self):
         xml = """
@@ -115,9 +115,12 @@ class TestServerMessages(unittest.TestCase):
            <xbe:MessageBody>
              <xbe:StatusList>
                <xbe:Status>
-                 <xbe:State>pending</xbe:State>
                  <xbe:Submitted>1171983221</xbe:Submitted>
                  <xbe:TaskID>task-1</xbe:TaskID>
+                 <xbe:State>
+                   <bes:ActivityStatus xmlns:bes="http://schemas.ggf.org/bes/2006/08/bes-activity"
+                                       state="Pending"/>
+                 </xbe:State>
                </xbe:Status>
              </xbe:StatusList>
            </xbe:MessageBody>
@@ -128,7 +131,7 @@ class TestServerMessages(unittest.TestCase):
         (entry,) = msg.entries()
         self.assertEqual(entry["TaskID"], "task-1")
         self.assertEqual(entry["Submitted"], "1171983221")
-        self.assertEqual(entry["State"], "pending")
+        self.assertEqual(entry["State"], "Pending")
 
 class TestInstanceMessages(unittest.TestCase):
     def setUp(self):

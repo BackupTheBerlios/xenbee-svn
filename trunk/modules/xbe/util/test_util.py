@@ -6,9 +6,9 @@ __version__ = "$Rev$"
 __author__ = "$Author$"
 
 
-import unittest, os
-from xenbeed import util
-from xenbeed.uuid import uuid
+import unittest, os, tempfile
+from xbe import util
+from xbe.util.uuid import uuid
 
 class TestRemoveDirCompletely(unittest.TestCase):
     def setUp(self):

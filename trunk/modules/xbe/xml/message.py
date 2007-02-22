@@ -15,6 +15,7 @@ from twisted.internet import defer, threads
 from twisted.python import failure
 
 from xbe.xml.namespaces import *
+from xbe.xml import bes
 from xbe.xml import errcode
 
 class MessageParserError(ValueError):
@@ -363,21 +364,22 @@ class StatusList(BaseServerMessage):
         entries = etree.SubElement(body, self.tag)
         for entry in self.__entries:
             e = etree.SubElement(entries, XBE("Status"))
-            for key, value in entry.iteritems():
-                etree.SubElement(e, XBE(key)).text = str(value)
+            etree.SubElement(e, XBE("TaskID")).text = entry["TaskID"]
+            etree.SubElement(e, XBE("Submitted")).text = str(entry["Submitted"])
+            etree.SubElement(e, XBE("State")).append(
+                (bes.fromXBETaskState(entry["State"])))
         return root
     
     def from_xml(cls, root, hdr, body):
-        cache_entries = cls()
+        status_list = cls()
         entries = body.find(cls.tag)
         for entry in entries:
             entry_info = {}
-            for info_elem in entry:
-                key = decodeTag(info_elem.tag)[1]
-                value = info_elem.text
-                entry_info[key] = value
-            cache_entries.__entries.append(entry_info)
-        return cache_entries
+            entry_info["TaskID"] = entry.find(XBE("TaskID")).text
+            entry_info["Submitted"] = entry.find(XBE("Submitted")).text
+            entry_info["State"] = bes.toXBETaskState(entry.find(XBE("State"))[0])
+            status_list.__entries.append(entry_info)
+        return status_list
     from_xml = classmethod(from_xml)
 MessageBuilder.register(StatusList)
 
