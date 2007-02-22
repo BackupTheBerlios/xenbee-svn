@@ -1,7 +1,7 @@
-"""Functions usefull to create disk images.
+"""Functions usefull to create and manage disk images.
 
-   sparse disks, swap space
-
+   sparse disks, swap space, file-system images
+   (u)mount images
 """
 
 import subprocess, tempfile, os
@@ -15,90 +15,23 @@ try:
 except OSError, e:
     raise ImportError("sorry, but I need %s to operate." % (devnull), e)
 
-def makeSparseDisk(path, mega_bytes=128):
-    """Creates a sparse.
+class ProcessError(subprocess.CalledProcessError):
+    def __init__(self, returncode, cmd, stderr, stdout):
+        subprocess.CalledProcessError.__init__(self, returncode, cmd)
+        self.__stderr = stderr
+        self.__stdout = stdout
 
-    path -- the path where to generate the file.
-    mega_bytes -- as the name says, the number of mega bytes.
+    def __str__(self):
+        s = subprocess.CalledProcessError.__str__(self)
+        s += ": %s" % (self.__stderr)
+        return s
 
-    requires: dd
-    
-    """
-    try:
-        mega_bytes = int(mega_bytes)
-    except:
-        raise
-    try:
-        subprocess.check_call(["dd",
-                               "if=%s" % devnull_p, "of=%s" % path,
-                               "bs=1024k", "count=0", "seek=%d" % mega_bytes],
-                              stdout=devnull, stderr=devnull)
-    except subprocess.CalledProcessError, e:
-        raise RuntimeError("dd returned non zero exit code", e)
-    except OSError, e:
-        raise
-
-def makeSwap(path, mega_bytes=128):
-    """Create a swap disk.
-
-    Uses the makeSparseDisk to create a sparse disk of size
-    'mega_bytes' at path and running 'mkswap' on it.
-
-    requires: mkswap
-
-    """
-    makeSparseDisk(path, mega_bytes)
-    try:
-        search_path = os.environ["PATH"].split(":")
-    except KeyError:
-        search_path = ["/sbin", "/usr/sbin", "/usr/local/sbin"]
-    for prefix in search_path:
-        try:
-            cmd = os.path.join(prefix, "mkswap")
-            subprocess.check_call([cmd, path], stdout=devnull, stderr=devnull)
-        except OSError:
-            # try the next one
-            continue
-        except subprocess.CalledProcessError, e:
-            raise RuntimeError("mkswap had non zero exitcode", e)
-        break
-
-def makeImage(path, fs_type="ext2", mega_bytes=128):
-    """Create a new disk image.
-
-    @param path location of the new image
-    @param fs_type the file-system type to create
-    @param mega_bytes the size of the new image
-    """
-    makeSparseDisk(path, mega_bytes)
-    try:
-        search_path = os.environ["PATH"].split(":")
-    except KeyError:
-        search_path = ["/sbin", "/usr/sbin", "/usr/local/sbin"]
-    for prefix in search_path:
-        try:
-            cmd = os.path.join(prefix, "mkfs.%s" % fs_type)
-# from the mkfs manpage:
-# -F Force mke2fs to create a filesystem, even if the specified device
-#    is  not  a partition  on  a block  special  device,  or if  other
-#    parameters do not make sense.  In order to force mke2fs to create
-#    a filesystem  even if the filesystem  appears to be in  use or is
-#    mounted  (a truly  dangerous thing  to do),  this option  must be
-#    specified twice.
-            subprocess.check_call([cmd, "-F",  path]) #, stdout=devnull, stderr=devnull)
-        except OSError:
-            # try the next one
-            continue
-        except subprocess.CalledProcessError, e:
-            raise RuntimeError("%s had non zero exitcode" % cmd, e)
-        break
+# the only currently supported filesystems
+FS_EXT2 = "ext2"
+FS_EXT3 = "ext3"
 
 class NotMountedException(Exception):
     pass
-
-FS_EXT2 = "ext2"
-FS_EXT3 = "ext3"
-FS_REISER="reiserfs"
 
 class Image(object):
     """Represents a filesystem image."""
@@ -118,7 +51,11 @@ class Image(object):
         except NotMountedException:
             pass
 
-    def mounted(self):
+    def fs_type(self):
+        """Return the fs_type of the image."""
+        return self.__fs_type
+
+    def is_mounted(self):
         """Is the image currently mounted?"""
         try:
             self.__mount_point
@@ -131,7 +68,7 @@ class Image(object):
 
         raises NotMountedException if the image is not mounted.
         """
-        if not self.mounted():
+        if not self.is_mounted():
             raise NotMountedException()
         return self.__mount_point
 
@@ -145,11 +82,14 @@ class Image(object):
         """
         mount_point = tempfile.mkdtemp(*args, **kw)
         try:
-            subprocess.check_call(["mount", "-o", "loop", "-t", self.__fs_type, self.__path, mount_point])
+            p = subprocess.Popen(["mount", "-o", "loop", "-t",
+                                   self.__fs_type, self.__path, mount_point],
+                                 stdout=devnull, stderr=subprocess.PIPE)
+            stdout, stderr = p.communicate()
+            if p.returncode != 0:
+                raise ProcessError(p.returncode, "mount", stderr, stdout)
         except OSError, e:
             raise RuntimeError("'mount' could not be called", e)
-        except subprocess.CalledProcessError, e:
-            raise RuntimeError("'mount' failed", e)
         except:
             os.rmdir(mount_point)
             raise
@@ -170,7 +110,11 @@ class Image(object):
         except AttributeError:
             raise NotMountedException()
         try:
-            subprocess.check_call(["umount", mount_point])
+            p = subprocess.Popen(["umount", mount_point],
+                                 stdout=devnull, stderr=subprocess.PIPE)
+            stdout, stderr = p.communicate()
+            if p.returncode != 0:
+                raise ProcessError(p.returncode, "umount", stderr, stdout)
         except OSError, e:
             raise RuntimeError("'umount' could not be called", e)
         except subprocess.CalledProcessError, e:
@@ -178,6 +122,30 @@ class Image(object):
         except:
             raise
         os.rmdir(mount_point)
+
+def guess_fs_type(path):
+    """Try to guess the file system type using the 'file' command.
+
+    raises ValueError if no guess could be made.
+    return the fs_type
+    """
+    try:
+        p = subprocess.Popen(["file",
+                              "-b", # brief output
+                              path],
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = p.communicate()
+        if p.returncode != 0:
+            raise ProcessError(p.returncode, "file", stderr, stdout)
+        else:
+            # single line: example: Linux rev 1.0 ext3 filesystem data
+            file_info = stdout.split()
+            if len(file_info) == 6 and " ".join(file_info[-2:]) == "filesystem data":
+                return file_info[-3]
+            else:
+                raise ValueError("could not guess filesystem type")
+    except OSError, e:
+        raise
 
 def mountImage(path, fs_type=FS_EXT2, *args, **kw):
     """Mount an image using the loop device.
@@ -191,3 +159,109 @@ def mountImage(path, fs_type=FS_EXT2, *args, **kw):
     img = Image(path, fs_type)
     img.mount(*args, **kw)
     return img
+
+def makeSparseDisk(path, mega_bytes=128):
+    """Creates a sparse.
+
+    path -- the path where to generate the file.
+    mega_bytes -- as the name says, the number of mega bytes.
+
+    requires: dd
+
+    raises ProcessError if 'dd' failed
+    raises OSError if 'dd' could not be executed
+    raises ValueError if mega_bytes did not convert to 'int'
+    returns the given path
+    """
+    try:
+        mega_bytes = int(mega_bytes)
+    except:
+        raise
+
+    try:
+        p = subprocess.Popen(["dd",
+                              "if=%s" % devnull_p, "of=%s" % path,
+                              "bs=1024k", "count=0", "seek=%d" % mega_bytes],
+                             stdout=devnull, stderr=subprocess.PIPE)
+        stdout, stderr = p.communicate()
+        if p.returncode != 0:
+            raise ProcessError(p.returncode, "dd", stderr, stdout)
+    except OSError, e:
+        raise
+    return path
+
+def makeSwap(path, mega_bytes=128):
+    """Create a swap disk.
+
+    Uses the makeSparseDisk to create a sparse disk of size
+    'mega_bytes' at path and running 'mkswap' on it.
+
+    requires: mkswap
+
+    raises ProcessError if mkswap returned non zero
+    raises LookupError if mkswap could not be found
+    returns the given if successful path
+    """
+    makeSparseDisk(path, mega_bytes)
+    try:
+        search_path = os.environ["PATH"].split(":")
+    except KeyError:
+        search_path = ["/sbin", "/usr/sbin", "/usr/local/sbin"]
+    success = False
+    for prefix in search_path:
+        try:
+            cmd = os.path.join(prefix, "mkswap")
+            p = subprocess.Popen([cmd, path],
+                                 stdout=devnull, stderr=subprocess.PIPE)
+            stdout, stderr = p.communicate()
+            if p.returncode != 0:
+                raise ProcessError(p.returncode, cmd, stderr, stdout)
+        except OSError:
+            # try the next one
+            continue
+        success = True
+        break
+    if not success:
+        raise LookupError("could not locate mkswap")
+    return path
+
+def makeImage(path, fs_type="ext2", mega_bytes=128):
+    """Create a new disk image.
+
+    raises LookupError if mkfs could not be found
+    raises 
+    
+    @param path location of the new image
+    @param fs_type the file-system type to create
+    @param mega_bytes the size of the new image
+    """
+    makeSparseDisk(path, mega_bytes)
+    try:
+        search_path = os.environ["PATH"].split(":")
+    except KeyError:
+        search_path = ["/sbin", "/usr/sbin", "/usr/local/sbin"]
+        
+    success = False
+    for prefix in search_path:
+        try:
+            cmd = os.path.join(prefix, "mkfs")
+# from the mkfs manpage:
+# -F Force mke2fs to create a filesystem, even if the specified device
+#    is  not  a partition  on  a block  special  device,  or if  other
+#    parameters do not make sense.  In order to force mke2fs to create
+#    a filesystem  even if the filesystem  appears to be in  use or is
+#    mounted  (a truly  dangerous thing  to do),  this option  must be
+#    specified twice.
+            p = subprocess.Popen([cmd, "-t", fs_type, "-F", path],
+                                 stdout=devnull, stderr=subprocess.PIPE)
+            stdout, stderr = p.communicate()
+            if p.returncode != 0:
+                raise ProcessError(p.returncode, cmd, stderr, stdout)
+        except OSError, e:
+            # try the next path
+            continue
+        success = True
+        break
+    if not success:
+        raise LookupError("could not locate mkfs")
+    return Image(path, fs_type)
