@@ -27,6 +27,7 @@ class ProcessError(subprocess.CalledProcessError):
         return s
 
 # the only currently supported filesystems
+FS_GUESS = ()
 FS_EXT2 = "ext2"
 FS_EXT3 = "ext3"
 
@@ -35,13 +36,15 @@ class NotMountedException(Exception):
 
 class Image(object):
     """Represents a filesystem image."""
-    def __init__(self, path, fs_type=FS_EXT2):
+    def __init__(self, path, fs_type=FS_GUESS):
         """Initialize the image.
 
         @param path the path to the image-file
         @param fs_type the filesystem type to be used
         """
         self.__path = path
+        if fs_type == FS_GUESS:
+            fs_type = guess_fs_type(path)
         self.__fs_type = fs_type
 
     def __del__(self):
@@ -147,13 +150,16 @@ def guess_fs_type(path):
     except OSError, e:
         raise
 
-def mountImage(path, fs_type=FS_EXT2, *args, **kw):
+def mountImage(path, fs_type=FS_GUESS, *args, **kw):
     """Mount an image using the loop device.
 
     returns a Image instance which is already mounted.
 
     @param path is the path to the image file
-    @param fs_type the filesystem type to use (defaults to ext2)
+    @param fs_type the filesystem type to use, defaults to FS_GUESS,
+           which means that an attempt is made to guess the correct
+           fs_type
+           
     all additional parameters will be passed to tempfile.mkdtemp
     """
     img = Image(path, fs_type)

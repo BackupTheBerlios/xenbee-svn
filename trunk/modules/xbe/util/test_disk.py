@@ -96,6 +96,15 @@ class TestMakeImage(unittest.TestCase):
         img = mountImage(tmp.name)
         self.assertTrue(img.is_mounted())
 
+    def test_mount_illegal_image(self):
+        tmp = tempfile.NamedTemporaryFile()
+        try:
+            img = mountImage(tmp.name, FS_EXT2)
+        except ProcessError:
+            pass
+        else:
+            self.fail("ProcessError expected")
+
     def test_umount_image(self):
         # check the automatic umounting
         tmp = tempfile.NamedTemporaryFile()
