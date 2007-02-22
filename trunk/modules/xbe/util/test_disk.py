@@ -5,27 +5,39 @@
 __version__ = "$Rev$"
 __author__ = "$Author$"
 
-import unittest, os, sys, os.path
-from xenbeed.disk import makeSparseDisk, makeSwap
-from xenbeed.uuid import uuid
+import unittest, os, sys, os.path, tempfile
+from xbe.util.disk import makeSparseDisk, makeSwap
 
 class TestDiskFunctions(unittest.TestCase):
     def setUp(self):
-        self.path = os.path.join("/tmp", uuid())
+        self.path = None
 
     def tearDown(self):
-        if os.access(self.path, os.F_OK):
+        if self.path is not None and os.access(self.path, os.F_OK):
             os.unlink(self.path)
+            os.close(self.fd)
 
     def test_make_sparse(self):
-        self.assertFalse(os.access(self.path, os.F_OK))
-        makeSparseDisk(self.path)
-        self.assertTrue(os.access(self.path, os.F_OK))
+        tmp = tempfile.NamedTemporaryFile()
+        tmp.seek(0, os.SEEK_END)
+        self.assertEquals(0, tmp.tell())
+        makeSparseDisk(tmp.name, 2)
+        tmp.seek(0, os.SEEK_END)
+        self.assertEquals(2*1024**2, tmp.tell())
 
     def test_make_swap(self):
-        self.assertFalse(os.access(self.path, os.F_OK))
-        makeSwap(self.path)
-        self.assertTrue(os.access(self.path, os.F_OK))
+        tmp = tempfile.NamedTemporaryFile()
+        tmp.seek(0, os.SEEK_END)
+        self.assertEquals(0, tmp.tell())
+        makeSwap(tmp.name, 2)
+        tmp.seek(0, os.SEEK_END)
+        self.assertEquals(2*1024**2, tmp.tell())
+
+    def test_create_fs(self):
+        pass
+
+    def test_mount_image(self):
+        pass
 
 def suite():
     s1 = unittest.makeSuite(TestDiskFunctions, "test")
