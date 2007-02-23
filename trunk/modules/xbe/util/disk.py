@@ -1,7 +1,8 @@
 """Functions usefull to create and manage disk images.
 
    sparse disks, swap space, file-system images
-   (u)mount images
+   (u)mount images, build fstab entries.
+   
 """
 
 import subprocess, tempfile, os
@@ -271,3 +272,113 @@ def makeImage(path, fs_type="ext2", mega_bytes=128):
     if not success:
         raise LookupError("could not locate mkfs")
     return Image(path, fs_type)
+
+class FSTabEntry:
+    """Represents a single entry in the fstab.
+
+    """
+
+    def __init__(self, file_system, mount_point, type, options="defaults", dump_freq=0, pass_no=0):
+        self.__file_system = file_system
+        self.__mount_point = mount_point
+        self.__type = type
+        self.__opts = self._parse_opts(options)
+        self.__dump_freq = int(dump_freq)
+        self.__pass_no = int(pass_no)
+
+    def get_opts(self):
+        return self.__opts
+    def get_opt_string(self):
+        return self._unparse_opts(self.__opts)
+    def get_file_system(self):
+        return self.__file_system
+    def get_mount_point(self):
+        return self.__mount_point
+    def get_type(self):
+        return self.__type
+    def get_dump_freq(self):
+        return self.__dump_freq
+    def get_pass_no(self):
+        return self.__pass_no
+
+    def _unparse_opts(self, options):
+        opts = []
+        for key, value in options.iteritems():
+            if value == 0: # and key in 'self.__boolOpts'
+                key_value = "no"+key
+            elif value == 1:
+                key_value = key
+            else:
+                key_value = "%s=%s" % (key, value)
+            opts.append(key_value)
+        return ",".join(opts)
+
+    def _parse_opts(self, optstring):
+        options = {}
+        opts = optstring.split(",")
+        for opt in opts:
+            key_value = opt.split("=", 1)
+            if len(key_value) == 2:
+                options[key_value[0]] = key_value[1]
+            elif len(key_value) == 1:
+                # have a look at the option and store 0 or 1 if it starts with 'no'
+                val = 1
+                key = key_value[0]
+                if key.startswith("no"):
+                    val = 0
+                    key = key[2:]
+                options[key] = val
+        return options
+
+    def __repr__(self):
+        return "<%(cls)s %(fs)s on %(mp)s (%(type)s with %(opts)s)>" % {
+            "cls": self.__class__.__name__,
+            "fs" : self.__file_system,
+            "mp" : self.__mount_point,
+            "type":self.__type,
+            "opts":self.get_opt_string() }
+    def __str__(self):
+        return "\t".join(map(str, (self.get_file_system(),
+                                   self.get_mount_point(),
+                                   self.get_type(),
+                                   self.get_opt_string(),
+                                   self.get_dump_freq(),
+                                   self.get_pass_no())))
+
+class FSTab:
+    """Represents the /etc/fstab
+    #
+    # /etc/fstab: static file system information.
+    #
+    # <file system> <mount point>   <type>  <options>       <dump>  <pass>
+    """
+    def __init__(self):
+        self.__entries = []
+        self.__iter__ = self.__entries.__iter__
+        self.__getitem__ = self.__entries.__getitem__
+        self.__getslice__ = self.__entries.__getslice__
+
+    def add(self, *args, **kw):
+        self.__entries.append(FSTabEntry(*args, **kw))
+
+    def __repr__(self):
+        from pprint import pformat
+        return pformat(self.__entries)
+
+    def __str__(self):
+        return self.to_fstab()
+
+    def to_fstab(self):
+        return "\n".join(map(str, self))
+
+    def from_file(cls, f):
+        fstab = cls()
+        if not isinstance(f, file):
+            f = open(f)
+        for line in f.readlines():
+            entry = line.strip().split("#", 1)[0]
+            if entry == "":
+                continue
+            fstab.add(*entry.split())
+        return fstab
+    from_file = classmethod(from_file)

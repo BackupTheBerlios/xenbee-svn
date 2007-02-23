@@ -124,6 +124,18 @@ class TestMakeImage(unittest.TestCase):
         self.assertTrue(os.path.exists(path))
         data = open(path).read()
         self.assertEqual("hello world!", data)
+
+class TestFSTab(unittest.TestCase):
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
+    def test_adding(self):
+        fstab = FSTab()
+        fstab.add("proc", "/proc", "proc", "defaults", "0", "0")
+        print repr(fstab)
         
 def suite():
     s1 = unittest.makeSuite(TestMakeSparse, "test")

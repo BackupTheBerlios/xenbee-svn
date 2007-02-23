@@ -67,6 +67,43 @@ class RangeValue:
                 return True
         return False
 
+    def __str__(self):
+        s = []
+        if self.upper[0] is not None:
+            if self.upper[1]:
+                s.append("< %.2f" % self.upper[0])
+            else:
+                s.append("<= %.2f" % self.upper[0])
+        if self.lower[0] is not None:
+            if self.lower[1]:
+                s.append("> %.2f" % self.lower[0])
+            else:
+                s.append(">= %.2f" % self.lower[0])
+        for exact, epsilon in self.exacts:
+            if epsilon != 0:
+                s.append("== %.2f (+/- %f)" % (exact, epsilon))
+            else:
+                s.append("== %.2f" % (exact))
+        for lower, upper in self.ranges:
+            s.append("%(lo_bound)s%(lo_val)f, %(hi_val)s%(hi_bound)s" % {
+                "lo_bound": lower[1] and "(" or "[",
+                "lo_val": lower[0],
+                "hi_val": upper[0],
+                "hi_bound": upper[1] and ")" or "]"
+            })
+        return "{"+", ".join(s)+"}"
+
+    def __repr__(self):
+        return "<%(cls)s %(humanreadable)s>" % {
+            "cls": self.__class__.__name__,
+            "humanreadable": str(self)
+            }
+
+    def get_value(self):
+        if len(self.exacts) == 1:
+            return self.exacts[0][0]
+        raise NotImplementedError("TODO: implement more functionality")
+
     def __parse_range_type(self, xml_elem):
         ns, tag = decodeTag(xml_elem.tag)
         if ns != str(JSDL):
@@ -146,6 +183,8 @@ class JsdlDocument:
     
     def __init__(self):
 
+        self._fileSystems = {}
+
         # JSDL Parser Map
         jsdlParserMap = {
             self.DEFAULT_PARSER: self._parse_complex,
@@ -164,7 +203,7 @@ class JsdlDocument:
             # Resources
             "CandidateHosts": self._parse_elem_array,
             "HostName": self._parse_text,
-            "FileSystem": self._parse_complex_array,
+            "FileSystem": self._parse_filesystem,
             "MountPoint": self._parse_text,
             "MountSource": self._parse_text,
             "DiskSpace": self._parse_range,
@@ -202,7 +241,6 @@ class JsdlDocument:
             self.DEFAULT_PARSER: self._parse_complex,
             "Executable": self._parse_text,
 
-            # TODO: this must be changed, since the 'Argument' accepts an attribute!!!!
             "Argument": self._parse_posix_text_array,
             "Executable": self._parse_posix_text,
             "Input": self._parse_posix_text,
@@ -226,10 +264,22 @@ class JsdlDocument:
             "GroupName": self._parse_text,
             }
 
+        xbeParserMap = {
+            self.DEFAULT_PARSER: self._parse_complex,
+            "Ticket": self._parse_normative_text,
+            "CacheID": self._parse_normative_text,
+        }
+        xsdlParserMap = {
+            self.DEFAULT_PARSER: self._parse_complex,
+            "Argument": self._parse_normative_text_array,
+        }
+
         self.parserMaps = {
             str(JSDL): jsdlParserMap,
             str(JSDL_POSIX): jsdlPosixParserMap,
-            }
+            str(XBE): xbeParserMap,
+            str(XSDL): xsdlParserMap,
+        }
 
     def lookup_path(self, path):
         components = path.split("/")
@@ -281,9 +331,13 @@ class JsdlDocument:
     def _parse_elem_array(self, xml):
         return [self._parse(xml[0])]
     def _parse_text_array(self, xml):
-        return [xml.text]
+        return [(xml.text or "")]
+    def _parse_normative_text_array(self, xml):
+        return [self._parse_normative_text(xml)]
     def _parse_text(self, xml):
-        return xml.text
+        return xml.text or ""
+    def _parse_normative_text(self, xml):
+        return self._parse_text(xml).strip()
     def _parse_uri(self, xml):
         return self._parse_text(xml)
     def _parse_complex_array(self, xml):
@@ -292,12 +346,18 @@ class JsdlDocument:
         return RangeValue.from_xml(xml)
     def _parse_bool(self, xml):
         val = (xml.text or "").strip().lower()
-        if val in ("true", "yes", "1"):
+        if val in ("true", "1"):
             return True
-        elif val in ("false", "no", "0"):
+        elif val in ("false", "0"):
             return False
         else:
             raise ValueError("illegal value for bool", val)
+    def _parse_filesystem(self, xml):
+        # if the filesystem has a 'name' attribute, remember it
+        name = xml.attrib.get("name")
+        if name is not None:
+            self._fileSystems[name] = self._parse_complex_array(xml)
+        return self._parse_complex_array(xml)
 
     def _parse_integer(self, xml):
         return int(xml.text)
