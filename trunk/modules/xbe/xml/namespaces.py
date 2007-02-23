@@ -36,7 +36,9 @@ JSDL_POSIX_NS = "http://schemas.ggf.org/jsdl/2005/11/jsdl-posix"
 DSIG_NS = "http://www.w3.org/2000/09/xmldsig#"
 OGSA_BES_ACTIVITY_NS = "http://schemas.ggf.org/bes/2006/08/bes-activity"
 CALANA_STATE_NS = "http://www.example.com/schemas/calana/2007/01/calana_state"
+XSD_NS = "http://www.w3.org/2001/XMLSchema"
 
+XSD = NS(XSD_NS)
 XBE  = NS(XBE_NS)
 XSDL = NS(XSDL_NS)
 JSDL = NS(JSDL_NS)

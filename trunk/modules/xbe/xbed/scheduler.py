@@ -21,7 +21,6 @@ class Scheduler:
         self.__mtx = threading.RLock()
 
         self.tMgr = taskMgr
-        self.tMgr.addObserver(self.taskWatch)
 
         self.schedulerLoop = task.LoopingCall(self.cycle)
 
@@ -37,7 +36,9 @@ class Scheduler:
         self.__finished = []
         self.__failed = []
 
-        self.schedulerLoop.start(0.5)
+        # scheduler is currently disabled
+        #self.tMgr.addObserver(self.taskWatch)
+        #self.schedulerLoop.start(0.5)
 
     def logStatistics(self):
         from textwrap import dedent
