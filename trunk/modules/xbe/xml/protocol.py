@@ -5,6 +5,8 @@ The Xen Based Execution Environment XML Protocol
 import logging
 log = logging.getLogger(__name__)
 
+from pprint import pformat
+
 from xbe.xml.namespaces import *
 from xbe.xml import message, errcode
 from xbe.xml.security import X509SecurityLayer, X509Certificate, SecurityError
@@ -137,8 +139,8 @@ class XMLProtocol(object):
 
     def do_Error(self, err, *args, **kw):
         log.error("got error:\n%s" % (etree.tostring(err)))
-        log.error("args: %s" % (args))
-        log.error("kw: %s" % (kw))
+        log.error("args: %s" % pformat(args))
+        log.error("kw: %s" % pformat(kw))
         
 
 

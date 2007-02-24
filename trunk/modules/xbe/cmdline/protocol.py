@@ -25,9 +25,9 @@ class ClientXMLProtocol(protocol.XMLProtocol):
     def connectionMade(self):
         """send initialization stuff"""
         log.info("client protocol connected")
-        msg = message.StatusRequest()
-        self.sendMessage(msg.as_xml())
         msg = message.ListCache()
+        self.sendMessage(msg.as_xml())
+        msg = message.ReservationRequest()
         self.sendMessage(msg.as_xml())
 
     def do_CacheEntries(self, elem, *args, **kw):
@@ -40,6 +40,10 @@ class ClientXMLProtocol(protocol.XMLProtocol):
         print "got status list:"
         pprint(status_list.entries())
         
+    def do_ReservationResponse(self, elem, *args, **kw):
+        msg = message.MessageBuilder.from_xml(elem.getroottree())
+        print "got reservation response:"
+        pprint(msg.ticket())
 
 class ClientProtocolFactory(XenBEEProtocolFactory):
     def __init__(self, id, certificate, ca_cert):

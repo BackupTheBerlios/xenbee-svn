@@ -261,10 +261,63 @@ class CacheEntries(BaseServerMessage):
     from_xml = classmethod(from_xml)
 MessageBuilder.register(CacheEntries)
 
+class ReservationRequest(BaseClientMessage):
+    """Sends a request for a reservation.
+
+    not sure about meta information
+
+    <ReservationRequest/>
+    """
+    tag = XBE("ReservationRequest")
+    
+    def __init__(self):
+        BaseClientMessage.__init__(self)
+
+    def as_xml(self):
+        root, hdr, body = MessageBuilder.xml_parts()
+        elem = etree.SubElement(body, self.tag)
+        return root
+    def from_xml(cls, root, hdr, body):
+        elem = body.find(cls.tag)
+        if elem is None:
+            raise MessageParserError("could not find 'ReservationRequest' element")
+        return cls()
+    from_xml = classmethod(from_xml)
+MessageBuilder.register(ReservationRequest)
+
+class ReservationResponse(BaseServerMessage):
+    """Response to a ReservationRequest request.
+
+    not sure about *all* meta information
+    """
+    tag = XBE("ReservationResponse")
+    
+    def __init__(self, ticket):
+        BaseServerMessage.__init__(self)
+        self.__ticket = ticket
+
+    def ticket(self):
+        return self.__ticket
+    
+    def as_xml(self):
+        root, hdr, body = MessageBuilder.xml_parts()
+        elem = etree.SubElement(body, self.tag)
+        etree.SubElement(elem, XBE("Ticket")).text = self.ticket()
+        return root
+    def from_xml(cls, root, hdr, body):
+        elem = body.find(cls.tag)
+        if elem is None:
+            raise MessageParserError("could not find 'ReservationResponse' element")
+        ticket = elem.findtext(XBE("Ticket"))
+        if ticket is None:
+            raise MessageParserError("no 'Ticket' found!")
+        return cls(ticket)
+    from_xml = classmethod(from_xml)
+MessageBuilder.register(ReservationResponse)
+
 #
 # job control
 #
-
 class Kill(BaseClientMessage):
     """Sends a signal to the given task.
 

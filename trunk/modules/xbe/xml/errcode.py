@@ -9,6 +9,7 @@ INSTANCE_LOOKUP_FAILURE = 405
 SIGNAL_OUT_OF_RANGE = 450
 SECURITY_ERROR = 460
 UNAUTHORIZED = 461
+SERVER_BUSY = 470
 INTERNAL_SERVER_ERROR = 500
 
 info = {
@@ -27,5 +28,6 @@ info = {
                           "the signal you have sent was out of range", None),
     SECURITY_ERROR: ("SECURITY_ERROR", "general security violation", None),
     UNAUTHORIZED: ("UNAUTHORIZED", "you are not authorized", None),
+    SERVER_BUSY: ("SERVER_BUSY", "I cannot handle your request right now, try again later", None),
     INTERNAL_SERVER_ERROR: ("INTERNAL_SERVER_ERROR", "you sent me an illegal request", None)
 }

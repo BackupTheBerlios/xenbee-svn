@@ -131,6 +131,20 @@ class TestRangeValue(unittest.TestCase):
         self.assertTrue(rv.matches(100))
 
 
+class TestHashValidator(unittest.TestCase):
+    def setUp(self):
+        pass
+    def tearDown(self):
+        pass
+
+    def test_valid(self):
+        validator = jsdl.HashValidator('430ce34d020724ed75a196dfc2ad67c77772d169', "sha1")
+        self.assertTrue(validator.validate('hello world!'))
+
+    def test_invalid(self):
+        validator = jsdl.HashValidator('0123456789abcdef', "sha1")
+        self.assertFalse(validator.validate('hello world!'))
+
 class TestJsdlParser(unittest.TestCase):
     def setUp(self):
         pass
@@ -138,119 +152,111 @@ class TestJsdlParser(unittest.TestCase):
         pass
 
     def test_simple(self):
-        xml = """
-        <jsdl:JobDefinition xmlns:jsdl="http://schemas.ggf.org/jsdl/2005/11/jsdl"
-                           xmlns:jsdl-posix="http://schemas.ggf.org/jsdl/2005/11/jsdl-posix">
-          <jsdl:JobDescription>
-             <jsdl:JobIdentification>
-               <jsdl:JobName>foobar</jsdl:JobName>
-               <jsdl:Description>blah</jsdl:Description>
-               <jsdl:JobAnnotation>anno 1</jsdl:JobAnnotation>
-               <jsdl:JobAnnotation>anno 2</jsdl:JobAnnotation>
-               <jsdl:JobAnnotation>anno 3</jsdl:JobAnnotation>
-             </jsdl:JobIdentification>
-             <jsdl:Application>
-               <jsdl:ApplicationName>test app name</jsdl:ApplicationName>
-               <jsdl:ApplicationVersion>4.3</jsdl:ApplicationVersion>
-               <jsdl-posix:POSIXApplication>
-                 <jsdl-posix:Executable>
-                    /usr/local/bin/gnuplot
-                 </jsdl-posix:Executable>
-                 <jsdl-posix:Argument>arg1</jsdl-posix:Argument>
-                 <jsdl-posix:Argument>arg2</jsdl-posix:Argument>
-                 <jsdl-posix:Argument><!-- empty arg--></jsdl-posix:Argument>
-                 <jsdl-posix:Argument>arg4</jsdl-posix:Argument>
-                 <jsdl-posix:Input>input.dat</jsdl-posix:Input>
-                 <jsdl-posix:Output>output1.png</jsdl-posix:Output>
-               </jsdl-posix:POSIXApplication>
-             </jsdl:Application>
-             <jsdl:Resources>
-               <jsdl:ExclusiveExecution>true</jsdl:ExclusiveExecution>
-               <jsdl:FileSystem name="ROOT">
-                  <jsdl:Description>the root filesystem</jsdl:Description>
-                  <jsdl:MountPoint>/</jsdl:MountPoint>
-                  <jsdl:DiskSpace>
-                     <jsdl:Exact epsilon="5.0">1073741824</jsdl:Exact>
-                  </jsdl:DiskSpace>
-                  <xsdl:Image xmlns:xsdl="http://www.example.com/schemas/xbe/2007/01/xsdl">
-                     <jsdl:URI>file:///srv/xen-images/xenbee/usr.img</jsdl:URI>
-                  </xsdl:Image>
-               </jsdl:FileSystem>
-               <jsdl:FileSystem name="USR_LOCAL">
-                  <jsdl:Description>the user local</jsdl:Description>
-                  <jsdl:MountPoint>/usr/local</jsdl:MountPoint>
-                  <jsdl:MountSource>file:///srv/xen-images/xenbee/usr.img</jsdl:MountSource>
-                  <jsdl:DiskSpace>
-                     <jsdl:LowerBoundedRange>1073741824</jsdl:LowerBoundedRange>
-                  </jsdl:DiskSpace>
-                  <jsdl:FileSystemType>normal</jsdl:FileSystemType>
-               </jsdl:FileSystem>
-               <jsdl:FileSystem name="SPOOL">
-                  <jsdl:Description>a spool filesystem</jsdl:Description>
-                  <jsdl:MountPoint>/spool</jsdl:MountPoint>
-                  <jsdl:DiskSpace>
-                     <jsdl:LowerBoundedRange>1073741824</jsdl:LowerBoundedRange>
-                  </jsdl:DiskSpace>
-                  <jsdl:FileSystemType>temporary</jsdl:FileSystemType>
-               </jsdl:FileSystem>
-               <jsdl:CandidateHosts>
-                 <jsdl:HostName>host1</jsdl:HostName>
-                 <jsdl:HostName>host2</jsdl:HostName>                 
-                 <jsdl:HostName>host3</jsdl:HostName>                 
-               </jsdl:CandidateHosts>
-               <jsdl:OperatingSystem>
-                 <jsdl:OperatingSystemType>
-                    <jsdl:OperatingSystemName>Linux</jsdl:OperatingSystemName>
-                 </jsdl:OperatingSystemType>
-                 <jsdl:OperatingSystemVersion>2.6.11</jsdl:OperatingSystemVersion>
-               </jsdl:OperatingSystem>
-               <jsdl:CPUArchitecture>
-                  <jsdl:CPUArchitectureName>x86</jsdl:CPUArchitectureName>
-               </jsdl:CPUArchitecture>
-               <jsdl:TotalCPUCount>
-                  <jsdl:Exact>2</jsdl:Exact>
-               </jsdl:TotalCPUCount>
-               <xbe:Reservation xmlns:xbe="http://www.example.com/schemas/xbe/2007/01/xbe">
-                  <xbe:Ticket>ticket-1</xbe:Ticket>
-               </xbe:Reservation>
-               <xsdl:Instance xmlns:xsdl="http://www.example.com/schemas/xbe/2007/01/xsdl">
-                  <xsdl:PackageDefinition>
-                     <xsdl:PackageLocation compressed="bzip2">
-                        <jsdl:URI>file:///srv/xen-images/package.tar.bz2</jsdl:URI>
-                     </xsdl:PackageLocation>
-                  </xsdl:PackageDefinition>
-                  <xsdl:KernelDefinition>
-                     <xsdl:Argument></xsdl:Argument>
-                     <xsdl:Kernel>
-                        <jsdl:URI>file:///srv/xen-images/domains/xenhobel-2/kernel</jsdl:URI>
-                     </xsdl:Kernel>
-                     <xsdl:Initrd>
-                        <jsdl:URI>file:///srv/xen-images/domains/xenhobel-2/initrd</jsdl:URI>
-                        <xbe:CacheID xmlns:xbe="http://www.example.com/schemas/xbe/2007/01/xbe">
-                           abcd
-                        </xbe:CacheID>
-                     </xsdl:Initrd>
-                  </xsdl:KernelDefinition>
-               </xsdl:Instance>
-             </jsdl:Resources>
-             <jsdl:DataStaging>
-                <jsdl:FileName>test.file</jsdl:FileName>
-                <jsdl:FileSystemName>HOME</jsdl:FileSystemName>
-                <jsdl:Source>
-                   <jsdl:URI>http://www.example.com/test.file</jsdl:URI>
-                </jsdl:Source>
-                <jsdl:Target>
-                   <jsdl:URI>http://www.example.com/test.file</jsdl:URI>
-                </jsdl:Target>
-                <jsdl:CreationFlag>overwrite</jsdl:CreationFlag>
-                <jsdl:DeleteOnTermination>true</jsdl:DeleteOnTermination>
-             </jsdl:DataStaging>
-          </jsdl:JobDescription>
-        </jsdl:JobDefinition>
+        xml = """<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- image submission extension for JSDL -->
+
+<jsdl:JobDefinition xmlns:jsdl="http://schemas.ggf.org/jsdl/2005/11/jsdl"
+		    xmlns:jsdl-posix="http://schemas.ggf.org/jsdl/2005/11/jsdl-posix">
+  <jsdl:JobDescription>
+    <jsdl:JobIdentification>
+      <jsdl:JobName>foobar</jsdl:JobName>
+      <jsdl:Description>blah</jsdl:Description>
+      <jsdl:JobAnnotation>anno 1</jsdl:JobAnnotation>
+      <jsdl:JobAnnotation>anno 2</jsdl:JobAnnotation>
+      <jsdl:JobAnnotation>anno 3</jsdl:JobAnnotation>
+    </jsdl:JobIdentification>
+    <jsdl:Application>
+      <jsdl:ApplicationName>test app name</jsdl:ApplicationName>
+      <jsdl:ApplicationVersion>4.3</jsdl:ApplicationVersion>
+      <jsdl-posix:POSIXApplication>
+	<jsdl-posix:Executable>
+	  /usr/local/bin/gnuplot
+	</jsdl-posix:Executable>
+	<jsdl-posix:Argument>arg1</jsdl-posix:Argument>
+	<jsdl-posix:Argument>arg2</jsdl-posix:Argument>
+	<jsdl-posix:Argument><!-- empty arg--></jsdl-posix:Argument>
+	<jsdl-posix:Argument>arg4</jsdl-posix:Argument>
+	<jsdl-posix:Input>input.dat</jsdl-posix:Input>
+	<jsdl-posix:Output>output1.png</jsdl-posix:Output>
+      </jsdl-posix:POSIXApplication>
+    </jsdl:Application>
+    <jsdl:Resources>
+      <jsdl:FileSystem name="ROOT">
+	<jsdl:Description>the root filesystem</jsdl:Description>
+	<jsdl:MountPoint>/</jsdl:MountPoint>
+      </jsdl:FileSystem>
+      <jsdl:FileSystem name="SPOOL">
+	<jsdl:Description>a spool directory</jsdl:Description>
+	<jsdl:MountPoint>/spool</jsdl:MountPoint>
+      </jsdl:FileSystem>
+      <jsdl:TotalCPUCount>
+	<jsdl:Exact>2</jsdl:Exact>
+      </jsdl:TotalCPUCount>
+
+
+      <!-- XBE reservation extension -->
+      <xbe:Reservation xmlns:xbe="http://www.example.com/schemas/xbe/2007/01/xbe">
+	<xbe:Ticket>ticket-1</xbe:Ticket>
+      </xbe:Reservation>
+      
+      <xsdl:InstanceDefinition xmlns:xsdl="http://www.example.com/schemas/xbe/2007/01/xsdl">
+	<!-- user may specify either a package or the the instance itself -->
+	<xsdl:Package>
+          <xsdl:Description>
+             A sample description for this package
+          </xsdl:Description>
+	  <xsdl:Location compressed="tbz">
+	    <xsdl:URI>file:///srv/xen-images/package.tar.bz2</xsdl:URI>
+	    <xsdl:Hash algorithm="sha1">0123456789</xsdl:Hash>
+	  </xsdl:Location>
+	</xsdl:Package>
+
+	<xsdl:InstanceDescription>
+	  <!-- the kernel must be specified if using the InstanceDescription -->
+	  <xsdl:Kernel>
+	    <xsdl:Argument name="foo">bar</xsdl:Argument> <!-- results in 'foo=bar' -->
+	    <xsdl:Argument>bar</xsdl:Argument> <!-- results in 'bar' -->
+	    <xsdl:Location>
+	      <xsdl:Hash algorithm="sha1">0123456789</xsdl:Hash>
+	      <xbe:CacheEntry xmlns:xbe="http://www.example.com/schemas/xbe/2007/01/xbe">
+		uuid:0123456789
+	      </xbe:CacheEntry>
+	    </xsdl:Location>
+	  </xsdl:Kernel>
+
+	  <!-- the initrd is optional -->
+	  <xsdl:Initrd>
+	    <xsdl:Location>
+	      <xsdl:URI>file:///srv/xen-images/domains/xenhobel-2/initrd</xsdl:URI>
+	      <xsdl:Hash algorithm="sha1">0123456789</xsdl:Hash>
+	    </xsdl:Location>
+	  </xsdl:Initrd>
+	</xsdl:InstanceDescription>
+      </xsdl:InstanceDefinition>
+
+    </jsdl:Resources>
+    <jsdl:DataStaging>
+      <jsdl:FileName>test.file</jsdl:FileName>
+      <jsdl:FilesystemName>HOME</jsdl:FilesystemName>
+      <jsdl:CreationFlag>overwrite</jsdl:CreationFlag>
+      <jsdl:DeleteOnTermination>true</jsdl:DeleteOnTermination>
+      <jsdl:Source>
+	<jsdl:URI>http://www.example.com/test.file</jsdl:URI>
+      </jsdl:Source>
+      <jsdl:Target>
+	<jsdl:URI>http://www.example.com/test.file</jsdl:URI>
+      </jsdl:Target>
+    </jsdl:DataStaging>
+  </jsdl:JobDescription>
+</jsdl:JobDefinition>
         """
         elem = etree.fromstring(xml)
+        schema_path = "/root/xenbee/etc/xml/schema/jsdl.xsd"
+        jsdl_schema = etree.XMLSchema(etree.parse(schema_path))
         doc = jsdl.JsdlDocument()
-        pprint(doc._parse(elem))
+        doc.register_schema(str(JSDL), jsdl_schema)
+        pprint(doc.parse(elem))
         
 def suite():
     s1 = unittest.makeSuite(TestRangeValue, 'test')

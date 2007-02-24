@@ -1,12 +1,15 @@
 #!/usr/bin/env python
-"""
-A module, that provides a JSDL parser and generator.
+"""A module, that provides a JSDL parser.
+
+This is a *premature hack*. One should refactor it into a generic
+parser frame-work to which an application can attach more
+functionality. But I did not have time to that refactoring yet.
 """
 
 __version__ = "$Rev$"
 __author__ = "$Author$"
 
-import logging
+import logging, hashlib, sys
 log = logging.getLogger(__name__)
 
 from lxml import etree
@@ -178,18 +181,50 @@ class RangeValue:
         return rv
     from_xml = classmethod(from_xml)
 
+class HashValidator:
+    """Represents a hash algorithm validator.
+
+    Its only defined method is 'validate' which accepts some data and
+    returns True if and only if the stored digest matches the one
+    computed out of the data using the stored hash-algorithm.
+    """
+    
+    def __init__(self, hexdigest, algorithm="sha1"):
+        """Initialize the HashValidator.
+
+        The parameters to this can be retrieved from an xml document.
+        """
+        self.__hexdigest = hexdigest
+        self.__algorithm = algorithm
+
+    def validate(self, data):
+        """Validate the data against the stored digest using the
+        stored algorithm."""
+        h = hashlib.new(self.__algorithm)
+        h.update(data)
+        return self.__hexdigest == h.hexdigest()
+
+    def __call__(self, data):
+        """Does the same as 'validate(data)'."""
+        return self.validate(data)
+
+    def __repr__(self):
+        return "<%(cls)s using %(algo)s with digest %(digest)s>" % {
+            "cls": self.__class__.__name__,
+            "digest": self.__hexdigest,
+            "algo": self.__algorithm
+        }
+
 class JsdlDocument:
     DEFAULT_PARSER=()
     
     def __init__(self):
-
+        self._schemaMap = {}
         self._fileSystems = {}
 
         # JSDL Parser Map
         jsdlParserMap = {
             self.DEFAULT_PARSER: self._parse_complex,
-            "JobDefinition": self._parse_start,
-            
             # JobIdentification
             "Description": self._parse_text,
             "JobName": self._parse_text,
@@ -230,7 +265,7 @@ class JsdlDocument:
             # DataStaging
             "DataStaging": self._parse_complex_array,
             "FileName": self._parse_text,
-            "FileSystemName": self._parse_text,
+            "FilesystemName": self._parse_text,
             "URI": self._parse_uri,
             "CreationFlag": self._parse_text,
             "DeleteOnTermination": self._parse_bool,
@@ -271,7 +306,10 @@ class JsdlDocument:
         }
         xsdlParserMap = {
             self.DEFAULT_PARSER: self._parse_complex,
-            "Argument": self._parse_normative_text_array,
+            "Argument": self._parse_xsdl_argument,
+            "URI": self._parse_normative_text,
+            "CacheEntry": self._parse_normative_text,
+            "Hash": self._parse_hash,
         }
 
         self.parserMaps = {
@@ -280,6 +318,9 @@ class JsdlDocument:
             str(XBE): xbeParserMap,
             str(XSDL): xsdlParserMap,
         }
+
+    def register_schema(self, namespace, schema):
+        self._schemaMap[namespace] = schema
 
     def lookup_path(self, path):
         components = path.split("/")
@@ -291,9 +332,10 @@ class JsdlDocument:
     def _parse_complex(self, xml):
         children = {}
         if len(xml.attrib):
-            children[":attributes:"] = {}
+            attribs = {}
             for k,v in xml.attrib.iteritems():
-                children[":attributes:"][k] = v
+                attribs[k] = v
+            children[":attributes:"] = attribs
         for e in xml:
             if isinstance(e, etree._Comment):
                 continue
@@ -303,7 +345,7 @@ class JsdlDocument:
                 if other is None:
                     other = []
                     children["other"] = other
-                other.append(self._parse(e))
+                other.append(e)#self._parse(e))
             else:
                 mapping = children.get(child_tag)
                 if mapping is not None and isinstance(mapping, list):
@@ -312,7 +354,23 @@ class JsdlDocument:
                     children[child_tag] = self._parse(e)
         return children
 
+    def validate(self, xml):
+        ns, tag = decodeTag(xml.tag)
+        schema = self._schemaMap.get(ns)
+        if schema is not None:
+            print >>sys.stderr, "validating", xml.tag
+            try:
+                schema.assertValid(xml)
+            except Exception, e:
+                raise
+
+    def parse(self, xml):
+        # validate the document before parsing
+        self.parsedDoc = {decodeTag(xml.tag)[1] : self._parse(xml)}
+        return self.parsedDoc
+
     def _parse(self, xml_elem):
+        self.validate(xml_elem)
         ns, tag = decodeTag(xml_elem.tag)
         # get the parser map
         parser_map = self.parserMaps.get(ns)
@@ -321,12 +379,6 @@ class JsdlDocument:
             return xml_elem
         parser = parser_map.get(tag, parser_map[self.DEFAULT_PARSER])
         return parser(xml_elem)
-
-    def _parse_start(self, xml):
-        tag = decodeTag(xml.tag)[1]
-        self.__parsed_doc = {}
-        self.__parsed_doc[tag] = { decodeTag(xml[0].tag)[1]: self._parse(xml[0]) }
-        return self.__parsed_doc
 
     def _parse_elem_array(self, xml):
         return [self._parse(xml[0])]
@@ -367,8 +419,21 @@ class JsdlDocument:
             raise ValueError("nonNegativeInteger expected", i)
         return i
 
+    def _parse_hash(self, xml):
+        algo = xml.attrib.get("algorithm", "sha1").lower()
+        hexdigest = self._parse_normative_text(xml)
+        return HashValidator(hexdigest, algo)
+
     def _parse_posix_text_array(self, xml):
         # return a tuple (filesystemName attribute, xml.text)
         return [self._parse_posix_text(xml)]
     def _parse_posix_text(self, xml):
         return ((xml.text or "").strip(), dict(xml.attrib))
+
+    def _parse_xsdl_argument(self, xml):
+        val = self._parse_normative_text(xml)
+        key = xml.attrib.get("name")
+        if key is not None:
+            return ["%s=%s" % (key, val)]
+        else:
+            return ["%s" % val]

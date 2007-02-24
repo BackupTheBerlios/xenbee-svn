@@ -4,18 +4,27 @@
 
 <jsdl:JobDefinition xmlns:jsdl="http://schemas.ggf.org/jsdl/2005/11/jsdl"
 		    xmlns:jsdl-posix="http://schemas.ggf.org/jsdl/2005/11/jsdl-posix">
-  <jsdl:JobDescription>
+ <jsdl:JobDescription>
     <jsdl:JobIdentification>
-      <jsdl:JobName>ls</jsdl:JobName>
-      <jsdl:Description>list the directory content</jsdl:Description>
-      <jsdl:JobAnnotation>task:uuid:0123456789</jsdl:JobAnnotation>
+      <jsdl:JobName>foobar</jsdl:JobName>
+      <jsdl:Description>blah</jsdl:Description>
+      <jsdl:JobAnnotation>anno 1</jsdl:JobAnnotation>
+      <jsdl:JobAnnotation>anno 2</jsdl:JobAnnotation>
+      <jsdl:JobAnnotation>anno 3</jsdl:JobAnnotation>
     </jsdl:JobIdentification>
     <jsdl:Application>
-      <jsdl:ApplicationName>GNU ls</jsdl:ApplicationName>
+      <jsdl:ApplicationName>test app name</jsdl:ApplicationName>
+      <jsdl:ApplicationVersion>4.3</jsdl:ApplicationVersion>
       <jsdl-posix:POSIXApplication>
-	<jsdl-posix:Executable>ls</jsdl-posix:Executable>
-	<jsdl-posix:Argument>-l</jsdl-posix:Argument>
-	<jsdl-posix:Argument filesystemName="USR"></jsdl-posix:Argument>
+	<jsdl-posix:Executable>
+	  /usr/local/bin/gnuplot
+	</jsdl-posix:Executable>
+	<jsdl-posix:Argument>arg1</jsdl-posix:Argument>
+	<jsdl-posix:Argument>arg2</jsdl-posix:Argument>
+	<jsdl-posix:Argument><!-- empty arg--></jsdl-posix:Argument>
+	<jsdl-posix:Argument>arg4</jsdl-posix:Argument>
+	<jsdl-posix:Input>input.dat</jsdl-posix:Input>
+	<jsdl-posix:Output>output1.png</jsdl-posix:Output>
       </jsdl-posix:POSIXApplication>
     </jsdl:Application>
     <jsdl:Resources>
@@ -31,63 +40,85 @@
 	<jsdl:Exact>2</jsdl:Exact>
       </jsdl:TotalCPUCount>
 
+
       <!-- XBE reservation extension -->
       <xbe:Reservation xmlns:xbe="http://www.example.com/schemas/xbe/2007/01/xbe">
 	<xbe:Ticket>ticket-1</xbe:Ticket>
       </xbe:Reservation>
       
       <xsdl:InstanceDefinition xmlns:xsdl="http://www.example.com/schemas/xbe/2007/01/xsdl">
-	<!-- user may specify either a package or the the instance itself -->
-	<xsdl:Package>
-	  <xsdl:Location compressed="tbz">
-	    <xsdl:URI>file:///srv/xen-images/package.tar.bz2</xsdl:URI>
-	    <xsdl:Hash algorithm="sha1">0123456789</xsdl:Hash>
-	  </xsdl:Location>
-	</xsdl:Package>
-
 	<xsdl:InstanceDescription>
-	  <!-- the kernel must be specified if using the InstanceDescription -->
-	  <xsdl:Kernel>
-	    <xsdl:Argument name="foo">bar</xsdl:Argument> <!-- results in 'foo=bar' -->
-	    <xsdl:Argument>bar</xsdl:Argument> <!-- results in 'bar' -->
-	    <xsdl:Location>
+<!--
+	  <xsdl:Package>
+	    <xsdl:Location compressed="tbz">
+	      <xsdl:URI>file:///srv/xen-images/package.tar.bz2</xsdl:URI>
 	      <xsdl:Hash algorithm="sha1">0123456789</xsdl:Hash>
-	      <xbe:CacheEntry xmlns:xbe="http://www.example.com/schemas/xbe/2007/01/xbe">
-		uuid:0123456789
-	      </xbe:CacheEntry>
 	    </xsdl:Location>
-	  </xsdl:Kernel>
+	  </xsdl:Package>
+-->
+	  <xsdl:Instance>
+	    <!-- the kernel must be specified if using the InstanceDescription -->
+	    <xsdl:Description>
+	      sample description for this instance
+	    </xsdl:Description>
+	    <xsdl:Kernel>
+	      <xsdl:Location>
+		<xsdl:Hash algorithm="sha1">0123456789</xsdl:Hash>
+		<xbe:CacheEntry xmlns:xbe="http://www.example.com/schemas/xbe/2007/01/xbe">
+		  uuid:0123456789
+		</xbe:CacheEntry>
+	      </xsdl:Location>
+	      <xsdl:Argument name="foo">bar</xsdl:Argument> <!-- results in 'foo=bar' -->
+	      <xsdl:Argument>bar</xsdl:Argument> <!-- results in 'bar' -->
+	    </xsdl:Kernel>
 
-	  <!-- the initrd is optional -->
-	  <xsdl:Initrd>
-	    <xsdl:Location>
-	      <xsdl:URI>file:///srv/xen-images/domains/xenhobel-2/initrd</xsdl:URI>
-	      <xsdl:Hash algorithm="sha1">0123456789</xsdl:Hash>
-	    </xsdl:Location>
-	  </xsdl:Initrd>
+	    <!-- the initrd is optional -->
+	    <xsdl:Initrd>
+	      <xsdl:Location>
+		<xsdl:URI>file:///srv/xen-images/domains/xenhobel-2/initrd</xsdl:URI>
+		<xsdl:Hash algorithm="sha1">0123456789</xsdl:Hash>
+	      </xsdl:Location>
+	    </xsdl:Initrd>
+
+	    <!-- the image is mandatory -->
+	    <xsdl:Image>
+	      <xsdl:Location>
+		<xsdl:URI>file:///srv/xen-images/domains/xenhobel-2/base.img</xsdl:URI>
+		<xsdl:Hash algorithm="sha1">0123456789</xsdl:Hash>
+	      </xsdl:Location>
+	    </xsdl:Image>
+
+	    <!-- some control files -->
+	    <xsdl:Control>
+	      <xsdl:Setup>
+		<xsdl:Location>
+		  <xsdl:URI>file:///srv/xen-images/domains/xenhobel-2/setup</xsdl:URI>
+		  <xsdl:Hash algorithm="sha1">0123456789</xsdl:Hash>
+		</xsdl:Location>
+	      </xsdl:Setup>
+	      <xsdl:TearDown>
+		<xsdl:Location>
+		  <xsdl:URI>file:///srv/xen-images/domains/xenhobel-2/teardown</xsdl:URI>
+		  <xsdl:Hash algorithm="sha1">0123456789</xsdl:Hash>
+		</xsdl:Location>
+	      </xsdl:TearDown>
+	    </xsdl:Control>
+	  </xsdl:Instance>
+
 	</xsdl:InstanceDescription>
       </xsdl:InstanceDefinition>
     </jsdl:Resources>
-
     <jsdl:DataStaging>
       <jsdl:FileName>test.file</jsdl:FileName>
-      <jsdl:FileSystemName>SPOOL</jsdl:FileSystemName>
-
-      <!-- stage-in source -->
+      <jsdl:FilesystemName>HOME</jsdl:FilesystemName>
+      <jsdl:CreationFlag>overwrite</jsdl:CreationFlag>
+      <jsdl:DeleteOnTermination>true</jsdl:DeleteOnTermination>
       <jsdl:Source>
 	<jsdl:URI>http://www.example.com/test.file</jsdl:URI>
       </jsdl:Source>
-      
-      <!-- stage-out destination -->
       <jsdl:Target>
 	<jsdl:URI>http://www.example.com/test.file</jsdl:URI>
       </jsdl:Target>
-
-      <!-- overwrite an probably existing file -->
-      <jsdl:CreationFlag>overwrite</jsdl:CreationFlag>
-
-      <!-- delete after stage-out -->
-      <jsdl:DeleteOnTermination>true</jsdl:DeleteOnTermination>
     </jsdl:DataStaging>
   </jsdl:JobDescription>
 </jsdl:JobDefinition>

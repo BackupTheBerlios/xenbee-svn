@@ -42,6 +42,13 @@ class XenBEEClientProtocol(protocol.XMLProtocol):
         return message.Error(errcode.OK,
                              "task submitted: %s" % task.ID())
 
+    def do_ReservationRequest(self, dom_node, *args, **kw):
+        log.warn("TODO: create ticket")
+        msg = message.ReservationResponse(ticket="create-a-real-ticket")
+        # if no ticket could be generated:
+        # message.Error(errcode.SERVER_BUSY)
+        return msg
+
     def do_StatusRequest(self, dom_node, *args, **kw):
 	"""Handle status request."""
         status_list = message.StatusList()

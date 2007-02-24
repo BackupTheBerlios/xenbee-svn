@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+-->
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	    xmlns="http://www.example.com/schemas/xbe/2007/01/xsdl"
+	    xmlns:xsdl="http://www.example.com/schemas/xbe/2007/01/xsdl"
+	    targetNamespace="http://www.example.com/schemas/xbe/2007/01/xsdl"
+	    elementFormDefault="qualified">
+  <!--========================================================================-->
+  <!-- SIMPLE TYPES -->
+  <xsd:simpleType name="HashAlgorithmEnumeration">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="md5"/>
+      <xsd:enumeration value="sha1"/>
+      <xsd:enumeration value="sha224"/>
+      <xsd:enumeration value="sha256"/>
+      <xsd:enumeration value="sha384"/>
+      <xsd:enumeration value="sha512"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <!--========================================================================-->
+  <xsd:simpleType name="CompressionTypeEnumeration">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="bzip2"/>
+      <xsd:enumeration value="gzip"/>
+      <xsd:enumeration value="tbz"/>
+      <xsd:enumeration value="tgz"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <!--========================================================================-->
+  <xsd:simpleType name="Description_Type">
+    <xsd:restriction base="xsd:string"/>
+  </xsd:simpleType>
+  <!--========================================================================-->
+  <!-- COMPLEX TYPES: Definitions for the Location_Type -->
+  <xsd:complexType name="Hash_Type">
+    <xsd:simpleContent>
+      <xsd:extension base="xsd:hexBinary">
+	<xsd:attribute name="algorithm" type="HashAlgorithmEnumeration" use="optional"/>
+	<xsd:anyAttribute namespace="##other" processContents="lax"/>
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="Location_Type">
+    <xsd:annotation>
+      <xsd:documentation xml:lang="en">
+	The location of some file. It  defines a URI, that can be used
+	to retrieve  the file and a  hash value, which can  be used to
+	verify the retrieved file.
+      </xsd:documentation>
+    </xsd:annotation>
+    <xsd:sequence>
+      <xsd:element ref="xsdl:URI" minOccurs="0"/>
+      <xsd:element ref="xsdl:Hash" minOccurs="0"/>
+      <xsd:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+    <xsd:attribute name="compressed" type="CompressionTypeEnumeration" use="optional"/>
+    <xsd:anyAttribute namespace="##other" processContents="lax"/>
+  </xsd:complexType>
+
+  <xsd:complexType name="InstanceDefinition_Type">
+    <xsd:sequence>
+      <xsd:element ref="xsdl:InstanceDescription"/>
+      <xsd:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  
+  <!-- COMPLEX TYPES: Definitions for the InstanceDescription_Type -->
+  <xsd:complexType name="InstanceDescription_Type">
+    <xsd:choice>
+      <xsd:element ref="xsdl:Package" minOccurs="0"/>
+      <xsd:element ref="xsdl:Instance" minOccurs="0"/>
+    </xsd:choice>
+  </xsd:complexType>
+  
+  <!-- COMPLEX TYPES: Definitions for the Package_Type -->
+  <xsd:complexType name="Package_Type">
+    <xsd:sequence>
+      <xsd:element ref="xsdl:Location"/>
+      <xsd:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+    <xsd:anyAttribute namespace="##other" processContents="lax"/>
+  </xsd:complexType>
+
+  <!-- COMPLEX TYPES: Definitions for the Instance_Type -->
+  <xsd:complexType name="Instance_Type">
+    <xsd:annotation>
+      <xsd:documentation xml:lang="en">
+	A Instance consists of:
+	    * an optional Description
+	    * a kernel file
+	    * an optional initrd file
+	    * optional control scripts
+      </xsd:documentation>
+    </xsd:annotation>
+    <xsd:sequence>
+      <xsd:element ref="xsdl:Description" minOccurs="0"/>
+      <xsd:element ref="xsdl:Kernel"/>
+      <xsd:element ref="xsdl:Initrd" minOccurs="0"/>
+      <xsd:element ref="xsdl:Image"/>
+      <xsd:element ref="xsdl:Control" minOccurs="0"/>
+      <xsd:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="Argument_Type">
+    <xsd:simpleContent>
+      <xsd:extension base="xsd:normalizedString">
+	<xsd:attribute name="name" type="xsd:NCName" use="optional"/>
+	<xsd:anyAttribute namespace="##other" processContents="lax"/>
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="Kernel_Type">
+    <xsd:annotation>
+      <xsd:documentation xml:lang="en">
+	The kernel that shall be used.
+      </xsd:documentation>
+    </xsd:annotation>
+    <xsd:sequence>
+      <xsd:element ref="xsdl:Location"/>
+      <xsd:element ref="xsdl:Argument" maxOccurs="unbounded"/>
+      <xsd:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="Initrd_Type">
+    <xsd:annotation>
+      <xsd:documentation xml:lang="en">
+	The initrd that shall be used.
+      </xsd:documentation>
+    </xsd:annotation>
+    <xsd:sequence>
+      <xsd:element ref="xsdl:Location"/>
+      <xsd:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="Image_Type">
+    <xsd:annotation>
+      <xsd:documentation xml:lang="en">
+	The root filesystem image.
+      </xsd:documentation>
+    </xsd:annotation>
+    <xsd:sequence>
+      <xsd:element ref="xsdl:Location"/>
+      <xsd:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  
+  <xsd:complexType name="Script_Type">
+    <xsd:sequence>
+      <xsd:element ref="xsdl:Location"/>
+      <xsd:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="Control_Type">
+    <xsd:annotation>
+      <xsd:documentation xml:lang="en">
+	The Control  type defines set-up and  tear-down scripts. These
+	scripts  are executed  before starting  an instance  and after
+	shutting it down respectively.
+	
+	    * Setup -> an executable, that is passed the path to the
+	               mounted root-image, and is called after the
+		       retrieval of all defined files.
+	    * TearDown -> the same as Setup but after shutting the
+	                  instance has been shut down.
+      </xsd:documentation>
+    </xsd:annotation>
+    <xsd:sequence>
+      <xsd:element ref="xsdl:Setup" minOccurs="0"/>
+      <xsd:element ref="xsdl:TearDown" minOccurs="0"/>
+      <xsd:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  
+  <!--=====================================================================-->
+  <xsd:element name="InstanceDefinition" type="xsdl:InstanceDefinition_Type"/>
+  <xsd:element name="InstanceDescription" type="xsdl:InstanceDescription_Type"/>
+  <xsd:element name="Description" type="xsdl:Description_Type"/>
+  <xsd:element name="Hash" type="xsdl:Hash_Type"/>
+  <xsd:element name="Location" type="xsdl:Location_Type"/>
+  <xsd:element name="Package" type="xsdl:Package_Type"/>
+  <xsd:element name="Argument" type="xsdl:Argument_Type"/>
+  <xsd:element name="Kernel" type="xsdl:Kernel_Type"/>
+  <xsd:element name="Initrd" type="xsdl:Initrd_Type"/>
+  <xsd:element name="Image" type="xsdl:Image_Type"/>
+  <xsd:element name="Setup" type="xsdl:Script_Type"/>
+  <xsd:element name="TearDown" type="xsdl:Script_Type"/>
+  <xsd:element name="Control" type="xsdl:Control_Type"/>
+  <xsd:element name="Instance" type="xsdl:Instance_Type"/>
+  <xsd:element name="URI" type="xsd:anyURI"/>
+</xsd:schema>
