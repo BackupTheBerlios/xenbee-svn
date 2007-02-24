@@ -154,20 +154,14 @@ class DataStager:
     def perform(self, asynchronous=True):
 	"""Transfers data from source to destination.
 
-        if asynchronous: call in thread
-        returns a Deferred
+        if asynchronous: call in thread and returns a Deferred
+        else: wait until completion and raise exception if it failed
         """
         if asynchronous:
-            self.defer = threads.deferToThread(self.__perform)
+            rv = self.defer = threads.deferToThread(self.__perform)
         else:
-            self.defer = defer.Deferred()
-            try:
-                r = self.__perform()
-                self.defer.callback(r)
-            except:
-                r = failure.Failure()
-                self.defer.errback(r)
-        return self.defer
+            rv = self.__perform()
+        return rv
 
 class FileSetRetriever:
     """Retrieve many files and abort all if any one fails."""

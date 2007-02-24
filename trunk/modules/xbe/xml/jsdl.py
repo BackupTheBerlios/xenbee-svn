@@ -9,7 +9,7 @@ functionality. But I did not have time to that refactoring yet.
 __version__ = "$Rev$"
 __author__ = "$Author$"
 
-import logging, hashlib, sys
+import logging, hashlib, sys, os, os.path, time, tempfile
 log = logging.getLogger(__name__)
 
 from lxml import etree
@@ -197,6 +197,14 @@ class HashValidator:
         self.__hexdigest = hexdigest
         self.__algorithm = algorithm
 
+    def hexdigest(self):
+        """Return the hexdigest."""
+        return self.__hexdigest
+
+    def algorithm(self):
+        """Return the used algorithm (as string)."""
+        return self.__algorithm
+    
     def validate(self, data):
         """Validate the data against the stored digest using the
         stored algorithm."""
@@ -215,6 +223,90 @@ class HashValidator:
             "algo": self.__algorithm
         }
 
+class Decompressor:
+    """Represent a decompression algorithm.
+
+    Its only defined method is 'decompress' which accepts source and
+    destination paths. It uses the stored decompression algorithm.
+       * bzip2
+       * gzip
+       * tbz -> bzip2 compressed tar archive
+       * tgz -> gzip compressed tar archive
+    """
+    def __init__(self, format):
+        self.__format = format
+
+    def __repr__(self):
+        return "<"+self.__class__.__name__+" using "+self.__format+">"
+
+    def format(self):
+        """Return the used compression format."""
+        return self.__format
+
+    def decompress(self, file_name, dst_dir=None, remove_original=True):
+        """Decompress the src using the stored algorithm to dst.
+
+        if dst is None src is decompressed to the same directory as
+        src.
+        """
+        if dst_dir is None:
+            dst_dir = os.path.dirname(file_name)
+        start = time.time()
+        log.debug("decompressing '%s' to '%s'" % (file_name, dst_dir))
+        if self.format() in ('tbz', 'tgz'):
+            import tarfile
+            tar_file = tarfile.open(file_name)
+            tar_file.extractall(dst)
+            log.debug("decompression took %.2fs" % (time.time() - start))
+
+            if remove_original:
+                # decompression successful, remove the original file
+                log.debug("removing %s" % (file_name))
+                os.unlink(file_name)
+        elif self.format() == "bzip2":
+            import bz2
+            bz2_file = bz2.BZ2File(file_name)
+            # decompress to temporary file
+            tmp_file_fd, tmp_path = tempfile.mkstemp(dir=dst_dir)
+            tmp_file = os.fdopen(tmp_file_fd, 'w')
+            try:
+                tmp_file.write(bz2_file.read())
+            except Exception, e:
+                raise
+            finally:
+                bz2_file.close()
+                tmp_file.close()
+            # decompression successful, rename the file
+            try:
+                open(file_name, 'wb').write(open(tmp_path).read())
+            finally:
+                os.unlink(tmp_path)
+        elif self.format() == "gzip":
+            import gzip
+            gzip_file = gzip.GzipFile(file_name)
+            # decompress to temporary file
+            tmp_file_fd, tmp_path = tempfile.mkstemp(dir=dst_dir)
+            tmp_file = os.fdopen(tmp_file_fd, 'w')
+            try:
+                tmp_file.write(gzip_file.read())
+            except Exception, e:
+                raise
+            finally:
+                gzip_file.close()
+                tmp_file.close()
+            # decompression successful, rename the file
+            try:
+                open(file_name, 'wb').write(open(tmp_path).read())
+            finally:
+                os.unlink(tmp_path)
+        else:
+            raise NotImplementedError(
+                "decompression for this format is not yet implemented", self.__format
+            )
+
+    def __call__(self, src, dst):
+        return self.decompress(src, dst)
+        
 class JsdlDocument:
     DEFAULT_PARSER=()
     
@@ -310,6 +402,8 @@ class JsdlDocument:
             "URI": self._parse_normative_text,
             "CacheEntry": self._parse_normative_text,
             "Hash": self._parse_hash,
+            "Compression": self._parse_compression,
+            "Script": self._parse_complex_array,
         }
 
         self.parserMaps = {
@@ -324,7 +418,7 @@ class JsdlDocument:
 
     def lookup_path(self, path):
         components = path.split("/")
-        elem = self.__parsed_doc
+        elem = self.parsedDoc
         for c in components:
             elem = elem[c]
         return elem
@@ -358,7 +452,6 @@ class JsdlDocument:
         ns, tag = decodeTag(xml.tag)
         schema = self._schemaMap.get(ns)
         if schema is not None:
-            print >>sys.stderr, "validating", xml.tag
             try:
                 schema.assertValid(xml)
             except Exception, e:
@@ -423,12 +516,14 @@ class JsdlDocument:
         algo = xml.attrib.get("algorithm", "sha1").lower()
         hexdigest = self._parse_normative_text(xml)
         return HashValidator(hexdigest, algo)
+    def _parse_compression(self, xml):
+        algo = xml.attrib.get("algorithm").lower()
+        return Decompressor(algo)
 
     def _parse_posix_text_array(self, xml):
-        # return a tuple (filesystemName attribute, xml.text)
         return [self._parse_posix_text(xml)]
     def _parse_posix_text(self, xml):
-        return ((xml.text or "").strip(), dict(xml.attrib))
+        return ((xml.text or "").strip(), xml.attrib.get("filesystemName"))
 
     def _parse_xsdl_argument(self, xml):
         val = self._parse_normative_text(xml)
