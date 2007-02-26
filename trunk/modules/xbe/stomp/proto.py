@@ -176,7 +176,7 @@ class StompClient(LineReceiver):
 	"""Send a frame."""
         try:
             self.mtx.acquire()
-#            log.debug("sending frame: %s" % (frame))
+#            log.debug(frame)
             self.transport.write(str(frame))
         finally:
             self.mtx.release()

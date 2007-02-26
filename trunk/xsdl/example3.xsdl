@@ -16,17 +16,24 @@
     <jsdl:Application>
       <jsdl:ApplicationName>test app name</jsdl:ApplicationName>
       <jsdl:ApplicationVersion>4.3</jsdl:ApplicationVersion>
+<!--
+      <xbe:XBEApplication xmlns:xbe="http://www.example.com/schemas/xbe/2007/01/xbe">
+	<xbe:ContinuousTask/>
+      </xbe:XBEApplication>
+-->
       <jsdl-posix:POSIXApplication>
-	<jsdl-posix:Executable>
-	  /usr/local/bin/gnuplot
+	<jsdl-posix:Executable filesystemName="USR">
+	  bin/python
 	</jsdl-posix:Executable>
-	<jsdl-posix:Argument>arg1</jsdl-posix:Argument>
-	<jsdl-posix:Argument>arg2</jsdl-posix:Argument>
-	<jsdl-posix:Argument><!-- empty arg--></jsdl-posix:Argument>
-	<jsdl-posix:Argument>arg4</jsdl-posix:Argument>
-	<jsdl-posix:Input>input.dat</jsdl-posix:Input>
-	<jsdl-posix:Output>output1.png</jsdl-posix:Output>
+	<jsdl-posix:Argument>-c</jsdl-posix:Argument>
+	<jsdl-posix:Argument>import os; print os.environ</jsdl-posix:Argument>
+	<jsdl-posix:Output filesystemName="TMP">foo</jsdl-posix:Output>
+	<jsdl-posix:Environment name="HOME" filesystemName="ROOT"/>
+	<jsdl-posix:Environment name="TEST" filesystemName="USR">
+	  foo
+	</jsdl-posix:Environment>
       </jsdl-posix:POSIXApplication>
+
     </jsdl:Application>
     <jsdl:Resources>
       <jsdl:FileSystem name="ROOT">
@@ -36,6 +43,14 @@
       <jsdl:FileSystem name="SPOOL">
 	<jsdl:Description>a spool directory</jsdl:Description>
 	<jsdl:MountPoint>/spool</jsdl:MountPoint>
+      </jsdl:FileSystem>
+      <jsdl:FileSystem name="TMP">
+	<jsdl:Description>a temporary directory</jsdl:Description>
+	<jsdl:MountPoint>/tmp</jsdl:MountPoint>
+      </jsdl:FileSystem>
+      <jsdl:FileSystem name="USR">
+	<jsdl:Description>a temporary directory</jsdl:Description>
+	<jsdl:MountPoint>/usr</jsdl:MountPoint>
       </jsdl:FileSystem>
       <jsdl:TotalCPUCount>
 	<jsdl:Exact>2</jsdl:Exact>

@@ -8,6 +8,8 @@ NO_INSTANCE_DESCRIPTION = 403
 TASK_LOOKUP_FAILURE = 404
 INSTANCE_LOOKUP_FAILURE = 405
 TICKET_INVALID = 406
+NO_APPLICATION = 407
+EXECUTION_FAILED = 408
 SIGNAL_OUT_OF_RANGE = 450
 SECURITY_ERROR = 460
 UNAUTHORIZED = 461
@@ -32,7 +34,12 @@ info = {
                           "the signal you have sent was out of range", None),
     SECURITY_ERROR: ("SECURITY_ERROR", "general security violation", None),
     UNAUTHORIZED: ("UNAUTHORIZED", "you are not authorized", None),
-    SERVER_BUSY: ("SERVER_BUSY", "I cannot handle your request right now, try again later", None),
-    INTERNAL_SERVER_ERROR: ("INTERNAL_SERVER_ERROR", "you sent me an illegal request", None),
+    SERVER_BUSY: ("SERVER_BUSY",
+                  "I cannot handle your request right now, try again later", None),
+    NO_APPLICATION: ("NO_APPLICATION",
+                     "No application found", None),
+    INTERNAL_SERVER_ERROR: ("INTERNAL_SERVER_ERROR",
+                            "you sent me an illegal request", None),
     TICKET_INVALID: ("TICKET_INVALID", "no ticket specified, or illegal ticket", None),
+    EXECUTION_FAILED: ("EXECUTION_FAILED", "execution of the task failed", None),
 }

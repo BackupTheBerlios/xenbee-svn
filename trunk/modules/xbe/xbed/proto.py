@@ -10,15 +10,17 @@ import logging, re, time, threading
 log = logging.getLogger(__name__)
 
 from pprint import pprint, pformat
-from xbe.proto import XenBEEProtocolFactory, XenBEEProtocol
 from lxml import etree
-from xbe.xml.security import X509SecurityLayer, X509Certificate, SecurityError
+from twisted.python import failure
+
+from xbe.proto import XenBEEProtocolFactory, XenBEEProtocol
 from xbe.xml.namespaces import *
 from xbe.xml import xsdl, message, protocol, errcode, jsdl
 
 from xbe.xbed.daemon import XBEDaemon
 from xbe.xbed.ticketstore import TicketStore
 from xbe.xbed.task import TaskManager
+from xbe.xbed.instance import InstanceManager
             
 class XenBEEClientProtocol(protocol.XMLProtocol):
     """The XBE client side protocol.
@@ -115,15 +117,6 @@ class XenBEEClientProtocol(protocol.XMLProtocol):
         if not task:
             return message.Error(errcode.TASK_LOOKUP_FAILURE,
                                  "no such task: %s" % (tid,),)
-        task.kill(kill.signal())
-#        sig = int(elem.findtext(xsdl.XSDL("Signal")))
-#        if not sig in [ 9, 15 ]:
-#            return xsdl.XenBEEError("Signal out of range, allowed are (9,15)",
-#                                    xsdl.ErrorCode.SIGNAL_OUT_OF_RANGE)
-#        tid = elem.find(xsdl.XSDL("JobID"))
-#        task = self.factory.taskManager.lookupByID(tid)
-#        task.kill(sig)
-#        return xsdl.XenBEEError("signal sent", xsdl.ErrorCode.OK)
 
     def do_ListCache(self, elem, *args, **kw):
         log.debug("retrieving cache list...")
@@ -148,21 +141,11 @@ class XenBEEInstanceProtocol(protocol.XMLProtocol):
     def __init__(self, instid, transport):
         protocol.XMLProtocol.__init__(self, transport)
 	self.instid = instid
-        self.addUnderstood(XSDL("InstanceAvailable"))
-        self.addUnderstood(XSDL("TaskStatusNotification"))
 
-    def executeTask(self, task):
-        if task.document.tag != JSDL("JobDefinition"):
-            job = task.document.find(JSDL("JobDefinition"))
-        else:
-            job = task.document
-        if job is None:
-            raise RuntimeError("no job definition found for task %s" % (task.id()))
-        msg = xsdl.XenBEEClientMessage()
-        msg.root.append(etree.fromstring(etree.tostring(job)))
-
-        log.info("submitting:\n%s" % str(msg))
-        self.transport.write(msg.to_s())
+    def executeTask(self, jsdl, task):
+        msg = message.ExecuteTask(jsdl, task.id())
+        self.task_id = task.id()
+        self.sendMessage(msg.as_xml())
 
     def queryStatus(self):
         pass
@@ -176,27 +159,32 @@ class XenBEEInstanceProtocol(protocol.XMLProtocol):
         inst_avail = message.MessageBuilder.from_xml(xml.getroottree())
         inst_id = inst_avail.inst_id()
 
-        if inst_id != self.instid:
-            raise ValueError("got answer from different instance!")
-
-        inst = self.factory.instanceManager.lookupByUUID(inst_id)
+        inst = InstanceManager.getInstance().lookupByUUID(inst_id)
         if not inst:
             return message.Error(errcode.INSTANCE_LOOKUP_FAILURE)
-        if inst.task == None:
-            raise ValueError("no task belongs to this instance")
-        inst.protocol = self
-        inst.available(inst_avail)
+        inst.available(inst_avail, self)
 
-    def do_TaskFinished(self, status, *args, **kw):
-        fin_elem = status.find(XSDL("TaskFinished"))
-        exitcode = int(fin_elem.findtext(XSDL("ExitCode")))
-        stdout = fin_elem.findtext(XSDL("StandardOutput"))
-        errout = fin_elem.findtext(XSDL("ErrorOutput"))
-        log.info("task finished:\ncode=%d\nstdout='%s'\nerrout='%s'" % (exitcode, stdout, errout))
+    def do_ExecutionFinished(self, xml, *args, **kw):
+        msg = message.MessageBuilder.from_xml(xml.getroottree())
+        inst_id = msg.inst_id()
+        exitcode = msg.exitcode()
+        inst = InstanceManager.getInstance().lookupByUUID(inst_id)
+        inst.task.cb_execution_finished(exitcode)
 
-        task = self.factory.instanceManager.lookupByUUID(self.instid).task
-        task.status_elem = status
-        task.finished(exitcode)
+    def do_InstanceAlive(self, xml, *a, **kw):
+        msg = message.MessageBuilder.from_xml(xml.getroottree())
+        inst = InstanceManager.getInstance().lookupByUUID(msg.inst_id())
+        inst.alive()
+
+    def do_ExecutionFailed(self, xml, *a, **kw):
+        msg = message.MessageBuilder.from_xml(xml.getroottree())
+        inst = InstanceManager.getInstance().lookupByUUID(msg.inst_id())
+        inst.task.failed(failure.Failure(msg))
+
+    def do_InstanceShuttingDown(self, xml, *a, **kw):
+        msg = message.MessageBuilder.from_xml(xml.getroottree())
+        inst = InstanceManager.getInstance().lookupByUUID(msg.inst_id())
+        log.info("instance is shutting down...")
 
 class _XBEDProtocol(XenBEEProtocol):
     def post_connect(self):

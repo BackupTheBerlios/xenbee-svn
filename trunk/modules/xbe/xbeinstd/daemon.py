@@ -16,27 +16,24 @@ class XBEInstDaemon(Daemon):
         Daemon.__init__(self, pidfile="/var/run/xbeinstd.pid",
                         umask=0007, name="xbeinstd", user="root", group="root")
         p = self.parser
-        p.add_option("-S", "--server", dest="server",
-                     type="string", help="the STOMP server (host[:port])", default=os.environ.get("XBE_SERVER"))
-        p.add_option("-D", "--no-daemonize", dest="daemonize", action="store_false", default=True, help="do not daemonize")
-        p.add_option("-l", "--logfile", dest="logfile",
-                     type="string", default="/var/log/xenbee/xbeinstd.log", help="the logfile to use")
-        p.add_option("--pidfile", dest="pidfile",
-                     type="string", default="/var/run/xbeinstd.pid", help="the pidfile to use")
-        p.add_option("-u", "--uuid", dest="uuid",
-                     type="string", default=os.environ.get("XBE_UUID"), help="the uuid to use")
-
-    def __parseServer(self, server):
-        if server is None:
-            xbe_server, xbe_port = "localhost", 61613
-            log.warn("running in local mode with server at %s:%d" % (xbe_server,xbe_port))
-        else:
-            try:
-                xbe_server, xbe_port = server.split(":")
-                xbe_port = int(xbe_port)
-            except ValueError, ve:
-                xbe_server, xbe_port = server, 61613
-        return xbe_server, xbe_port
+        p.add_option("-H", "--host", dest="server", type="string",
+                     help="the server uri (stomp://host[:port]/queue)",
+                     default=os.environ.get("XBE_SERVER"))
+        p.add_option("-D", "--no-daemonize", dest="daemonize", action="store_false",
+                      help="do not daemonize",
+                     default=True)
+        p.add_option("-S", "--schema-dir", dest="schema_dir", type="string",
+                     help="path to a directory that contains schema documents",
+                     default="/root/xenbee/etc/xml/schema")
+        p.add_option("-l", "--logfile", dest="logfile", type="string",
+                     help="the logfile to use",
+                     default="/var/log/xenbee/xbeinstd.log")
+        p.add_option("--pidfile", dest="pidfile", type="string",
+                     help="the pidfile to use",
+                     default="/var/run/xbeinstd.pid")
+        p.add_option("-u", "--uuid", dest="uuid", type="string",
+                     help="the uuid to use",
+                     default=os.environ.get("XBE_UUID"))
 
     def configure(self):
         self.daemonize = self.opts.daemonize
@@ -68,6 +65,18 @@ class XBEInstDaemon(Daemon):
     def setup_priviledged(self):
 	log.info("Setting up the XenBEE instance daemon")
 
+        log.info("initializing schema documents...")
+        from lxml import etree
+        self.schema_map = {}
+        for schema in os.listdir(self.opts.schema_dir):
+            if not schema.endswith(".xsd"): continue
+            path = os.path.join(self.opts.schema_dir, schema)
+            log.info("   reading %s" % path)
+            xsd_doc = etree.parse(path)
+            namespace = xsd_doc.getroot().attrib["targetNamespace"]
+            self.schema_map[namespace] = etree.XMLSchema(xsd_doc)
+        log.info("  done.")
+        
         log.info("initializing the twisted framework...")
         from twisted.python import threadable
         threadable.init()
@@ -75,24 +84,29 @@ class XBEInstDaemon(Daemon):
 
         # set up the uuid
         if self.opts.uuid is None:
-            self.opts.uuid = uuid()
-            log.warn("could not get my instance id, using: %s" % self.opts.uuid)
+            raise RuntimeError("could not get my instance id")
         self.queue = "/queue/xenbee.instance.%s" % (self.opts.uuid)
 
         # set up the STOMP server
+        from xbe.util.network import urlparse
+        proto, host, queue, _, _, _ = urlparse(self.opts.server)
+        if proto != "stomp":
+            raise ValueError("unknown protocol", proto)
         try:
-            self.xbe_host, self.xbe_port = self.__parseServer(self.opts.server)
+            self.host, port = host.split(":")
+            self.port = int(port)
         except Exception, e:
-            self.error("could not interpret server: %s: %s" % (self.opts.server, e))
-        
+            self.host = host
+            self.port = 61613
+            
         log.info("initializing reactor...")
         from twisted.internet import reactor
         from xbe.xbeinstd.protocol.instance import XenBEEInstProtocolFactory
 
         f = XenBEEInstProtocolFactory(self, self.opts.uuid,
-                                      my_queue=self.queue, server_queue="/queue/xenbee.daemon")
-        reactor.connectTCP(self.xbe_host,
-                           self.xbe_port,
+                                      my_queue=self.queue, server_queue="/queue"+queue)
+        reactor.connectTCP(self.host,
+                           self.port,
                            f)
         log.info("  done.")
         
@@ -104,4 +118,4 @@ class XBEInstDaemon(Daemon):
         return reactor.exitcode
 
 def main(argv):
-    XBEInstDaemon().main(argv)
+    XBEInstDaemon.getInstance().main(argv)

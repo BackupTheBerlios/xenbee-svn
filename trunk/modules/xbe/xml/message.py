@@ -609,7 +609,7 @@ class InstanceAvailable(InstanceMessage):
        <NodeInformation>
           <Network>
              <IPList>
-               <IP type="IPv{4,6}">first ip</IP>
+               <IP>127.0.0.1</IP>
                ...
              </IPList>
           </Network>
@@ -651,7 +651,8 @@ class InstanceAvailable(InstanceMessage):
         obj = cls(inst_id)
 
         # ips
-        map(obj.add_ip, [ip.text for ip in ia.findall(XBE("NodeInformation/Network/IPList/IP"))])
+        map(obj.add_ip,
+            [ip.text for ip in ia.findall(XBE("NodeInformation/Network/IPList/IP"))])
         return obj
     from_xml = classmethod(from_xml)
 MessageBuilder.register(InstanceAvailable)
@@ -664,7 +665,7 @@ class InstanceAlive(InstanceMessage):
     """
     tag = XBE("InstanceAlive")
     
-    def __init__(self, inst_id, uptime=None):
+    def __init__(self, inst_id, uptime=None, idle=None):
         """Create a new InstanceAlive message.
 
         @param inst_id - the instance id in which the task has been running
@@ -674,11 +675,14 @@ class InstanceAlive(InstanceMessage):
             raise ValueError("I need at least an instance-ID!")
         self.__inst_id = inst_id
         self.__uptime = uptime and int(uptime)
+        self.__idle = idle and int(idle)
 
     def inst_id(self):
         return self.__inst_id
     def uptime(self):
         return self.__uptime
+    def idle(self):
+        return self.__idle
     
     def as_xml(self):
         root, hdr, body = MessageBuilder.xml_parts()
@@ -686,26 +690,29 @@ class InstanceAlive(InstanceMessage):
         ia.attrib["inst-id"] = self.inst_id()
         if self.uptime() is not None:
             etree.SubElement(ia, XBE("Uptime")).text = str(self.uptime())
+        if self.idle() is not None:
+            etree.SubElement(ia, XBE("Idle")).text = str(self.idle())
         return root
 
     def from_xml(cls, root, hdr, body):
         elem = body.find(cls.tag)
         inst_id = elem.attrib["inst-id"]
         uptime = elem.findtext(XBE("Uptime"))
-        return cls(inst_id, uptime)
+        idle = elem.findtext(XBE("Idle"))
+        return cls(inst_id, uptime, idle)
     from_xml = classmethod(from_xml)
 MessageBuilder.register(InstanceAlive)
 
-class TaskFinished(InstanceMessage):
+class ExecutionFinished(InstanceMessage):
     """Notifies the daemon, that the task has finished.
 
     The message does not indicate, whether the job failed or not, but
     it contains its exitcode and other stuff.
     """
-    tag = XBE("TaskFinished")
+    tag = XBE("ExecutionFinished")
     
     def __init__(self, inst_id, exitcode, task_id=None):
-        """Create a new TaskFinished message.
+        """Create a new ExecutionFinished message.
 
         @param inst_id - the instance id in which the task has been running
         @param task_id - if the instance does know the task_id, it may be set here.
@@ -740,4 +747,118 @@ class TaskFinished(InstanceMessage):
         exitcode = int(elem.findtext(XBE("ExitCode")))
         return cls(inst_id, exitcode, task_id)
     from_xml = classmethod(from_xml)
-MessageBuilder.register(TaskFinished)
+MessageBuilder.register(ExecutionFinished)
+
+class ExecutionFailed(InstanceMessage):
+    """Notifies the daemon, that the task has failed.
+
+    This message is sent, when the task could not be executed due to
+    some reason.
+    """
+    tag = XBE("ExecutionFailed")
+    
+    def __init__(self, inst_id, reason):
+        """Create a new ExecutionFinished message.
+
+        @param inst_id - the instance id in which the task has been running
+        @param task_id - if the instance does know the task_id, it may be set here.
+        """
+        InstanceMessage.__init__(self)
+        if inst_id is None:
+            raise ValueError("I need at least an instance-ID!")
+        self.__inst_id = inst_id
+        self.__reason = int(reason)
+        
+    def inst_id(self):
+        return self.__inst_id
+    def reason(self):
+        return self.__reason
+    
+    def as_xml(self):
+        root, hdr, body = MessageBuilder.xml_parts()
+        tf = etree.SubElement(body, self.tag)
+        tf.attrib["inst-id"] = self.inst_id()
+        tf.attrib["reason"] = str(self.reason())
+        return root
+
+    def from_xml(cls, root, hdr, body):
+        elem = body.find(cls.tag)
+        inst_id = elem.attrib["inst-id"]
+        reason = elem.attrib["reason"]
+        return cls(inst_id, reason)
+    from_xml = classmethod(from_xml)
+MessageBuilder.register(ExecutionFailed)
+
+class InstanceShuttingDown(InstanceMessage):
+    """Notifies the daemon, that the instance is going down.
+    """
+    tag = XBE("InstanceShuttingDown")
+    
+    def __init__(self, inst_id, signal):
+        """Create a new InstanceShuttingDown message.
+
+        @param inst_id the usual instance id
+        @param signal the signal due to which the instance is going down
+        """
+        InstanceMessage.__init__(self)
+        if inst_id is None:
+            raise ValueError("I need at least an instance-ID!")
+        self.__inst_id = inst_id
+        self.__signal = signal
+
+    def inst_id(self):
+        return self.__inst_id
+    def signal(self):
+        return self.__signal
+    
+    def as_xml(self):
+        root, hdr, body = MessageBuilder.xml_parts()
+        xml = etree.SubElement(body, self.tag)
+        xml.attrib["inst-id"] = self.inst_id()
+        xml.attrib["signal"] = str(self.signal())
+        return root
+
+    def from_xml(cls, root, hdr, body):
+        elem = body.find(cls.tag)
+        inst_id = elem.attrib["inst-id"]
+        signal = int(elem.attrib["signal"])
+        return cls(inst_id, signal)
+    from_xml = classmethod(from_xml)
+MessageBuilder.register(InstanceShuttingDown)
+
+class ExecuteTask(BaseServerMessage):
+    """Execute a task on an instance.
+
+    The ExecuteTask consists of a JSDL document.
+    """
+    tag = XBE("ExecuteTask")
+
+    def __init__(self, jsdl, task_id):
+        BaseServerMessage.__init__(self)
+        self.__jsdl = jsdl
+        self.__task_id = task_id
+
+    def jsdl(self):
+        return self.__jsdl
+
+    def task_id(self):
+        return self.__task_id
+
+    def as_xml(self):
+        root, hdr, body = MessageBuilder.xml_parts()
+        elem = etree.SubElement(body, self.tag)
+        elem.attrib["task-id"] = str(self.task_id())
+        elem.append(self.__jsdl)
+        return root
+
+    def from_xml(cls, root, hdr, body):
+        elem = body.find(cls.tag)
+        if elem is None:
+            raise MessageParserError("could not find 'ExecuteTask' element")
+        task_id = elem.attrib["task-id"]
+        jsdl = elem.find(JSDL("JobDefinition"))
+        if jsdl is None:
+            raise MessageParserError("could not find 'JobDefinition' element")
+        return cls(jsdl, task_id)
+    from_xml = classmethod(from_xml)
+MessageBuilder.register(ExecuteTask)

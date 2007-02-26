@@ -60,6 +60,7 @@ class Instance(object):
 
         self.__backend_id = -1
         self.__startTime = 0
+        self.__last_message_tstamp = 0
         self.protocol = None # the protocol used to speak to the instance
         self.task = None
 
@@ -123,7 +124,7 @@ class Instance(object):
 
     def stop(self):
         """Stop the instance."""
-        if self.state in ["started", "available"]:
+        if self.state in ["started"]:
             return threads.deferToThread(backend.shutdownInstance,
                                          self).addCallback(self.stopped)
         else:
@@ -168,7 +169,6 @@ class Instance(object):
 
         def __cancelTimer(arg, timer):
             # got signal from the backend instance
-            self.state = "available"
             timer.cancel()
             return arg
             
@@ -194,15 +194,22 @@ class Instance(object):
             
         return self.__availableDefer
 
-    def available(self, inst_avail_msg):
+    def available(self, inst_avail_msg, protocol):
         """Callback called when the 'real' instance has notified us."""
-        self.log.debug("now available at [%s]" % (self.id(),
-                                                  ", ".join(inst_avail_msg.ips())))
         self.ips = inst_avail_msg.ips()
+        self.log.debug("now available at [%s]" % (", ".join(self.ips())))
         if not self.__availableDefer.called:
+            self.protocol = protocol
+            self.alive()
             self.__availableDefer.callback(self)
             del self.__availableDefer
             del self.__availableTimer
+
+    def alive(self):
+        self.__last_message_tstamp = time.time()
+
+    def timeOfLastMessage(self):
+        return self.__last_message_tstamp
 
 from xbe.util import singleton
 class InstanceManager(singleton.Singleton):
@@ -220,6 +227,8 @@ class InstanceManager(singleton.Singleton):
         self.instances = {}
         self.cache = daemon.cache
         self.__iter__ = self.instances.itervalues
+        self.reaper = task.LoopingCall(self.reap, 5*60)
+        self.reaper.start(1*60, now=False)
 
     def newInstance(self, spool):
         """Returns a new instance.
@@ -241,6 +250,18 @@ class InstanceManager(singleton.Singleton):
         self.instances[inst.uuid()] = inst
         return inst
 
+    def reap(self, timeout):
+        """Checks if an instance has been started but does not seem to
+        be alive."""
+        now = time.time()
+        for inst in self.instances.values():
+            if inst.state == "started":
+                if (inst.timeOfLastMessage() + timeout) < now:
+                    log.info("reaping stale instance %s" % inst.id())
+                    inst.task.failed(
+                        failure.Failure(
+                        InstanceTimedout("instance seems dead", inst.id())))
+            
     def removeInstance(self, inst):
         """Remove the instance 'inst' from the manager.
 

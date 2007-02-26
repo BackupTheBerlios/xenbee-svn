@@ -385,15 +385,13 @@ class JsdlDocument:
         # JSDL-POSIX Parser Map
         jsdlPosixParserMap = {
             self.DEFAULT_PARSER: self._parse_complex,
-            "Executable": self._parse_text,
-
             "Argument": self._parse_posix_text_array,
             "Executable": self._parse_posix_text,
             "Input": self._parse_posix_text,
             "Output": self._parse_posix_text,
             "Error": self._parse_posix_text,
             "WorkingDirectory": self._parse_posix_text,
-            "Environment": self._parse_posix_text_array,
+            "Environment": self._parse_posix_environment,
             "WallTimeLimit": self._parse_unsigned_integer,
             "FileSizeLimit": self._parse_unsigned_integer,
             "DataSegmentLimit": self._parse_unsigned_integer,
@@ -481,6 +479,23 @@ class JsdlDocument:
         self.parsedDoc = {decodeTag(xml.tag)[1] : self._parse(xml)}
         return self.parsedDoc
 
+    def get_file_systems(self):
+        if self.parsedDoc is None:
+            raise RuntimeError("please parse first!")
+        known_filesystems = {}    # mapping from logical name to mount-point
+        try:
+            file_systems = self.lookup_path(
+                "JobDefinition/JobDescription/Resources/FileSystem")
+            for fs in file_systems:
+                logical_name = fs[":attributes:"]["name"]
+                mount_point  = fs["MountPoint"]
+                known_filesystems[logical_name] = mount_point
+        except Exception, e:
+            pass
+        if "ROOT" not in known_filesystems:
+            known_filesystems["ROOT"] = "/"
+        return known_filesystems
+
     def _parse(self, xml_elem):
         self.validate(xml_elem)
         ns, tag = decodeTag(xml_elem.tag)
@@ -546,6 +561,11 @@ class JsdlDocument:
         return [self._parse_posix_text(xml)]
     def _parse_posix_text(self, xml):
         return ((xml.text or "").strip(), xml.attrib.get("filesystemName"))
+    def _parse_posix_environment(self, xml):
+        key = xml.attrib["name"]
+        fs = xml.attrib.get("filesystemName")
+        val = (xml.text or "").strip()
+        return [ (key, val, fs) ]
 
     def _parse_xsdl_argument(self, xml):
         val = self._parse_normative_text(xml)

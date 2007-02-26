@@ -116,7 +116,7 @@ class Task(TaskFSM):
         pre-cond. instance available -> protocol is ready
         post-cond. jsdl sent to instance
         """
-        pass
+        self.__inst.protocol.executeTask(self.__jsdl_xml)
 
     def do_terminate_execution(self, reason, *args, **kw):
         """terminate the execution within the instance.

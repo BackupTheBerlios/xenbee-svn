@@ -111,23 +111,10 @@ class Preparer(object):
         if instdesc.get("Control") is not None:
             self._prepare_control_files(instdesc.get("Control"))
 
-        # now we can handle the stage in definitions
-        known_filesystems = {}    # mapping from logical name to mount-point
-        try:
-            file_systems = jsdl_doc.lookup_path(
-                "JobDefinition/JobDescription/Resources/FileSystem")
-            for fs in file_systems:
-                logical_name = fs[":attributes:"]["name"]
-                mount_point  = fs["MountPoint"]
-                known_filesystems[logical_name] = mount_point
-        except Exception, e:
-            log.warn('error while retrieving defined filesystems', e)
-            raise
-            
-        if "ROOT" not in known_filesystems:
-            known_filesystems["ROOT"] = "/"
+        # mapping from logical name to mount-point
+        known_filesystems = jsdl_doc.get_file_systems()
 
-        # handle the DataStaging elements
+        # now we can handle the stage in definitions
         try:
             stagings = jsdl_doc.lookup_path("JobDefinition/JobDescription/"+
                                         "DataStaging")

@@ -188,6 +188,7 @@ class XBEDaemon(Daemon):
             raise ValueError("unknown protocol", proto)
         try:
             host, port = host.split(":")
+            port = int(port)
         except ValueError, e:
             port = 61613
         log.info(" connecting to %s:%d using %s" % (
