@@ -85,16 +85,16 @@ class Backend(object):
         return commands.getstatusoutput(cmdline)
 
     def _getDomainByName(self, inst):
-        return self.con.lookupByName(inst.getName())
+        return self.con.lookupByName(inst.id())
 
     def _getDomain(self, inst):
         try:
-            if inst.backend_id in self.con.listDomainsID():
+            if inst.getBackendID() in self.con.listDomainsID():
                 d = self._getDomainByName(inst)
             else:
-                raise BackendException("backend domain not found: %s" % inst.getName())
-        except Exception, le:
-            raise BackendException("backend domain not found: %s" % inst.getName(), le)
+                raise BackendException("domain not found", inst.id())
+        except Exception, e:
+            raise BackendException("domain not found", inst.id(), e)
         return d
 
     def retrieveID(self, inst):
@@ -144,7 +144,7 @@ class Backend(object):
         
         """
 
-        log.info("attempting to create backend instance for: %s" % inst.getName())
+        log.info("attempting to create backend instance for: %s" % inst.id())
 
         # check if another (or maybe this) instance is running with same name
         # (that should not happen!)
@@ -155,14 +155,14 @@ class Backend(object):
         # build configuration
         generator = XenConfigGenerator() # TODO: create factory for 'backend'
         try:
-            cfg = generator.generate(inst.config)
+            cfg = generator.generate(inst.config())
         except:
             log.error("backend: could not generate config: " + format_exception())
             raise
 
         # write current config to inst.spool/config
         try:
-            cfg_path = os.path.join(inst.getSpool(), "config")
+            cfg_path = os.path.join(inst.spool(), "config")
             cfg_file = open(cfg_path, "w")
             cfg_file.write(cfg)
             cfg_file.close()
@@ -223,18 +223,18 @@ class Backend(object):
             time.sleep(1)
         return None
 
-    def shutdownInstance(self, inst):
+    def shutdownInstance(self, inst, timeout=60*2):
         """Attempts to cleanly shut the backend instance down.
 
         WARNING: may not succeed, since the OS ignores the request.
         """
-        log.info("attempting to shut instance %s down." % inst.getName())
+        log.info("attempting to shut instance %s down." % inst.id())
         try:
             self.acquireLock()
             domain = self._getDomain(inst)
             domain.shutdown()
         finally:
             self.releaseLock()
-        if self.waitState(inst, (BE_INSTANCE_NOSTATE, BE_INSTANCE_SHUTOFF), timeout=60*2) == None:
+        if self.waitState(inst, (BE_INSTANCE_NOSTATE, BE_INSTANCE_SHUTOFF), timeout) == None:
             raise BackendException("shutdown timed out")
         return True

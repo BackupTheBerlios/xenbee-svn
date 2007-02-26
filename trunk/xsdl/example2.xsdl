@@ -40,12 +40,12 @@
       <jsdl:TotalCPUCount>
 	<jsdl:Exact>2</jsdl:Exact>
       </jsdl:TotalCPUCount>
-
-
-      <!-- XBE reservation extension -->
-      <xbe:Reservation xmlns:xbe="http://www.example.com/schemas/xbe/2007/01/xbe">
-	<xbe:Ticket>ticket-1</xbe:Ticket>
-      </xbe:Reservation>
+      <jsdl:TotalPhysicalMemory>
+	<jsdl:LowerBoundedRange>268435456.0</jsdl:LowerBoundedRange>
+      </jsdl:TotalPhysicalMemory>
+      <jsdl:TotalVirtualMemory>
+	<jsdl:LowerBoundedRange>268435456.0</jsdl:LowerBoundedRange>
+      </jsdl:TotalVirtualMemory>
       
       <xsdl:InstanceDefinition>
 	<xsdl:InstanceDescription>
@@ -111,8 +111,8 @@
       <jsdl:CreationFlag>overwrite</jsdl:CreationFlag>
       <jsdl:DeleteOnTermination>true</jsdl:DeleteOnTermination>
       <jsdl:Source>
-	<jsdl:URI>http://www.example.com/test.file</jsdl:URI>
-	<xsdl:Hash algorithm="sha1">d85b87219fa6a4578cb8e796db9ddfb37ce5c772</xsdl:Hash>
+	<jsdl:URI>file:///srv/xen-images/xenbee/packages/simple-pkg/kernel</jsdl:URI>
+	<xsdl:Hash algorithm="sha1">a3b180e5dc2359849ffa927b93414ada20807a0c</xsdl:Hash>
       </jsdl:Source>
       <jsdl:Target>
 	<jsdl:URI>http://www.example.com/test.file</jsdl:URI>

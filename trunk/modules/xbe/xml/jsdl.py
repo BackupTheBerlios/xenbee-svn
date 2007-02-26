@@ -9,7 +9,7 @@ functionality. But I did not have time to that refactoring yet.
 __version__ = "$Rev$"
 __author__ = "$Author$"
 
-import logging, hashlib, sys, os, os.path, time, tempfile
+import logging, hashlib, sys, os, os.path, time, tempfile, random
 log = logging.getLogger(__name__)
 
 from lxml import etree
@@ -19,7 +19,16 @@ from xbe.xml import errcode
 JSDL_ProcessorArchitectureEnumeration = [ "x86", "x86_32" ]
 JSDL_FileSystemTypeEnumeration = [ "swap", "temporary", "spool", "normal" ]
 JSDL_OperatingSystemTypeEnumeration = [ "Linux" ]
-JSDL_CreationFlagEnumeration = [ "overwrite", "dontOverwrite", "append" ]
+
+JSDL_CreationFlag_OVERWRITE = 0
+JSDL_CreationFlag_DONT_OVERWRITE = 1
+JSDL_CreationFlag_APPEND = 2
+
+JSDL_CreationFlagEnumeration = {
+    "overwrite": JSDL_CreationFlag_OVERWRITE,
+    "dontOverwrite": JSDL_CreationFlag_DONT_OVERWRITE,
+    "append": JSDL_CreationFlag_APPEND,
+}
 
 class RangeValue:
     def __init__(self,
@@ -103,8 +112,18 @@ class RangeValue:
             }
 
     def get_value(self):
-        if len(self.exacts) == 1:
-            return self.exacts[0][0]
+        if len(self.exacts):
+            return random.choice(self.exacts)[0]
+        if self.lower[0] is not None:
+            if self.lower[1]:
+                return self.lower[0] + 1
+            else:
+                return self.lower[0]
+        if self.upper[0] is not None:
+            if self.upper[1]:
+                return self.upper[0] - 1
+            else:
+                return self.upper[0]
         raise NotImplementedError("TODO: implement more functionality")
 
     def __parse_range_type(self, xml_elem):
@@ -256,7 +275,7 @@ class Decompressor:
         if self.format() in ('tbz', 'tgz'):
             import tarfile
             tar_file = tarfile.open(file_name)
-            tar_file.extractall(dst)
+            tar_file.extractall(dst_dir)
             log.debug("decompression took %.2fs" % (time.time() - start))
 
             if remove_original:
@@ -310,8 +329,8 @@ class Decompressor:
 class JsdlDocument:
     DEFAULT_PARSER=()
     
-    def __init__(self):
-        self._schemaMap = {}
+    def __init__(self, schema_map={}):
+        self._schemaMap = schema_map
         self._fileSystems = {}
 
         # JSDL Parser Map
@@ -359,7 +378,7 @@ class JsdlDocument:
             "FileName": self._parse_text,
             "FilesystemName": self._parse_text,
             "URI": self._parse_uri,
-            "CreationFlag": self._parse_text,
+            "CreationFlag": self._parse_creation_flag,
             "DeleteOnTermination": self._parse_bool,
             }
 
@@ -503,6 +522,9 @@ class JsdlDocument:
         if name is not None:
             self._fileSystems[name] = self._parse_complex_array(xml)
         return self._parse_complex_array(xml)
+
+    def _parse_creation_flag(self, xml):
+        return JSDL_CreationFlagEnumeration[xml.text.strip()]
 
     def _parse_integer(self, xml):
         return int(xml.text)

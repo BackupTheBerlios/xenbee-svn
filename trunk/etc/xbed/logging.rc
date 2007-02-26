@@ -10,7 +10,7 @@ default_logfile = /var/log/xenbee/xbed.log
 keys = root
 
 [logger_root]
-level = NOTSET
+level = DEBUG
 # NOTE: it is important to *not* have spaces in the comma separated list
 handlers = stderr,syslog,logfile
 
@@ -22,7 +22,7 @@ keys = console,syslog,file
 
 [handler_stderr]
 class = StreamHandler
-level = ERROR
+level = WARN
 formatter = console
 args = (sys.stderr,)
 
@@ -34,9 +34,9 @@ args = ()
 
 [handler_logfile]
 class = FileHandler
-level = NOTSET
+level = DEBUG
 formatter = file
-args = ("%(default_logfile)s",)
+args = ("/var/log/xenbee/xbed.log", 'w')
 
 [formatter_console]
 format = %(asctime)s %(threadName)s %(levelname)-8s %(message)s

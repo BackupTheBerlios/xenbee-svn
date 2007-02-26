@@ -17,6 +17,10 @@ class XBEDaemon(Daemon):
         Daemon.__init__(self, pidfile="/var/run/xbed.pid", umask=0007, name="xbed", user="root", group="root")
         p = self.parser
         p.add_option(
+            "-U", "--uri", dest="uri", type="string",
+            default="stomp://xen-o-matic.itwm.fhrg.fraunhofer.de/xenbee.daemon",
+            help="the uri through which I'am reachable")
+        p.add_option(
             "-H", "--host", dest="host", type="string", default="localhost",
             help="the STOMP server")
         p.add_option(
@@ -28,6 +32,10 @@ class XBEDaemon(Daemon):
         p.add_option(
             "-s", "--spool", dest="spool", type="string", default="/srv/xen-images/xenbee",
             help="the spool directory to use")
+        p.add_option(
+            "-S", "--schema-dir", dest="schema_dir", type="string",
+            default="/root/xenbee/etc/xml/schema",
+            help="path to a directory where schema definitions can be found.")
         p.add_option(
             "-l", "--logfile", dest="logfile", type="string", default="/var/log/xenbee/xbed.log",
             help="the logfile to use")
@@ -52,10 +60,6 @@ class XBEDaemon(Daemon):
         p.add_option(
             "--mac-file", dest="mac_file", type="string",
             help="path to a file, that contains available mac addresses.")
-        p.add_option(
-            "--url", dest="url", type="string",
-            default="stomp://xen-o-matic.itwm.fhrg.fraunhofer.de/xenbee.daemon",
-            help="the url through which I'am reachable")
 
     def configure(self):
         self.daemonize = self.opts.daemonize
@@ -83,24 +87,42 @@ class XBEDaemon(Daemon):
             self.opts.mac_file = __locate_file("mac-addresses")
         if self.opts.log_conf is None:
             self.opts.log_conf = __locate_file("logging.rc")
+        if self.opts.schema_dir is None:
+            self.opts.schema_dir = __locate_file(os.path.join("xml", "schema"))
 
     def setup_logging(self):
-        import xbe
         try:
             if os.path.exists(self.opts.log_conf):
                 # try to use the logconf file
                 from logging.config import fileConfig
                 fileConfig(self.opts.log_conf)
+                logging.currentframe = lambda: sys._getframe(3)
             else:
+                import xbe
                 # fall back and use a simple logfile
                 xbe.initLogging(self.opts.logfile)
-            self.log_error = log.fatal
         except IOError, ioe:
             raise Exception("%s: %s" % (ioe.strerror, ioe.filename))
-
+        global log
+        log = logging.getLogger()
+        log.info("logging has been set up")
+        self.log_error = log.fatal
+        
     def setup_priviledged(self):
 	log.info("Setting up the XenBEE daemon")
 
+        log.info("initializing schema documents...")
+        from lxml import etree
+        self.schema_map = {}
+        for schema in os.listdir(self.opts.schema_dir):
+            if not schema.endswith(".xsd"): continue
+            path = os.path.join(self.opts.schema_dir, schema)
+            log.info("   reading %s" % path)
+            xsd_doc = etree.parse(path)
+            namespace = xsd_doc.getroot().attrib["targetNamespace"]
+            self.schema_map[namespace] = etree.XMLSchema(xsd_doc)
+        log.info("  done.")
+        
         log.info("initializing certificates...")
         # read in the certificate and private-key
         from xbe.xml.security import X509Certificate
@@ -133,20 +155,20 @@ class XBEDaemon(Daemon):
         self.cache.initialize().addBoth(str).addErrback(self.error)
         log.info("  done.")
 
+        log.info("initializing mac address pool...")
+        from xbe.xbed.resource import MacAddressPool
+        self.macAddresses = MacAddressPool.from_file(self.opts.mac_file)
+        log.info("  done.")
+
         log.info("initializing instance manager...")
         from xbe.xbed.instance import InstanceManager
-        self.instanceManager = InstanceManager(self)
+        self.instanceManager = InstanceManager.getInstance(self)
         log.info("  done.")
 
         log.info("initializing task manager...")
         from xbe.xbed.task import TaskManager
-        self.taskManager = TaskManager(self.instanceManager,
-                                            os.path.join(self.opts.spool, "tasks"))
-        log.info("  done.")
-
-        log.info("initializing scheduler...")
-        from xbe.xbed.scheduler import Scheduler
-        self.scheduler = Scheduler(self.taskManager)
+        self.taskManager = TaskManager.getInstance(self.instanceManager,
+                                                   os.path.join(self.opts.spool, "tasks"))
         log.info("  done.")
 
         log.info("initializing login portal...")
@@ -160,10 +182,22 @@ class XBEDaemon(Daemon):
         from xbe.xbed.proto import XenBEEDaemonProtocolFactory
 
         log.info("initializing reactor...")
-        reactor.connectTCP(self.opts.host,
-                           self.opts.port,
+        from xbe.util.network import urlparse
+        proto, host, queue, _, _, _ = urlparse(self.opts.uri)
+        if proto != "stomp":
+            raise ValueError("unknown protocol", proto)
+        try:
+            host, port = host.split(":")
+        except ValueError, e:
+            port = 61613
+        log.info(" connecting to %s:%d using %s" % (
+            host, port, proto
+        ))
+                 
+        reactor.connectTCP(host,
+                           port,
                            XenBEEDaemonProtocolFactory(self,
-                                                       queue="/queue/xenbee.daemon"))
+                                                       queue="/queue"+queue))
         log.info("  done.")
         
     def run(self, *args, **kw):
@@ -174,4 +208,4 @@ class XBEDaemon(Daemon):
         return reactor.exitcode
 
 def main(argv):
-    XBEDaemon().main(argv)
+    XBEDaemon.getInstance().main(argv)

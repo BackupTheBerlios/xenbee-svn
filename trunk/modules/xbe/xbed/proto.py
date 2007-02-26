@@ -9,11 +9,16 @@ __author__ = "$Author: petry $"
 import logging, re, time, threading
 log = logging.getLogger(__name__)
 
+from pprint import pprint, pformat
 from xbe.proto import XenBEEProtocolFactory, XenBEEProtocol
 from lxml import etree
 from xbe.xml.security import X509SecurityLayer, X509Certificate, SecurityError
 from xbe.xml.namespaces import *
-from xbe.xml import xsdl, message, protocol, errcode
+from xbe.xml import xsdl, message, protocol, errcode, jsdl
+
+from xbe.xbed.daemon import XBEDaemon
+from xbe.xbed.ticketstore import TicketStore
+from xbe.xbed.task import TaskManager
             
 class XenBEEClientProtocol(protocol.XMLProtocol):
     """The XBE client side protocol.
@@ -29,30 +34,79 @@ class XenBEEClientProtocol(protocol.XMLProtocol):
     def connectionMade(self):
         log.debug("client %s has connected" % (self.client))
     
-    def do_JobDefinition(self, job, *args, **kw):
-        log.debug("got new job")
+    def do_ConfirmReservation(self, elem, *args, **kw):
+        try:
+            confirm = message.MessageBuilder.from_xml(elem.getroottree())
+        except Exception, e:
+            return message.Error(errcode.ILLEGAL_REQUEST, str(e))
+        log.debug("got confirmation with ticket %s" % confirm.ticket())
+        ticket = TicketStore.getInstance().lookup(confirm.ticket())
+        if ticket is None:
+            return message.Error(errcode.TICKET_INVALID, confirm.ticket())
+        
+        xbed = XBEDaemon.getInstance()
+        jsdl_doc = jsdl.JsdlDocument(schema_map=xbed.schema_map)
+        parsed_jsdl = jsdl_doc.parse(confirm.jsdl())
 
-        # does the job have our InstanceDefinition element?
-        # otherwise drop the job
-        if not job.find(XSDL("InstanceDefinition")):
-            return message.Error(errcode.ILLEGAL_REQUEST,
-                                 "no InstanceDefinition found.")
-        # we should be able to handle the job
-        task = self.factory.taskManager.newTask(job)
-        return message.Error(errcode.OK,
-                             "task submitted: %s" % task.ID())
-
-    def do_ReservationRequest(self, dom_node, *args, **kw):
-        log.warn("TODO: create ticket")
-        msg = message.ReservationResponse(ticket="create-a-real-ticket")
-        # if no ticket could be generated:
-        # message.Error(errcode.SERVER_BUSY)
+        try:
+            # does the job have our InstanceDescription element?
+            # otherwise drop the job
+            jsdl_doc.lookup_path(
+                "JobDefinition/JobDescription/Resources/"+
+                "InstanceDefinition/InstanceDescription")
+        except Exception, e:
+            TaskManager.getInstance().removeTask(ticket.task)
+            del ticket.task
+            TicketStore.getInstance().release(ticket)
+            msg = message.Error(errcode.NO_INSTANCE_DESCRIPTION, str(e))
+        else:
+            ticket.task.confirm(confirm.jsdl(), jsdl_doc)
+            if confirm.start_task():
+                ticket.task.start()
+            msg = None
         return msg
 
-    def do_StatusRequest(self, dom_node, *args, **kw):
+    def do_ReservationRequest(self, dom_node, *args, **kw):
+        ticket = TicketStore.getInstance().new()
+        if ticket is None:
+            # if no ticket could be generated:
+            msg = message.Error(errcode.SERVER_BUSY)
+        else:
+            task = TaskManager.getInstance().new()
+            ticket.task = task
+            msg = message.ReservationResponse(ticket.id(), task.id())
+        return msg
+
+    def do_CancelReservation(self, elem, *args, **kw):
+        msg = message.MessageBuilder.from_xml(elem.getroottree())
+        ticket = TicketStore.getInstance().lookup(msg.ticket())
+        ticket.task.terminate("UserCancel")
+        del ticket.task
+        TicketStore.getInstance().release(ticket)
+
+    def do_StartRequest(self, elem, *a, **kw):
+        msg = message.MessageBuilder(elem.getroottree())
+        ticket = TicketStore.getInstance().lookup(msg.ticket())
+        ticket.task.start()
+
+    def do_StatusRequest(self, elem, *args, **kw):
 	"""Handle status request."""
+        request = message.MessageBuilder.from_xml(elem.getroottree())
+        task_id = request.task_id()
+        print "handling request:", request.as_str()
         status_list = message.StatusList()
-        map(status_list.add, self.factory.taskManager.tasks.values())
+        if task_id is not None:
+            task = TaskManager.getInstance().lookupByID(task_id)
+            if task is not None:
+                status_list.add(task.id(), task.submitTime(), task.state())
+            else:
+                return message.Error(errcode.TASK_LOOKUP_FAILURE, task_id)
+        else:
+            pprint(TaskManager.getInstance().tasks)
+            for task in TaskManager.getInstance().tasks.values():
+                print "adding task", task.id()
+                status_list.add(task.id(), task.submitTime(), task.state())
+        print status_list.as_str()
         return status_list
 
     def do_Kill(self, elem, *args, **kw):
@@ -103,7 +157,7 @@ class XenBEEInstanceProtocol(protocol.XMLProtocol):
         else:
             job = task.document
         if job is None:
-            raise RuntimeError("no job definition found for task %s" % (task.ID()))
+            raise RuntimeError("no job definition found for task %s" % (task.id()))
         msg = xsdl.XenBEEClientMessage()
         msg.root.append(etree.fromstring(etree.tostring(job)))
 
@@ -151,7 +205,7 @@ class _XBEDProtocol(XenBEEProtocol):
 class XenBEEDaemonProtocolFactory(XenBEEProtocolFactory):
     protocol = _XBEDProtocol
     
-    def __init__(self, daemon, queue="/queue/xenbee.daemon"):
+    def __init__(self, daemon, queue):
 	XenBEEProtocolFactory.__init__(self, queue, "daemon", "test1234")
         self.daemon = daemon
         self.__protocolRemovalTimeout = 60

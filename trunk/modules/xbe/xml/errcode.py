@@ -4,8 +4,10 @@ OK = 200
 ILLEGAL_REQUEST = 400
 SUBMISSION_FAILURE = 401
 JOB_ALREADY_RUNNING = 402
+NO_INSTANCE_DESCRIPTION = 403
 TASK_LOOKUP_FAILURE = 404
 INSTANCE_LOOKUP_FAILURE = 405
+TICKET_INVALID = 406
 SIGNAL_OUT_OF_RANGE = 450
 SECURITY_ERROR = 460
 UNAUTHORIZED = 461
@@ -20,6 +22,8 @@ info = {
                          "you sent me an illegal request", None),
     JOB_ALREADY_RUNNING: ("JOB ALREADY RUNNING",
                          "a job is already running on this instance", None),
+    NO_INSTANCE_DESCRIPTION: ("NO_INSTANCE_DESCRIPTION",
+                              "no instance description found", None),
     TASK_LOOKUP_FAILURE: ("TASK_LOOKUP_FAILURE",
                           "the task-id you sent could not be mapped to a task", None),
     INSTANCE_LOOKUP_FAILURE: ("INSTANCE_LOOKUP_FAILURE",
@@ -29,5 +33,6 @@ info = {
     SECURITY_ERROR: ("SECURITY_ERROR", "general security violation", None),
     UNAUTHORIZED: ("UNAUTHORIZED", "you are not authorized", None),
     SERVER_BUSY: ("SERVER_BUSY", "I cannot handle your request right now, try again later", None),
-    INTERNAL_SERVER_ERROR: ("INTERNAL_SERVER_ERROR", "you sent me an illegal request", None)
+    INTERNAL_SERVER_ERROR: ("INTERNAL_SERVER_ERROR", "you sent me an illegal request", None),
+    TICKET_INVALID: ("TICKET_INVALID", "no ticket specified, or illegal ticket", None),
 }

@@ -25,25 +25,26 @@ class ClientXMLProtocol(protocol.XMLProtocol):
     def connectionMade(self):
         """send initialization stuff"""
         log.info("client protocol connected")
-        msg = message.ListCache()
-        self.sendMessage(msg.as_xml())
         msg = message.ReservationRequest()
         self.sendMessage(msg.as_xml())
 
     def do_CacheEntries(self, elem, *args, **kw):
         cache_entries = message.MessageBuilder.from_xml(elem.getroottree())
-        print "got cache entries:"
         pprint(cache_entries.entries())
 
     def do_StatusList(self, elem, *args, **kw):
         status_list = message.MessageBuilder.from_xml(elem.getroottree())
-        print "got status list:"
         pprint(status_list.entries())
         
     def do_ReservationResponse(self, elem, *args, **kw):
-        msg = message.MessageBuilder.from_xml(elem.getroottree())
-        print "got reservation response:"
-        pprint(msg.ticket())
+        rmsg = message.MessageBuilder.from_xml(elem.getroottree())
+        jsdl = etree.parse("/root/xenbee/xsdl/example3.xsdl")
+        reactor.callLater(1,
+                          self.sendMessage,
+                          message.ConfirmReservation(rmsg.ticket(),
+                                                     jsdl.getroot(),
+                                                     start_task=True).as_xml())
+
 
 class ClientProtocolFactory(XenBEEProtocolFactory):
     def __init__(self, id, certificate, ca_cert):

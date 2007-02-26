@@ -13,13 +13,8 @@ from zope.interface import Interface, implements
 from lxml import etree
 from pprint import pprint, pformat
 
-from xbe.xml.jsdl import JsdlDocument
+from xbe.xml import jsdl
 from xbe.util.staging import DataStager
-
-JSDL_SCHEMA=etree.XMLSchema(etree.parse("/root/xenbee/etc/xml/schema/jsdl.xsd"))
-JSDL_POSIX_SCHEMA=etree.XMLSchema(etree.parse("/root/xenbee/etc/xml/schema/jsdl-posix.xsd"))
-XSDL_SCHEMA=etree.XMLSchema(etree.parse("/root/xenbee/etc/xml/schema/xsdl.xsd"))
-#XBE_SCHEMA=etree.XMLSchema(etree.parse("/root/xenbee/etc/xml/schema/xbe.xsd"))
 
 class ValidationError(ValueError):
     pass
@@ -57,7 +52,8 @@ class URILocationHandler:
             log.debug("validating data")
             if not hash_validator.validate(open(dst).read()):
                 raise ValidationError("the retrieved file did not match the hash-value",
-                                      uri, hash_validator.algorithm(), hash_validator.hexdigest()
+                                      uri, hash_validator.algorithm(),
+                                      hash_validator.hexdigest()
                 )
 
         # decompress the file if necessary
@@ -92,18 +88,16 @@ class Preparer(object):
 
         jsdl_doc is a parsed and validated JSDL document.
         """
-        if not isinstance(jsdl_doc, JsdlDocument):
+        if not isinstance(jsdl_doc, jsdl.JsdlDocument):
             raise ValueError("jsdl_doc must be a JsdlDocument", jsdl_doc)
-        self.__jsdl_doc = jsdl_doc
         if not os.path.exists(spool_path):
             raise ValueError("spool_path must exist", spool_path)
         self.__spool = spool_path
 
-        jsdl = self.__jsdl_doc
         try:
-            instdesc = jsdl.lookup_path("JobDefinition/JobDescription/"+
-                                        "Resources/InstanceDefinition/"+
-                                        "InstanceDescription")
+            instdesc = jsdl_doc.lookup_path("JobDefinition/JobDescription/"+
+                                            "Resources/InstanceDefinition/"+
+                                            "InstanceDescription")
         except Exception, e:
             raise ValidationError("could not find an InstanceDescription", e)
 
@@ -120,42 +114,71 @@ class Preparer(object):
         # now we can handle the stage in definitions
         known_filesystems = {}    # mapping from logical name to mount-point
         try:
-            file_systems = jsdl.lookup_path("JobDefinition/JobDescription/Resources/FileSystem")
+            file_systems = jsdl_doc.lookup_path(
+                "JobDefinition/JobDescription/Resources/FileSystem")
             for fs in file_systems:
-                print "found fs:\n", pformat(fs)
                 logical_name = fs[":attributes:"]["name"]
                 mount_point  = fs["MountPoint"]
                 known_filesystems[logical_name] = mount_point
         except Exception, e:
-            log.debug('error while retrieving defined filesystems', e)
+            log.warn('error while retrieving defined filesystems', e)
             raise
             
         if "ROOT" not in known_filesystems:
-            print "adding root"
             known_filesystems["ROOT"] = "/"
 
-        # handle the Resource/DataStaging elements
+        # handle the DataStaging elements
         try:
-            stagings = jsdl.lookup_path("JobDefinition/JobDescription/"+
+            stagings = jsdl_doc.lookup_path("JobDefinition/JobDescription/"+
                                         "DataStaging")
+        except KeyError, e:
+            stagings = None
+        else:
             self._prepare_stagings(stagings, known_filesystems)
-        except:
-            pass
+        self._call_scripts(os.path.join(self.__spool, "scripts"), "setup")
+        log.info("preparation complete!")
 
+    def _call_scripts(self, script_dir, script_prefix):
+        from xbe.util.disk import mountImage
+        image = mountImage(os.path.join(self.__spool, "image"), dir=self.__spool)
+        log.debug("mounted image to '%s'" % image.mount_point())
 
+        for script in filter(lambda s: s.startswith(script_prefix),
+                             os.listdir(script_dir)):
+            script_path = os.path.join(script_dir, script)
+            log.debug("calling script '%s'" % (script_path))
+            self._run_script(script_path, self.__spool, image.mount_point())
+
+    def _run_script(self, script, *args):
+        try:
+            argv = [script]
+            argv.extend(args)
+            p = subprocess.Popen(argv, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            stdout, stderr = p.communicate()
+            if p.returncode != 0:
+                raise ValueError("script failed", script, p.returncode, stdout, stderr)
+            log.debug("stdout of script:\n%s" % stdout)
+            log.debug("errout of script:\n%s" % stderr)
+        except OSError, e:
+            raise
+        
     def _prepare_stagings(self, stagings, known_filesystems):
         log.debug("performing the staging operations")
         # first, mount the image
         from xbe.util.disk import mountImage
         image = mountImage(os.path.join(self.__spool, "image"), dir=self.__spool)
         log.debug("mounted image to '%s'" % image.mount_point())
-        
+
         for staging in stagings:
             log.debug(pformat(staging))
             if staging.get("Source") is None:
                 # stage-out operation
+                log.debug("ignoring stageout operation")
                 continue
             creation_flag = staging["CreationFlag"]
+            if creation_flag == jsdl.JSDL_CreationFlag_APPEND:
+                raise ValueError("cannot currently handle *append* CreationFlag")
+            
             fs = staging.get("FilesystemName")
             if fs is None:
                 raise ValueError("the FilesystemName *must* be specified!")
@@ -163,12 +186,19 @@ class Preparer(object):
             mount_point = known_filesystems.get(fs)
             if mount_point is None:
                 raise ValueError("the referenced FilesystemName could not be found!")
-            src_uri = staging["Source"]["URI"]
-            log.debug("")
-            
+            dst_dir = os.path.join(image.mount_point(), mount_point.lstrip("/"))
+            dst_file = staging["FileName"]
+
+            if os.path.exists(os.path.join(dst_dir, dst_file)) and \
+               creation_flag == jsdl.JSDL_CreationFlag_DONT_OVERWRITE:
+                log.debug("file already exists")
+                continue
+
+            self._handle_location(staging["Source"],
+                                  dst_dir=os.path.join(image.mount_point(), mount_point[1:]),
+                                  dst_file=staging["FileName"])
 
     def _prepare_package(self, package):
-        print "preparing from package:"
         self._handle_location(package["Location"])
 
     def _prepare_inst(self, inst):
@@ -182,11 +212,9 @@ class Preparer(object):
             self._handle_location(inst["Initrd"]["Location"], dst_file="initrd")
         log.debug("getting image...")
         self._handle_location(inst["Image"]["Location"], dst_file="image")
-        log.debug(pformat(inst))
 
     def _prepare_control_files(self, control):
         log.debug("preparing control files")
-        log.debug(pformat(control))
         script_dir = os.path.join(self.__spool, "scripts")
         try:
             os.makedirs(script_dir)

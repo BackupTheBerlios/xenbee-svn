@@ -1,6 +1,7 @@
 """This module provides some network related utility functions."""
 
 import socket
+import urlparse as py_urlparse
 
 def discover_ips(peer):
     """discover the external ip(s) for this node.
@@ -38,3 +39,9 @@ def discover_ips(peer):
         s.close()
         del s
     return ips
+
+def urlparse(uri):
+    if "stomp" not in py_urlparse.uses_netloc:
+        py_urlparse.uses_netloc.append("stomp")
+    return py_urlparse.urlparse(uri)
+

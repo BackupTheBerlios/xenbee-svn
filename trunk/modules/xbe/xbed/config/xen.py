@@ -31,7 +31,7 @@ class InstanceConfig:
         self.name = name
         self.diskImages = []
         self.mac = None
-        self.memory = 128 * 2**20
+        self.memory = 128 * 1024**2
         self.kernel = None
         self.initrd = None
         self.cmdline = []
@@ -223,8 +223,8 @@ class XenConfigGenerator:
         self._write_helper("on_reboot", "restart")
         self._write_helper("on_crash", "restart")
     
-from xml.dom.DOMImplementation import implementation
-import xml.utils
+#from xml.dom.DOMImplementation import implementation
+#import xml.utils
 
 class LibVirtXMLConfigGenerator:
     """Generates xml configs for libvirt.

@@ -3,7 +3,8 @@
 <!-- image submission extension for JSDL -->
 
 <jsdl:JobDefinition xmlns:jsdl="http://schemas.ggf.org/jsdl/2005/11/jsdl"
-		    xmlns:jsdl-posix="http://schemas.ggf.org/jsdl/2005/11/jsdl-posix">
+		    xmlns:jsdl-posix="http://schemas.ggf.org/jsdl/2005/11/jsdl-posix"
+		    xmlns:xsdl="http://www.example.com/schemas/xbe/2007/01/xsdl">
  <jsdl:JobDescription>
     <jsdl:JobIdentification>
       <jsdl:JobName>foobar</jsdl:JobName>
@@ -40,29 +41,20 @@
 	<jsdl:Exact>2</jsdl:Exact>
       </jsdl:TotalCPUCount>
 
-
-      <!-- XBE reservation extension -->
-      <xbe:Reservation xmlns:xbe="http://www.example.com/schemas/xbe/2007/01/xbe">
-	<xbe:Ticket>ticket-1</xbe:Ticket>
-      </xbe:Reservation>
-      
-      <xsdl:InstanceDefinition xmlns:xsdl="http://www.example.com/schemas/xbe/2007/01/xsdl">
+      <xsdl:InstanceDefinition>
 
 	<xsdl:InstanceDescription>
 	  <!-- package which contains the image and probably some input data -->
 	  <xsdl:Package>
 	    <xsdl:Location>
-	      <!--
 	      <xsdl:URI>file:///srv/xen-images/xenbee/packages/sample-pkg.tar.bz2</xsdl:URI>
-	      <xsdl:Hash algorithm="sha1">
-	         df104aad94f65a72cccf5ebc03a6d02332a0797d
-	      </xsdl:Hash>
-	      -->
-	      <xsdl:URI>file:///srv/xen-images/xenbee/packages/simple-pkg.tar.bz2</xsdl:URI>
-	      <xsdl:Hash algorithm="sha1">
-		ac6d02b3318daeab2ee4bdcd7b4e8eca5e73b661
-	      </xsdl:Hash>
+	      <xsdl:Hash algorithm="sha1">df104aad94f65a72cccf5ebc03a6d02332a0797d</xsdl:Hash>
 	      <xsdl:Compression algorithm="tbz"/>
+	      <!--
+	      <xsdl:URI>file:///srv/xen-images/xenbee/packages/simple-pkg.tar.bz2</xsdl:URI>
+	      <xsdl:Hash algorithm="sha1">ac6d02b3318daeab2ee4bdcd7b4e8eca5e73b661</xsdl:Hash>
+	      <xsdl:Compression algorithm="tbz"/>
+	      -->
 	    </xsdl:Location>
 	  </xsdl:Package>
 
@@ -88,11 +80,12 @@
     </jsdl:Resources>
     <jsdl:DataStaging>
       <jsdl:FileName>test.file</jsdl:FileName>
-      <jsdl:FilesystemName>HOME</jsdl:FilesystemName>
+      <jsdl:FilesystemName>SPOOL</jsdl:FilesystemName>
       <jsdl:CreationFlag>overwrite</jsdl:CreationFlag>
       <jsdl:DeleteOnTermination>true</jsdl:DeleteOnTermination>
       <jsdl:Source>
-	<jsdl:URI>http://www.example.com/test.file</jsdl:URI>
+	<jsdl:URI>file:///srv/xen-images/xenbee/packages/simple-pkg/kernel</jsdl:URI>
+	<xsdl:Hash algorithm="sha1">a3b180e5dc2359849ffa927b93414ada20807a0c</xsdl:Hash>
       </jsdl:Source>
       <jsdl:Target>
 	<jsdl:URI>http://www.example.com/test.file</jsdl:URI>

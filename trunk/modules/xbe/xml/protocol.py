@@ -62,7 +62,6 @@ class XMLProtocol(object):
             self.__understood.append(tag)
 
     def transformResultToMessage(self, result):
-        log.debug("transforming result '%r'" % result)
         if result is None:
             # do not reply, so return None
             return None
@@ -110,7 +109,6 @@ class XMLProtocol(object):
              * a method is looked up according to the 'tag' of the root element
                or the first direct child that 
         """
-        log.debug("got message: '%r'" % msg)
         d = defer.maybeDeferred(self._messageReceived, msg)
         d.addBoth(self.transformResultToMessage)
         d.addCallback(self.sendMessage)
@@ -192,7 +190,8 @@ class SecureProtocol(XMLProtocol):
         # instantiate the upper protocol
         if self.protocolFactory:
             log.info("attaching application layer")
-            self.protocol = self.protocolFactory(*self.protocolFactoryArgs, **self.protocolFactoryKwArgs)
+            self.protocol = self.protocolFactory(*self.protocolFactoryArgs,
+                                                 **self.protocolFactoryKwArgs)
             try:
                 factory = self.factory
             except AttributeError:
@@ -202,7 +201,8 @@ class SecureProtocol(XMLProtocol):
 
             # connect it with a secure transport
             # (thus we act as a secure lower layer)
-            self.protocol.makeConnection(SecureXMLTransport(self.transport, self.securityLayer))
+            self.protocol.makeConnection(
+                SecureXMLTransport(self.transport, self.securityLayer))
 
     # handle security related messages
     def do_Message(self, msg):
@@ -219,10 +219,12 @@ class SecureProtocol(XMLProtocol):
             # we got just a MessageHeader, so validate at least that part
             try:
                 self.securityLayer.validate(msg)
-                if self.securityLayer.fully_established() and self.__state != "established":
+                if self.securityLayer.fully_established() and \
+                       self.__state != "established":
                     self.__handshake_complete()
             except SecurityError, se:
-                log.debug("got a message from not-validatable source: %s" % (" ".join(se.args)))
+                log.debug("got a message from not-validatable source: %s" %
+                          (" ".join(map(str, se.args))))
                 return message.Error(errcode.UNAUTHORIZED)
             return
         

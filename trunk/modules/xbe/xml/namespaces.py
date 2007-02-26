@@ -23,7 +23,7 @@ class NS(object):
 
 def decodeTag(tag):
     if tag[0] == '{':
-        return tag[1:].split("}")
+        return tag[1:].split("}", 1)
     else:
         return None, tag
 

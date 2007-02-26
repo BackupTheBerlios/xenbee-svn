@@ -135,7 +135,7 @@ class Error(SimpleMessage):
         root, hdr, body = MessageBuilder.xml_parts()
 	error = etree.SubElement(body, self.tag)
         
-        error.attrib[Error.ns("code")] = str(self.code())
+        error.attrib["code"] = str(self.code())
 	etree.SubElement(error, self.ns("Name")).text = self.name()
         etree.SubElement(error, self.ns("Description")).text = self.description()
         if self.message() is not None:
@@ -144,7 +144,7 @@ class Error(SimpleMessage):
 
     def from_xml(cls, root, hdr, body):
         error = body.find(cls.tag)
-        code = int(error.attrib[cls.ns("code")])
+        code = int(error.attrib["code"])
         msg = error.findtext(cls.ns("Message"))
         return cls(code, msg)
     from_xml = classmethod(from_xml)
@@ -292,28 +292,182 @@ class ReservationResponse(BaseServerMessage):
     """
     tag = XBE("ReservationResponse")
     
-    def __init__(self, ticket):
+    def __init__(self, ticket, task_id):
         BaseServerMessage.__init__(self)
         self.__ticket = ticket
+        self.__task_id = task_id
 
     def ticket(self):
         return self.__ticket
+    def task_id(self):
+        return self.__task_id
     
     def as_xml(self):
         root, hdr, body = MessageBuilder.xml_parts()
         elem = etree.SubElement(body, self.tag)
-        etree.SubElement(elem, XBE("Ticket")).text = self.ticket()
+        elem.attrib["task-id"] = self.task_id()
+        reservation = etree.SubElement(elem, XBE("Reservation"))
+        etree.SubElement(reservation, XBE("Ticket")).text = self.ticket()
         return root
     def from_xml(cls, root, hdr, body):
         elem = body.find(cls.tag)
         if elem is None:
             raise MessageParserError("could not find 'ReservationResponse' element")
-        ticket = elem.findtext(XBE("Ticket"))
+        task_id = elem.attrib.get("task-id")
+        ticket = elem.findtext(XBE("Reservation/Ticket"))
         if ticket is None:
             raise MessageParserError("no 'Ticket' found!")
-        return cls(ticket)
+        return cls(ticket, task_id)
     from_xml = classmethod(from_xml)
 MessageBuilder.register(ReservationResponse)
+
+class ConfirmReservation(BaseClientMessage):
+    """Client confirmed the reservation.
+
+    The confirmation message consists of a JSDL document with the
+    ticket as an additional resource.
+    """
+    tag = XBE("ConfirmReservation")
+
+    def __init__(self, ticket, jsdl, start_task=True):
+        BaseClientMessage.__init__(self)
+        self.__jsdl = jsdl
+        self.__ticket = ticket
+        self.__start_task = start_task
+
+    def jsdl(self):
+        return self.__jsdl
+
+    def ticket(self):
+        return self.__ticket
+
+    def start_task(self):
+        return self.__start_task
+
+    def as_xml(self):
+        root, hdr, body = MessageBuilder.xml_parts()
+        elem = etree.SubElement(body, self.tag)
+        if self.start_task():
+            elem.attrib["start-task"] = "true"
+        elem.append(self.__jsdl)
+        resources = self.__jsdl.find(JSDL("JobDescription/Resources"))
+        if resources is None:
+            resources = etree.SubElement(self.__jsdl, JSDL("Resources"))
+        reservation = etree.SubElement(resources, XBE("Reservation"))
+        etree.SubElement(reservation, XBE("Ticket")).text = self.__ticket
+        return root
+
+    def from_xml(cls, root, hdr, body):
+        elem = body.find(cls.tag)
+        if elem is None:
+            raise MessageParserError("could not find 'ConfirmReservation' element")
+        start_task = elem.attrib.get("start-task")
+        if start_task in ("true", "1"):
+            start_task = True
+        else:
+            start_task = False
+        jsdl = elem.find(JSDL("JobDefinition"))
+        if jsdl is None:
+            raise MessageParserError("could not find 'JobDefinition' element")
+        resources = jsdl.find(JSDL("JobDescription/Resources"))
+        if resources is None:
+            raise MessageParserError("could not find 'Resources' element")
+        ticket = resources.findtext(XBE("Reservation/Ticket"))
+        return cls(ticket, jsdl, start_task)
+    from_xml = classmethod(from_xml)
+MessageBuilder.register(ConfirmReservation)
+        
+class CancelReservation(BaseClientMessage):
+    """Client cancels a reservation.
+
+    The cancel message consists of a xbe:Reservation element which
+    contains the ticket information.
+    """
+    tag = XBE("CancelReservation")
+
+    def __init__(self, ticket):
+        BaseClientMessage.__init__(self)
+        self.__ticket = ticket
+
+    def ticket(self):
+        return self.__ticket
+
+    def as_xml(self):
+        root, hdr, body = MessageBuilder.xml_parts()
+        elem = etree.SubElement(body, self.tag)
+        reservation = etree.SubElement(elem, XBE("Reservation"))
+        etree.SubElement(reservation, XBE("Ticket")).text = self.__ticket
+        return root
+
+    def from_xml(cls, root, hdr, body):
+        elem = body.find(cls.tag)
+        if elem is None:
+            raise MessageParserError("could not find 'CancelReservation' element")
+        ticket = elem.findtext(XBE("Reservation/Ticket"))
+        return cls(ticket)
+    from_xml = classmethod(from_xml)
+MessageBuilder.register(CancelReservation)
+
+class ConfirmAck(BaseServerMessage):
+    """Acknowledgement of the Confirm message."""
+    tag = XBE("ConfirmAck")
+
+    def __init__(self, ticket, task_id):
+        BaseServerMessage.__init__(self)
+        self.__task_id = task_id
+        self.__ticket = ticket
+
+    def task_id(self):
+        return self.__task_id
+    def ticket(self):
+        return self.__ticket
+
+    def as_xml(self):
+        root, hdr, body = MessageBuilder.xml_parts()
+        elem = etree.SubElement(body, self.tag)
+        elem.attrib["task-id"] = self.task_id()
+        reservation = etree.SubElement(elem, XBE("Reservation"))
+        etree.SubElement(reservation, XBE("Ticket")).text = self.__ticket
+        return root
+
+    def from_xml(cls, root, hdr, body):
+        elem = body.find(cls.tag)
+        if elem is None:
+            raise MessageParserError("could not find 'ConfirmAck' element")
+        ticket = elem.findtext(XBE("Reservation/Ticket"))
+        task_id = elem.attrib["task-id"]
+        return cls(task_id, ticket)
+    from_xml = classmethod(from_xml)
+MessageBuilder.register(ConfirmAck)
+
+class StartRequest(BaseClientMessage):
+    """Request the start of a task."""
+    tag = XBE("StartRequest")
+
+    def __init__(self, task_id):
+        BaseClientMessage.__init__(self)
+        self.__task_id = task_id
+
+    def task_id(self):
+        return self.__task_id
+
+    def as_xml(self):
+        root, hdr, body = MessageBuilder.xml_parts()
+        elem = etree.SubElement(body, self.tag)
+        elem.attrib["task-id"] = self.task_id()
+        reservation = etree.SubElement(elem, XBE("Reservation"))
+        etree.SubElement(reservation, XBE("Ticket")).text = self.__ticket
+        return root
+
+    def from_xml(cls, root, hdr, body):
+        elem = body.find(cls.tag)
+        if elem is None:
+            raise MessageParserError("could not find 'StartRequest' element")
+        ticket = elem.findtext(XBE("Reservation/Ticket"))
+        task_id = elem.attrib["task-id"]
+        return cls(task_id, ticket)
+    from_xml = classmethod(from_xml)
+MessageBuilder.register(StartRequest)
 
 #
 # job control
@@ -351,7 +505,7 @@ class Kill(BaseClientMessage):
             raise ValueError("illegal signal: %r" % (signal))
         root, hdr, body = MessageBuilder.xml_parts()
         kill = etree.SubElement(body, self.tag)
-        kill.attrib[XBE("signal")] = str(signal)
+        kill.attrib["signal"] = str(signal)
         etree.SubElement(kill, XBE("Task")).text = self.task_id()
         return root
     def from_xml(cls, root, hdr, body):
@@ -359,7 +513,7 @@ class Kill(BaseClientMessage):
         if kill is None:
             raise MessageParserError("could not find 'Kill' element")
         task_id = kill.findtext(XBE("Task"))
-        signal = kill.attrib[XBE("signal")]
+        signal = kill.attrib["signal"]
         msg = Kill(task_id, signal)
         return msg
     from_xml = classmethod(from_xml)
@@ -384,11 +538,11 @@ class StatusRequest(BaseClientMessage):
         root, hdr, body = MessageBuilder.xml_parts()
         sr = etree.SubElement(body, self.tag)
         if self.task_id() is not None:
-            sr.attrib[XBE("task-id")] = self.task_id()
+            sr.attrib["task-id"] = self.task_id()
         return root
     def from_xml(cls, root, hdr, body):
         sr = body.find(cls.tag)
-        task_id = sr.attrib.get(XBE("task-id"))
+        task_id = sr.attrib.get("task-id")
         return cls(task_id)
     from_xml = classmethod(from_xml)
 MessageBuilder.register(StatusRequest)
@@ -483,7 +637,7 @@ class InstanceAvailable(InstanceMessage):
         root, hdr, body = MessageBuilder.xml_parts()
         ia = etree.SubElement(body, self.tag)
         if self.inst_id() is not None:
-            ia.attrib[XBE("inst-id")] = self.inst_id()
+            ia.attrib["inst-id"] = self.inst_id()
         nodeinfo = etree.SubElement(ia, XBE("NodeInformation"))
         network = etree.SubElement(nodeinfo, XBE("Network"))
         iplist = etree.SubElement(network, XBE("IPList"))
@@ -493,7 +647,7 @@ class InstanceAvailable(InstanceMessage):
 
     def from_xml(cls, root, hdr, body):
         ia = body.find(cls.tag)
-        inst_id = ia.attrib.get(XBE("inst-id"))
+        inst_id = ia.attrib.get("inst-id")
         obj = cls(inst_id)
 
         # ips
@@ -529,14 +683,14 @@ class InstanceAlive(InstanceMessage):
     def as_xml(self):
         root, hdr, body = MessageBuilder.xml_parts()
         ia = etree.SubElement(body, self.tag)
-        ia.attrib[XBE("inst-id")] = self.inst_id()
+        ia.attrib["inst-id"] = self.inst_id()
         if self.uptime() is not None:
             etree.SubElement(ia, XBE("Uptime")).text = str(self.uptime())
         return root
 
     def from_xml(cls, root, hdr, body):
         elem = body.find(cls.tag)
-        inst_id = elem.attrib[XBE("inst-id")]
+        inst_id = elem.attrib["inst-id"]
         uptime = elem.findtext(XBE("Uptime"))
         return cls(inst_id, uptime)
     from_xml = classmethod(from_xml)
@@ -573,16 +727,16 @@ class TaskFinished(InstanceMessage):
     def as_xml(self):
         root, hdr, body = MessageBuilder.xml_parts()
         tf = etree.SubElement(body, self.tag)
-        tf.attrib[XBE("inst-id")] = self.inst_id()
+        tf.attrib["inst-id"] = self.inst_id()
         if self.task_id() is not None:
-            tf.attrib[XBE("task-id")] = self.task_id()
+            tf.attrib["task-id"] = self.task_id()
         etree.SubElement(tf, XBE("ExitCode")).text = str(self.exitcode())
         return root
 
     def from_xml(cls, root, hdr, body):
         elem = body.find(cls.tag)
-        inst_id = elem.attrib[XBE("inst-id")]
-        task_id = elem.attrib.get(XBE("task-id"))
+        inst_id = elem.attrib["inst-id"]
+        task_id = elem.attrib.get("task-id")
         exitcode = int(elem.findtext(XBE("ExitCode")))
         return cls(inst_id, exitcode, task_id)
     from_xml = classmethod(from_xml)

@@ -1,6 +1,7 @@
 """A class that can be used to create daemon processes."""
 
 from optparse import OptionParser
+from xbe.util import singleton
 import os, sys, signal, errno, time
 import pwd, grp
 
@@ -13,10 +14,12 @@ if hasattr(os, "devnull"):
 else:
     REDIRECT_TO = "/dev/null"
 
-class Daemon(object):
+class Daemon(singleton.Singleton):
     MAXFD = 1024
+    
     def __init__(self, pidfile, name=sys.argv[0],
                  daemonize=True, workdir="/", umask=0, user="nobody", group="nogroup"):
+        singleton.Singleton.__init__(self)
         self.pidfile = pidfile
         self.daemonize=daemonize
         self.workdir = workdir
@@ -288,7 +291,6 @@ class Daemon(object):
             if self.daemonize:
                 self.__close_streams()
 
-            self.setup_logging()
             self._setup_priviledged()
             self.drop_priviledges()
             self._setup_unpriviledged()
@@ -343,6 +345,7 @@ class Daemon(object):
         os.setuid(self.runas["user"][0])
 
     def _setup_priviledged(self):
+        self.setup_logging()
 
         # user specified stuff
         self.setup_priviledged()
