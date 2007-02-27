@@ -60,22 +60,40 @@
       </jsdl:TotalPhysicalMemory>
 
       <xsdl:InstanceDefinition>
-
 	<xsdl:InstanceDescription>
-	  <!-- package which contains the image and probably some input data -->
-	  <xsdl:Package>
-	    <xsdl:Location>
-	      <xsdl:URI>
-		file:///srv/xen-images/xenbee/packages/test-pkg.tar.bz2
-	      </xsdl:URI>
-	      <xsdl:Hash algorithm="sha1">
-		4e9ef2cd4f4f3dd0481a5ddaf7c454c143267410
-	      </xsdl:Hash>
-	      <xsdl:Compression algorithm="tbz"/>
-	    </xsdl:Location>
-	  </xsdl:Package>
+	  <xsdl:Instance>
+	    <xsdl:Kernel>
+	      <xsdl:Location>
+		<xsdl:URI>
+		  file:///srv/xen-images/xenbee/packages/simple-pkg/kernel
+		</xsdl:URI>
+		<xsdl:Hash algorithm="sha1">
+		  a3b180e5dc2359849ffa927b93414ada20807a0c
+		</xsdl:Hash>
+	      </xsdl:Location>
+	    </xsdl:Kernel>
 
-	  <!-- some control files -->
+	    <!-- the initrd is optional -->
+	    <xsdl:Initrd>
+	      <xsdl:Location>
+		<xsdl:URI>
+		  file:///srv/xen-images/xenbee/packages/simple-pkg/initrd
+		</xsdl:URI>
+		<xsdl:Hash algorithm="sha1">
+		  748e72fbce57ec21ebc94471ed8db24cb712f717
+		</xsdl:Hash>
+	      </xsdl:Location>
+	    </xsdl:Initrd>
+
+	    <!-- the image is mandatory -->
+	    <xsdl:Image>
+	      <xsdl:Location>
+		<xsdl:URI>
+		  file:///srv/xen-images/base.img
+		</xsdl:URI>
+	      </xsdl:Location>
+	    </xsdl:Image>
+	  </xsdl:Instance>
 
 	  <xsdl:Control>
 	    <xsdl:Script target="setup">

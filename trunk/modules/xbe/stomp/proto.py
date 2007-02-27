@@ -487,7 +487,13 @@ class StompClientFactory(ReconnectingClientFactory):
 	self.password = password
 
     def clientConnectionFailed(self, connector, reason):
-	self.retry()
+        if self.retries > self.maxRetries:
+            log.warn("connecting failed, giving up")
+            reactor.exitcode = 2
+            reactor.stop()
+        else:
+            log.info("connection failed, retrying...")
+            self.retry(connector)
 
 class ProtocolTransportMixin:
     """This class has been taken from twisted.conch.telnet."""

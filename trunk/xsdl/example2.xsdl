@@ -57,12 +57,9 @@
 	    <xsdl:Kernel>
 	      <xsdl:Location>
 		<xsdl:URI>file:///srv/xen-images/xenbee/packages/simple-pkg/kernel</xsdl:URI>
-		<xsdl:Hash algorithm="sha1">a3b180e5dc2359849ffa927b93414ada20807a0c</xsdl:Hash>
-<!--
-		<xbe:CacheEntry xmlns:xbe="http://www.example.com/schemas/xbe/2007/01/xbe">
-		  uuid:0123456789
-		</xbe:CacheEntry>
--->
+		<xsdl:Hash algorithm="sha1">
+		  a3b180e5dc2359849ffa927b93414ada20807a0c
+		</xsdl:Hash>
 	      </xsdl:Location>
 	      <xsdl:Argument name="foo">bar</xsdl:Argument> <!-- results in 'foo=bar' -->
 	      <xsdl:Argument>bar</xsdl:Argument> <!-- results in 'bar' -->
@@ -71,16 +68,24 @@
 	    <!-- the initrd is optional -->
 	    <xsdl:Initrd>
 	      <xsdl:Location>
-		<xsdl:URI>file:///srv/xen-images/xenbee/packages/simple-pkg/initrd</xsdl:URI>
-		<xsdl:Hash algorithm="sha1">748e72fbce57ec21ebc94471ed8db24cb712f717</xsdl:Hash>
+		<xsdl:URI>
+		  file:///srv/xen-images/xenbee/packages/simple-pkg/initrd
+		</xsdl:URI>
+		<xsdl:Hash algorithm="sha1">
+		  748e72fbce57ec21ebc94471ed8db24cb712f717
+		</xsdl:Hash>
 	      </xsdl:Location>
 	    </xsdl:Initrd>
 
 	    <!-- the image is mandatory -->
 	    <xsdl:Image>
 	      <xsdl:Location>
-		<xsdl:URI>file:///srv/xen-images/xenbee/packages/simple-pkg/image.bz2</xsdl:URI>
-		<xsdl:Hash algorithm="sha1">5f27bb2530e71307703a8dc7c974c3ac0c346003</xsdl:Hash>
+		<xsdl:URI>
+		  file:///srv/xen-images/xenbee/packages/simple-pkg/image.bz2
+		</xsdl:URI>
+		<xsdl:Hash algorithm="sha1">
+		  5f27bb2530e71307703a8dc7c974c3ac0c346003
+		</xsdl:Hash>
 		<xsdl:Compression algorithm="bzip2"/>
 	      </xsdl:Location>
 	    </xsdl:Image>
