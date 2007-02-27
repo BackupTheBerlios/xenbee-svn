@@ -48,7 +48,14 @@ class XenBEEClientProtocol(protocol.XMLProtocol):
         
         xbed = XBEDaemon.getInstance()
         jsdl_doc = jsdl.JsdlDocument(schema_map=xbed.schema_map)
-        parsed_jsdl = jsdl_doc.parse(confirm.jsdl())
+        try:
+            parsed_jsdl = jsdl_doc.parse(confirm.jsdl())
+        except etree.DocumentInvalid, e:
+            log.info("got invalid document: %s" % str(e.error_log))
+            TaskManager.getInstance().removeTask(ticket.task)
+            del ticket.task
+            TicketStore.getInstance().release(ticket)
+            return message.Error(errcode.ILLEGAL_REQUEST, "JSDL document is invalid")
 
         try:
             # does the job have our InstanceDescription element?

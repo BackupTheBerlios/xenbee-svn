@@ -132,7 +132,7 @@
     </xsd:annotation>
     <xsd:sequence>
       <xsd:element ref="xsdl:Location"/>
-      <xsd:element ref="xsdl:Argument" maxOccurs="unbounded"/>
+      <xsd:element ref="xsdl:Argument" minOccurs="0" maxOccurs="unbounded"/>
       <xsd:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
     </xsd:sequence>
   </xsd:complexType>

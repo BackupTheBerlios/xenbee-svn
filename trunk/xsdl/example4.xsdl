@@ -61,6 +61,7 @@
 
       <xsdl:InstanceDefinition>
 	<xsdl:InstanceDescription>
+	  
 	  <xsdl:Instance>
 	    <xsdl:Kernel>
 	      <xsdl:Location>
