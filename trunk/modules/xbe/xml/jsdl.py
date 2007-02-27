@@ -195,7 +195,7 @@ class RangeValue:
     def from_xml(cls, elem):
         # elem contains the range specifications as its child elements
         rv = cls()
-        for range_type in elem:
+        for range_type in elem.getchildren():
             rv.__parse_range_type(range_type)
         return rv
     from_xml = classmethod(from_xml)
@@ -447,7 +447,7 @@ class JsdlDocument:
             for k,v in xml.attrib.iteritems():
                 attribs[k] = v
             children[":attributes:"] = attribs
-        for e in xml:
+        for e in xml.getchildren():
             if isinstance(e, etree._Comment):
                 continue
             ns, child_tag = decodeTag(e.tag)
