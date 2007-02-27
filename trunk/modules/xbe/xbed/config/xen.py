@@ -193,6 +193,7 @@ class XenConfigGenerator:
     def write_other(self):
         print >>self.out, "# Memory and cpu configurtion"
         self._write_helper("memory", str(self.config.getMemory("m")))
+        self._write_helper("vcpus", str(self.config.getNumCpus()))
         print >>self.out
 
     def write_disks(self):

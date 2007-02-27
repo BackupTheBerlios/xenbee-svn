@@ -151,6 +151,10 @@ class Preparer(object):
         else:
             self._prepare_stagings(stagings, known_filesystems)
         self._call_scripts(os.path.join(self.__spool, "scripts"), "setup")
+
+        # create swap space
+        self._prepare_swap(jsdl_doc.lookup_path("JobDefinition/JobDescription/Resources"))
+        
         log.info("preparation complete!")
 
     def _call_scripts(self, script_dir, script_prefix):
@@ -176,6 +180,11 @@ class Preparer(object):
             log.debug("errout of script:\n%s" % stderr)
         except OSError, e:
             raise
+
+    def _prepare_swap(self, resources):
+        from xbe.util.disk import makeSwap
+        path = os.path.join(self.__spool, "swap")
+        makeSwap(path, 256)
         
     def _prepare_stagings(self, stagings, known_filesystems):
         log.debug("performing the staging operations")

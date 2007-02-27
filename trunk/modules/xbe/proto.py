@@ -64,7 +64,7 @@ class XenBEEProtocol(StompClient):
         try:
             log.debug("dispatching: " + momIdentifier)
             transport = XMLTransport(StompTransport(self, replyTo))
-            log.info("transport type: %r" % transport)
+            log.debug("transport type: %r" % transport)
             self.factory.dispatchToProtocol(transport, msg.body, *components)
         except Exception, e:
             log.error(

@@ -19,7 +19,7 @@ from lxml import etree
 from xbe.xml.security import X509SecurityLayer, X509Certificate, SecurityError
 from xbe.xml.namespaces import *
 
-from twisted.internet import defer, reactor
+from twisted.internet import defer, reactor, task
 
 class ClientXMLProtocol(protocol.XMLProtocol):
     def connectionMade(self):
@@ -44,10 +44,9 @@ class ClientXMLProtocol(protocol.XMLProtocol):
                           message.ConfirmReservation(rmsg.ticket(),
                                                      jsdl.getroot(),
                                                      start_task=True).as_xml())
-        reactor.callLater(1,
-                          self.sendMessage,
-                          message.StatusRequest())
-
+        self.statusRequester = task.LoopingCall(self.sendMessage,
+                                                message.StatusRequest().as_xml())
+        self.statusRequester.start(10)
 
 class ClientProtocolFactory(XenBEEProtocolFactory):
     def __init__(self, id,

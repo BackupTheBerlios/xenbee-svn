@@ -9,7 +9,6 @@ from pprint import pformat
 
 from xbe.xml.namespaces import *
 from xbe.xml import message, errcode
-from xbe.xml.security import X509SecurityLayer, X509Certificate, SecurityError
 
 from lxml import etree
 from twisted.internet import defer, reactor
@@ -67,7 +66,8 @@ class XMLProtocol(object):
             return None
 
         if isinstance(result, failure.Failure):
-            log.warn("failure occured: %s\n%s" % (result.getErrorMessage(), result.getTraceback()))
+            log.warn("failure occured: %s\n%s" %
+                     (result.getErrorMessage(), result.getTraceback()))
             result = message.Error(errcode.INTERNAL_SERVER_ERROR,
                                    result.getErrorMessage())
         assert isinstance(result, message.Message), "attempted to transform strange result"
@@ -163,6 +163,7 @@ class SecureProtocol(XMLProtocol):
         self.__ca_cert = ca_cert
         self.__state = "disconnected"
 
+        from xbe.xml.security import X509SecurityLayer
         # initialize the security layer
         self.securityLayer = X509SecurityLayer(self.__cert, # my own certificate
                                                None, # the other's certificate
@@ -177,6 +178,8 @@ class SecureProtocol(XMLProtocol):
         self.__state = "disconnected"
         
     def __handshake_complete(self):
+        from xbe.xml.security import SecurityError
+    
         log.info("Message Layer Security established.")
         self.__state = "established"
         self.__handshakeTimeout.cancel()
@@ -207,6 +210,8 @@ class SecureProtocol(XMLProtocol):
 
     # handle security related messages
     def do_Message(self, msg):
+        from xbe.xml.security import SecurityError
+    
         # decompose into header and body
         hdr = msg.find(XBE("MessageHeader"))
         bod = msg.find(XBE("MessageBody"))
@@ -240,6 +245,8 @@ class SecureProtocol(XMLProtocol):
 
         decrypts the received data and validates it.
         """
+        from xbe.xml.security import SecurityError
+    
         # decrypt the whole message and validate it
         try:
             real_msg = self.securityLayer.decrypt(msg)

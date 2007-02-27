@@ -255,12 +255,20 @@ class Task(TaskFSM):
             inst.id()
         ))
         try:
-            ncpus = jsdl.lookup_path("JobDefinition/JobDescription/Resources/"+
-                                     "TotalCPUCount").get_value()
+            ncpus = int(jsdl.lookup_path("JobDefinition/JobDescription/Resources/"+
+                                         "TotalCPUCount").get_value())
         except Exception, e:
             self.log.debug("using default number of cpus: 1", e)
             ncpus = 1
         inst.config().setNumCpus(ncpus)
+
+        try:
+            pmem = int(jsdl.lookup_path("JobDefinition/JobDescription/Resources/"+
+                                        "TotalPhysicalMemory").get_value())
+        except Exception, e:
+            self.log.debug("using default memory: 134217728", e)
+            pmem = 134217728
+        inst.config().setMemory(pmem)
         return inst
 
     def __stop_instance(self, inst):
@@ -270,7 +278,8 @@ class Task(TaskFSM):
 
     def __release_resources(self, arg):
         self.log.info("releasing acquired resources")
-        d = defer.maybeDeferred(XBEDaemon.getInstance().macAddresses.release, self.__inst.config().getMac())
+        d = defer.maybeDeferred(
+            XBEDaemon.getInstance().macAddresses.release, self.__inst.config().getMac())
         d.addCallback(self.__delete_instance)
         d.addCallback(self.__clean_up)
         d.addCallback(lambda x: log.info("resources released"))
@@ -300,9 +309,6 @@ class Task(TaskFSM):
         from xbe.xbed import task_preparer
         preparer = task_preparer.Preparer()
 
-        # replace cache uri's with their real ones
-        
-
         d1 = threads.deferToThread(preparer.prepare,
                                   self.__spool, self.__jsdl_doc)
         d1.addCallback(self._cb_assign_files_to_inst, self.__inst, self.__spool)
@@ -312,8 +318,9 @@ class Task(TaskFSM):
         d2.addCallback(self._cb_assign_mac_to_inst, self.__inst)
 
         d3 = defer.maybeDeferred(self.__configureInstance, self.__inst, self.__jsdl_doc)
-
-        dlist = defer.DeferredList([d1, d2, d3])
+        deferreds = [d1, d2, d3]
+        
+        dlist = defer.DeferredList(deferreds, consumeErrors=1)
         dlist.addCallback(self._cb_check_deferred_list)
         dlist.addCallback(self.cb_stage_in_completed)
         dlist.addErrback(self.failed)

@@ -55,6 +55,9 @@
       <jsdl:TotalCPUCount>
 	<jsdl:Exact>2</jsdl:Exact>
       </jsdl:TotalCPUCount>
+      <jsdl:TotalPhysicalMemory>
+	<jsdl:Exact>134217728</jsdl:Exact>
+      </jsdl:TotalPhysicalMemory>
 
       <xsdl:InstanceDefinition>
 
