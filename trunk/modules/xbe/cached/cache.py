@@ -36,13 +36,15 @@ class Cache(object):
 
     """
 
-    def __init__(self, cache_dir):
+    def __init__(self, cache_dir, base_uri="file://"):
         if not os.path.exists(cache_dir):
             os.makedirs(cache_dir)
         else:
             import stat
             if not stat.S_ISDIR(os.stat(cache_dir)[stat.ST_MODE]):
-                raise RuntimeError("`%s' already exists and does not seem to be a directory!" % _dir)
+                raise RuntimeError(
+                    "`%s' already exists and does not seem to be a directory!" % _dir)
+        self.__base_uri = base_uri
         self.__cacheDir = cache_dir
         self.__db = ConnectionPool("pysqlite2.dbapi2", os.path.join(cache_dir, "cache.db"))
 
@@ -103,7 +105,7 @@ class Cache(object):
             if not len(rows):
                 raise LookupError("no cache entry found for uuid: %s" % (uuid,))
             path = self.__buildFileName(rows[0][0])
-            return "file://" + path
+            return self.__base_uri + path
         return self.__lookup("uuid = ?", (uuid,)).addCallback(__buildURI)
         
     def lookupByType(self, type):
@@ -112,7 +114,8 @@ class Cache(object):
         return self.__lookup("type = ?", type).addCallback(__buildTypes)
 
     def __lookup(self, where_clause, *args):
-        return self.__db.runQuery("SELECT uuid FROM files WHERE %s" % (where_clause), *args)
+        return self.__db.runQuery(
+            "SELECT uuid FROM files WHERE %s" % (where_clause), *args)
 
     def __operationAllowed(self, operation, entry, cred):
         log.info("TODO: implement credentials")

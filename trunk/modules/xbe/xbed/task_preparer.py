@@ -15,10 +15,10 @@ from pprint import pprint, pformat
 
 from xbe.xml import jsdl
 from xbe.util.staging import DataStager
+from xbe.xbed.daemon import XBEDaemon
 
 class ValidationError(ValueError):
     pass
-
 
 class ILocationHandler(Interface):
     def can_handle(location):
@@ -35,9 +35,37 @@ class URILocationHandler:
     def can_handle(self, location):
         return location.get("URI") is not None
 
-    def handle(self, location, target_dir, target_file_name=None):
-        # retrieve
+    def __transform_cache_uri_hack(self, uri):
+        # XXX: this is a hack, please, think about a better way!
+        try:
+            xbed = XBEDaemon.getInstance()
+            if not hasattr(xbed, "cache") or xbed.cache is None:
+                raise ValueError("could not transform uri, no cache", uri)
+
+            cache_id = uri.split("/")[-1]
+            log.debug("looking up cache-id %s" % cache_id)
+
+            from twisted.internet import defer
+            cache_uri = defer.waitForDeferred(
+                xbed.cache.lookupByUUID(cache_id)).getResult()
+            return cache_uri
+        except Exception, e:
+            log.warn("could not look up cache entry", e)
+            raise
+
+    def handle(self, location,
+               target_dir,
+               target_file_name=None):
+        """Handle a Location entry with an URI as its source.
+
+        The URI is retrieved and according to additional elements
+        validated (hash validation) and decompressed.
+        """
         uri = location["URI"]
+        if uri.startswith("cache://"):
+            uri = self.__transform_cache_uri_hack(uri)
+            
+        # retrieve
         log.debug("retrieving: %s" % (uri))
         if target_file_name is None:
             filename = uri.split("/")[-1]
@@ -182,7 +210,8 @@ class Preparer(object):
                 continue
 
             self._handle_location(staging["Source"],
-                                  dst_dir=os.path.join(image.mount_point(), mount_point[1:]),
+                                  dst_dir=os.path.join(image.mount_point(),
+                                                       mount_point[1:]),
                                   dst_file=staging["FileName"])
 
     def _prepare_package(self, package):

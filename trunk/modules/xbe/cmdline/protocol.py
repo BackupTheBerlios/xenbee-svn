@@ -50,11 +50,11 @@ class ClientXMLProtocol(protocol.XMLProtocol):
 
 
 class ClientProtocolFactory(XenBEEProtocolFactory):
-    def __init__(self, id, certificate, ca_cert):
+    def __init__(self, id, certificate, ca_cert, server_queue):
         XenBEEProtocolFactory.__init__(self,
                                        "/queue/xenbee.client.%s" % (id), "test-user-1")
         self.client_id = id
-        self.server_queue = "/queue/xenbee.daemon"
+        self.server_queue = server_queue
         self.cert = certificate
         self.ca_cert = ca_cert
         
@@ -71,7 +71,6 @@ class ClientProtocolFactory(XenBEEProtocolFactory):
             self.xml_protocol = protocol.SecureProtocol(self.cert,
                                                         self.ca_cert,
                                                         protocolFactory=ClientXMLProtocol)
-#            stomp_protocol.subscribe("foo")
             self.xml_protocol.factory = self
             self.xml_protocol.makeConnection(
                 protocol.XMLTransport(StompTransport(stomp_protocol, self.server_queue)))
@@ -88,6 +87,8 @@ if __name__ == "__main__":
 #                                           os.path.join(path, "signer_key.pem"))
 #   ca_cert = X509Certificate.load_from_files("/root/xenbee/etc/CA/ca-cert.pem")
     
-    f = ClientProtocolFactory(id="2", certificate=cert, ca_cert=ca_cert)
+    f = ClientProtocolFactory(id="2",
+                              certificate=cert, ca_cert=ca_cert,
+                              server_queue="/queue/xenbee.daemon.1")
     reactor.connectTCP("localhost", 61613, f)
     reactor.run()

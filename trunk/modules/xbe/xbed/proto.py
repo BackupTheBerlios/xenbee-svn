@@ -189,9 +189,10 @@ class _XBEDProtocol(XenBEEProtocol):
 class XenBEEDaemonProtocolFactory(XenBEEProtocolFactory):
     protocol = _XBEDProtocol
     
-    def __init__(self, daemon, queue):
-	XenBEEProtocolFactory.__init__(self, queue, "daemon", "test1234")
+    def __init__(self, daemon, queue, topic, user, passwrd):
+	XenBEEProtocolFactory.__init__(self, queue, user, passwrd)
         self.daemon = daemon
+        self.__topic = topic
         self.__protocolRemovalTimeout = 60
         self.__clientProtocols = {}
         self.__clientMutex = threading.RLock()
@@ -207,7 +208,10 @@ class XenBEEDaemonProtocolFactory(XenBEEProtocolFactory):
 
         from twisted.internet import task
         self.__cleanupLoop = task.LoopingCall(self.__cleanupOldProtocols)
-        self.__cleanupLoop.start(10)
+        self.__cleanupLoop.start(5*60)
+
+    def stompConnectionMade(self, stomp_prot):
+        stomp_prot.subscribe(self.__topic)
 
     def dispatchToProtocol(self, transport, msg, domain, sourceType, sourceId=None):
         assert sourceType != None, "the source-type must not be None"
@@ -216,7 +220,8 @@ class XenBEEDaemonProtocolFactory(XenBEEProtocolFactory):
             raise ValueError("illegal domain: %s, expected 'xenbee'" % domain)
         if sourceId is None:
             raise ValueError(
-                "illegal reply-to value, must be of the form: /(queue|topic)/xenbee.[type].[id]")
+                "illegal reply-to value, must be of the form: "+
+                "/(queue|topic)/xenbee.[type].[id]")
         getattr(self, (sourceType.lower()+"Message"))(transport, msg, sourceId)
 
     def __messageHelper(self, id, msg, trnsprt, protocols, mtx, cls, *args, **kw):
@@ -280,7 +285,8 @@ class XenBEEDaemonProtocolFactory(XenBEEProtocolFactory):
             tbr = [] # list of 'to be removed' items
             for id, p in protocols.iteritems():
                 if (p.timeOflastReceive + self.__protocolRemovalTimeout) < time.time():
-                    log.debug("removing registered protocol %s due to inactivity." % (id,))
+                    log.debug(
+                        "removing registered protocol %s due to inactivity." % (id,))
                     tbr.append(id)
             map(protocols.pop, tbr)
         finally:

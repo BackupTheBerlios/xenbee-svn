@@ -51,9 +51,11 @@ class XenBEEProtocol(StompClient):
         # use the reply-to field
         try:
             replyTo = msg.header["reply-to"]
-        except KeyError:
-	    log.warn("illegal message received")
-            raise
+            if replyTo == "null":
+                raise ValueError
+        except (KeyError, ValueError):
+	    log.warn("message without reply-to received, throwing away")
+            return
 
         # dispatch the message to another protocol using the MOM identifier
         pattern = r'^/(queue|topic)/'
@@ -65,7 +67,9 @@ class XenBEEProtocol(StompClient):
             log.info("transport type: %r" % transport)
             self.factory.dispatchToProtocol(transport, msg.body, *components)
         except Exception, e:
-            log.error("could not dispatch according to MOM identifier: %s: %s" % (momIdentifier, e))
+            log.error(
+                "could not dispatch according to MOM identifier: %s: %s" % (
+                momIdentifier, e))
             
     def messageReceived(self, msg):
         reactor.callInThread(self._messageReceived, msg)
@@ -90,9 +94,12 @@ class XenBEEProtocolFactory(StompClientFactory):
 
         @param transport - the transport over which the client is reachable
         @param msg - the message that we received
-        @param domain - the first part of the MOM-identifier (e.g. xenbee.daemon -> domain is 'xenbee')
-        @param sourceType - the type of client that sent the message (e.g. xenbee.client.foo -> type is 'client')
-        @param sourceId - the source identifier (e.g. xenbee.client.12345 -> id is 12345)
+        @param domain - the first part of the MOM-identifier
+               (e.g. xenbee.daemon -> domain is 'xenbee')
+        @param sourceType - the type of client that sent the message
+               (e.g. xenbee.client.foo -> type is 'client')
+        @param sourceId - the source identifier
+               (e.g. xenbee.client.12345 -> id is 12345)
         """
         raise NotImplementedError("dispatchToProtocol must be overridded in subclass")
 

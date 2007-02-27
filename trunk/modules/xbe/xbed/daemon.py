@@ -18,7 +18,7 @@ class XBEDaemon(Daemon):
         p = self.parser
         p.add_option(
             "-u", "--uri", dest="uri", type="string",
-            default="stomp://xen-o-matic.itwm.fhrg.fraunhofer.de/xenbee.daemon",
+            default="stomp://xen-o-matic.itwm.fhrg.fraunhofer.de/xenbee.daemon.1",
             help="the uri through which I'am reachable")
         p.add_option(
             "-U", "--user-database", dest="user_db", type="string",
@@ -61,6 +61,14 @@ class XBEDaemon(Daemon):
         p.add_option(
             "--mac-file", dest="mac_file", type="string",
             help="path to a file, that contains available mac addresses.")
+        p.add_option(
+            "--stomp-user", dest="stomp_user", type="string",
+            default="daemon",
+            help="username for the stomp connection")
+        p.add_option(
+            "--stomp-pass", dest="stomp_pass", type="string",
+            default="Aefith3s",
+            help="password for the stomp connection")
 
     def configure(self):
         self.daemonize = self.opts.daemonize
@@ -199,7 +207,10 @@ class XBEDaemon(Daemon):
         reactor.connectTCP(host,
                            port,
                            XenBEEDaemonProtocolFactory(self,
-                                                       queue="/queue"+queue))
+                                                       queue="/queue"+queue,
+                                                       topic="/topic/xenbee.daemons",
+                                                       user=self.opts.stomp_user,
+                                                       passwrd=self.opts.stomp_pass))
         log.info("  done.")
         
     def run(self, *args, **kw):
