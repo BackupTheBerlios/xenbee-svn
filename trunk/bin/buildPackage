@@ -55,11 +55,15 @@ def main():
         raise ValueError("F: outputfile required")
 
     tar = tarfile.open(opts.outputfile, "w:%s" % (opts.compression))
+    print >>sys.stderr, "adding", opts.image
     tar.add(opts.image, "image")
+    print >>sys.stderr, "adding", opts.kernel
     tar.add(opts.kernel, "kernel")
     if opts.initrd is not None:
+        print >>sys.stderr, "adding", opts.initrd
         tar.add(opts.initrd, "initrd")
     if opts.metainf is not None:
+        print >>sys.stderr, "adding", opts.metainf
         tar.add(opts.metainf, "META_INF")
 
     script_dir = tempfile.mkdtemp()

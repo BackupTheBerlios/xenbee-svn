@@ -15,20 +15,16 @@ fi
 
 . /lib/lsb/init-functions
 
-#check_config() { }
-
 export PATH="${PATH:+$PATH:}/usr/sbin:/sbin"
 
 case "$1" in
   start)
 	log_begin_msg "Starting XenBEE instance daemon..."
-#	start-stop-daemon --start --quiet -b -m --pidfile $pidfile --exec $daemon -- $XBEINSTD_OPTS || log_end_msg 1
 	"$daemon" start --pidfile "$pidfile" $XBEINSTD_OPTS || log_end_msg 1
 	log_end_msg 0
 	;;
   stop)
 	log_begin_msg "Stopping XenBEE instance daemon..."
-#	start-stop-daemon --stop --quiet --oknodo --pidfile $pidfile || log_end_msg 1
 	"$daemon" stop --pidfile "$pidfile" $XBEINSTD_OPTS || log_end_msg 1
 	log_end_msg 0
 	;;
@@ -36,15 +32,12 @@ case "$1" in
   reload|force-reload)
 	log_begin_msg "Reloading XenBEE instance daemon..."
 	check_config
-#	start-stop-daemon --stop --signal 1 --quiet --oknodo --pidfile $pidfile --exec $daemon || log_end_msg 1
 	"$daemon" restart --pidfile "$pidfile" $XBEINSTD_OPTS || log_end_msg 1
 	log_end_msg 0
 	;;
 
   restart)
 	log_begin_msg "Restarting XenBEE instance daemon..."
-#	start-stop-daemon --stop --quiet --oknodo --retry 30 --pidfile $pidfile
-#	start-stop-daemon --start --quiet -b -m --pidfile $pidfile --exec $daemon -- $XBEINSTD_OPTS || log_end_msg 1
 	"$daemon" restart --pidfile "$pidfile" $XBEINSTD_OPTS || log_end_msg 1
 	log_end_msg 0
 	;;

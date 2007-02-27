@@ -126,7 +126,7 @@ class Task(TaskFSM):
         self.mtx.acquire()
         try:
             self.log.warn("starting of my instance failed: %s" % reason.getErrorMessage())
-            self.__stop_instance(self.__inst)
+#            self.__stop_instance(self.__inst)
         finally:
             self.mtx.release()
 

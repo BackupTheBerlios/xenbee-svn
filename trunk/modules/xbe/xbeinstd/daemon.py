@@ -89,6 +89,8 @@ class XBEInstDaemon(Daemon):
 
         # set up the STOMP server
         from xbe.util.network import urlparse
+        if self.opts.server is None:
+            raise RuntimeError("no server uri given, use XBE_SERVER or -H")
         proto, host, queue, _, _, _ = urlparse(self.opts.server)
         if proto != "stomp":
             raise ValueError("unknown protocol", proto)

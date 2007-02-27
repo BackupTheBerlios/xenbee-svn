@@ -134,8 +134,8 @@ class XenBEEInstanceProtocol(protocol.XMLProtocol):
     This protocol is spoken between an instance and the daemon.
     """
 
-    def __init__(self, instid, transport):
-        protocol.XMLProtocol.__init__(self, transport)
+    def __init__(self, instid):
+        protocol.XMLProtocol.__init__(self)
 	self.instid = instid
 
     def executeTask(self, jsdl, task):
@@ -156,31 +156,44 @@ class XenBEEInstanceProtocol(protocol.XMLProtocol):
         inst_id = inst_avail.inst_id()
 
         inst = InstanceManager.getInstance().lookupByUUID(inst_id)
-        if not inst:
+        if inst is not None:
+            inst.available(inst_avail, self)
+        else:
             return message.Error(errcode.INSTANCE_LOOKUP_FAILURE)
-        inst.available(inst_avail, self)
 
     def do_ExecutionFinished(self, xml, *args, **kw):
         msg = message.MessageBuilder.from_xml(xml.getroottree())
         inst_id = msg.inst_id()
         exitcode = msg.exitcode()
         inst = InstanceManager.getInstance().lookupByUUID(inst_id)
-        inst.task.cb_execution_finished(exitcode)
+        if inst is not None:
+            inst.task.cb_execution_finished(exitcode)
+        else:
+            return message.Error(errcode.INSTANCE_LOOKUP_FAILURE)
 
     def do_InstanceAlive(self, xml, *a, **kw):
         msg = message.MessageBuilder.from_xml(xml.getroottree())
         inst = InstanceManager.getInstance().lookupByUUID(msg.inst_id())
-        inst.alive()
+        if inst is not None:
+            inst.alive()
+        else:
+            return message.Error(errcode.INSTANCE_LOOKUP_FAILURE)
 
     def do_ExecutionFailed(self, xml, *a, **kw):
         msg = message.MessageBuilder.from_xml(xml.getroottree())
-        inst = InstanceManager.getInstance().lookupByUUID(msg.inst_id())
-        inst.task.failed(failure.Failure(msg))
+        inst = InstanceManager.getInstance().lookupByUUID(inst_id)
+        if inst is not None:
+            inst.task.failed(failure.Failure(msg))
+        else:
+            return message.Error(errcode.INSTANCE_LOOKUP_FAILURE)
 
     def do_InstanceShuttingDown(self, xml, *a, **kw):
         msg = message.MessageBuilder.from_xml(xml.getroottree())
-        inst = InstanceManager.getInstance().lookupByUUID(msg.inst_id())
-        log.info("instance is shutting down...")
+        inst = InstanceManager.getInstance().lookupByUUID(inst_id)
+        if inst is not None:
+            log.info("instance is shutting down...")
+        else:
+            return message.Error(errcode.INSTANCE_LOOKUP_FAILURE)
 
 class _XBEDProtocol(XenBEEProtocol):
     def post_connect(self):
