@@ -50,17 +50,21 @@ class ClientXMLProtocol(protocol.XMLProtocol):
 
 
 class ClientProtocolFactory(XenBEEProtocolFactory):
-    def __init__(self, id, certificate, ca_cert, server_queue):
+    def __init__(self, id,
+                 certificate, ca_cert, server_queue,
+                 protocolFactory=None, *a, **kw):
         XenBEEProtocolFactory.__init__(self,
                                        "/queue/xenbee.client.%s" % (id), "test-user-1")
+        self.protocolFactory = protocolFactory
+        self.protocolFactoryArgs = a
+        self.protocolFactoryKwArgs = kw
+        
         self.client_id = id
         self.server_queue = server_queue
         self.cert = certificate
         self.ca_cert = ca_cert
         
     def dispatchToProtocol(self, transport, msg, domain, sourceType, sourceId=None):
-        if "/queue/%s.%s" % (domain, sourceType) != self.server_queue:
-            raise RuntimeError("illegal source of message: %s" % (sourceType))
         d = defer.maybeDeferred(self.xml_protocol.messageReceived, msg)
         d.addErrback(log.error)
 
@@ -68,9 +72,12 @@ class ClientProtocolFactory(XenBEEProtocolFactory):
         try:
             self.xml_protocol
         except AttributeError:
-            self.xml_protocol = protocol.SecureProtocol(self.cert,
-                                                        self.ca_cert,
-                                                        protocolFactory=ClientXMLProtocol)
+            self.xml_protocol = \
+                              protocol.SecureProtocol(self.cert,
+                                                      self.ca_cert,
+                                                      protocolFactory=self.protocolFactory,
+                                                      *self.protocolFactoryArgs,
+                                                      **self.protocolFactoryKwArgs)
             self.xml_protocol.factory = self
             self.xml_protocol.makeConnection(
                 protocol.XMLTransport(StompTransport(stomp_protocol, self.server_queue)))
@@ -89,6 +96,7 @@ if __name__ == "__main__":
     
     f = ClientProtocolFactory(id="2",
                               certificate=cert, ca_cert=ca_cert,
-                              server_queue="/queue/xenbee.daemon.1")
+                              server_queue="/queue/xenbee.daemon.1",
+                              protocolFactory=ClientXMLProtocol)
     reactor.connectTCP("localhost", 61613, f)
     reactor.run()

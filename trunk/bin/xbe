@@ -399,7 +399,8 @@ class StompClientCmd(StompClient):
         self.subscribe(self.factory.queue, exclusive=True)
         self.send(self.factory.serverQueue, self.factory.msg)
         self.receive(
-            time_out=self.factory.cmd.options.timeout).addCallback(self.message).addErrback(self.abort)
+            time_out=self.factory.cmd.options.timeout).\
+            addCallback(self.message).addErrback(self.abort)
 
     def connectFailed(self, reason):
         print >>sys.stderr, "Connection to STOMP server failed!"
