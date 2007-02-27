@@ -62,8 +62,12 @@
 	  <!-- package which contains the image and probably some input data -->
 	  <xsdl:Package>
 	    <xsdl:Location>
-	      <xsdl:URI>file:///srv/xen-images/xenbee/packages/sample-pkg.tar.bz2</xsdl:URI>
-	      <xsdl:Hash algorithm="sha1">df104aad94f65a72cccf5ebc03a6d02332a0797d</xsdl:Hash>
+	      <xsdl:URI>
+		file:///srv/xen-images/xenbee/packages/sample-pkg.tar.bz2
+	      </xsdl:URI>
+	      <xsdl:Hash algorithm="sha1">
+		df104aad94f65a72cccf5ebc03a6d02332a0797d
+	      </xsdl:Hash>
 	      <xsdl:Compression algorithm="tbz"/>
 	      <!--
 	      <xsdl:URI>file:///srv/xen-images/xenbee/packages/simple-pkg.tar.bz2</xsdl:URI>
@@ -78,14 +82,22 @@
 	  <xsdl:Control>
 	    <xsdl:Script target="setup">
 	      <xsdl:Location>
-		<xsdl:URI>file:///srv/xen-images/xenbee/packages/simple-pkg/scripts/setup</xsdl:URI>
-		<xsdl:Hash algorithm="sha1">d85b87219fa6a4578cb8e796db9ddfb37ce5c772</xsdl:Hash>
+		<xsdl:URI>
+		  file:///srv/xen-images/xenbee/packages/simple-pkg/scripts/setup
+		</xsdl:URI>
+		<xsdl:Hash algorithm="sha1">
+		  d85b87219fa6a4578cb8e796db9ddfb37ce5c772
+		</xsdl:Hash>
 	      </xsdl:Location>
 	    </xsdl:Script>
 	    <xsdl:Script target="cleanup">
 	      <xsdl:Location>
-		<xsdl:URI>file:///srv/xen-images/xenbee/packages/simple-pkg/scripts/cleanup</xsdl:URI>
-		<xsdl:Hash algorithm="sha1">9c186fae6046d70e89ce038a6689b550804e9d85</xsdl:Hash>
+		<xsdl:URI>
+		  file:///srv/xen-images/xenbee/packages/simple-pkg/scripts/cleanup
+		</xsdl:URI>
+		<xsdl:Hash algorithm="sha1">
+		  9c186fae6046d70e89ce038a6689b550804e9d85
+		</xsdl:Hash>
 	      </xsdl:Location>
 	    </xsdl:Script>
 	  </xsdl:Control>

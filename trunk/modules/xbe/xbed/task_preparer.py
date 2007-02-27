@@ -22,10 +22,12 @@ class ValidationError(ValueError):
 
 class ILocationHandler(Interface):
     def can_handle(location):
-        """Returns true, if the given location information can be handled, False otherwise."""
+        """Returns true, if the given location information can be
+        handled, False otherwise."""
 
     def handle(self, location, target_dir, target_file_name):
-        """handles the location information (i.e. download) with the given target."""
+        """handles the location information (i.e. download) with the
+        given target."""
 
 class URILocationHandler:
     implements(ILocationHandler)
@@ -65,9 +67,7 @@ class URILocationHandler:
 
 class Preparer(object):
     def __init__(self):
-        """prepares necessary files for a task.
-
-        """
+        """prepares necessary files for a task."""
         self.__locationHandler = [
             URILocationHandler() # the default handler
         ]

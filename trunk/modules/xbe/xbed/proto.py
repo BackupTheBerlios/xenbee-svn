@@ -95,7 +95,6 @@ class XenBEEClientProtocol(protocol.XMLProtocol):
 	"""Handle status request."""
         request = message.MessageBuilder.from_xml(elem.getroottree())
         task_id = request.task_id()
-        print "handling request:", request.as_str()
         status_list = message.StatusList()
         if task_id is not None:
             task = TaskManager.getInstance().lookupByID(task_id)
@@ -104,11 +103,8 @@ class XenBEEClientProtocol(protocol.XMLProtocol):
             else:
                 return message.Error(errcode.TASK_LOOKUP_FAILURE, task_id)
         else:
-            pprint(TaskManager.getInstance().tasks)
             for task in TaskManager.getInstance().tasks.values():
-                print "adding task", task.id()
                 status_list.add(task.id(), task.submitTime(), task.state())
-        print status_list.as_str()
         return status_list
 
     def do_Kill(self, elem, *args, **kw):
@@ -206,7 +202,6 @@ class XenBEEDaemonProtocolFactory(XenBEEProtocolFactory):
 	self.instanceManager = daemon.instanceManager
         self.taskManager = daemon.taskManager
         self.cache = daemon.cache
-        self.portal = daemon.portal
         self.cert = daemon.certificate
         self.ca_cert = daemon.ca_certificate
 
@@ -246,7 +241,8 @@ class XenBEEDaemonProtocolFactory(XenBEEProtocolFactory):
         
         # finally log any error and consume them
         d.addErrback(self.logCallback,
-                     log.error, "sending message %(message)s to %(client)s failed: %(result)s",
+                     log.error,
+                     "sending message %(message)s to %(client)s failed: %(result)s",
                      { "client":id, "message": str(msg)})
 
     def logCallback(self, result, logfunc, fmt, dictionary, *args, **kw):
@@ -261,6 +257,7 @@ class XenBEEDaemonProtocolFactory(XenBEEProtocolFactory):
                              protocol.SecureProtocol,
                              self.cert,
                              self.ca_cert,
+                             self.certificateChecker,
                              XenBEEClientProtocol, client)
 
     def instanceMessage(self, transport, msg, inst):
@@ -269,6 +266,8 @@ class XenBEEDaemonProtocolFactory(XenBEEProtocolFactory):
                              self.__instanceMutex,
                              XenBEEInstanceProtocol, inst)
 
+    def certificateChecker(self, certificate):
+        return XBEDaemon.getInstance().userDatabase.check_x509(certificate)
 
     # clean up registered protocols after some inactivity threshold
     def __cleanupOldProtocols(self):

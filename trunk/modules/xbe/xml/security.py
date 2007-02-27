@@ -56,6 +56,11 @@ class X509Certificate(object):
             raise KeyCheckFailed("the private key must be a M2Crypto.RSA instance.")
         self.__priv_key = priv_key
         self.__padding = padding
+
+    def subject_as_dict(self):
+        return dict(
+            [c.split("=", 1) for c in self.subject().split(", ")]
+        )
         
     def subject(self):
         return self.__x509.get_subject().as_text()
@@ -384,6 +389,8 @@ class X509SecurityLayer:
         self.__other_cert = other_cert
         self.__ca_certs = ca_certs
 
+    def other_cert(self):
+        return self.__other_cert
 
     def sign(self, msg, include_certificate=False):
         _msg = cloneDocument(msg)

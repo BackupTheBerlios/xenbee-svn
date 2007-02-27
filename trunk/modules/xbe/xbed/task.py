@@ -24,6 +24,7 @@ from xbe import util
 from xbe.util import fsm
 from xbe.xbed.task_fsm import TaskFSM
 from xbe.xbed.daemon import XBEDaemon
+from xbe.xbed.instance import InstanceManager
 
 from twisted.internet import reactor, defer, threads
 from twisted.python import failure
@@ -38,6 +39,7 @@ class Task(TaskFSM):
     def __init__(self, id, mgr):
         """Initialize a new task."""
         TaskFSM.__init__(self)
+        self.mtx = threading.RLock()
         self.__tstamp = time.time()
         self.__id = id
         self.log = logging.getLogger("task."+self.id())
@@ -62,19 +64,23 @@ class Task(TaskFSM):
     #
     def do_confirmed(self, jsdl_xml, jsdl_doc, *args, **kw):
         """The task has been confirmed by the user."""
+        self.mtx.acquire()
         self.__jsdl_xml = jsdl_xml
         self.__jsdl_doc = jsdl_doc
+        self.mtx.release()
 
     def do_terminate_pending_reserved(self, reason, *args, **kw):
         """terminate a pending task, that has not been confirmed yet.
 
         That should not impose much work to do.
         """
-        pass
+        self.mtx.acquire()
+        self.mtx.release()
 
     def do_terminate_pending_confirmed(self, reason, *args, **kw):
         """terminate a confirmed task."""
-        pass
+        self.mtx.acquire()
+        self.mtx.release()
 
     def do_stage_in(self, *args, **kw):
         """stage in all necessary files and wait for other resources.
@@ -85,16 +91,24 @@ class Task(TaskFSM):
         pre-cond: task description available and task has been confirmed
         post-cond: state == Running:Stage-In
         """
-        return self.__prepare()
+        self.mtx.acquire()
+        rv = self.__prepare()
+        self.mtx.release()
+        return rv
 
     def do_terminate_stage_in(self, reason, *args, **kw):
         """terminate the stage-in process, must not fail."""
-        pass
+        self.mtx.acquire()
+        self.mtx.release()
 
     def do_stage_in_failed(self, reason, *args, **kw):
         """handle the case, that the staging failed"""
-        self.log.warn("stage in failed")
-        self.__clean_up()
+        self.mtx.acquire()
+        try:
+            self.log.warn("stage in failed")
+            self.__clean_up()
+        finally:
+            self.mtx.release()
 
     def do_start_instance(self, *args, **kw):
         """all files are staged in, so trigger the start of the instance
@@ -104,19 +118,28 @@ class Task(TaskFSM):
 
     def do_terminate_instance_starting(self, reason, *args, **kw):
         """terminate the start process of the instance."""
-        pass
+        self.mtx.acquire()
+        self.mtx.release()
 
     def do_instance_starting_failed(self, reason, *args, **kw):
         """handle a failed instance start attempt"""
-        self.log.warn("starting of my instance failed: %s" % reason.getErrorMessage())
-#        self.__stop_instance(self.__inst)
+        self.mtx.acquire()
+        try:
+            self.log.warn("starting of my instance failed: %s" % reason.getErrorMessage())
+            self.__stop_instance(self.__inst)
+        finally:
+            self.mtx.release()
 
     def do_execute_task(self, *args, **kw):
         """execute the task
         pre-cond. instance available -> protocol is ready
         post-cond. jsdl sent to instance
         """
-        self.__inst.protocol.executeTask(self.__jsdl_xml)
+        self.mtx.acquire()
+        try:
+            self.__inst.protocol.executeTask(self.__jsdl_xml, self)
+        finally:
+            self.mtx.release()
 
     def do_terminate_execution(self, reason, *args, **kw):
         """terminate the execution within the instance.
@@ -124,45 +147,57 @@ class Task(TaskFSM):
         1. terminate the task within the instance
         2. shutdown the instance
         """
-        pass
+        self.mtx.acquire()
+        self.mtx.release()
 
     def do_execution_failed(self, reason, *args, **kw):
         """the task execution failed
 
         that should be something like 'do_stop_instance' with different callbacks
         """
-        pass
+        self.mtx.acquire()
+        self.mtx.release()
 
     def do_stop_instance(self, *args, **kw):
         """the task has finished its execution stop the instance"""
-        self.__stop_instance(self.__inst).addCallback(self.cb_instance_stopped)
+        self.mtx.acquire()
+        try:
+            self.__stop_instance(self.__inst).addCallback(self.cb_instance_stopped)
+        finally:
+            self.mtx.release()
 
     def do_terminate_instance_stopping(self, reason, *args, **kw):
         """terminate the shutdown-process
         I think that has to be a 'noop', but the 'instance-stopped' callback
         must not do any harm!"""
-        pass
+        self.mtx.acquire()
+        self.mtx.release()
 
     def do_instance_stopping_failed(self, reason, *args, **kw):
         """i really do not know, what to do about that, maybe force the destroying"""
-        pass
+        self.mtx.acquire()
+        self.mtx.release()
 
     def do_stage_out(self, *args, **kw):
         """task has finished its execution,
            instance has been shut down, stage out the data"""
-        pass
+        self.mtx.acquire()
+        self.mtx.release()
 
     def do_stage_out_failed(self, reason, *args, **kw):
         """stage out process failed, so handle that"""
-        pass
+        self.mtx.acquire()
+        self.mtx.release()
 
     def do_terminate_stage_out(self, *args, **kw):
         """terminate the stage out process"""
-        pass
+        self.mtx.acquire()
+        self.mtx.release()
 
     def do_task_finished(self):
         """pre-cond: stage-out is complete"""
-        pass
+        self.mtx.acquire()
+        self.mtx.release()
 
     #
     # Helper methods
@@ -230,7 +265,8 @@ class Task(TaskFSM):
 
     def __stop_instance(self, inst):
         """returns a deferred"""
-        return inst.stop().addErrback(self.__inst.destroy).addCallback(self.__release_resources)
+        return inst.stop().addErrback(
+            self.__inst.destroy).addCallback(self.__release_resources)
 
     def __release_resources(self, arg):
         self.log.info("releasing acquired resources")
@@ -241,6 +277,8 @@ class Task(TaskFSM):
         return arg
 
     def __delete_instance(self, *a, **kw):
+        InstanceManager.getInstance().removeInstance(self.__inst)
+        del self.__inst.task
         del self.__inst
 
     def __clean_up(self, *a, **kw):
@@ -255,12 +293,15 @@ class Task(TaskFSM):
         self.__spool = self.__createSpool()
 
         # create the instance
-        from xbe.xbed.instance import InstanceManager
         self.__inst = InstanceManager.getInstance().newInstance(self.__spool)
+        self.__inst.task = self
 
         # prepare the task (i.e. stage-in)
         from xbe.xbed import task_preparer
         preparer = task_preparer.Preparer()
+
+        # replace cache uri's with their real ones
+        
 
         d1 = threads.deferToThread(preparer.prepare,
                                   self.__spool, self.__jsdl_doc)

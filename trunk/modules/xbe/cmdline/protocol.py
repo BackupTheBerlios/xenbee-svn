@@ -44,11 +44,15 @@ class ClientXMLProtocol(protocol.XMLProtocol):
                           message.ConfirmReservation(rmsg.ticket(),
                                                      jsdl.getroot(),
                                                      start_task=True).as_xml())
+        reactor.callLater(1,
+                          self.sendMessage,
+                          message.StatusRequest())
 
 
 class ClientProtocolFactory(XenBEEProtocolFactory):
     def __init__(self, id, certificate, ca_cert):
-        XenBEEProtocolFactory.__init__(self, "/queue/xenbee.client.%s" % (id), "test-user-1")
+        XenBEEProtocolFactory.__init__(self,
+                                       "/queue/xenbee.client.%s" % (id), "test-user-1")
         self.client_id = id
         self.server_queue = "/queue/xenbee.daemon"
         self.cert = certificate
@@ -66,7 +70,7 @@ class ClientProtocolFactory(XenBEEProtocolFactory):
         except AttributeError:
             self.xml_protocol = protocol.SecureProtocol(self.cert,
                                                         self.ca_cert,
-                                                        ClientXMLProtocol)
+                                                        protocolFactory=ClientXMLProtocol)
 #            stomp_protocol.subscribe("foo")
             self.xml_protocol.factory = self
             self.xml_protocol.makeConnection(

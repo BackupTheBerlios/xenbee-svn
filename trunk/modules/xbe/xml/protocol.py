@@ -83,7 +83,6 @@ class XMLProtocol(object):
                 return self.transport.write(msg)
             except Exception, e:
                 log.error("message sending failed: %s" % (e,))
-        log.debug("nothing to answer...")
 
     def parse_and_validate(self, msg):
         if isinstance(msg, basestring):
@@ -91,14 +90,7 @@ class XMLProtocol(object):
         else:
             xml = msg
         # validate xml against schema
-        log.warn("TODO: validate against XML-Schema")
         assert (isinstance(xml, (etree._Element, etree._ElementTree)))
-
-        # build xbe.xml.message
-        try:
-            msg_obj = message.MessageBuilder.from_xml(xml)
-        except Exception, e:
-            log.warn("TODO: write builder for %s", e.message)
         return xml
 
     def messageReceived(self, msg):
@@ -158,12 +150,15 @@ class SecureProtocol(XMLProtocol):
     protocol = None
     protocolFactory = None
     
-    def __init__(self, cert, ca_cert, protocolFactory=None, *a, **kw):
+    def __init__(self, cert, ca_cert,
+                 certificate_checker=None,
+                 protocolFactory=None, *a, **kw):
         XMLProtocol.__init__(self)
         if protocolFactory:
             self.protocolFactory = protocolFactory
             self.protocolFactoryArgs = a
             self.protocolFactoryKwArgs = kw
+        self.__certificate_checker = certificate_checker
         self.__cert = cert
         self.__ca_cert = ca_cert
         self.__state = "disconnected"
@@ -186,6 +181,12 @@ class SecureProtocol(XMLProtocol):
         self.__state = "established"
         self.__handshakeTimeout.cancel()
         del self.__handshakeTimeout
+
+        # check the certificate with some certificate checker
+        if self.__certificate_checker is not None:
+            other_cert = self.securityLayer.other_cert()
+            if not self.__certificate_checker(other_cert):
+                raise SecurityError("certificate not allowed", other_cert)
         
         # instantiate the upper protocol
         if self.protocolFactory:

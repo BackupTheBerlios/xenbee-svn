@@ -182,6 +182,7 @@ class Instance(object):
 	    self.state = "started"
             self.setBackendID(backendId)
             self.__startTime = time.time()
+            self.alive()
             return self
         def __failed(err):
             self.state = "failed"
@@ -224,6 +225,7 @@ class InstanceManager(singleton.Singleton):
     def __init__(self, daemon):
         """Initialize the InstanceManager."""
         singleton.Singleton.__init__(self)
+        self.mtx = threading.RLock()
         self.instances = {}
         self.cache = daemon.cache
         self.__iter__ = self.instances.itervalues
@@ -238,16 +240,21 @@ class InstanceManager(singleton.Singleton):
         """
         from xbe.xbed.config.xen import InstanceConfig
         from xbe.util.uuid import uuid
-        icfg = InstanceConfig(uuid())
 
+        self.mtx.acquire()
         try:
-            inst = Instance(icfg, spool, self)
-        except:
-            log.error(format_exception())
-            raise
-	
-        # remember the instance in our db
-        self.instances[inst.uuid()] = inst
+            icfg = InstanceConfig(uuid())
+            
+            try:
+                inst = Instance(icfg, spool, self)
+            except:
+                log.error(format_exception())
+                raise
+            
+            # remember the instance in our db
+            self.instances[inst.uuid()] = inst
+        finally:
+            self.mtx.release()
         return inst
 
     def reap(self, timeout):
@@ -269,8 +276,12 @@ class InstanceManager(singleton.Singleton):
         before.
 
         """
-        inst.mgr = None
-        self.instances.pop(inst.uuid())
+        self.mtx.acquire()
+        try:
+            inst.mgr = None
+            self.instances.pop(inst.uuid())
+        finally:
+            self.mtx.release()
 
     def lookupByID(self, id):
         return self.lookupByUUID(id)
