@@ -250,9 +250,9 @@ class CacheEntries(BaseServerMessage):
     def from_xml(cls, root, hdr, body):
         cache_entries = cls()
         entries = body.find(cls.tag)
-        for entry in entries:
+        for entry in entries.getchildren():
             entry_info = {}
-            for info_elem in entry:
+            for info_elem in entry.getchildren():
                 key = decodeTag(info_elem.tag)[1]
                 value = info_elem.text
                 entry_info[key] = value
@@ -580,7 +580,7 @@ class StatusList(BaseServerMessage):
     def from_xml(cls, root, hdr, body):
         status_list = cls()
         entries = body.find(cls.tag)
-        for entry in entries:
+        for entry in entries.getchildren():
             entry_info = {}
             entry_info["TaskID"] = entry.find(XBE("TaskID")).text
             entry_info["Submitted"] = entry.find(XBE("Submitted")).text

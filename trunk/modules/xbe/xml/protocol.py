@@ -189,6 +189,7 @@ class SecureProtocol(XMLProtocol):
         if self.__certificate_checker is not None:
             other_cert = self.securityLayer.other_cert()
             if not self.__certificate_checker(other_cert):
+                self.__state = "disconnected"
                 raise SecurityError("certificate not allowed", other_cert)
         
         # instantiate the upper protocol
@@ -231,6 +232,7 @@ class SecureProtocol(XMLProtocol):
             except SecurityError, se:
                 log.debug("got a message from not-validatable source: %s" %
                           (" ".join(map(str, se.args))))
+                self.__state = "disconnected"
                 return message.Error(errcode.UNAUTHORIZED)
             return
         
@@ -264,7 +266,8 @@ class SecureProtocol(XMLProtocol):
             rv = self.protocol.messageReceived(real_msg)
         except Exception, e:
             log.debug("handling of application data failed: %s", e)
-        return rv
+        else:
+            return rv
     
     def do_CertificateRequest(self, req, msg):
         """handle a CertificateRequest.

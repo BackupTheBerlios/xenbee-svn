@@ -173,6 +173,7 @@ class XenBEEInstanceProtocol(protocol.XMLProtocol):
 
     def do_InstanceAlive(self, xml, *a, **kw):
         msg = message.MessageBuilder.from_xml(xml.getroottree())
+        inst_id = msg.inst_id()
         inst = InstanceManager.getInstance().lookupByUUID(msg.inst_id())
         if inst is not None:
             inst.alive()
@@ -181,6 +182,7 @@ class XenBEEInstanceProtocol(protocol.XMLProtocol):
 
     def do_ExecutionFailed(self, xml, *a, **kw):
         msg = message.MessageBuilder.from_xml(xml.getroottree())
+        inst_id = msg.inst_id()
         inst = InstanceManager.getInstance().lookupByUUID(inst_id)
         if inst is not None:
             inst.task.failed(failure.Failure(msg))
@@ -189,6 +191,7 @@ class XenBEEInstanceProtocol(protocol.XMLProtocol):
 
     def do_InstanceShuttingDown(self, xml, *a, **kw):
         msg = message.MessageBuilder.from_xml(xml.getroottree())
+        inst_id = msg.inst_id()
         inst = InstanceManager.getInstance().lookupByUUID(inst_id)
         if inst is not None:
             log.info("instance is shutting down...")

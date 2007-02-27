@@ -105,7 +105,7 @@ class Task(TaskFSM):
         """handle the case, that the staging failed"""
         self.mtx.acquire()
         try:
-            self.log.warn("stage in failed")
+            self.log.warn("stage in failed: %s", reason.getErrorMessage())
             self.__clean_up()
         finally:
             self.mtx.release()

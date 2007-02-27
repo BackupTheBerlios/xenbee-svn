@@ -69,7 +69,7 @@
 		file:///srv/xen-images/xenbee/packages/test-pkg.tar.bz2
 	      </xsdl:URI>
 	      <xsdl:Hash algorithm="sha1">
-		ef5ca5c3342a82a00d60c32b3a73ba93208ef08b
+		4e9ef2cd4f4f3dd0481a5ddaf7c454c143267410
 	      </xsdl:Hash>
 	      <xsdl:Compression algorithm="tbz"/>
 	    </xsdl:Location>

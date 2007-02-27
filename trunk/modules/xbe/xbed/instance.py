@@ -198,7 +198,7 @@ class Instance(object):
     def available(self, inst_avail_msg, protocol):
         """Callback called when the 'real' instance has notified us."""
         self.ips = inst_avail_msg.ips()
-        self.log.debug("now available at [%s]" % (", ".join(self.ips())))
+        self.log.debug("now available at [%s]" % (", ".join(self.ips)))
         if not self.__availableDefer.called:
             self.protocol = protocol
             self.alive()

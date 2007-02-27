@@ -480,13 +480,14 @@ class StompClient(LineReceiver):
 
 class StompClientFactory(ReconnectingClientFactory):
     protocol = StompClient
+    maxRetries = 5
 
     def __init__(self, user = '', password = ''):
 	self.user = user
 	self.password = password
 
     def clientConnectionFailed(self, connector, reason):
-	reactor.stop()
+	self.retry()
 
 class ProtocolTransportMixin:
     """This class has been taken from twisted.conch.telnet."""
