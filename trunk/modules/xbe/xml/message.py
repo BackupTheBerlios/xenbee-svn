@@ -188,6 +188,30 @@ class Certificate(Message):
         root, signature = self.__securityLayer.sign(root, include_certificate=True)
         return root
 
+class EstablishMLS(Message):
+    """Represents a certificate.
+
+    it only contains a header, that holds a signed X509 certificate.
+    see xml.security.X509SecurityLayer for information about signing.
+    """
+    tag = XBE("EstablishMLS")
+
+    ST_DISCONNECTED = "disconnected"
+    ST_ESTABLISHED  = "established"
+    
+    def __init__(self, securityLayer, state):
+        Message.__init__(self)
+        self.__securityLayer = securityLayer
+        self.__state = state
+
+    def as_xml(self):
+        root, hdr, body = MessageBuilder.xml_parts()
+        emls = etree.SubElement(body, XBE("EstablishMLS"))
+        emls.attrib["state"] = self.__state
+        # sign the message
+        root, signature = self.__securityLayer.sign(root, include_certificate=True)
+        return root
+
 #############################
 #
 #   client/server messages
