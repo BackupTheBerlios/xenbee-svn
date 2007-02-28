@@ -32,6 +32,12 @@
       <xsd:enumeration value="cleanup"/>
     </xsd:restriction>
   </xsd:simpleType>
+  <xsd:simpleType name="FileSystemTypeEnumeration">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="ext2"/>
+      <xsd:enumeration value="ext3"/>
+    </xsd:restriction>
+  </xsd:simpleType>
   <!--========================================================================-->
   <xsd:simpleType name="Description_Type">
     <xsd:restriction base="xsd:string"/>
@@ -157,6 +163,7 @@
       <xsd:element ref="xsdl:Location"/>
       <xsd:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
     </xsd:sequence>
+    <xsd:attribute name="fs-type" type="FileSystemTypeEnumeration" use="optional"/>
   </xsd:complexType>
   
   <xsd:complexType name="Script_Type">

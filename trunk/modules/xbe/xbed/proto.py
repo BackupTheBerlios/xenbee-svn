@@ -46,10 +46,10 @@ class XenBEEClientProtocol(protocol.XMLProtocol):
             confirm = message.MessageBuilder.from_xml(elem.getroottree())
         except Exception, e:
             return message.Error(errcode.ILLEGAL_REQUEST, str(e))
-        log.debug("got confirmation with ticket %s" % confirm.ticket())
         ticket = TicketStore.getInstance().lookup(confirm.ticket())
         if ticket is None:
             return message.Error(errcode.TICKET_INVALID, confirm.ticket())
+        log.debug("got confirmation with ticket %s" % confirm.ticket())
         
         xbed = XBEDaemon.getInstance()
         jsdl_doc = jsdl.JsdlDocument(schema_map=xbed.schema_map)
@@ -94,14 +94,20 @@ class XenBEEClientProtocol(protocol.XMLProtocol):
     def do_CancelReservation(self, elem, *args, **kw):
         msg = message.MessageBuilder.from_xml(elem.getroottree())
         ticket = TicketStore.getInstance().lookup(msg.ticket())
-        ticket.task.terminate("UserCancel")
-        del ticket.task
-        TicketStore.getInstance().release(ticket)
+        if ticket is not None:
+            ticket.task.terminate("UserCancel")
+            del ticket.task
+            TicketStore.getInstance().release(ticket)
+        else:
+            return message.Error(errcode.TICKET_INVALID)
 
     def do_StartRequest(self, elem, *a, **kw):
         msg = message.MessageBuilder(elem.getroottree())
         ticket = TicketStore.getInstance().lookup(msg.ticket())
-        ticket.task.start()
+        if ticket is not None:
+            ticket.task.start()
+        else:
+            return message.Error(errcode.TICKET_INVALID)
 
     def do_StatusRequest(self, elem, *args, **kw):
 	"""Handle status request."""
@@ -155,10 +161,12 @@ class XenBEEInstanceProtocol(protocol.XMLProtocol):
 
         return a Deferred, that gets called when the task has finished.
         """
+        self.__defer = defer.Deferred()
+
         msg = message.ExecuteTask(jsdl, task.id())
         self.task_id = task.id()
         self.sendMessage(msg.as_xml())
-        self.__defer = defer.Deferred()
+
         return self.__defer
 
     def queryStatus(self):

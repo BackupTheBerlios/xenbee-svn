@@ -38,7 +38,7 @@ class ClientXMLProtocol(protocol.XMLProtocol):
         
     def do_ReservationResponse(self, elem, *args, **kw):
         rmsg = message.MessageBuilder.from_xml(elem.getroottree())
-        jsdl = etree.parse("/root/xenbee/xsdl/example4.xsdl")
+        jsdl = etree.parse("/root/xenbee/xsdl/example5.xsdl")
         reactor.callLater(1,
                           self.sendMessage,
                           message.ConfirmReservation(rmsg.ticket(),

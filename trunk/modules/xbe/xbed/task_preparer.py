@@ -20,6 +20,20 @@ from xbe.xbed.daemon import XBEDaemon
 class ValidationError(ValueError):
     pass
 
+class ScriptFailed(Exception):
+    def __init__(self, message, script, exitcode, stdout="", stderr=""):
+        Exception.__init__(self, message)
+        self.exitcode = int(exitcode)
+        self.script = script
+        self.stdout = stdout
+        self.stderr = stderr
+
+    def __repr__(self):
+        return "<%(cls)s with exitcode %(code)d>" % {
+            "cls": self.__class__.__name__,
+            "code":self.exitcode,
+        }
+
 class ILocationHandler(Interface):
     def can_handle(location):
         """Returns true, if the given location information can be
@@ -148,28 +162,44 @@ class Preparer(object):
                                         "DataStaging")
         except KeyError, e:
             stagings = None
-        else:
-            self._prepare_stagings(stagings, known_filesystems)
-        self._call_scripts(os.path.join(self.__spool, "scripts"), "setup")
+
+        # mount the image
+        from xbe.util import disk
+        img = disk.mountImage(
+            os.path.join(self.__spool, "image"),  # path to the image file
+            fs_type=disk.FS_EXT3,                 # filesystem type
+            dir=self.__spool                      # where to create the tmp mount-point
+        )
+        log.debug("mounted image to '%s'" % img.mount_point())
+
+        try:
+            # staging operations
+            if stagings is not None:
+                self._prepare_stagings(stagings,
+                                       img.mount_point(),
+                                       known_filesystems)
+
+            # setup scripts
+            script_dir = os.path.join(self.__spool, "scripts")
+            if os.path.isdir(script_dir):
+                self._call_scripts(
+                    script_dir, "setup",
+                    self.__spool, img.mount_point() # passed to the script
+                )
+        finally:
+            del img
 
         # create swap space
         self._prepare_swap(jsdl_doc.lookup_path("JobDefinition/JobDescription/Resources"))
         
         log.info("preparation complete!")
 
-    def _call_scripts(self, script_dir, script_prefix):
-        from xbe.util import disk
-        image = disk.mountImage(
-            os.path.join(self.__spool, "image"),
-            fs_type=disk.FS_EXT3,
-            dir=self.__spool)
-        log.debug("mounted image to '%s'" % image.mount_point())
-
+    def _call_scripts(self, script_dir, script_prefix, *args):
         for script in filter(lambda s: s.startswith(script_prefix),
                              os.listdir(script_dir)):
             script_path = os.path.join(script_dir, script)
             log.debug("calling script '%s'" % (script_path))
-            self._run_script(script_path, self.__spool, image.mount_point())
+            self._run_script(script_path, *args)
 
     def _run_script(self, script, *args):
         try:
@@ -178,7 +208,10 @@ class Preparer(object):
             p = subprocess.Popen(argv, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             stdout, stderr = p.communicate()
             if p.returncode != 0:
-                raise ValueError("script failed", script, p.returncode, stdout, stderr)
+                raise ScriptFailed("script failed",
+                                   os.path.basename(script),
+                                   p.returncode,
+                                   stdout, stderr)
         except OSError, e:
             raise
 
@@ -187,16 +220,8 @@ class Preparer(object):
         path = os.path.join(self.__spool, "swap")
         makeSwap(path, 256)
         
-    def _prepare_stagings(self, stagings, known_filesystems):
+    def _prepare_stagings(self, stagings, img_mount_point, known_filesystems):
         log.debug("performing the staging operations")
-        # first, mount the image
-        from xbe.util import disk
-        image = disk.mountImage(
-            os.path.join(self.__spool, "image"),
-            fs_type=disk.FS_EXT3,
-            dir=self.__spool)
-        log.debug("mounted image to '%s'" % image.mount_point())
-
         for staging in stagings:
             if staging.get("Source") is None:
                 # stage-out operation
@@ -212,16 +237,16 @@ class Preparer(object):
             mount_point = known_filesystems.get(fs)
             if mount_point is None:
                 raise ValueError("the referenced FilesystemName could not be found!")
-            dst_dir = os.path.join(image.mount_point(), mount_point.lstrip("/"))
+            dst_dir = os.path.join(img_mount_point, mount_point.lstrip("/"))
             dst_file = staging["FileName"]
-
+            
             if os.path.exists(os.path.join(dst_dir, dst_file)) and \
-               creation_flag == jsdl.JSDL_CreationFlag_DONT_OVERWRITE:
+                   creation_flag == jsdl.JSDL_CreationFlag_DONT_OVERWRITE:
                 log.debug("file already exists")
                 continue
 
             self._handle_location(staging["Source"],
-                                  dst_dir=os.path.join(image.mount_point(),
+                                  dst_dir=os.path.join(img_mount_point,
                                                        mount_point[1:]),
                                   dst_file=staging["FileName"])
 
