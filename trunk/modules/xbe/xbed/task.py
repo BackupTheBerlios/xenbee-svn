@@ -66,6 +66,20 @@ class Task(TaskFSM):
         # timestamp information
         for time, tstamp in self.__timestamps.iteritems():
             info["%s-time" % time] = tstamp
+
+        if hasattr(self, 'reason'):
+            reason = self.reason
+            if isinstance(reason, failure.Failure):
+                msg = reason.getErrorMessage()
+            else:
+                msg = str(reason)
+            info["reason"] = msg
+        if hasattr(self, 'exitcode'):
+            info["exitcode"] = self.exitcode
+
+        if self.state() == "Running:Executing":
+            # instance is available and has an IP
+            info["IP"] = self.__inst.ip
         return info
 
     #
@@ -75,10 +89,12 @@ class Task(TaskFSM):
     def do_confirmed(self, jsdl_xml, jsdl_doc, *args, **kw):
         """The task has been confirmed by the user."""
         self.mtx.acquire()
-        self.__timestamps["confirm"] = time.time()
-        self.__jsdl_xml = jsdl_xml
-        self.__jsdl_doc = jsdl_doc
-        self.mtx.release()
+        try:
+            self.__timestamps["confirm"] = time.time()
+            self.__jsdl_xml = jsdl_xml
+            self.__jsdl_doc = jsdl_doc
+        finally:
+            self.mtx.release()
 
     def do_terminate_pending_reserved(self, reason, *args, **kw):
         """terminate a pending task, that has not been confirmed yet.
@@ -86,26 +102,30 @@ class Task(TaskFSM):
         That should not impose much work to do.
         """
         self.mtx.acquire()
-        self.__timestamps["terminate"] = time.time()
-        self.reason = reason
-        if isinstance(reason, failure.Failure):
-            msg = reason.getErrorMessage()
-        else:
-            msg = str(reason)
-        self.log.info("terminating pending reserved: %s" % msg)
-        self.mtx.release()
+        try:
+            self.__timestamps["terminate"] = time.time()
+            self.reason = reason
+            if isinstance(reason, failure.Failure):
+                msg = reason.getErrorMessage()
+            else:
+                msg = str(reason)
+            self.log.info("terminating pending reserved: %s" % msg)
+        finally:
+            self.mtx.release()
 
     def do_terminate_pending_confirmed(self, reason, *args, **kw):
         """terminate a confirmed task."""
         self.mtx.acquire()
-        self.__timestamps["terminate"] = time.time()
-        self.reason = reason
-        if isinstance(reason, failure.Failure):
-            msg = reason.getErrorMessage()
-        else:
-            msg = str(reason)
-        self.log.info("terminating pending confirmed: %s" % msg)
-        self.mtx.release()
+        try:
+            self.__timestamps["terminate"] = time.time()
+            self.reason = reason
+            if isinstance(reason, failure.Failure):
+                msg = reason.getErrorMessage()
+            else:
+                msg = str(reason)
+            self.log.info("terminating pending confirmed: %s" % msg)
+        finally:
+            self.mtx.release()
 
     def do_stage_in(self, *args, **kw):
         """stage in all necessary files and wait for other resources.
@@ -117,22 +137,26 @@ class Task(TaskFSM):
         post-cond: state == Running:Stage-In
         """
         self.mtx.acquire()
-        self.__timestamps["stage-in-start"] = time.time()
-        rv = self.__prepare()
-        self.mtx.release()
+        try:
+            self.__timestamps["stage-in-start"] = time.time()
+            rv = self.__prepare()
+        finally:
+            self.mtx.release()
         return rv
 
     def do_terminate_stage_in(self, reason, *args, **kw):
         """terminate the stage-in process, must not fail."""
         self.mtx.acquire()
-        self.__timestamps["terminate"] = time.time()
-        self.reason = reason
-        if isinstance(reason, failure.Failure):
-            msg = reason.getErrorMessage()
-        else:
-            msg = str(reason)
-        self.log.info("terminating stage-in: %s" % msg)
-        self.mtx.release()
+        try:
+            self.__timestamps["terminate"] = time.time()
+            self.reason = reason
+            if isinstance(reason, failure.Failure):
+                msg = reason.getErrorMessage()
+            else:
+                msg = str(reason)
+            self.log.info("terminating stage-in: %s" % msg)
+        finally:
+            self.mtx.release()
 
     def do_stage_in_failed(self, reason, *args, **kw):
         """handle the case, that the staging failed"""
@@ -152,21 +176,27 @@ class Task(TaskFSM):
     def do_start_instance(self, *args, **kw):
         """all files are staged in, so trigger the start of the instance
            addCallback(self.cb_instance_started).addErrback(self.failed)"""
-        self.__timestamps["instance-start"] = time.time()
-        self.__inst.start().addCallback(self.cb_instance_started).\
-                            addErrback(self.failed)
+        self.mtx.acquire()
+        try:
+            self.__timestamps["instance-start"] = time.time()
+            self.__inst.start().addCallback(self.cb_instance_started).\
+                                addErrback(self.failed)
+        finally:
+            self.mtx.release()
 
     def do_terminate_instance_starting(self, reason, *args, **kw):
         """terminate the start process of the instance."""
         self.mtx.acquire()
-        self.__timestamps["terminate"] = time.time()
-        self.reason = reason
-        if isinstance(reason, failure.Failure):
-            msg = reason.getErrorMessage()
-        else:
-            msg = str(reason)
-        self.log.info("terminating instance-start: %s" % msg)
-        self.mtx.release()
+        try:
+            self.__timestamps["terminate"] = time.time()
+            self.reason = reason
+            if isinstance(reason, failure.Failure):
+                msg = reason.getErrorMessage()
+            else:
+                msg = str(reason)
+            self.log.info("terminating instance-start: %s" % msg)
+        finally:
+            self.mtx.release()
 
     def do_instance_starting_failed(self, reason, *args, **kw):
         """handle a failed instance start attempt"""
@@ -194,6 +224,7 @@ class Task(TaskFSM):
             log.info("executing task")
             self.__inst.protocol.executeTask(
                 self.__jsdl_xml, self).\
+                addCallback(self._cb_store_exitcode).\
                 addCallback(self.cb_execution_finished).\
                 addErrback(self.failed)
         finally:
@@ -206,14 +237,16 @@ class Task(TaskFSM):
         2. shutdown the instance
         """
         self.mtx.acquire()
-        self.__timestamps["terminate"] = time.time()
-        self.reason = reason
-        if isinstance(reason, failure.Failure):
-            msg = reason.getErrorMessage()
-        else:
-            msg = str(reason)
-        self.log.info("terminating execution: %s" % msg)
-        self.mtx.release()
+        try:
+            self.__timestamps["terminate"] = time.time()
+            self.reason = reason
+            if isinstance(reason, failure.Failure):
+                msg = reason.getErrorMessage()
+            else:
+                msg = str(reason)
+            self.log.info("terminating execution: %s" % msg)
+        finally:
+            self.mtx.release()
 
     def do_execution_failed(self, reason, *args, **kw):
         """the task execution failed
@@ -221,14 +254,16 @@ class Task(TaskFSM):
         that should be something like 'do_stop_instance' with different callbacks
         """
         self.mtx.acquire()
-        self.__timestamps["failed"] = time.time()
-        self.reason = reason
-        if isinstance(reason, failure.Failure):
-            msg = reason.getErrorMessage()
-        else:
-            msg = str(reason)
-        self.log.warn("execution failed: %s" % msg)
-        self.mtx.release()
+        try:
+            self.__timestamps["failed"] = time.time()
+            self.reason = reason
+            if isinstance(reason, failure.Failure):
+                msg = reason.getErrorMessage()
+            else:
+                msg = str(reason)
+            self.log.warn("execution failed: %s" % msg)
+        finally:
+            self.mtx.release()
 
     def do_stop_instance(self, *args, **kw):
         """the task has finished its execution stop the instance"""
@@ -245,67 +280,83 @@ class Task(TaskFSM):
         I think that has to be a 'noop', but the 'instance-stopped' callback
         must not do any harm!"""
         self.mtx.acquire()
-        self.__timestamps["terminate"] = time.time()
-        self.reason = reason
-        if isinstance(reason, failure.Failure):
-            msg = reason.getErrorMessage()
-        else:
-            msg = str(reason)
-        self.log.info("terminate instance-stop: %s" % msg)
-        self.mtx.release()
+        try:
+            self.__timestamps["terminate"] = time.time()
+            self.reason = reason
+            if isinstance(reason, failure.Failure):
+                msg = reason.getErrorMessage()
+            else:
+                msg = str(reason)
+            self.log.info("terminate instance-stop: %s" % msg)
+        finally:
+            self.mtx.release()
 
     def do_instance_stopping_failed(self, reason, *args, **kw):
         """i really do not know, what to do about that, maybe force the destroying"""
         self.mtx.acquire()
-        self.__timestamps["failed"] = time.time()
-        self.reason = reason
-        if isinstance(reason, failure.Failure):
-            msg = reason.getErrorMessage()
-        else:
-            msg = str(reason)
-        self.log.warn("instance-stop failed: %s" % msg)
-        self.mtx.release()
+        try:
+            self.__timestamps["failed"] = time.time()
+            self.reason = reason
+            if isinstance(reason, failure.Failure):
+                msg = reason.getErrorMessage()
+            else:
+                msg = str(reason)
+            self.log.warn("instance-stop failed: %s" % msg)
+        finally:
+            self.mtx.release()
 
     def do_stage_out(self, *args, **kw):
         """task has finished its execution,
            instance has been shut down, stage out the data"""
         self.mtx.acquire()
-        self.log.info("staging out")
-        self.__timestamps["stage-out-start"] = time.time()
-        rv = self.__unprepare()
-        self.mtx.release()
+        try:
+            self.log.info("staging out")
+            self.__timestamps["stage-out-start"] = time.time()
+            rv = self.__unprepare()
+        finally:
+            self.mtx.release()
+        return rv
 
     def do_stage_out_failed(self, reason, *args, **kw):
         """stage out process failed, so handle that"""
         self.mtx.acquire()
-        self.reason = reason
-        self.__timestamps["failed"] = time.time()
-        if isinstance(reason, failure.Failure):
-            msg = reason.getErrorMessage()
-        else:
-            msg = str(reason)
-        self.log.warn("stage-out failed: %s" % msg)
-        self.mtx.release()
+        try:
+            self.reason = reason
+            self.__timestamps["failed"] = time.time()
+            if isinstance(reason, failure.Failure):
+                msg = reason.getErrorMessage()
+            else:
+                msg = str(reason)
+            self.log.warn("stage-out failed: %s" % msg)
+
+
+            
+        finally:
+            self.mtx.release()
 
     def do_terminate_stage_out(self, reason, *args, **kw):
         """terminate the stage out process"""
         self.mtx.acquire()
-        self.__timestamps["terminate"] = time.time()
-        self.reason = reason
-        if isinstance(reason, failure.Failure):
-            msg = reason.getErrorMessage()
-        else:
-            msg = str(reason)
-        self.log.info("terminating stage out: %s" % msg)
-        self.mtx.release()
+        try:
+            self.__timestamps["terminate"] = time.time()
+            self.reason = reason
+            if isinstance(reason, failure.Failure):
+                msg = reason.getErrorMessage()
+            else:
+                msg = str(reason)
+            self.log.info("terminating stage out: %s" % msg)
+        finally:
+            self.mtx.release()
 
     def do_task_finished(self, *args, **kw):
         """pre-cond: stage-out is complete"""
         self.mtx.acquire()
-        self.log.info("task finished")
-        self.__timestamps["finished"] = time.time()
-        self.__clean_up_spool()
-        self.mtx.release()
+        try:
+            self.log.info("task finished")
+            self.__timestamps["finished"] = time.time()
+            self.__clean_up_spool()
+        finally:
+            self.mtx.release()
 
     #
     # Helper methods
@@ -335,9 +386,10 @@ class Task(TaskFSM):
         os.makedirs(path)
         return path
 
-    def _cb_assign_mac_to_inst(self, mac, inst):
-        self.log.debug("assigning mac '%s' to instance" % mac)
-        inst.config().setMac(mac)
+    def _cb_assign_mac_ip_to_inst(self, mac_ip, inst):
+        self.log.debug("assigning mac '%s' with IP '%s' to instance" % (mac_ip))
+        inst.config().setMac(mac_ip[0])
+        inst.ip = mac_ip[1]
 
     def _cb_assign_files_to_inst(self, prepare_result, inst, spool):
         # image, kernel and probably initrd
@@ -354,6 +406,9 @@ class Task(TaskFSM):
         path = os.path.join(spool, "initrd")
         if os.path.exists(path):
             inst.config().setInitrd(path)
+
+    def _cb_store_exitcode(self, exitcode):
+        self.exitcode = exitcode
 
     def __configureInstance(self, inst, jsdl):
         # set the uri through which i am reachable
@@ -387,8 +442,9 @@ class Task(TaskFSM):
 
     def __release_resources(self, arg):
         self.log.info("releasing acquired resources")
+        mac_ip = (self.__inst.config().getMac(), self.__inst.ip)
         d = defer.maybeDeferred(
-            XBEDaemon.getInstance().macAddresses.release, self.__inst.config().getMac())
+            XBEDaemon.getInstance().macAddresses.release, mac_ip)
         d.addCallback(self.__delete_instance)
         d.addCallback(lambda x: log.info("resources released"))
         return arg
@@ -424,7 +480,7 @@ class Task(TaskFSM):
 
         # assign a mac address
         d2 = defer.maybeDeferred(XBEDaemon.getInstance().macAddresses.acquire)
-        d2.addCallback(self._cb_assign_mac_to_inst, self.__inst)
+        d2.addCallback(self._cb_assign_mac_ip_to_inst, self.__inst)
 
         d3 = defer.maybeDeferred(self.__configureInstance, self.__inst, self.__jsdl_doc)
         deferreds = [d1, d2, d3]

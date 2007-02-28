@@ -235,7 +235,7 @@ class XenBEEInstanceProtocol(protocol.XMLProtocol):
             else:
                 d.callback(0)  # call with an exitcode of 0
         else:
-            return message.Error(errcode.INSTANCE_LOOKUP_FAILURE)
+            log.info("old instance %s is shutting down" % inst_id)
 
 class _XBEDProtocol(XenBEEProtocol):
     def post_connect(self):

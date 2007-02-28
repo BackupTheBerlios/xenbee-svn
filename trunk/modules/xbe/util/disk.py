@@ -6,6 +6,7 @@
 """
 
 import subprocess, tempfile, os, errno, time
+from xbe.util.exceptions import ProcessError
 
 try:
     devnull_p = os.devnull
@@ -15,17 +16,6 @@ try:
     devnull = open(devnull_p, 'rw')
 except OSError, e:
     raise ImportError("sorry, but I need %s to operate." % (devnull), e)
-
-class ProcessError(subprocess.CalledProcessError):
-    def __init__(self, returncode, cmd, stderr, stdout):
-        subprocess.CalledProcessError.__init__(self, returncode, cmd)
-        self.__stderr = stderr
-        self.__stdout = stdout
-
-    def __str__(self):
-        s = subprocess.CalledProcessError.__str__(self)
-        s += ": %s" % (self.__stderr)
-        return s
 
 # the only currently supported filesystems
 FS_GUESS = ()

@@ -60,7 +60,8 @@ class XBEDaemon(Daemon):
             help="path to the CA x509 certificate")
         p.add_option(
             "--mac-file", dest="mac_file", type="string",
-            help="path to a file, that contains available mac addresses.")
+            help="path to a file, that contains available mac addresses "+
+                 "paired with IP addresses.")
         p.add_option(
             "--stomp-user", dest="stomp_user", type="string",
             default="daemon",
@@ -167,8 +168,8 @@ class XBEDaemon(Daemon):
         log.info("  done.")
 
         log.info("initializing mac address pool...")
-        from xbe.xbed.resource import MacAddressPool
-        self.macAddresses = MacAddressPool.from_file(self.opts.mac_file)
+        from xbe.xbed.resource import MacIPAddressPool
+        self.macAddresses = MacIPAddressPool.from_file(self.opts.mac_file)
         log.info("  done.")
 
         log.info("initializing instance manager...")

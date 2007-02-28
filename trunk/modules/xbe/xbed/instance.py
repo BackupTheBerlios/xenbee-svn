@@ -243,7 +243,8 @@ class InstanceManager(singleton.Singleton):
 
         self.mtx.acquire()
         try:
-            icfg = InstanceConfig(uuid())
+            instance_name = "xbe-%s" % uuid()
+            icfg = InstanceConfig(instance_name)
             
             try:
                 inst = Instance(icfg, spool, self)

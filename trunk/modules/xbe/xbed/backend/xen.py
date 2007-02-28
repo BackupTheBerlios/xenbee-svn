@@ -16,7 +16,7 @@ __author__ = "$Author: petry $"
 import logging
 log = logging.getLogger(__name__)
 
-import commands, sys, os.path, threading
+import sys, os.path, threading, subprocess
 
 try:
     from traceback import format_exc as format_exception
@@ -56,7 +56,8 @@ class Backend(object):
             
             # register an ErrorCallback
             def errHandler(ctx, error):
-                log.debug("backend error: %s" % (error,))
+                # log.debug("backend error: %s" % (error,))
+                pass
             libvirt.registerErrorHandler(errHandler, None)
 
             self.con = libvirt.open(None)
@@ -72,18 +73,15 @@ class Backend(object):
         self.lock.release()
 
     def _runcmd(self, cmd, *args):
-        """Executes the specified command on the xen backend, using 'xm'.
-
-        WARNING: this function is exploitable using an injection mechanism
-
-        TODO: find a way to escape correctly (re.escape includes
-        double-backslashes not only for quotes)
-
-        """
-        #    cmdline = "xm " + "'%s' " % re.escape(cmd) + " ".join(map(lambda x: "'%s'" % re.escape(str(x)), args))
-        cmdline = "xm " + "'%s' " % cmd + " ".join(map(lambda x: "'%s'" % x, args))
-        return commands.getstatusoutput(cmdline)
-
+        """Executes the specified command on the xen backend, using 'xm'."""
+        argv = ['xm', cmd]
+        argv.extend(args)
+        p = subprocess.Popen(argv,
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = p.communicate()
+        if p.returncode != 0:
+            raise ProcessError(p.returncode, "xm", stderr, stdout)
+        
     def _getDomainByName(self, inst):
         return self.con.lookupByName(inst.id())
 
@@ -137,6 +135,23 @@ class Backend(object):
             self.releaseLock()
         return info
 
+    def getDefinedDomains(self):
+        """Return a mapping from 'name' to id for all known domains."""
+        try:
+            domains = {}
+            ids = self.con.listDomainsID()
+            for domainID in ids:
+                try:
+                    name = self.con.lookupByID(domainID)
+                except Exception, e:
+                    # domain has disappeared?
+                    pass
+                else:
+                    domains[name] = domainID
+        finally:
+            self.releaseLock()
+        return domains
+
     def _createInstance(self, inst):
         """Creates a new backend-instance.
         
@@ -149,7 +164,7 @@ class Backend(object):
         # check if another (or maybe this) instance is running with same name
         # (that should not happen!)
         if self.retrieveID(inst) >= 0:
-            log.error("backend: another instance (or maybe this one?) is already known to xen")
+            log.error("backend: another instance with that name is already known to xen")
             raise InstanceCreationError("instance already known")
 
         # build configuration
@@ -171,15 +186,19 @@ class Backend(object):
             raise
 
         # dry-run and create instance
-        (status, output) = self._runcmd("dry-run", cfg_path)
-        if status != 0:
-            log.error("backend: could not execute dry-run: %d: %s" % (status, output))
-            raise InstanceCreationError("dry-run failed: %d: %s" % (status, output))
+        try:
+            self._runcmd("dry-run", cfg_path)
+        except ProcessError, e:
+            log.error("backend: could not execute dry-run: %d: %s" % (e.returncode, e.stdout))
+            raise InstanceCreationError("dry-run failed: %d: %s" % (e.returncode, e.stdout))
 
-        (status, output) = self._runcmd("create", cfg_path)
-        if status != 0:
-            log.error("backend: could not create backend instance: %d: %s" % (status, output))
-            raise InstanceCreationError("create failed: %d, %s" % (status, output))
+        try:
+            self._runcmd("create", cfg_path)
+        except ProcessError, e:
+            log.error("backend: could not create backend instance: %d: %s" %
+                      (e.returncode, e.stdout))
+            raise InstanceCreationError("create failed: %d, %s" %
+                                        (e.returncode, e.stdout))
         backend_id = self.retrieveID(inst)
         log.debug("created backend instance with id: %d" % (backend_id,))
         return backend_id
@@ -210,6 +229,8 @@ class Backend(object):
         
         returns the state reached, or None otherwise.
         """
+        log.debug("backend: waiting for one of: %s" % (map(getStateName, states)))
+
         import time
         end = int(time.time() + timeout)
         while True:
@@ -219,7 +240,6 @@ class Backend(object):
                 return s
             if int(time.time()) >= end:
                 break
-            log.debug("backend: waiting for one of: %s currently in: %s" % (map(getStateName, states), getStateName(s)))
             time.sleep(1)
         return None
 

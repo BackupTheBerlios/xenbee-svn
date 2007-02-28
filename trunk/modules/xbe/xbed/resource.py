@@ -214,8 +214,10 @@ class ValidatingPool(Pool):
         """
         # validate the object
         try:
-            if self.__validator(obj, *self.__validatorArgs, **self.__validatorKwArgs) is not True:
-                raise Exception("validator did not return True")
+            if self.__validator(obj,
+                                *self.__validatorArgs,
+                                **self.__validatorKwArgs) is not True:
+                raise ValueError("validator did not return True")
         except Exception, e:
             raise ItemNotAllowed(obj, e)
         return Pool.add(self, obj)
@@ -254,7 +256,11 @@ class MacAddressPool(ValidatingPool):
         """reads a file which contains a list of mac addresses (each
         on a single line).
 
-        lines starting with '#' are ignored
+        Format:
+          # MAC Address    
+          01-02-03-ab-cd-ef # some comment
+
+        comments are stripped.
         """
         pool = cls()
         if isinstance(file, basestring):
@@ -263,6 +269,48 @@ class MacAddressPool(ValidatingPool):
             f = file
         for line in f.readlines():
             mac = line.split("#", 1)[0].strip().lower()
-            if len(mac): pool.add(mac)
+            if len(mac):
+                pool.add(mac)
+        return pool
+    from_file = classmethod(from_file)
+
+def mac_ip_validator(mac_ip):
+    return mac_validator(mac_ip[0])
+
+class MacIPAddressPool(ValidatingPool):
+    """A pool of MAC-Addresses paired with an IP address.
+
+    it is just a convenience wrapper around a ValidatingPool with a
+    mac_ip_validator.
+      
+    allowed MAC addresses must match the following regex:
+            "^([0-9a-f]{1,2}:){5}[0-9a-f]{1,2}$"
+
+    defines a from_file classmethod that reads in a list of
+    mac-addresses paired with an IP from a file.
+    """
+    def __init__(self):
+        ValidatingPool.__init__(self, mac_ip_validator)
+
+    def from_file(cls, file):
+        """reads a file which contains a list of mac addresses (each
+        on a single line).
+
+        Format:
+          # MAC Address      IP Address
+          01-02-03-ab-cd-ef  127.0.0.1    # some comment
+
+        comments are stripped.
+        """
+        pool = cls()
+        if isinstance(file, basestring):
+            f = open(file)
+        else:
+            f = file
+        for line in f.readlines():
+            line = line.split("#", 1)[0].strip().lower()
+            if len(line):
+                mac, ip = line.split()
+                pool.add((mac,ip))
         return pool
     from_file = classmethod(from_file)
