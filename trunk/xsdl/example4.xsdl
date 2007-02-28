@@ -23,17 +23,11 @@
 -->
       <jsdl-posix:POSIXApplication>
 	<jsdl-posix:Executable filesystemName="USR">
-	  bin/python
+	  bin/sha1sum
 	</jsdl-posix:Executable>
-	<jsdl-posix:Argument>-c</jsdl-posix:Argument>
-	<jsdl-posix:Argument>import os; print os.environ</jsdl-posix:Argument>
-	<jsdl-posix:Output filesystemName="TMP">foo</jsdl-posix:Output>
-	<jsdl-posix:Environment name="HOME" filesystemName="ROOT"/>
-	<jsdl-posix:Environment name="TEST" filesystemName="USR">
-	  foo
-	</jsdl-posix:Environment>
+	<jsdl-posix:Argument filesystemName="SPOOL">test.file</jsdl-posix:Argument>
+	<jsdl-posix:Output filesystemName="SPOOL">test.file.sha1</jsdl-posix:Output>
       </jsdl-posix:POSIXApplication>
-
     </jsdl:Application>
     <jsdl:Resources>
       <jsdl:FileSystem name="ROOT">
@@ -131,8 +125,14 @@
 	<jsdl:URI>file:///srv/xen-images/xenbee/packages/simple-pkg/kernel</jsdl:URI>
 	<xsdl:Hash algorithm="sha1">a3b180e5dc2359849ffa927b93414ada20807a0c</xsdl:Hash>
       </jsdl:Source>
+    </jsdl:DataStaging>
+    <jsdl:DataStaging>
+      <jsdl:FileName>test.file.sha1</jsdl:FileName>
+      <jsdl:FilesystemName>SPOOL</jsdl:FilesystemName>
+      <jsdl:CreationFlag>overwrite</jsdl:CreationFlag>
+      <jsdl:DeleteOnTermination>true</jsdl:DeleteOnTermination>
       <jsdl:Target>
-	<jsdl:URI>http://www.example.com/test.file</jsdl:URI>
+	<jsdl:URI>file:///srv/xen-images/scratch/test.file.sha1</jsdl:URI>
       </jsdl:Target>
     </jsdl:DataStaging>
   </jsdl:JobDescription>

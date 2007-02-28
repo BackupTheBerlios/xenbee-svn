@@ -40,16 +40,14 @@ class Task(TaskFSM):
         """Initialize a new task."""
         TaskFSM.__init__(self)
         self.mtx = threading.RLock()
-        self.__tstamp = time.time()
+        self.__timestamps = {}
+        self.__timestamps["submit"] = time.time()
         self.__id = id
         self.log = logging.getLogger("task."+self.id())
         self.mgr = mgr
 
     def id(self):
         return self.__id
-
-    def submitTime(self):
-        return self.__tstamp
 
     def __repr__(self):
         return "<%(cls)s %(id)s in state %(state)s>" % {
@@ -58,6 +56,17 @@ class Task(TaskFSM):
             "state": self.state(),
         }
 
+    def getStatusInfo(self):
+        """Return all possible information about this task in a
+        dictionary.
+
+        The information returned depends on the current state.
+        """
+        info = {}
+        # timestamp information
+        for time, tstamp in self.__timestamps.iteritems():
+            info["%s-time" % time] = tstamp
+        return info
     #
     # FSM transitions
     # (overrides those defined in TaskFSM)
@@ -65,6 +74,7 @@ class Task(TaskFSM):
     def do_confirmed(self, jsdl_xml, jsdl_doc, *args, **kw):
         """The task has been confirmed by the user."""
         self.mtx.acquire()
+        self.__timestamps["confirm"] = time.time()
         self.__jsdl_xml = jsdl_xml
         self.__jsdl_doc = jsdl_doc
         self.mtx.release()
@@ -75,11 +85,13 @@ class Task(TaskFSM):
         That should not impose much work to do.
         """
         self.mtx.acquire()
+        self.__timestamps["terminate"] = time.time()
         self.mtx.release()
 
     def do_terminate_pending_confirmed(self, reason, *args, **kw):
         """terminate a confirmed task."""
         self.mtx.acquire()
+        self.__timestamps["terminate"] = time.time()
         self.mtx.release()
 
     def do_stage_in(self, *args, **kw):
@@ -92,6 +104,7 @@ class Task(TaskFSM):
         post-cond: state == Running:Stage-In
         """
         self.mtx.acquire()
+        self.__timestamps["stage-in-start"] = time.time()
         rv = self.__prepare()
         self.mtx.release()
         return rv
@@ -99,6 +112,7 @@ class Task(TaskFSM):
     def do_terminate_stage_in(self, reason, *args, **kw):
         """terminate the stage-in process, must not fail."""
         self.mtx.acquire()
+        self.__timestamps["terminate"] = time.time()
         self.mtx.release()
 
     def do_stage_in_failed(self, reason, *args, **kw):
@@ -106,6 +120,7 @@ class Task(TaskFSM):
         self.mtx.acquire()
         try:
             self.log.warn("stage in failed: %s", reason.getErrorMessage())
+            self.__timestamps["failed"] = time.time()
             self.__clean_up()
         finally:
             self.mtx.release()
@@ -113,12 +128,15 @@ class Task(TaskFSM):
     def do_start_instance(self, *args, **kw):
         """all files are staged in, so trigger the start of the instance
            addCallback(self.cb_instance_started).addErrback(self.failed)"""
+        self.__timestamps["instance-start"] = time.time()
         self.__inst.start().addCallback(self.cb_instance_started).\
                             addErrback(self.failed)
 
     def do_terminate_instance_starting(self, reason, *args, **kw):
         """terminate the start process of the instance."""
         self.mtx.acquire()
+        log.info("terminating starting instance")
+        self.__timestamps["terminate"] = time.time()
         self.mtx.release()
 
     def do_instance_starting_failed(self, reason, *args, **kw):
@@ -126,7 +144,8 @@ class Task(TaskFSM):
         self.mtx.acquire()
         try:
             self.log.warn("starting of my instance failed: %s" % reason.getErrorMessage())
-#            self.__stop_instance(self.__inst)
+            self.__timestamps["failed"] = time.time()
+            self.__stop_instance(self.__inst)
         finally:
             self.mtx.release()
 
@@ -137,7 +156,12 @@ class Task(TaskFSM):
         """
         self.mtx.acquire()
         try:
-            self.__inst.protocol.executeTask(self.__jsdl_xml, self)
+            log.info("executing task")
+            self.__timestamps["execute"] = time.time()
+            self.__inst.protocol.executeTask(
+                self.__jsdl_xml, self).\
+                addCallback(self.cb_execution_finished).\
+                addErrback(self.failed)
         finally:
             self.mtx.release()
 
@@ -148,6 +172,8 @@ class Task(TaskFSM):
         2. shutdown the instance
         """
         self.mtx.acquire()
+        log.info("terminating execution")
+        self.__timestamps["terminate"] = time.time()
         self.mtx.release()
 
     def do_execution_failed(self, reason, *args, **kw):
@@ -156,12 +182,16 @@ class Task(TaskFSM):
         that should be something like 'do_stop_instance' with different callbacks
         """
         self.mtx.acquire()
+        log.info("execution failed: %s" % reason.getErrorMessage())
+        self.__timestamps["failed"] = time.time()
         self.mtx.release()
 
     def do_stop_instance(self, *args, **kw):
         """the task has finished its execution stop the instance"""
         self.mtx.acquire()
         try:
+            log.info("stopping instance")
+            self.__timestamps["instance-stop"] = time.time()
             self.__stop_instance(self.__inst).addCallback(self.cb_instance_stopped)
         finally:
             self.mtx.release()
@@ -171,32 +201,46 @@ class Task(TaskFSM):
         I think that has to be a 'noop', but the 'instance-stopped' callback
         must not do any harm!"""
         self.mtx.acquire()
+        self.log.info("terminate stopping instance")
+        self.__timestamps["terminate"] = time.time()
         self.mtx.release()
 
     def do_instance_stopping_failed(self, reason, *args, **kw):
         """i really do not know, what to do about that, maybe force the destroying"""
         self.mtx.acquire()
+        self.log.info("instance stopping failed: %s" % reason.getErrorMessage())
+        self.__timestamps["failed"] = time.time()
         self.mtx.release()
 
     def do_stage_out(self, *args, **kw):
         """task has finished its execution,
            instance has been shut down, stage out the data"""
         self.mtx.acquire()
+        self.log.info("staging out")
+        self.__timestamps["stage-out-start"] = time.time()
+        rv = self.__unprepare()
         self.mtx.release()
 
     def do_stage_out_failed(self, reason, *args, **kw):
         """stage out process failed, so handle that"""
         self.mtx.acquire()
+        self.log.info("stage out failed: %s" % reason.getErrorMessage())
+        self.__timestamps["failed"] = time.time()
         self.mtx.release()
 
     def do_terminate_stage_out(self, *args, **kw):
         """terminate the stage out process"""
         self.mtx.acquire()
+        self.log.info("terminating stage out")
+        self.__timestamps["terminate"] = time.time()
         self.mtx.release()
 
-    def do_task_finished(self):
+    def do_task_finished(self, *args, **kw):
         """pre-cond: stage-out is complete"""
         self.mtx.acquire()
+        self.log.info("task finished")
+        self.__timestamps["finished"] = time.time()
+        self.__clean_up()
         self.mtx.release()
 
     #
@@ -281,7 +325,6 @@ class Task(TaskFSM):
         d = defer.maybeDeferred(
             XBEDaemon.getInstance().macAddresses.release, self.__inst.config().getMac())
         d.addCallback(self.__delete_instance)
-        d.addCallback(self.__clean_up)
         d.addCallback(lambda x: log.info("resources released"))
         return arg
 
@@ -292,6 +335,7 @@ class Task(TaskFSM):
 
     def __clean_up(self, *a, **kw):
         """cleans up the task, i.e. removes the task's spool directory"""
+        self.log.info("removing spool directory")
         from xbe.util import removeDirCompletely
         removeDirCompletely(self.__spool)
 
@@ -324,6 +368,18 @@ class Task(TaskFSM):
         dlist.addCallback(self._cb_check_deferred_list)
         dlist.addCallback(self.cb_stage_in_completed)
         dlist.addErrback(self.failed)
+
+    def __unprepare(self):
+        self.log.debug("starting un-preparation of task %s" % (self.id(),))
+
+        # unprepare the task (i.e. stage-out)
+        from xbe.xbed import task_unpreparer
+        unpreparer = task_unpreparer.UnPreparer()
+
+        d = threads.deferToThread(unpreparer.unprepare,
+                                  self.__spool, self.__jsdl_doc)
+        d.addCallback(self.cb_stage_out_completed)
+        d.addErrback(self.failed)
 
     def _cb_check_deferred_list(self, results):
         for code, result in results:

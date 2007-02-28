@@ -551,6 +551,13 @@ class StatusList(BaseServerMessage):
     """Answers the RequestStatus message.
 
     Holds a list of status information objects.
+
+    <StatusList>
+      <Status task-id="...">
+        <bes-state>...
+        <Meta>
+           <Info key="...">value</Info>
+        </Meta>
     """
     tag = XBE("StatusList")
     
@@ -558,10 +565,10 @@ class StatusList(BaseServerMessage):
         BaseServerMessage.__init__(self)
         self.__entries = []
 
-    def add(self, id, submitted_tstamp, state):
+    def add(self, id, state, meta={}):
         self.__entries.append({"TaskID": id,
-                               "Submitted": submitted_tstamp,
-                               "State": state})
+                               "State": state,
+                               "Meta": meta})
 
     def entries(self):
         return self.__entries
@@ -571,10 +578,13 @@ class StatusList(BaseServerMessage):
         entries = etree.SubElement(body, self.tag)
         for entry in self.__entries:
             e = etree.SubElement(entries, XBE("Status"))
-            etree.SubElement(e, XBE("TaskID")).text = entry["TaskID"]
-            etree.SubElement(e, XBE("Submitted")).text = str(entry["Submitted"])
-            etree.SubElement(e, XBE("State")).append(
-                (bes.fromXBETaskState(entry["State"])))
+            e.attrib["task-id"] = entry["TaskID"]
+            e.append(bes.fromXBETaskState(entry["State"]))
+            meta = etree.SubElement(e, XBE("Meta"))
+            for k, v in entry["Meta"].iteritems():
+                info = etree.SubElement(meta, XBE("Info"))
+                info.attrib["key"] = k
+                info.text = str(v)
         return root
     
     def from_xml(cls, root, hdr, body):
@@ -582,9 +592,15 @@ class StatusList(BaseServerMessage):
         entries = body.find(cls.tag)
         for entry in entries.getchildren():
             entry_info = {}
-            entry_info["TaskID"] = entry.find(XBE("TaskID")).text
-            entry_info["Submitted"] = entry.find(XBE("Submitted")).text
-            entry_info["State"] = bes.toXBETaskState(entry.find(XBE("State"))[0])
+            entry_info["TaskID"] = entry.attrib["task-id"]
+            entry_info["State"] = bes.toXBETaskState(
+                entry.find(BES_ACTIVITY("ActivityStatus")))
+            meta = {}
+            for info in entry.findall(XBE("Meta/Info")):
+                k = info.attrib["key"]
+                v = (info.text or "").strip()
+                meta[k] = v
+            entry_info["Meta"] = meta
             status_list.__entries.append(entry_info)
         return status_list
     from_xml = classmethod(from_xml)

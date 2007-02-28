@@ -237,7 +237,6 @@ class SecureProtocol(XMLProtocol):
             return
         
         if bod and len(bod):
-            log.debug("dispatching %s" % bod[0].tag)
             return self.dispatch(bod[0], msg)
         else:
             return None
@@ -261,7 +260,6 @@ class SecureProtocol(XMLProtocol):
             real_msg = self.securityLayer.validate(real_msg)
         except SecurityError, se:
             return message.Error(errcode.UNAUTHORIZED)
-        log.debug("received application data: %s" % real_msg.tag)
         try:
             rv = self.protocol.messageReceived(real_msg)
         except Exception, e:

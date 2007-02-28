@@ -6,13 +6,18 @@ The Xen Based Execution Environment protocol
 __version__ = "$Rev$"
 __author__ = "$Author: petry $"
 
+# system imports
 import logging, re, time, threading
 log = logging.getLogger(__name__)
 
 from pprint import pprint, pformat
 from lxml import etree
-from twisted.python import failure
 
+# twisted imports
+from twisted.python import failure
+from twisted.internet import defer
+
+# XBE imports
 from xbe.proto import XenBEEProtocolFactory, XenBEEProtocol
 from xbe.xml.namespaces import *
 from xbe.xml import xsdl, message, protocol, errcode, jsdl
@@ -106,12 +111,12 @@ class XenBEEClientProtocol(protocol.XMLProtocol):
         if task_id is not None:
             task = TaskManager.getInstance().lookupByID(task_id)
             if task is not None:
-                status_list.add(task.id(), task.submitTime(), task.state())
+                status_list.add(task.id(), task.state(), task.getStatusInfo())
             else:
                 return message.Error(errcode.TASK_LOOKUP_FAILURE, task_id)
         else:
             for task in TaskManager.getInstance().tasks.values():
-                status_list.add(task.id(), task.submitTime(), task.state())
+                status_list.add(task.id(), task.state(), task.getStatusInfo())
         return status_list
 
     def do_Kill(self, elem, *args, **kw):
@@ -146,9 +151,15 @@ class XenBEEInstanceProtocol(protocol.XMLProtocol):
 	self.instid = instid
 
     def executeTask(self, jsdl, task):
+        """send the request to the application.
+
+        return a Deferred, that gets called when the task has finished.
+        """
         msg = message.ExecuteTask(jsdl, task.id())
         self.task_id = task.id()
         self.sendMessage(msg.as_xml())
+        self.__defer = defer.Deferred()
+        return self.__defer
 
     def queryStatus(self):
         pass
@@ -174,7 +185,10 @@ class XenBEEInstanceProtocol(protocol.XMLProtocol):
         exitcode = msg.exitcode()
         inst = InstanceManager.getInstance().lookupByUUID(inst_id)
         if inst is not None:
-            inst.task.cb_execution_finished(exitcode)
+            log.debug("execution on instance %s finished" % inst_id)
+            d = self.__defer
+            del self.__defer
+            d.callback(exitcode)
         else:
             return message.Error(errcode.INSTANCE_LOOKUP_FAILURE)
 
@@ -192,7 +206,9 @@ class XenBEEInstanceProtocol(protocol.XMLProtocol):
         inst_id = msg.inst_id()
         inst = InstanceManager.getInstance().lookupByUUID(inst_id)
         if inst is not None:
-            inst.task.failed(failure.Failure(msg))
+            d = self.__defer
+            del self.__defer
+            d.errback(failure.Failure(Exception("execution failed", msg)))
         else:
             return message.Error(errcode.INSTANCE_LOOKUP_FAILURE)
 
@@ -202,6 +218,14 @@ class XenBEEInstanceProtocol(protocol.XMLProtocol):
         inst = InstanceManager.getInstance().lookupByUUID(inst_id)
         if inst is not None:
             log.info("instance is shutting down...")
+            # check if we still have a deferred that may be called
+            try:
+                d = self.__defer
+                del self.__defer
+            except AttributeError:
+                pass
+            else:
+                d.callback(0)  # call with an exitcode of 0
         else:
             return message.Error(errcode.INSTANCE_LOOKUP_FAILURE)
 
@@ -259,7 +283,7 @@ class XenBEEDaemonProtocolFactory(XenBEEProtocolFactory):
             p.timeOflastReceive = time.time()
         finally:
             mtx.release()
-        log.debug("got message for %r" % (p,))
+#        log.debug("got message for %r" % (p,))
         d = p.messageReceived(msg)
 
         # log sent answers
