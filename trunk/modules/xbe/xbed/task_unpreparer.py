@@ -44,8 +44,8 @@ class DataStagingHandler:
         # make file relative to image mount_point
         file_name = os.path.join(mount_point, file_name.lstrip("/"))
 
-        ds = DataStager(file_name, uri)
-        rv = ds.perform(asynchronous=False)
+        stager = DataStager(file_name, uri)
+        rv = stager.perform_upload()
         log.debug("uploaded to %s" % (uri))
         return rv
 

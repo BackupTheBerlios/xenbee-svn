@@ -5,7 +5,7 @@
    
 """
 
-import subprocess, tempfile, os
+import subprocess, tempfile, os, errno, time
 
 try:
     devnull_p = os.devnull
@@ -100,14 +100,7 @@ class Image(object):
         self.__mount_point = mount_point
         return self.__mount_point
 
-    def umount(self):
-        """U(n)mount the image.
-
-        If the image is currently mounted, umount it and delete the
-        temporary mount-point.
-
-        raises NotMountedException if the image is not currently mounted.
-        """
+    def __umount(self):
         try:
             mount_point = self.__mount_point
             del self.__mount_point
@@ -126,6 +119,26 @@ class Image(object):
         except:
             raise
         os.rmdir(mount_point)
+
+    def umount(self, retries=5):
+        """U(n)mount the image.
+
+        If the image is currently mounted, umount it and delete the
+        temporary mount-point.
+
+        raises NotMountedException if the image is not currently mounted.
+        """
+        while True:
+            try:
+                self.__umount()
+            except NotMountedException:
+                raise
+            except OSError, e:
+                if e.errno == errno.EINTR:
+                    time.sleep(1)
+                else:
+                    retries -= 1
+                    if retries < 0: raise
 
 def guess_fs_type(path):
     """Try to guess the file system type using the 'file' command.

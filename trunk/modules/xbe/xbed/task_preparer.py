@@ -73,7 +73,7 @@ class URILocationHandler:
             filename = target_file_name
         dst = os.path.join(target_dir, filename)
         ds = DataStager(uri, dst)
-        rv = ds.perform(asynchronous=False)
+        rv = ds.perform_download()
         log.debug("retrieved to %s" % (dst))
 
         # verify the hash value
@@ -158,8 +158,11 @@ class Preparer(object):
         log.info("preparation complete!")
 
     def _call_scripts(self, script_dir, script_prefix):
-        from xbe.util.disk import mountImage
-        image = mountImage(os.path.join(self.__spool, "image"), dir=self.__spool)
+        from xbe.util import disk
+        image = disk.mountImage(
+            os.path.join(self.__spool, "image"),
+            fs_type=disk.FS_EXT3,
+            dir=self.__spool)
         log.debug("mounted image to '%s'" % image.mount_point())
 
         for script in filter(lambda s: s.startswith(script_prefix),
@@ -176,8 +179,6 @@ class Preparer(object):
             stdout, stderr = p.communicate()
             if p.returncode != 0:
                 raise ValueError("script failed", script, p.returncode, stdout, stderr)
-            log.debug("stdout of script:\n%s" % stdout)
-            log.debug("errout of script:\n%s" % stderr)
         except OSError, e:
             raise
 
@@ -189,15 +190,16 @@ class Preparer(object):
     def _prepare_stagings(self, stagings, known_filesystems):
         log.debug("performing the staging operations")
         # first, mount the image
-        from xbe.util.disk import mountImage
-        image = mountImage(os.path.join(self.__spool, "image"), dir=self.__spool)
+        from xbe.util import disk
+        image = disk.mountImage(
+            os.path.join(self.__spool, "image"),
+            fs_type=disk.FS_EXT3,
+            dir=self.__spool)
         log.debug("mounted image to '%s'" % image.mount_point())
 
         for staging in stagings:
-            log.debug(pformat(staging))
             if staging.get("Source") is None:
                 # stage-out operation
-                log.debug("ignoring stageout operation")
                 continue
             creation_flag = staging["CreationFlag"]
             if creation_flag == jsdl.JSDL_CreationFlag_APPEND:

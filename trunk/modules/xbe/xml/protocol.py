@@ -176,6 +176,13 @@ class SecureProtocol(XMLProtocol):
     def __handshake_failed(self):
         log.warn("Message Layer Security handshake *failed*")
         self.__state = "disconnected"
+        try:
+            p = self.protocol
+            del self.protocol
+        except AttributeError:
+            pass
+        else:
+            del p
         
     def __handshake_complete(self):
         from xbe.xml.security import SecurityError
