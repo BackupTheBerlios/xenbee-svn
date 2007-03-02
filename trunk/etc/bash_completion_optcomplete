@@ -1,0 +1,4 @@
+#!/bin/bash
+
+complete -F _optcomplete xbed
+complete -F _optcomplete xbe

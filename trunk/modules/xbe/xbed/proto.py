@@ -92,6 +92,9 @@ class XenBEEClientProtocol(protocol.XMLProtocol):
         return msg
 
     def do_CancelReservation(self, elem, *args, **kw):
+        return self.do_TerminateRequest(elem, *args, **kw)
+
+    def do_TerminateRequest(self, elem, *args, **kw):
         msg = message.MessageBuilder.from_xml(elem.getroottree())
         ticket = TicketStore.getInstance().lookup(msg.ticket())
         if ticket is not None:
@@ -112,25 +115,15 @@ class XenBEEClientProtocol(protocol.XMLProtocol):
     def do_StatusRequest(self, elem, *args, **kw):
 	"""Handle status request."""
         request = message.MessageBuilder.from_xml(elem.getroottree())
-        task_id = request.task_id()
-        status_list = message.StatusList()
-        if task_id is not None:
-            task = TaskManager.getInstance().lookupByID(task_id)
-            if task is not None:
-                status_list.add(task.id(), task.state(), task.getStatusInfo())
-            else:
-                return message.Error(errcode.TASK_LOOKUP_FAILURE, task_id)
+        ticket = TicketStore.getInstance().lookup(request.ticket())
+        if ticket is not None:
+            status_list = message.StatusList()
+            task = ticket.task
+            status_list.add(task.id(), task.state(), task.getStatusInfo())
         else:
             for task in TaskManager.getInstance().tasks.values():
                 status_list.add(task.id(), task.state(), task.getStatusInfo())
         return status_list
-
-    def do_Kill(self, elem, *args, **kw):
-        kill = message.MessageBuilder.from_xml(elem.getroottree())
-        task = self.factory.taskManager.lookupByID(kill.task_id())
-        if not task:
-            return message.Error(errcode.TASK_LOOKUP_FAILURE,
-                                 "no such task: %s" % (tid,),)
 
     def do_ListCache(self, elem, *args, **kw):
         log.debug("retrieving cache list...")

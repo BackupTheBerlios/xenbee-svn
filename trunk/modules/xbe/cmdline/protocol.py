@@ -1,6 +1,7 @@
 """The protocol spoken by the commandline tool."""
 
 import logging, sys, os, os.path
+
 from pprint import pprint
 log = logging.getLogger(__name__)
 
@@ -20,44 +21,108 @@ from xbe.xml.security import X509SecurityLayer, X509Certificate, SecurityError
 from xbe.xml.namespaces import *
 
 from twisted.internet import defer, reactor, task
+from twisted.internet.protocol import BaseProtocol
 
 class ClientXMLProtocol(protocol.XMLProtocol):
+    protocolFactory = None
+    protocol = None
+    
+    def __init__(self, protocolFactory=None, *protocolFactoryArgs, **protocolFactoryKwArgs):
+        if protocolFactory:
+            self.protocolFactory = protocolFactory
+            self.protocolFactoryArgs = protocolFactoryArgs
+            self.protocolFactoryKwArgs = protocolFactoryKwArgs
+    
     def connectionMade(self):
         """send initialization stuff"""
-        log.info("client protocol connected")
-        msg = message.ReservationRequest()
-        self.sendMessage(msg.as_xml())
+        log.debug("client xml protocol connected")
+        if self.protocolFactory is not None:
+            self.protocol = self.protocolFactory(*self.protocolFactoryArgs,
+                                                 **self.protocolFactoryKwArgs)
+            try:
+                factory = self.factory
+            except AttributeError:
+                pass
+            else:
+                self.protocol.factory = factory
+            self.protocol.makeConnection(self)
 
     def do_CacheEntries(self, elem, *args, **kw):
         cache_entries = message.MessageBuilder.from_xml(elem.getroottree())
-        pprint(cache_entries.entries())
+        if self.protocol is not None:
+            return self.protocol.cacheEntriesReceived(cache_entries)
 
     def do_StatusList(self, elem, *args, **kw):
         status_list = message.MessageBuilder.from_xml(elem.getroottree())
-        pprint(status_list.entries())
+        if self.protocol is not None:
+            return self.protocol.statusListReceived(status_list)
         
     def do_ReservationResponse(self, elem, *args, **kw):
-        rmsg = message.MessageBuilder.from_xml(elem.getroottree())
-        jsdl = etree.parse("/root/xenbee/xsdl/example5.xsdl")
-        reactor.callLater(1,
-                          self.sendMessage,
-                          message.ConfirmReservation(rmsg.ticket(),
-                                                     jsdl.getroot(),
-                                                     start_task=True).as_xml())
-        self.statusRequester = task.LoopingCall(self.sendMessage,
-                                                message.StatusRequest().as_xml())
-        self.statusRequester.start(10)
+        response = message.MessageBuilder.from_xml(elem.getroottree())
+        if self.protocol is not None:
+            return self.protocol.reservationResponseReceived(response)
+
+    def do_Error(self, elem, *a, **kw):
+        error = message.MessageBuilder.from_xml(elem.getroottree())
+        if self.protocol is not None:
+            return self.protocol.errorReceived(error)
+
+class BaseCommandLineProtocol(BaseProtocol):
+    connected = 0
+
+    def makeConnection(self, transport):
+        if not isinstance(transport, protocol.XMLProtocol):
+            raise ValueError("sorry, but I expect a XMLProtocol")
+        self.transport = transport   # it should be a XML protocol
+        connected = 1
+        log.debug("command line protcol connected")
+        self.connectionMade()
+
+    def connectionMade(self):
+        pass
+
+    def cacheEntriesReceived(self, cache_entries):
+        pass
+
+    def reservationResponseReceived(self, reservationResponse):
+        pass
+
+    def statusListReceived(self, statusList):
+        pass
+
+    def errorReceived(self, error):
+        pass
+
+    def requestTermination(self, ticket):
+        msg = message.TerminateRequest(ticket)
+        self.transport.sendMessage(msg.as_xml())
+
+    def requestStatus(self, ticket):
+        msg = message.StatusRequest(ticket)
+        self.transport.sendMessage(msg.as_xml())
+
+    def requestReservation(self):
+        msg = message.ReservationRequest()
+        self.transport.sendMessage(msg.as_xml())
+
+    def confirmReservation(self, ticket, jsdl, auto_start=True):
+        msg = message.ConfirmReservation(ticket, jsdl, auto_start)
+        self.transport.sendMessage(msg.as_xml())
+
 
 class ClientProtocolFactory(XenBEEProtocolFactory):
-    def __init__(self, id,
+    def __init__(self, id, stomp_user, stomp_pass,
                  certificate, ca_cert, server_queue,
-                 protocolFactory=None, *a, **kw):
+                 protocolFactory=None,
+                 protocolFactoryArgs=(),
+                 protocolFactoryKwArgs={}):
         XenBEEProtocolFactory.__init__(self,
-                                       "/queue/xenbee.client.%s" % (id), "test-user-1")
+                                       "/queue/xenbee.client.%s" % (id),
+                                       stomp_user, stomp_pass)
         self.protocolFactory = protocolFactory
-        self.protocolFactoryArgs = a
-        self.protocolFactoryKwArgs = kw
-        
+        self.protocolFactoryArgs = protocolFactoryArgs
+        self.protocolFactoryKwArgs = protocolFactoryKwArgs
+
         self.client_id = id
         self.server_queue = server_queue
         self.cert = certificate
@@ -74,7 +139,8 @@ class ClientProtocolFactory(XenBEEProtocolFactory):
             self.xml_protocol = \
                               protocol.SecureProtocol(self.cert,
                                                       self.ca_cert,
-                                                      protocolFactory=self.protocolFactory,
+                                                      None,
+                                                      self.protocolFactory,
                                                       *self.protocolFactoryArgs,
                                                       **self.protocolFactoryKwArgs)
             self.xml_protocol.factory = self
@@ -94,8 +160,10 @@ if __name__ == "__main__":
 #   ca_cert = X509Certificate.load_from_files("/root/xenbee/etc/CA/ca-cert.pem")
     
     f = ClientProtocolFactory(id="2",
+                              stomp_user="test-user-1", stomp_pass="test-pass-1",
                               certificate=cert, ca_cert=ca_cert,
                               server_queue="/queue/xenbee.daemon.1",
-                              protocolFactory=ClientXMLProtocol)
+                              protocolFactory=ClientXMLProtocol,
+                              protocolFactoryArgs=(BaseCommandLineProtocol,))
     reactor.connectTCP("localhost", 61613, f)
     reactor.run()

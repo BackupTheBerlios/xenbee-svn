@@ -29,7 +29,6 @@ class Daemon(singleton.Singleton):
         self.name = name
         self.parser = OptionParser(
             usage="usage: %prog start|stop|status|help [options]", add_help_option=False)
-
         self.__daemon = None
 
     def main(self, argv=sys.argv):

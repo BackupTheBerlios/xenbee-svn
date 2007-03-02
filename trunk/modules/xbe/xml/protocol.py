@@ -155,12 +155,12 @@ class SecureProtocol(XMLProtocol):
     
     def __init__(self, cert, ca_cert,
                  certificate_checker=None,
-                 protocolFactory=None, *a, **kw):
+                 protocolFactory=None, *protocolFactoryArgs, **protocolFactoryKwArgs):
         XMLProtocol.__init__(self)
         if protocolFactory:
             self.protocolFactory = protocolFactory
-            self.protocolFactoryArgs = a
-            self.protocolFactoryKwArgs = kw
+            self.protocolFactoryArgs = protocolFactoryArgs
+            self.protocolFactoryKwArgs = protocolFactoryKwArgs
         self.__certificate_checker = certificate_checker
         self.__cert = cert
         self.__ca_cert = ca_cert

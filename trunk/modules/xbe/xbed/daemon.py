@@ -70,6 +70,13 @@ class XBEDaemon(Daemon):
             "--stomp-pass", dest="stomp_pass", type="string",
             default="Aefith3s",
             help="password for the stomp connection")
+        try:
+            import optcomplete
+        except ImportError:
+            # no optcompletion available
+            pass
+        else:
+            optcomplete.autocomplete(p)
 
     def configure(self):
         self.daemonize = self.opts.daemonize

@@ -262,6 +262,7 @@ class Task(TaskFSM):
             else:
                 msg = str(reason)
             self.log.warn("execution failed: %s" % msg)
+            self.__stop_instance(self.__inst)
         finally:
             self.mtx.release()
 
@@ -328,9 +329,7 @@ class Task(TaskFSM):
             else:
                 msg = str(reason)
             self.log.warn("stage-out failed: %s" % msg)
-
-
-            
+            self.__clean_up_spool()
         finally:
             self.mtx.release()
 
@@ -371,7 +370,7 @@ class Task(TaskFSM):
 
         The spool directory is used to store all necessary information
         about this task:
-	    * kernel, root, swap, additional images
+	    * kernel, root, swap, image
 	    * persistent configuration
 	    * access and security stuff
             * anything other that makes sense
@@ -385,6 +384,12 @@ class Task(TaskFSM):
         # create the directory structure
         os.makedirs(path)
         return path
+
+    def __clean_up_spool(self, *a, **kw):
+        """cleans up the task, i.e. removes the task's spool directory"""
+        self.log.info("removing spool directory")
+        from xbe.util import removeDirCompletely
+        removeDirCompletely(self.__spool)
 
     def _cb_assign_mac_ip_to_inst(self, mac_ip, inst):
         self.log.debug("assigning mac '%s' with IP '%s' to instance" % (mac_ip))
@@ -438,9 +443,9 @@ class Task(TaskFSM):
     def __stop_instance(self, inst):
         """returns a deferred"""
         return inst.stop().addErrback(
-            self.__inst.destroy).addCallback(self.__release_resources)
+            self.__inst.destroy).addCallback(self._cb_release_resources)
 
-    def __release_resources(self, arg):
+    def _cb_release_resources(self, arg):
         self.log.info("releasing acquired resources")
         mac_ip = (self.__inst.config().getMac(), self.__inst.ip)
         d = defer.maybeDeferred(
@@ -453,12 +458,6 @@ class Task(TaskFSM):
         InstanceManager.getInstance().removeInstance(self.__inst)
         del self.__inst.task
         del self.__inst
-
-    def __clean_up_spool(self, *a, **kw):
-        """cleans up the task, i.e. removes the task's spool directory"""
-        self.log.info("removing spool directory")
-        from xbe.util import removeDirCompletely
-        removeDirCompletely(self.__spool)
 
     def __prepare(self):
         self.log.debug("starting preparation of task %s" % (self.id(),))
