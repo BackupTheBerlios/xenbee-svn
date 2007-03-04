@@ -37,7 +37,7 @@ class IComplexActivity(IActivity):
     def join():
         """joins the execution of the activity."""
 
-class Aborted(Exception):
+class ActivityAborted(Exception):
     """An activity may raise this, if it has been aborted."""
     pass
 
@@ -253,11 +253,11 @@ class ThreadedActivity:
                     self.proxy.abort()
                 except:
                     pass
-                try:
-                    self.__mtx.release()
-                    self.join()
-                finally:
-                    self.__mtx.acquire()
+#                try:
+#                    self.__mtx.release()
+#                    self.join()
+#                finally:
+#                    self.__mtx.acquire()
         finally:
             self.__mtx.release()
 
@@ -328,7 +328,7 @@ class ThreadedActivity:
         ctxt.check_abort = self.check_abort
         try:
             rv = self.proxy(ctxt, *self.proxyArgs, **self.proxyKwArgs)
-        except Aborted, e:
+        except ActivityAborted, e:
             try:
                 self.__mtx.acquire()
                 self.__aborted = True
@@ -386,6 +386,7 @@ class ComplexActivity:
         self.__cv = threading.Condition(self.__mtx)
 
         self.__activities = []
+        self.__current = None
         self.__started = False
         self.__failed = False
         self.__finished = False
@@ -453,6 +454,8 @@ class ComplexActivity:
         self.__mtx.acquire()
         # just mark the request, that we want to abort
         self.__do_abort = True
+        if self.__current is not None:
+            self.__current.abort()
         self.__mtx.release()
 
     def getResult(self):
@@ -504,12 +507,12 @@ class ComplexActivity:
         # as long as there are activities, start one after the other
         self.__cv.acquire()
         while len(self.__activities) and not self.done():
-            if md.current is None:
-                md.current = self.__activities.pop(0)
+            if self.__current is None:
+                self.__current = self.__activities.pop(0)
                 try:
                     self.__cv.release()
                     try:
-                        md.current.start(on_finish=notify_me)
+                        self.__current.start(on_finish=notify_me)
                     except Exception, e:
                         self.__mtx.acquire()
                         self.__failed = True
@@ -518,30 +521,30 @@ class ComplexActivity:
                         continue
                 finally:
                     self.__cv.acquire()
-            while not md.current.done():
+            while not self.__current.done():
                 try:
-                    self.__cv.wait(0.5)
-                except Exception:
+                    self.__cv.wait()
+                except Exception, e:
                     pass
                 if self.__do_abort:
-                    md.current.abort()
+                    self.__current.abort()
                     self.__do_abort = False
             if self.__do_abort:
-                md.current.abort()
+                self.__current.abort()
                 self.__do_abort = False
 
             # the activity has finished, check its state
-            if md.current.aborted():
+            if self.__current.aborted():
                 self.__aborted = True
-                self.__result = md.current.getResult()
+                self.__result = self.__current.getResult()
                 break
-            if md.current.finished():
-                self.__result = md.current.getResult()
-                md.current = None
+            if self.__current.finished():
+                self.__result = self.__current.getResult()
+                self.__current = None
                 continue
-            if md.current.failed():
+            if self.__current.failed():
                 self.__failed = True
-                self.__result = md.current.getResult()
+                self.__result = self.__current.getResult()
                 break
         self.__started = False
 
