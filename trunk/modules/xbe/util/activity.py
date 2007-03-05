@@ -11,7 +11,7 @@ import threading
 class IActivity(Interface):
     """I represent a single activity."""
 
-    def start(on_finish=None, *args, **kw):
+    def start():
         """start the activity"""
     def cleanup():
         """run clean up code, if any"""
@@ -30,6 +30,10 @@ class IActivity(Interface):
     def getResult():
         """return the result of the activity"""
 
+class IUndoable(Interface):
+    def undo():
+        """undo the activity"""
+
 class IComplexActivity(IActivity):
     """I represent a more complex activity, that consists of other activities"""
     def add(activity):
@@ -41,12 +45,40 @@ class ActivityAborted(Exception):
     """An activity may raise this, if it has been aborted."""
     pass
 
-class SimpleActivity:
+class Hookable:
+    def __init__(self):
+        self.hooks = {}
+
+    def registerHooks(self, *args):
+        for hook_id in args:
+            if self.hooks.has_key(hook_id):
+                raise ValueError("hook already registered")
+            else:
+                self.hooks[hook_id] = []
+
+    def addHook(self, hook_id, function, *args, **kw):
+        self.hooks[hook_id].append( (function, args, kw) )
+
+    def callHook(self, hook_id, result=None):
+        for hook, args, kw in self.hooks[hook_id]:
+            result = hook(result, *args, **kw)
+        return result
+
+HOOK_START="on-start"
+HOOK_SUCCESS="on-success"
+HOOK_FAILED="on-fail"
+HOOK_ABORTED="on-aborted"
+HOOK_ALL="on-all"
+    
+class SimpleActivity(Hookable):
     implements(IActivity)
 
     activity_func = None
     
     def __init__(self, func=None, args=(), kw={}):
+        Hookable.__init__(self)
+        self.registerHooks(HOOK_START, HOOK_SUCCESS, HOOK_FAILED, HOOK_ABORTED, HOOK_ALL)
+        
         self.__started = False
         self.__failed = False
         self.__finished = False
@@ -71,7 +103,7 @@ class SimpleActivity:
             if self.__aborted:
                 rv += " aborted"
             if self.__result is not None:
-                rv += " with %r" % (self.__result)
+                rv += " with %r" % (repr(self.__result),)
             rv += ">"
         finally:
             self.__mtx.release()
@@ -130,8 +162,9 @@ class SimpleActivity:
         self.__mtx.release()
         return rv
 
-    def start(self, on_finish=None, args=(), kw={}):
+    def start(self):
         try:
+            self.callHook(HOOK_START)
             self.__mtx.acquire()
             if not self.startable():
                 raise RuntimeError("already started")
@@ -151,17 +184,33 @@ class SimpleActivity:
                 self.__result = e
                 self.__failed = True
             else:
-                self.__finished = True
+                if not self.aborted():
+                    self.__finished = True
                 self.__result = rv
             self.__started = False
         finally:
             self.__mtx.release()
-            
-        if on_finish is not None:
+
+        if self.finished():
             try:
-                on_finish(*args, **kw)
+                self.callHook(HOOK_SUCCESS, self.__result)
             except:
                 pass
+        elif self.aborted():
+            try:
+                self.callHook(HOOK_ABORTED, self.__result)
+            except:
+                pass
+        elif self.failed():
+            try:
+                self.callHook(HOOK_FAILED, self.__result)
+            except:
+                pass
+            
+        try:
+            self.callHook(HOOK_ALL, self.__result)
+        except:
+            pass
 
     def cleanup(self):
         pass
@@ -179,16 +228,27 @@ class _ThreadContext:
         return self.__aborted
 
 class ActivityProxy:
+    def __init__(self):
+        self.__mtx = threading.RLock()
+
+    def lock(self):
+        self.__mtx.acquire()
+
+    def unlock(self):
+        self.__mtx.release()
+        
     def __call__(self, context, *args, **kw):
         pass
     
     def abort(self):
         pass
 
-class ThreadedActivity:
-    implements(IActivity)
+class ThreadedActivity(Hookable):
+    implements(IActivity, IUndoable)
     
     def __init__(self, proxy, args=(), kw={}):
+        Hookable.__init__(self)
+        self.registerHooks(HOOK_START, HOOK_SUCCESS, HOOK_FAILED, HOOK_ABORTED, HOOK_ALL)
         self.__started = False
         self.__failed = False
         self.__finished = False
@@ -220,7 +280,7 @@ class ThreadedActivity:
             if self.__aborted:
                 rv += " aborted"
             if self.__result is not None:
-                rv += " with %r" % (self.__result)
+                rv += " with %r" % (repr(self.__result),)
             rv += ">"
         finally:
             self.__mtx.release()
@@ -244,6 +304,16 @@ class ThreadedActivity:
         self.__mtx.release()
         return rv
 
+    def undo(self):
+        try:
+            self.__mtx.acquire()
+            if IUndoable.providedBy(self.proxy):
+                self.proxy.undo()
+            else:
+                raise NotImplementedError("proxy does not support 'undo'")
+        finally:
+            self.__mtx.release()
+
     def abort(self):
         try:
             self.__mtx.acquire()
@@ -253,11 +323,6 @@ class ThreadedActivity:
                     self.proxy.abort()
                 except:
                     pass
-#                try:
-#                    self.__mtx.release()
-#                    self.join()
-#                finally:
-#                    self.__mtx.acquire()
         finally:
             self.__mtx.release()
 
@@ -285,26 +350,14 @@ class ThreadedActivity:
         self.__mtx.release()
         return rv
 
-    def start(self, on_finish=None, args=(), kw={}):
+    def start(self):
         try:
             self.__mtx.acquire()
             if not self.startable():
                 raise RuntimeError("already started")
-            if self.check_abort():
-                # already aborted
-                self.__do_abort = False
-                self.__aborted = True
-                return
-            
             self.__started = True
-            self.__aborted = False
-            self.__failed = False
-            self.__finished = False
 
-            argv = [on_finish]
-            argv.append(args)
-            self.__worker = threading.Thread(target=self.__thread_body,
-                                             args=argv, kwargs=kw)
+            self.__worker = threading.Thread(target=self.__thread_entry)
             self.__worker.start()
         finally:
             self.__mtx.release()
@@ -323,7 +376,30 @@ class ThreadedActivity:
         finally:
             self.__mtx.release()
 
-    def __thread_body(self, on_finish=None, args=(), kw={}):
+    def __thread_entry(self):
+        try:
+            self.callHook(HOOK_START)
+            self.__thread_body()
+            if self.finished():
+                self.callHook(HOOK_SUCCESS, self.__result)
+            elif self.aborted():
+                self.callHook(HOOK_ABORTED, self.__result)
+        except Exception, e:
+            self.__failed = True
+            self.__result = e
+
+        if self.failed():
+            try:
+                self.callHook(HOOK_FAILED)
+            except:
+                pass
+
+        try:
+            self.callHook(HOOK_ALL)
+        except:
+            pass
+
+    def __thread_body(self):
         ctxt = _ThreadContext()
         ctxt.check_abort = self.check_abort
         try:
@@ -332,12 +408,14 @@ class ThreadedActivity:
             try:
                 self.__mtx.acquire()
                 self.__aborted = True
+                self.__started = False
                 self.__do_abort = False
             finally:
                 self.__mtx.release()
         except Exception, e:
             try:
                 self.__mtx.acquire()
+                self.__started = False
                 self.__failed = True
                 self.__result = e
             finally:
@@ -347,12 +425,15 @@ class ThreadedActivity:
                 self.__mtx.acquire()
                 self.__result = rv
                 if ctxt.aborted() or self.check_abort():
+                    self.__started = False
                     self.__aborted = True
                     self.__do_abort = False
                 else:
+                    self.__started = False
                     self.__finished = True
             except Exception, e:
                 self.__result = e
+                self.__started = False
                 self.__failed = True
             finally:
                 self.__mtx.release()
@@ -361,24 +442,20 @@ class ThreadedActivity:
             del self.__worker
         finally:
             self.__mtx.release()
-
-        if on_finish is not None:
-            try:
-                on_finish(*args, **kw)
-            except:
-                pass
             
     def cleanup(self):
         pass
 
-class ComplexActivity:
+class ComplexActivity(Hookable):
     """I am a complex activity.
 
     On starting, i spawn a thread that loops over all my activities.
     """
-    implements(IComplexActivity)
+    implements(IComplexActivity, IUndoable)
 
     def __init__(self, activities=[]):
+        Hookable.__init__(self)
+        self.registerHooks(HOOK_START, HOOK_SUCCESS, HOOK_FAILED, HOOK_ABORTED, HOOK_ALL)
         self.__mtx = threading.RLock()
 
         # let our worker wait on a condition as long as an activity is
@@ -386,6 +463,7 @@ class ComplexActivity:
         self.__cv = threading.Condition(self.__mtx)
 
         self.__activities = []
+        self.__finished_activities = []
         self.__current = None
         self.__started = False
         self.__failed = False
@@ -464,17 +542,26 @@ class ComplexActivity:
         self.__mtx.release()
         return rv
 
-    def start(self, on_finish=None, args=(), kw={}):
+    def start(self):
         try:
             self.__mtx.acquire()
             if not self.startable():
                 raise RuntimeError("already started")
             self.__started = True
-            argv = [on_finish]
-            argv.append(args)
-            self.__worker = threading.Thread(target=self.__thread_body,
-                                             args=argv, kwargs=kw)
+            self.__worker = threading.Thread(target=self.__thread_entry)
             self.__worker.start()
+        finally:
+            self.__mtx.release()
+
+    def undo(self):
+        try:
+            self.__mtx.acquire()
+            while len(self.__finished_activities):
+                # undo the activities in reverse order
+                act = self.__finished_activities.pop(-1)
+                if IUndoable.providedBy(act):
+                    act.undo()
+                self.__activities.insert(0, act)
         finally:
             self.__mtx.release()
 
@@ -494,12 +581,32 @@ class ComplexActivity:
         finally:
             self.__mtx.release()
 
-    def __thread_body(self, on_finish=None, args=(), kw={}):
-        md = threading.local()  # my local data
-        md.current = None
-        
+    def __thread_entry(self):
+        try:
+            self.callHook(HOOK_START)
+            self.__thread_body()
+            if self.finished():
+                self.callHook(HOOK_SUCCESS, self.__result)
+            elif self.aborted():
+                self.callHook(HOOK_ABORTED, self.__result)
+        except Exception, e:
+            self.__failed = True
+            self.__result = e
+
+        if self.failed():
+            try:
+                self.callHook(HOOK_FAILED)
+            except:
+                pass
+
+        try:
+            self.callHook(HOOK_ALL)
+        except:
+            pass
+
+    def __thread_body(self):
         # a function that wakes me up
-        def notify_me():
+        def notify_me(result):
             self.__cv.acquire()
             self.__cv.notify()
             self.__cv.release()
@@ -512,7 +619,8 @@ class ComplexActivity:
                 try:
                     self.__cv.release()
                     try:
-                        self.__current.start(on_finish=notify_me)
+                        self.__current.addHook(HOOK_ALL, notify_me)
+                        self.__current.start()
                     except Exception, e:
                         self.__mtx.acquire()
                         self.__failed = True
@@ -523,7 +631,7 @@ class ComplexActivity:
                     self.__cv.acquire()
             while not self.__current.done():
                 try:
-                    self.__cv.wait()
+                    self.__cv.wait(1)
                 except Exception, e:
                     pass
                 if self.__do_abort:
@@ -538,26 +646,22 @@ class ComplexActivity:
                 self.__aborted = True
                 self.__result = self.__current.getResult()
                 break
-            if self.__current.finished():
+            elif self.__current.finished():
+                # sucessfully finished, take the next one
                 self.__result = self.__current.getResult()
+                self.__finished_activities.append(self.__current)
                 self.__current = None
                 continue
-            if self.__current.failed():
+            elif self.__current.failed():
                 self.__failed = True
                 self.__result = self.__current.getResult()
                 break
         self.__started = False
 
-        if not self.__failed and not self.__aborted:
+        if not self.failed() and not self.aborted():
             self.__finished = True
         del self.__worker
         self.__cv.release()
-
-        if on_finish is not None:
-            try:
-                on_finish(*args, **kw)
-            except:
-                pass
 
     def __repr__(self):
         try:
@@ -575,7 +679,7 @@ class ComplexActivity:
             if self.__failed:
                 rv += " failed"
             if self.__result is not None:
-                rv += " with %r" % (self.__result)
+                rv += " with %r" % (repr(self.__result),)
             rv += ">"
         finally:
             self.__mtx.release()

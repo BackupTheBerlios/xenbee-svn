@@ -96,9 +96,6 @@
 		<xsdl:URI>
 		  file:///srv/xen-images/xenbee/packages/simple-pkg/scripts/setup
 		</xsdl:URI>
-		<xsdl:Hash algorithm="sha1">
-		  d85b87219fa6a4578cb8e796db9ddfb37ce5c772
-		</xsdl:Hash>
 	      </xsdl:Location>
 	    </xsdl:Script>
 	    <xsdl:Script target="cleanup">
@@ -106,9 +103,6 @@
 		<xsdl:URI>
 		  file:///srv/xen-images/xenbee/packages/simple-pkg/scripts/cleanup
 		</xsdl:URI>
-		<xsdl:Hash algorithm="sha1">
-		  9c186fae6046d70e89ce038a6689b550804e9d85
-		</xsdl:Hash>
 	      </xsdl:Location>
 	    </xsdl:Script>
 	  </xsdl:Control>

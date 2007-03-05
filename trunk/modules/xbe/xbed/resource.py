@@ -9,16 +9,6 @@ import logging, time
 log = logging.getLogger(__name__)
 
 import threading
-from twisted.internet import threads, defer
-from twisted.python import failure
-
-class ResourceGatherer(object):
-    """I gather several resources for a given task.
-
-    The gathering process can explicitly stopped by the user or due to
-    some failure.
-    """
-    pass
 
 class PoolException(Exception):
     pass
@@ -56,25 +46,35 @@ class Pool(object):
        * release(obj) -> None
        * add(obj) -> None
        * remove(obj) -> obj
-    """
+       """
 
     def __init__(self):
         """initialize the pool."""
         self.__mtx = threading.RLock()
+        self.__available = threading.Condition(self.__mtx)
         self.__pool = {}
-        self.__pending = []
 
     def __get_free_items(self):
         return filter(lambda i: i.is_free(), self.__pool.values())
 
     def __len__(self):
         """return the size of the pool."""
-        return len(self.__pool)
+        try:
+            self.__mtx.acquire()
+            rv = len(self.__pool)
+        finally:
+            self.__mtx.release()
+        return rv
 
     def __str__(self):
         """print the pool entries and their current status."""
-        from pprint import pformat
-        return pformat(self.__pool)
+        try:
+            self.__mtx.acquire()
+            from pprint import pformat
+            rv = pformat(self.__pool)
+        finally:
+            self.__mtx.release()
+        return rv
     
     def free(self):
         """ free() -> int
@@ -88,7 +88,7 @@ class Pool(object):
             self.__mtx.release()
         return rv
 
-    def acquire(self):
+    def acquire(self, timeout=None):
         """ acquire() -> item
 
         take some element from the pool and mark it as used. If the
@@ -98,20 +98,17 @@ class Pool(object):
         @return defer.Deferred that is called back with the acquired item.
         """
         try:
-            self.__mtx.acquire()
-            free_items = self.__get_free_items()
-            if len(free_items) > 0:
-                # take a free one
-                item = free_items.pop()
-                item.status = _Item.USED
-                deferred = defer.succeed(item.obj)
-            else:
-                # remember the request
-                deferred = defer.Deferred()
-                self.__pending.append(deferred)
+            self.__available.acquire()
+            while self.free() == 0:
+                self.__available.wait(timeout)
+                if not self.free():
+                    raise PoolEmpty("try again later")
+            # take a free item
+            item = self.__get_free_items().pop()
+            item.status = _Item.USED
         finally:
-            self.__mtx.release()
-        return deferred
+            self.__available.release()
+        return item.obj
 
     def release(self, obj):
         """ release(obj) -> None
@@ -120,22 +117,12 @@ class Pool(object):
         raises UnknownItem if the item does not belong to this pool
         """
         try:
-            self.__mtx.acquire()
+            self.__available.acquire()
             if obj not in self.__pool.keys():
                 raise UnknownItem("cant release unknown item", obj)
-
             assert not self.__pool[obj].is_free()
-            # if there  are pending requests,  take the first  one and
-            # give him the object
-            try:
-                deferred = self.__pending.pop()
-            except IndexError:
-                # mark the item as FREE again
-                assert self.__pool[obj].status == _Item.USED
-                self.__pool[obj].status = _Item.FREE
-            else:
-                # object is again (or still) in use
-                deferred.callback(obj)
+            self.__pool[obj].status = _Item.FREE
+            self.__available.notify()
         finally:
             self.__mtx.release()
 
@@ -145,16 +132,14 @@ class Pool(object):
         add an item to the pool
         """
         try:
-            self.__mtx.acquire()
+            self.__available.acquire()
             if obj in self.__pool.keys():
                 raise PoolException("i already have that item", obj)
-            # create a  new item,  that is USED.  In this way,  we can
-            # reuse the 'release' method to handle pending requests.
-            item = _Item(obj, _Item.USED)
+            item = _Item(obj, _Item.FREE)
             self.__pool[obj] = item
-            self.release(obj)
+            self.__available.notify()
         finally:
-            self.__mtx.release()
+            self.__available.release()
         pass
 
     def remove(self, obj):

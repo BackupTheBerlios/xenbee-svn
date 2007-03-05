@@ -87,7 +87,7 @@ class UnPreparer(object):
         # mapping from logical name to mount-point
         known_filesystems = jsdl_doc.get_file_systems()
 
-        # now we can handle the stage in definitions
+        # now we can handle the stage out definitions
         try:
             stagings = jsdl_doc.lookup_path("JobDefinition/JobDescription/"+
                                         "DataStaging")

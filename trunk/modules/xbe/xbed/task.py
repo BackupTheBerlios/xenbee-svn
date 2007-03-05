@@ -59,7 +59,7 @@ class Task(TaskFSM):
     def getStatusInfo(self):
         """Return all possible information about this task in a
         dictionary.
-
+        
         The information returned depends on the current state.
         """
         info = {}

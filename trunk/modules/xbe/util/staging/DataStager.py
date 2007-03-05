@@ -101,7 +101,6 @@ class DataStager:
             self.fp = open(self.tmpdst, "wb")
 	    self.curl.perform()
             self.fp.close()
-            self.curl.close()
 	    self.duration = time.time() - start
 
             os.rename(self.tmpdst, self.dst)
@@ -109,8 +108,15 @@ class DataStager:
             
 	    log.debug("finished retrieving uri: %s: %ds" % (self.src, self.duration))
 	except Exception, e:
-	    log.error("retrieval failed: %s" % str(e))
-            raise
+            if self.aborted():
+                log.info("staging aborted")
+                os.unlink(self.tmpdst)
+                raise StagingAborted("staging aborted", self.src, self.dst)
+            else:
+                log.error("retrieval failed: %s" % str(e))
+                raise
+        finally:
+            self.curl.close()
         return self.dst
 
     def perform_upload(self):
@@ -127,9 +133,14 @@ class DataStager:
 	    dur = time.time() - start
 	    log.debug("finished uploading of %s after %ds" % (self.src, dur))
 	except Exception, e:
-	    log.error("upload failed: %s" % str(e))
-            raise
-	self.curl.close()
+            if self.aborted():
+                log.info("staging aborted")
+                raise StagingAborted("staging aborted", self.src, self.dst)
+            else:
+                log.error("upload failed: %s" % str(e))
+                raise
+        finally:
+            self.curl.close()
         return self.dst
 
     def __perform(self):
@@ -278,4 +289,4 @@ class TempFile:
                 import os
                 os.unlink(self.path)
 
-__all__ = [ 'DataStager', 'FileSetRetriever', 'TempFile' ]
+__all__ = [ 'DataStager', 'FileSetRetriever', 'TempFile', 'StagingError', 'StagingAborted' ]
