@@ -25,6 +25,7 @@ from xbe.util import fsm
 from xbe.xbed.task_fsm import TaskFSM
 from xbe.xbed.daemon import XBEDaemon
 from xbe.xbed.instance import InstanceManager
+from xbe.xbed.task_activity_queue import ActivityQueue
 
 from twisted.internet import reactor, defer, threads
 from twisted.python import failure
@@ -124,6 +125,8 @@ class Task(TaskFSM):
             else:
                 msg = str(reason)
             self.log.info("terminating pending confirmed: %s" % msg)
+            del self.__jsdl_xml
+            del self.__jsdl_doc
         finally:
             self.mtx.release()
 
@@ -155,6 +158,8 @@ class Task(TaskFSM):
             else:
                 msg = str(reason)
             self.log.info("terminating stage-in: %s" % msg)
+            self.mgr.abortActivities(self)
+            self.__clean_up_spool()
         finally:
             self.mtx.release()
 
@@ -179,6 +184,7 @@ class Task(TaskFSM):
         self.mtx.acquire()
         try:
             self.__timestamps["instance-start"] = time.time()
+            self.__configureInstance(self.__inst, self.__jsdl_doc)
             self.__inst.start().addCallback(self.cb_instance_started).\
                                 addErrback(self.failed)
         finally:
@@ -391,19 +397,29 @@ class Task(TaskFSM):
         from xbe.util import removeDirCompletely
         removeDirCompletely(self.__spool)
 
-    def _cb_assign_mac_ip_to_inst(self, mac_ip, inst):
-        self.log.debug("assigning mac '%s' with IP '%s' to instance" % (mac_ip))
+    def _cb_assign_mac_ip_to_inst(self, mac_ip):
+        inst = self.__inst
+        self.log.debug(
+            "assigning mac '%s' with IP '%s' to instance: %s" % (mac_ip[0], mac_ip[1], inst.id()))
         inst.config().setMac(mac_ip[0])
         inst.ip = mac_ip[1]
 
-    def _cb_assign_files_to_inst(self, prepare_result, inst, spool):
-        # image, kernel and probably initrd
-        path = os.path.join(spool, "image")
-        inst.config().addDisk(path, "sda1")
+    def _cb_assign_files_to_inst(self):
+        inst = self.__inst
+        spool = self.__spool
 
-        path = os.path.join(spool, "swap")
-        if os.path.exists(path):
-            inst.config().addDisk(path, "sda2")
+        # images, kernel and probably initrd
+        images = []
+        images.append(os.path.join(spool, "image"))
+        images.append(os.path.join(spool, "swap"))
+        for dir_entry in os.listdir(spool):
+            path = os.path.join(spool, dir_entry)
+            if os.path.isfile(path) and \
+               path.endswith(".img"):
+                images.append(path)
+
+        for ctr in xrange(len(images)):
+            inst.config().addDisk(images[ctr], "sda%d" % (ctr+1,))
         
         path = os.path.join(spool, "kernel")
         inst.config().setKernel(path)
@@ -448,10 +464,9 @@ class Task(TaskFSM):
     def _cb_release_resources(self, arg):
         self.log.info("releasing acquired resources")
         mac_ip = (self.__inst.config().getMac(), self.__inst.ip)
-        d = defer.maybeDeferred(
-            XBEDaemon.getInstance().macAddresses.release, mac_ip)
-        d.addCallback(self.__delete_instance)
-        d.addCallback(lambda x: log.info("resources released"))
+        XBEDaemon.getInstance().macAddresses.release(mac_ip)
+        self.__delete_instance()
+        log.info("resources released")
         return arg
 
     def __delete_instance(self, *a, **kw):
@@ -460,7 +475,7 @@ class Task(TaskFSM):
         del self.__inst
 
     def __prepare(self):
-        self.log.debug("starting preparation of task %s" % (self.id(),))
+        self.log.debug("initiating preparation")
 
         # create the spool directory
         self.__spool = self.__createSpool()
@@ -469,26 +484,40 @@ class Task(TaskFSM):
         self.__inst = InstanceManager.getInstance().newInstance(self.__spool)
         self.__inst.task = self
 
-        # prepare the task (i.e. stage-in)
-        from xbe.xbed import task_preparer
-        preparer = task_preparer.Preparer()
+        from xbe.xbed.task_activities import SetUpActivity, AcquireResourceActivity
+        from xbe.util.activity import ComplexActivity, ThreadedActivity, HOOK_SUCCESS
 
-        d1 = threads.deferToThread(preparer.prepare,
-                                  self.__spool, self.__jsdl_doc)
-        d1.addCallback(self._cb_assign_files_to_inst, self.__inst, self.__spool)
+        mac_pool = XBEDaemon.getInstance().macAddresses
+        mac_acquirer = ThreadedActivity(
+            AcquireResourceActivity(mac_pool))
+        setup_activity = ThreadedActivity(
+            SetUpActivity(self.__spool), (self.__jsdl_doc,))
 
-        # assign a mac address
-        d2 = defer.maybeDeferred(XBEDaemon.getInstance().macAddresses.acquire)
-        d2.addCallback(self._cb_assign_mac_ip_to_inst, self.__inst)
+        complex_activity = ComplexActivity([setup_activity, mac_acquirer])
+        self.mgr.registerActivity(self, complex_activity,
+                                  on_finish=self._cb_stage_in_succeed,
+                                  on_fail=self._eb_stage_in_failed,
+                                  on_abort=None)
 
-        d3 = defer.maybeDeferred(self.__configureInstance, self.__inst, self.__jsdl_doc)
-        deferreds = [d1, d2, d3]
+    def _cb_stage_in_succeed(self, results, *a, **kw):
+        try:
+            self.mtx.acquire()
+            mac_ip = results[1]
+            self._cb_assign_mac_ip_to_inst(mac_ip)
+            self._cb_assign_files_to_inst()
+        finally:
+            self.mtx.release()
+        self.log.debug("stage in completed")
+        self.cb_stage_in_completed()
+
+    def _eb_stage_in_failed(self, results, *a, **kw):
+        try:
+            self.mtx.acquire()
+            self.log.warn(results)
+        finally:
+            self.mtx.release()
+        self.failed()
         
-        dlist = defer.DeferredList(deferreds, consumeErrors=1)
-        dlist.addCallback(self._cb_check_deferred_list)
-        dlist.addCallback(self.cb_stage_in_completed)
-        dlist.addErrback(self.failed)
-
     def __unprepare(self):
         self.log.debug("starting un-preparation")
 
@@ -521,6 +550,7 @@ class TaskManager(singleton.Singleton):
         self.mtx = threading.RLock()
         self.daemon = daemon
         self.observers = [] # they are called when a new task has been created
+        self.activityQueue = ActivityQueue()
 
     def notify(self, task, event):
         for observer, args, kw in self.observers:
@@ -551,6 +581,13 @@ class TaskManager(singleton.Singleton):
             self.notify(task, "removeTask")
         finally:
             self.mtx.release()
+
+    def registerActivity(self, task, activity, on_finish, on_fail, on_abort):
+        self.activityQueue.registerActivity(task, activity,
+                                            on_finish, on_fail, on_abort)
+
+    def abortActivities(self, task):
+        self.activityQueue.abortActivities(task)
 
     def lookupByID(self, id):
         """Return the task for the given ID.

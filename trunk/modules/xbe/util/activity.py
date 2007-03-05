@@ -470,7 +470,7 @@ class ComplexActivity(Hookable):
         self.__finished = False
         self.__do_abort = False
         self.__aborted = False
-        self.__result = None
+        self.__results = []
         
         self.add_many(activities)
 
@@ -538,7 +538,7 @@ class ComplexActivity(Hookable):
 
     def getResult(self):
         self.__mtx.acquire()
-        rv = self.__result
+        rv = self.__results
         self.__mtx.release()
         return rv
 
@@ -586,12 +586,12 @@ class ComplexActivity(Hookable):
             self.callHook(HOOK_START)
             self.__thread_body()
             if self.finished():
-                self.callHook(HOOK_SUCCESS, self.__result)
+                self.callHook(HOOK_SUCCESS, self.__results)
             elif self.aborted():
-                self.callHook(HOOK_ABORTED, self.__result)
+                self.callHook(HOOK_ABORTED, self.__results)
         except Exception, e:
             self.__failed = True
-            self.__result = e
+            self.__results.append(e)
 
         if self.failed():
             try:
@@ -644,17 +644,17 @@ class ComplexActivity(Hookable):
             # the activity has finished, check its state
             if self.__current.aborted():
                 self.__aborted = True
-                self.__result = self.__current.getResult()
+                self.__results.append(self.__current.getResult())
                 break
             elif self.__current.finished():
                 # sucessfully finished, take the next one
-                self.__result = self.__current.getResult()
+                self.__results.append(self.__current.getResult())
                 self.__finished_activities.append(self.__current)
                 self.__current = None
                 continue
             elif self.__current.failed():
                 self.__failed = True
-                self.__result = self.__current.getResult()
+                self.__results.append(self.__current.getResult())
                 break
         self.__started = False
 
@@ -678,8 +678,8 @@ class ComplexActivity(Hookable):
                 rv += " aborted"
             if self.__failed:
                 rv += " failed"
-            if self.__result is not None:
-                rv += " with %r" % (repr(self.__result),)
+            if len(self.__results):
+                rv += " with %r" % (repr(self.__results),)
             rv += ">"
         finally:
             self.__mtx.release()

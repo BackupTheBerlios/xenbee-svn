@@ -5,7 +5,7 @@
    
 """
 
-import subprocess, tempfile, os, errno, time
+import subprocess, tempfile, os, errno, time, random
 from xbe.util.exceptions import ProcessError
 
 try:
@@ -93,7 +93,6 @@ class Image(object):
     def __umount(self):
         try:
             mount_point = self.__mount_point
-            del self.__mount_point
         except AttributeError:
             raise NotMountedException()
         try:
@@ -104,13 +103,12 @@ class Image(object):
                 raise ProcessError(p.returncode, "umount", stderr, stdout)
         except OSError, e:
             raise RuntimeError("'umount' could not be called", e)
-        except subprocess.CalledProcessError, e:
-            raise RuntimeError("'umount' failed", e)
         except:
             raise
+        del self.__mount_point
         os.rmdir(mount_point)
 
-    def umount(self, retries=5):
+    def umount(self, retries=15):
         """U(n)mount the image.
 
         If the image is currently mounted, umount it and delete the
@@ -118,17 +116,39 @@ class Image(object):
 
         raises NotMountedException if the image is not currently mounted.
         """
+
+        # the following has been taken from twisted.internet.protocol.ReconnectingClientFactory
+        maxDelay = 3600
+        initialDelay = 1.0
+        # Note: These highly sensitive factors have been precisely measured by
+        # the National Institute of Science and Technology.  Take extreme care
+        # in altering them, or you may damage your Internet!
+        factor = 2.7182818284590451 # (math.e)
+        # Phi = 1.6180339887498948 # (Phi is acceptable for use as a
+        # factor if e is too large for your application.)
+        jitter = 0.11962656492 # molar Planck constant times c, Jule meter/mole
+
+        delay = initialDelay
+
+        def retry(retries, delay):
+            if retries < 0:
+                return False, retries, delay
+            retries -= 1
+            delay = min(delay * factor, maxDelay)
+            if jitter:
+                delay = random.normalvariate(delay, delay * jitter)
+            time.sleep(delay)
+            return True, retries, delay
+                                        
         while True:
             try:
                 self.__umount()
             except NotMountedException:
                 raise
-            except OSError, e:
-                if e.errno == errno.EINTR:
-                    time.sleep(1)
-                else:
-                    retries -= 1
-                    if retries < 0: raise
+            except Exception, e:
+                do, retries, delay = retry(retries, delay)
+                if not do:
+                    raise
 
 def guess_fs_type(path):
     """Try to guess the file system type using the 'file' command.

@@ -79,13 +79,16 @@ class BaseCommandLineProtocol(BaseProtocol):
         self.connectionMade()
 
     def connectionMade(self):
-        pass
+        self.requestReservation()
 
     def cacheEntriesReceived(self, cache_entries):
         pass
 
     def reservationResponseReceived(self, reservationResponse):
-        pass
+        self.ticket = reservationResponse.ticket()
+        print "your ticket:", self.ticket
+        self.confirmReservation(self.ticket, etree.parse("/root/xenbee/xsdl/example4.xsdl").getroot())
+        reactor.callLater(5, self.requestTermination, self.ticket)
 
     def statusListReceived(self, statusList):
         pass

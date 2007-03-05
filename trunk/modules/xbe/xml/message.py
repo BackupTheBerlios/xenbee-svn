@@ -886,3 +886,29 @@ class ExecuteTask(BaseServerMessage):
         return cls(jsdl, task_id)
     from_xml = classmethod(from_xml)
 MessageBuilder.register(ExecuteTask)
+
+class TerminateTask(BaseServerMessage):
+    """Terminate the executing task."""
+    tag = XBE("TerminateTask")
+
+    def __init__(self, task_id):
+        BaseServerMessage.__init__(self)
+        self.__task_id = task_id
+
+    def task_id(self):
+        return self.__task_id
+
+    def as_xml(self):
+        root, hdr, body = MessageBuilder.xml_parts()
+        elem = etree.SubElement(body, self.tag)
+        elem.attrib["task-id"] = str(self.task_id())
+        return root
+
+    def from_xml(cls, root, hdr, body):
+        elem = body.find(cls.tag)
+        if elem is None:
+            raise MessageParserError("could not find 'TerminateTask' element")
+        task_id = elem.attrib["task-id"]
+        return cls(task_id)
+    from_xml = classmethod(from_xml)
+MessageBuilder.register(TerminateTask)

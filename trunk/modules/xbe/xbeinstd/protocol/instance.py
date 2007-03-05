@@ -65,7 +65,21 @@ class XBEInstProtocol(xmlprotocol.XMLProtocol):
 
     def do_ExecuteTask(self, xml, *a, **kw):
         msg = message.MessageBuilder.from_xml(xml.getroottree())
+        self.task_id = msg.task_id()
         return self.do_JobDefinition(msg.jsdl())
+
+    def do_TerminateTask(self, xml, *a, **kw):
+        msg = message.MessageBuilder.from_xml(xml.getroottree())
+        if msg.task_id() != self.task_id():
+            return message.Error(errcode.ILLEGAL_REQUEST, "task-id does not match")
+
+        try:
+            p = self.proc
+        except AttributeError:
+            pass
+        else:
+            p.process.signalProcess("KILL")
+        self.sig_TERM(signal.SIGTERM, None)
         
     def do_JobDefinition(self, job_def, *a, **kw):
         try:
@@ -155,8 +169,8 @@ class XBEInstProtocol(xmlprotocol.XMLProtocol):
 
                 self.proc = XBEProcessProtocol(self)
                 self.proc.cmdline = argv
-                reactor.spawnProcess(self.proc, argv[0], argv, env=environ,
-                                     path=wd, childFDs={
+                self.proc.process = reactor.spawnProcess(self.proc, argv[0], argv, env=environ,
+                                                         path=wd, childFDs={
                     0: child_streams[0].fileno(),
                     1: child_streams[1].fileno(),
                     2: child_streams[2].fileno()
