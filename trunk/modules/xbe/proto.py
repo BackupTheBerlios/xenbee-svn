@@ -40,31 +40,28 @@ class XenBEEProtocol(StompClient):
 	log.debug("successfully connected to STOMP server, avaiting your commands.")
         self.factory.stompConnectionMade(self)
 
-        log.error("TODO: move the subscription code to the client protocol")
+        log.debug("TODO: move the subscription code to the client protocol")
         self.setReplyTo(self.factory.queue)
 	self.subscribe(self.factory.queue, auto_ack=True, exclusive=True)
 
     def _messageReceived(self, msg):
-        # check if we got an advisory from the activemq server
-#        log.debug("got message:\n%s" % (str(msg),))
-
         # use the reply-to field
         try:
             replyTo = msg.header["reply-to"]
-            if replyTo == "null":
-                raise ValueError
         except (KeyError, ValueError):
 	    log.warn("message without reply-to received, throwing away")
             return
+        else:
+            if replyTo == "null":
+                log.warn("got message with 'null' reply-to, throwing away")
+                return
 
         # dispatch the message to another protocol using the MOM identifier
         pattern = r'^/(queue|topic)/'
         momIdentifier = re.sub(pattern, "", replyTo)
         components = momIdentifier.split(".", 2)
         try:
-#            log.debug("dispatching: " + momIdentifier)
             transport = XMLTransport(StompTransport(self, replyTo))
-#            log.debug("transport type: %r" % transport)
             self.factory.dispatchToProtocol(transport, msg.body, *components)
         except Exception, e:
             log.error(

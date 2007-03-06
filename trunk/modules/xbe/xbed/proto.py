@@ -96,13 +96,14 @@ class XenBEEClientProtocol(protocol.XMLProtocol):
 
     def do_TerminateRequest(self, elem, *args, **kw):
         msg = message.MessageBuilder.from_xml(elem.getroottree())
+        log.debug(str(msg.ticket()))
         ticket = TicketStore.getInstance().lookup(msg.ticket())
         if ticket is not None:
             ticket.task.terminate("UserCancel")
             del ticket.task
             TicketStore.getInstance().release(ticket)
         else:
-            return message.Error(errcode.TICKET_INVALID)
+            return message.Error(errcode.TICKET_INVALID, msg.ticket())
 
     def do_StartRequest(self, elem, *a, **kw):
         msg = message.MessageBuilder(elem.getroottree())
@@ -110,14 +111,14 @@ class XenBEEClientProtocol(protocol.XMLProtocol):
         if ticket is not None:
             ticket.task.start()
         else:
-            return message.Error(errcode.TICKET_INVALID)
+            return message.Error(errcode.TICKET_INVALID, msg.ticket())
 
     def do_StatusRequest(self, elem, *args, **kw):
 	"""Handle status request."""
         request = message.MessageBuilder.from_xml(elem.getroottree())
         ticket = TicketStore.getInstance().lookup(request.ticket())
+        status_list = message.StatusList()
         if ticket is not None:
-            status_list = message.StatusList()
             task = ticket.task
             status_list.add(task.id(), task.state(), task.getStatusInfo())
         else:
@@ -131,7 +132,12 @@ class XenBEEClientProtocol(protocol.XMLProtocol):
             msg = message.CacheEntries()
             for uid, uri, hash, type, desc in entries:
                 logical_uri = "cache://xbe-file-cache/%s" % (str(uid))
-                msg.add(logical_uri, hash, type, desc)
+                meta = {
+                    "hash": hash,
+                    "type": type,
+                    "description": desc,
+                }
+                msg.add(logical_uri, meta)
             return msg
         self.factory.cache.getEntries(
             ).addCallback(__buildMessage).addBoth(

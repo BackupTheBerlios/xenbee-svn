@@ -2,19 +2,11 @@
 
 import logging, sys, os, os.path
 
-from pprint import pprint
+from pprint import pprint, pformat
 log = logging.getLogger(__name__)
 
-# log to stderr
-logging.currentframe = lambda: sys._getframe(3)
-_stderr = logging.StreamHandler(sys.stderr)
-_stderr.setLevel(logging.DEBUG)
-_stderr.setFormatter(logging.Formatter('%(name)s:%(lineno)d: %(levelname)-8s %(message)s'))
-logging.getLogger().addHandler(_stderr)
-logging.getLogger().setLevel(logging.DEBUG)
-
 from xbe.stomp.proto import StompTransport
-from xbe.xml import xsdl, message, protocol
+from xbe.xml import xsdl, message, protocol, errcode
 from xbe.proto import XenBEEProtocolFactory, XenBEEProtocol
 from lxml import etree
 from xbe.xml.security import X509SecurityLayer, X509Certificate, SecurityError
@@ -79,18 +71,15 @@ class BaseCommandLineProtocol(BaseProtocol):
         self.connectionMade()
 
     def connectionMade(self):
-        self.requestReservation()
-
-    def cacheEntriesReceived(self, cache_entries):
         pass
 
     def reservationResponseReceived(self, reservationResponse):
-        self.ticket = reservationResponse.ticket()
-        print "your ticket:", self.ticket
-        self.confirmReservation(self.ticket, etree.parse("/root/xenbee/xsdl/example4.xsdl").getroot())
-        reactor.callLater(5, self.requestTermination, self.ticket)
+        pass
 
     def statusListReceived(self, statusList):
+        pass
+
+    def cacheEntriesReceived(self, cache_entries):
         pass
 
     def errorReceived(self, error):
@@ -104,6 +93,10 @@ class BaseCommandLineProtocol(BaseProtocol):
         msg = message.StatusRequest(ticket)
         self.transport.sendMessage(msg.as_xml())
 
+    def requestCacheList(self):
+        msg = message.ListCache()
+        self.transport.sendMessage(msg.as_xml())
+
     def requestReservation(self):
         msg = message.ReservationRequest()
         self.transport.sendMessage(msg.as_xml())
@@ -112,6 +105,9 @@ class BaseCommandLineProtocol(BaseProtocol):
         msg = message.ConfirmReservation(ticket, jsdl, auto_start)
         self.transport.sendMessage(msg.as_xml())
 
+class SimpleCommandLineProtocol(BaseCommandLineProtocol):
+    def errorReceived(self, error):
+        print >>sys.stderr, repr(error)
 
 class ClientProtocolFactory(XenBEEProtocolFactory):
     def __init__(self, id, stomp_user, stomp_pass,
@@ -167,6 +163,6 @@ if __name__ == "__main__":
                               certificate=cert, ca_cert=ca_cert,
                               server_queue="/queue/xenbee.daemon.1",
                               protocolFactory=ClientXMLProtocol,
-                              protocolFactoryArgs=(BaseCommandLineProtocol,))
+                              protocolFactoryArgs=(SimpleCommandLineProtocol,))
     reactor.connectTCP("localhost", 61613, f)
     reactor.run()

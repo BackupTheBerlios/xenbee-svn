@@ -21,12 +21,12 @@ class TestServerMessages(unittest.TestCase):
         xml = msg.as_xml()
         elem = xml.find(XBE("MessageBody")+"/"+msg.tag)
         self.assertNotEqual(elem, None)
-        self.assertEqual(int(elem.attrib[XBE("code")]), errcode.OK)
+        self.assertEqual(int(elem.attrib["code"]), errcode.OK)
         self.assertEqual(elem.findtext(XBE("Description")), errcode.info[errcode.OK][1])
         self.assertEqual(elem.findtext(XBE("Message")), "additional message")
 
     def test_Error_from_xml(self):
-        xml = """<xbe:Message xmlns:xbe="http://www.example.com/schemas/xbe/2007/01/xbe"><xbe:MessageHeader/><xbe:MessageBody><xbe:Error xbe:code="200"><xbe:Name>OK</xbe:Name><xbe:Description>everything ok</xbe:Description><xbe:Message>additional message</xbe:Message></xbe:Error></xbe:MessageBody></xbe:Message>"""
+        xml = """<xbe:Message xmlns:xbe="http://www.example.com/schemas/xbe/2007/01/xbe"><xbe:MessageHeader/><xbe:MessageBody><xbe:Error code="200"><xbe:Name>OK</xbe:Name><xbe:Description>everything ok</xbe:Description><xbe:Message>additional message</xbe:Message></xbe:Error></xbe:MessageBody></xbe:Message>"""
         msg = message.MessageBuilder.from_xml(etree.fromstring(xml))
         self.assertTrue(isinstance(msg, message.Error))
         self.assertEqual(msg.code(), errcode.OK)
@@ -35,29 +35,26 @@ class TestServerMessages(unittest.TestCase):
     def test_CacheEntries_as_xml(self):
         msg = message.CacheEntries()
         msg.add(uri="http://www.example.com/entry/1",
-                hash="01234",
-                type="data",
-                description="example description 1")
+                meta={ "hash": "01234",
+                       "type": "data",
+                       "description": "example description 1", })
+        
         msg.add(uri="http://www.example.com/entry/2",
-                hash="43210",
-                type="image",
-                description="example description 2")
+                meta={ "hash": "43210",
+                       "type": "image",
+                       "description": "example description 2",})
         xml = msg.as_xml()
         elem = xml.find(XBE("MessageBody")+"/"+msg.tag)
         self.assertNotEqual(elem, None)
-        entry1, entry2 = elem.findall(XBE("Entry"))
-        self.assertNotEqual(entry1, None)
-        self.assertNotEqual(entry2, None)
+
+        entries = elem.findall(XBE("Entry"))
+        self.assertTrue(len(entries) == 2)
+
+        entries.sort(lambda a,b: cmp(a.findtext(XBE.URI), b.findtext(XBE.URI)))
+        entry1, entry2 = entries
 
         self.assertEqual(entry1.findtext(XBE.URI), "http://www.example.com/entry/1")
-        self.assertEqual(entry1.findtext(XBE.HashValue), "01234")
-        self.assertEqual(entry1.findtext(XBE.Type), "data")
-        self.assertEqual(entry1.findtext(XBE.Description), "example description 1")
-        
         self.assertEqual(entry2.findtext(XBE.URI), "http://www.example.com/entry/2")
-        self.assertEqual(entry2.findtext(XBE.HashValue), "43210")
-        self.assertEqual(entry2.findtext(XBE.Type), "image")
-        self.assertEqual(entry2.findtext(XBE.Description), "example description 2")
 
     def test_CacheEntries_from_xml(self):
         xml = """
@@ -66,47 +63,40 @@ class TestServerMessages(unittest.TestCase):
               <xbe:MessageBody>
                 <xbe:CacheEntries>
                   <xbe:Entry>
-                   <xbe:HashValue>01234</xbe:HashValue>
-                   <xbe:Type>data</xbe:Type>
-                   <xbe:URI>http://www.example.com/entry/1</xbe:URI>
-                   <xbe:Description>example description 1</xbe:Description>
-                  </xbe:Entry>
-                  <xbe:Entry>
-                   <xbe:HashValue>43210</xbe:HashValue>
-                   <xbe:Type>image</xbe:Type>
-                   <xbe:URI>http://www.example.com/entry/2</xbe:URI>
-                   <xbe:Description>example description 2</xbe:Description>
+                    <xbe:URI>http://www.example.com/entry/1</xbe:URI>
+                    <xbe:Meta>
+                      <xbe:Dict>
+                         <xbe:Entry key="hash">01234</xbe:Entry>
+                         <xbe:Entry key="type">data</xbe:Entry>
+                         <xbe:Entry key="description">example description 1</xbe:Entry>
+                      </xbe:Dict>   
+                    </xbe:Meta>
                   </xbe:Entry>
                 </xbe:CacheEntries>
             </xbe:MessageBody>
         </xbe:Message>"""
         msg = message.MessageBuilder.from_xml(xml)
         self.assertTrue(isinstance(msg, message.CacheEntries))
-        entry1, entry2 = msg.entries()
+        entries = msg.entries()
+        self.assertEqual(entries.keys()[0], "http://www.example.com/entry/1")
+        entry1 = entries["http://www.example.com/entry/1"]
         
-        self.assertEqual(len(entry1.keys()), 4)
-        self.assertEqual(len(entry2.keys()), 4)
-        
-        self.assertEqual(entry1["URI"], "http://www.example.com/entry/1")
-        self.assertEqual(entry1["HashValue"], "01234")
-        self.assertEqual(entry1["Type"], "data")
-        self.assertEqual(entry1["Description"], "example description 1")
-
-        self.assertEqual(entry2["URI"], "http://www.example.com/entry/2")
-        self.assertEqual(entry2["HashValue"], "43210")
-        self.assertEqual(entry2["Type"], "image")
-        self.assertEqual(entry2["Description"], "example description 2")
+        self.assertEqual(entry1["hash"], "01234")
+        self.assertEqual(entry1["type"], "data")
+        self.assertEqual(entry1["description"], "example description 1")
 
     def test_StatusList_as_xml(self):
         msg = message.StatusList()
-        msg.add(id="task-1", submitted_tstamp=1171983221, state="Pending")
+        msg.add(id="task-1", state="Pending", meta={"submit-time": 1171983221,
+                                                    "start-time": 1171983221,
+                                                    "end-time": 1171983221,
+                                                    "foo": {1: "a"},
+                                                    })
         xml = msg.as_xml()
         elem = xml.find(XBE("MessageBody")+"/"+msg.tag)
         self.assertNotEqual(elem, None)
-        self.assertEqual(elem.findtext(XBE("Status/TaskID")), "task-1")
-        self.assertEqual(int(elem.findtext(XBE("Status/Submitted"))), 1171983221)
-        state = bes.toXBETaskState(elem.find(XBE("Status/State"))[0])
-        self.assertEqual(state, "Pending")
+        status = elem.getchildren()[0]
+        self.assertEqual(status.attrib["task-id"], "task-1")
 
     def test_StatusList_from_xml(self):
         xml = """
@@ -114,13 +104,14 @@ class TestServerMessages(unittest.TestCase):
            <xbe:MessageHeader/>
            <xbe:MessageBody>
              <xbe:StatusList>
-               <xbe:Status>
-                 <xbe:Submitted>1171983221</xbe:Submitted>
-                 <xbe:TaskID>task-1</xbe:TaskID>
-                 <xbe:State>
-                   <bes:ActivityStatus xmlns:bes="http://schemas.ggf.org/bes/2006/08/bes-activity"
+               <xbe:Status task-id="task-1">
+                 <bes:ActivityStatus xmlns:bes="http://schemas.ggf.org/bes/2006/08/bes-activity"
                                        state="Pending"/>
-                 </xbe:State>
+                 <xbe:Meta>
+                   <xbe:Dict>
+                      <xbe:Entry key="submit-time">1171983221</xbe:Entry>
+                   </xbe:Dict>   
+                 </xbe:Meta>
                </xbe:Status>
              </xbe:StatusList>
            </xbe:MessageBody>
@@ -128,9 +119,9 @@ class TestServerMessages(unittest.TestCase):
         """
         msg = message.MessageBuilder.from_xml(etree.fromstring(xml))
         self.assertTrue(isinstance(msg, message.StatusList))
-        (entry,) = msg.entries()
-        self.assertEqual(entry["TaskID"], "task-1")
-        self.assertEqual(entry["Submitted"], "1171983221")
+        self.assertTrue("task-1" in msg.entries().keys())
+        entry = msg.entries()["task-1"]
+        self.assertEqual(entry["Meta"]["submit-time"], "1171983221")
         self.assertEqual(entry["State"], "Pending")
 
 class TestInstanceMessages(unittest.TestCase):
@@ -147,7 +138,7 @@ class TestInstanceMessages(unittest.TestCase):
         elem = xml.find(XBE("MessageBody")+"/"+msg.tag)
         elem = xml.find(XBE("MessageBody/InstanceAvailable"))
         self.assertNotEqual(elem, None)
-        self.assertEqual(elem.attrib[XBE("inst-id")], "test-instance-id")
+        self.assertEqual(elem.attrib["inst-id"], "test-instance-id")
 
         ip = elem.findtext(XBE("NodeInformation/Network/IPList/IP"))
         self.assertEqual(ip, "127.0.0.1")
@@ -157,7 +148,7 @@ class TestInstanceMessages(unittest.TestCase):
         <xbe:Message xmlns:xbe="http://www.example.com/schemas/xbe/2007/01/xbe">
           <xbe:MessageHeader/>
           <xbe:MessageBody>
-            <xbe:InstanceAvailable xbe:inst-id="test-instance-id">
+            <xbe:InstanceAvailable inst-id="test-instance-id">
               <xbe:NodeInformation>
                 <xbe:Network>
                   <xbe:IPList>
@@ -173,38 +164,12 @@ class TestInstanceMessages(unittest.TestCase):
         self.assertEqual(msg.ips(), ["127.0.0.1"])
         self.assertEqual(msg.inst_id(), "test-instance-id")
         
-    def test_TaskFinished_as_xml(self):
-        msg = message.TaskFinished(inst_id="instance 1", exitcode=1, task_id="task 2")
-        xml = msg.as_xml()
-        elem = xml.find(XBE("MessageBody")+"/"+msg.tag)
-        self.assertNotEqual(elem, None)
-        self.assertEqual(elem.attrib.get(XBE("inst-id")), "instance 1")
-        self.assertEqual(elem.attrib.get(XBE("task-id")), "task 2")
-        self.assertEqual(int(elem.findtext(XBE("ExitCode"))), 1)
-
-    def test_TaskFinished_from_xml(self):
-        xml = """
-        <xbe:Message xmlns:xbe="http://www.example.com/schemas/xbe/2007/01/xbe">
-          <xbe:MessageHeader/>
-          <xbe:MessageBody>
-            <xbe:TaskFinished xbe:inst-id="instance 1" xbe:task-id="task 2">
-               <xbe:ExitCode>1</xbe:ExitCode>
-            </xbe:TaskFinished>
-          </xbe:MessageBody>
-        </xbe:Message>
-        """
-        msg = message.MessageBuilder.from_xml(xml)
-        self.assertTrue(isinstance(msg, message.TaskFinished))
-        self.assertEqual(msg.task_id(), "task 2")
-        self.assertEqual(msg.inst_id(), "instance 1")
-        self.assertEqual(msg.exitcode(), 1)
-
     def test_InstanceAlive_as_xml(self):
         msg = message.InstanceAlive(inst_id="instance 1", uptime=1171983221)
         xml = msg.as_xml()
         elem = xml.find(XBE("MessageBody")+"/"+msg.tag)
         self.assertNotEqual(elem, None)
-        self.assertEqual(elem.attrib.get(XBE("inst-id")), "instance 1")
+        self.assertEqual(elem.attrib.get("inst-id"), "instance 1")
         self.assertEqual(int(elem.findtext(XBE("Uptime"))), 1171983221)
 
     def test_InstanceAlive_from_xml(self):
@@ -212,7 +177,7 @@ class TestInstanceMessages(unittest.TestCase):
         <xbe:Message xmlns:xbe="http://www.example.com/schemas/xbe/2007/01/xbe">
           <xbe:MessageHeader/>
           <xbe:MessageBody>
-            <xbe:InstanceAlive xbe:inst-id="instance 1">
+            <xbe:InstanceAlive inst-id="instance 1">
               <xbe:Uptime>1171983221</xbe:Uptime>
             </xbe:InstanceAlive>
           </xbe:MessageBody>
@@ -251,63 +216,20 @@ class TestClientMessages(unittest.TestCase):
         msg = message.MessageBuilder.from_xml(xml)
         self.assertTrue(isinstance(msg, message.ListCache))
 
-    def test_Kill_as_xml(self):
-        msg = message.Kill("task 1", signal=15)
-        xml = msg.as_xml()
-        elem = xml.find(XBE("MessageBody")+"/"+msg.tag)
-        self.assertNotEqual(elem, None)
-
-        self.assertEqual(int(elem.attrib[XBE("signal")]), 15)
-        self.assertEqual(elem.findtext(XBE("Task")), "task 1")
-
-    def test_Kill_from_xml(self):
-        xml = """
-        <xbe:Message xmlns:xbe="http://www.example.com/schemas/xbe/2007/01/xbe">
-          <xbe:MessageHeader/>
-          <xbe:MessageBody>
-            <xbe:Kill xbe:signal="15">
-              <xbe:Task>task 2</xbe:Task>
-            </xbe:Kill>
-          </xbe:MessageBody>
-        </xbe:Message>"""
-        msg = message.MessageBuilder.from_xml(etree.fromstring(xml))
-        self.assertTrue(isinstance(msg, message.Kill))
-        self.assertEqual(msg.signal(), 15)
-        self.assertEqual(msg.task_id(), "task 2")
-
-    def test_Kill_illegal_signals(self):
-        try:
-            message.Kill("task 1", signal="a")
-        except ValueError:
-            pass
-        else:
-            self.fail("expected a ValueError, since signal 'a' is illegal")
-
     def test_StatusRequest_as_xml(self):
-        msg = message.StatusRequest("task 1")
+        msg = message.StatusRequest("ticket 1")
         xml = msg.as_xml()
         elem = xml.find(XBE("MessageBody")+"/"+msg.tag)
         self.assertNotEqual(elem, None)
-        self.assertEqual(elem.attrib[XBE("task-id")], "task 1")
-
-    def test_StatusRequest_as_xml_no_task_id(self):
-        msg = message.StatusRequest()
-        xml = msg.as_xml()
-        elem = xml.find(XBE("MessageBody")+"/"+msg.tag)
-        self.assertNotEqual(elem, None)
-        self.assertEqual(elem.attrib.get(XBE("task-id")), None)
+        res = elem.find(XBE("Reservation/Ticket"))
+        self.assertNotEqual(res, None)
+        self.assertEqual(res.text, "ticket 1")
 
     def test_StatusRequest_from_xml(self):
-        xml = """<xbe:Message xmlns:xbe="http://www.example.com/schemas/xbe/2007/01/xbe"><xbe:MessageHeader/><xbe:MessageBody><xbe:StatusRequest xbe:task-id="task-1"/></xbe:MessageBody></xbe:Message>"""
+        xml = """<xbe:Message xmlns:xbe="http://www.example.com/schemas/xbe/2007/01/xbe"><xbe:MessageHeader/><xbe:MessageBody><xbe:StatusRequest><xbe:Reservation><xbe:Ticket>ticket-1</xbe:Ticket></xbe:Reservation></xbe:StatusRequest></xbe:MessageBody></xbe:Message>"""
         msg = message.MessageBuilder.from_xml(xml)
         self.assertTrue(isinstance(msg, message.StatusRequest))
-        self.assertEqual(msg.task_id(), "task-1")
-
-    def test_StatusRequest_from_xml_no_task_id(self):
-        xml = """<xbe:Message xmlns:xbe="http://www.example.com/schemas/xbe/2007/01/xbe"><xbe:MessageHeader/><xbe:MessageBody><xbe:StatusRequest/></xbe:MessageBody></xbe:Message>"""
-        msg = message.MessageBuilder.from_xml(xml)
-        self.assertTrue(isinstance(msg, message.StatusRequest))
-        self.assertEqual(msg.task_id(), None)
+        self.assertEqual(msg.ticket(), "ticket-1")
 
 def suite():
     s1 = unittest.makeSuite(TestServerMessages, 'test')

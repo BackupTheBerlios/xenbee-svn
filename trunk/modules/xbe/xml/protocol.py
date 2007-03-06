@@ -56,8 +56,18 @@ class XMLProtocol(object):
         pass
     
     def dispatch(self, elem, *args, **kw):
-        method = getattr(self, "do_%s" % (decodeTag(elem.tag)[1]))
-        return method(elem, *args, **kw)
+        try:
+            method = getattr(self, "do_%s" % (decodeTag(elem.tag)[1]))
+        except AttributeError:
+            log.warn("no such method: do_%s" % (decodeTag(elem.tag)[1]))
+        else:
+            try:
+                rv = method(elem, *args, **kw)
+            except Exception, e:
+                from traceback import format_exc
+                log.warn("exception during message handling: %s\n%s", e, format_exc(e))
+            else:
+                return rv
 
     def addUnderstood(self, tag):
         if tag not in self.__understood:
@@ -131,11 +141,8 @@ class XMLProtocol(object):
             return self.dispatch(msg[0], *args, **kw)
 
     def do_Error(self, err, *args, **kw):
-        log.error("got error:\n%s" % (etree.tostring(err)))
-        log.error("args: %s" % pformat(args))
-        log.error("kw: %s" % pformat(kw))
-        
-
+        error = message.MessageBuilder.from_xml(err.getroottree())
+        log.error("got error:\n%s" % repr(error))
 
 class SecureXMLTransport(XMLTransport):
     def __init__(self, transport, securityLayer):

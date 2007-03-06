@@ -6,10 +6,11 @@ The Xen Based Execution Environment XML Messages
 __version__ = "$Rev$"
 __author__ = "$Author$"
 
-import logging, re
+import logging, re, types
 log = logging.getLogger(__name__)
 
 from time import gmtime, strftime
+from pprint import pformat
 from lxml import etree
 from twisted.internet import defer, threads
 from twisted.python import failure
@@ -121,6 +122,14 @@ class Error(SimpleMessage):
         self.__info = errcode.info[code]
         self.__code = code
         self.__message = msg
+
+    def __repr__(self):
+        return "<%(cls)s %(code)d [%(name)s] - %(desc)s>" % {
+            "cls": self.__class__.__name__,
+            "code": self.code(),
+            "name": self.name(),
+            "desc": self.description(),
+        }
 
     def code(self):
         return self.__code
@@ -251,13 +260,18 @@ class CacheEntries(BaseServerMessage):
     
     def __init__(self):
         BaseServerMessage.__init__(self)
-        self.__entries = []
+        self.__entries = {}
 
-    def add(self, uri, hash, type="data", description=""):
-        self.__entries.append({"URI": uri,
-                               "HashValue": hash,
-                               "Type": type,
-                               "Description": description})
+    def __repr__(self):
+        return "<%(cls)s with %(num)d entr%(plural_s)s:\n%(entries)s\n>" % {
+            "cls": self.__class__.__name__,
+            "num": len(self.__entries),
+            "plural_s": len(self.__entries) == 1 and "y" or "ies",
+            "entries": pformat(self.__entries),
+        }
+
+    def add(self, uri, meta={}):
+        self.__entries[uri] = meta
 
     def entries(self):
         return self.__entries
@@ -265,22 +279,21 @@ class CacheEntries(BaseServerMessage):
     def as_xml(self):
         root, hdr, body = MessageBuilder.xml_parts()
         entries = etree.SubElement(body, self.tag)
-        for entry in self.__entries:
+
+        for uri, meta_info in self.__entries.iteritems():
             e = etree.SubElement(entries, XBE("Entry"))
-            for key, value in entry.iteritems():
-                etree.SubElement(e, XBE(key)).text = str(value)
+            etree.SubElement(e, XBE("URI")).text = uri
+            meta = etree.SubElement(e, XBE("Meta"))
+            unparse_dictionary(meta_info, meta)
         return root
     
     def from_xml(cls, root, hdr, body):
         cache_entries = cls()
         entries = body.find(cls.tag)
         for entry in entries.getchildren():
-            entry_info = {}
-            for info_elem in entry.getchildren():
-                key = decodeTag(info_elem.tag)[1]
-                value = info_elem.text
-                entry_info[key] = value
-            cache_entries.__entries.append(entry_info)
+            uri = entry.findtext(XBE("URI"))
+            meta = parse_dictionary(entry.find(XBE("Meta/Dict")), {})
+            cache_entries.add(uri, meta)
         return cache_entries
     from_xml = classmethod(from_xml)
 MessageBuilder.register(CacheEntries)
@@ -550,10 +563,30 @@ class StatusRequest(BaseClientMessage):
         return root
     def from_xml(cls, root, hdr, body):
         sr = body.find(cls.tag)
-        ticket = sr.find(XBE("Reservation/Ticket"))
+        ticket = sr.findtext(XBE("Reservation/Ticket"))
         return cls(ticket)
     from_xml = classmethod(from_xml)
 MessageBuilder.register(StatusRequest)
+
+def parse_dictionary(elem, dictionary):
+    for entry in elem.iterchildren(tag=XBE("Entry")):
+        key = entry.attrib["key"]
+        if len(entry.getchildren()):
+            value = parse_dictionary(entry[0], {})
+        else:
+            value = (entry.text or "").strip()
+        dictionary[key] = value
+    return dictionary
+
+def unparse_dictionary(dictionary, parent):
+    d = etree.SubElement(parent, XBE("Dict"))
+    for k, v in dictionary.iteritems():
+        entry = etree.SubElement(d, XBE("Entry"))
+        entry.attrib["key"] = str(k)
+        if type(v) == types.DictType:
+            unparse_dictionary(v, entry)
+        else:
+            entry.text = str(v)
 
 class StatusList(BaseServerMessage):
     """Answers the RequestStatus message.
@@ -564,19 +597,26 @@ class StatusList(BaseServerMessage):
       <Status task-id="...">
         <bes-state>...
         <Meta>
-           <Info key="...">value</Info>
+           <Dict><Entry key="...">value</Entry></Dict>
         </Meta>
     """
     tag = XBE("StatusList")
     
     def __init__(self):
         BaseServerMessage.__init__(self)
-        self.__entries = []
+        self.__entries = {}
+
+    def __repr__(self):
+        return "<%(cls)s with %(num)d entr%(plural_s)s:\n%(entries)s\n>" % {
+            "cls": self.__class__.__name__,
+            "num": len(self.__entries),
+            "plural_s": len(self.__entries) == 1 and "y" or "ies",
+            "entries": pformat(self.__entries),
+        }
 
     def add(self, id, state, meta={}):
-        self.__entries.append({"TaskID": id,
-                               "State": state,
-                               "Meta": meta})
+        self.__entries[id] = { "State": state,
+                               "Meta": meta }
 
     def entries(self):
         return self.__entries
@@ -584,32 +624,23 @@ class StatusList(BaseServerMessage):
     def as_xml(self):
         root, hdr, body = MessageBuilder.xml_parts()
         entries = etree.SubElement(body, self.tag)
-        for entry in self.__entries:
+        for task_id, info in self.__entries.iteritems():
             e = etree.SubElement(entries, XBE("Status"))
-            e.attrib["task-id"] = entry["TaskID"]
-            e.append(bes.fromXBETaskState(entry["State"]))
+            e.attrib["task-id"] = task_id
+            e.append(bes.fromXBETaskState(info["State"]))
             meta = etree.SubElement(e, XBE("Meta"))
-            for k, v in entry["Meta"].iteritems():
-                info = etree.SubElement(meta, XBE("Info"))
-                info.attrib["key"] = k
-                info.text = str(v)
+            unparse_dictionary(info["Meta"], meta)
         return root
     
     def from_xml(cls, root, hdr, body):
         status_list = cls()
         entries = body.find(cls.tag)
-        for entry in entries.getchildren():
-            entry_info = {}
-            entry_info["TaskID"] = entry.attrib["task-id"]
-            entry_info["State"] = bes.toXBETaskState(
-                entry.find(BES_ACTIVITY("ActivityStatus")))
-            meta = {}
-            for info in entry.findall(XBE("Meta/Info")):
-                k = info.attrib["key"]
-                v = (info.text or "").strip()
-                meta[k] = v
-            entry_info["Meta"] = meta
-            status_list.__entries.append(entry_info)
+        for entry in entries.findall(XBE("Status")):
+            task_id = entry.attrib["task-id"]
+            state = bes.toXBETaskState(entry.find(
+                BES_ACTIVITY("ActivityStatus")))
+            meta = parse_dictionary(entry.find(XBE("Meta/Dict")), {})
+            status_list.add(task_id, state, meta)
         return status_list
     from_xml = classmethod(from_xml)
 MessageBuilder.register(StatusList)

@@ -63,25 +63,31 @@ class Task(TaskFSM):
         
         The information returned depends on the current state.
         """
-        info = {}
-        # timestamp information
-        for time, tstamp in self.__timestamps.iteritems():
-            info["%s-time" % time] = tstamp
+        self.mtx.acquire()
+        try:
+            info = {}
+            times = {}
+            # timestamp information
+            for time, tstamp in self.__timestamps.iteritems():
+                times["%s-time" % time] = tstamp
+            info["times"] = times
+            
+            if hasattr(self, 'reason'):
+                reason = self.reason
+                if isinstance(reason, failure.Failure):
+                    msg = reason.getErrorMessage()
+                else:
+                    msg = str(reason)
+                info["reason"] = msg
+            if hasattr(self, 'exitcode'):
+                info["exitcode"] = self.exitcode
 
-        if hasattr(self, 'reason'):
-            reason = self.reason
-            if isinstance(reason, failure.Failure):
-                msg = reason.getErrorMessage()
-            else:
-                msg = str(reason)
-            info["reason"] = msg
-        if hasattr(self, 'exitcode'):
-            info["exitcode"] = self.exitcode
-
-        if self.state() == "Running:Executing":
-            # instance is available and has an IP
-            info["IP"] = self.__inst.ip
-        return info
+            if self.state() == "Running:Executing":
+                # instance is available and has an IP
+                info["IP"] = self.__inst.ip
+            return info
+        finally:
+            self.mtx.release()
 
     #
     # FSM transitions

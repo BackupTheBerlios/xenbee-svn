@@ -7,7 +7,6 @@ The current implementation uses the uuid command line tool
 __version__ = "$Rev$"
 __author__ = "$Author: petry $"
 
-
 import commands
 class UUID:
     def __init__(self, random=True):
@@ -21,6 +20,8 @@ class UUID:
             self.cmd = "uuid -v 4"
         else:
             self.cmd = "uuid -v 1"
+
+        import commands
         (status, uuid) = commands.getstatusoutput(self.cmd)
         if status != 0:
             self.cmd = "uuidgen"
