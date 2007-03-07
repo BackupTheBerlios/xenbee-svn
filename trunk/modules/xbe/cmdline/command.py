@@ -50,10 +50,6 @@ class Command(object):
         self.argv = argv[1:]
 
         p = NoPrintOptionParser(usage="usage: %s [options]" % self.name, add_help_option=False)
-        p.add_option("-S", "--server",
-                     dest="server", type="string",
-                     help="the server to connect to or %default is used",
-                     default="stomp://xen-o-matic.itwm.fhrg.fraunhofer.de/queue/xenbee.daemon.1")
         p.add_option("-v", "--verbose",
                      dest="verbose", action="store_true",
                      help="be verbose",
@@ -93,6 +89,10 @@ class RemoteCommand(Command, SimpleCommandLineProtocol):
                      dest="ca_cert",  type="string",
                      default=os.path.join(os.environ["HOME"], ".xbe", "ca-cert.pem"),
                      help="the certificate of the CA (default: %default)")
+        p.add_option("-S", "--server",
+                     dest="server", type="string",
+                     help="the server to connect to or %default is used",
+                     default="stomp://xen-o-matic.itwm.fhrg.fraunhofer.de/queue/xenbee.daemon.1")
 
     def __call__(self, *args, **kw):
         """We need to callable, so that we can act as a protocol factory."""
@@ -361,6 +361,7 @@ class Command_confirm(Command_terminate):
                 path = self.opts.xsdl
                 
         if path == "-":
+            print >>sys.stderr, "reading from stdin..."
             f = sys.stdin
         else:
             f = open(path, 'rb')
@@ -504,7 +505,7 @@ class CommandLineClient:
         if prog_name is None:
             argv[0] = os.path.basename(argv[0])
         self.argv = argv
-        
+
         cmd = createCommand(argv[1:])
         if cmd:
             try:
