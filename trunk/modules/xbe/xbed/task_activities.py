@@ -113,13 +113,13 @@ class URILocationHandler(StagingActivity):
         from twisted.internet import defer
 
         cv = threading.Condition()
-        def notify(result, deferred):
+        def notify(result):
             cv.acquire()
             cv.notifyAll()
             self.__result = result
             cv.release()
         d = xbed.cache.lookupByUUID(cache_id)
-        d.addBoth(notify, d)
+        d.addBoth(notify)
 
         try:
             cv.acquire()
@@ -133,20 +133,6 @@ class URILocationHandler(StagingActivity):
         if isinstance(result, failure.Failure):
             result.raiseException()
         return result
-        
-#        def cache_waiter():
-#            cache_lookup = defer.waitForDeferred(xbed.cache.lookupByUUID(cache_id))
-#            yield cache_lookup
-#            cache_lookup = cache_lookup.getResult()
-#            yield cache_lookup
-#            return
-#        cache_waiter = defer.deferredGenerator(cache_waiter)
-#        deferred = cache_waiter()
-#        result = deferred.result
-#        deferred.addBoth(str).addBoth(log.debug)
-#        if isinstance(result, failure.Failure):
-#            result.raiseException()
-#        return result
 
     def handle(self, location,
                dst_dir,

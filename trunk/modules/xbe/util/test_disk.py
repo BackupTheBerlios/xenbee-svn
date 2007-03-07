@@ -135,7 +135,6 @@ class TestFSTab(unittest.TestCase):
     def test_adding(self):
         fstab = FSTab()
         fstab.add("proc", "/proc", "proc", "defaults", "0", "0")
-        print repr(fstab)
         
 def suite():
     s1 = unittest.makeSuite(TestMakeSparse, "test")

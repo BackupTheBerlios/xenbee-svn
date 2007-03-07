@@ -6,6 +6,7 @@
 """
 
 import subprocess, tempfile, os, errno, time, random
+import threading
 from xbe.util.exceptions import ProcessError
 
 try:
@@ -21,6 +22,8 @@ except OSError, e:
 FS_GUESS = ()
 FS_EXT2 = "ext2"
 FS_EXT3 = "ext3"
+
+_module_lock = threading.RLock()
 
 class NotMountedException(Exception):
     pass
@@ -75,19 +78,23 @@ class Image(object):
         error occurs, the created temporary directory gets removed.
         """
         mount_point = tempfile.mkdtemp(*args, **kw)
+        _module_lock.acquire()
         try:
-            p = subprocess.Popen(["mount", "-o", "loop", "-t",
-                                   self.__fs_type, self.__path, mount_point],
-                                 stdout=devnull, stderr=subprocess.PIPE)
-            stdout, stderr = p.communicate()
-            if p.returncode != 0:
-                raise ProcessError(p.returncode, "mount", stderr, stdout)
-        except OSError, e:
-            raise RuntimeError("'mount' could not be called", e)
-        except:
-            os.rmdir(mount_point)
-            raise
-        self.__mount_point = mount_point
+            try:
+                p = subprocess.Popen(["mount", "-o", "loop", "-t",
+                                      self.__fs_type, self.__path, mount_point],
+                                     stdout=devnull, stderr=subprocess.PIPE)
+                stdout, stderr = p.communicate()
+                if p.returncode != 0:
+                    raise ProcessError(p.returncode, "mount", stderr, stdout)
+            except OSError, e:
+                raise RuntimeError("'mount' could not be called", e)
+            except:
+                os.rmdir(mount_point)
+                raise
+            self.__mount_point = mount_point
+        finally:
+            _module_lock.release()
         return self.__mount_point
 
     def __umount(self):
@@ -95,18 +102,23 @@ class Image(object):
             mount_point = self.__mount_point
         except AttributeError:
             raise NotMountedException()
+        
+        _module_lock.acquire()
         try:
-            p = subprocess.Popen(["umount", mount_point],
-                                 stdout=devnull, stderr=subprocess.PIPE)
-            stdout, stderr = p.communicate()
-            if p.returncode != 0:
-                raise ProcessError(p.returncode, "umount", stderr, stdout)
-        except OSError, e:
-            raise RuntimeError("'umount' could not be called", e)
-        except:
-            raise
-        del self.__mount_point
-        os.rmdir(mount_point)
+            try:
+                p = subprocess.Popen(["umount", mount_point],
+                                     stdout=devnull, stderr=subprocess.PIPE)
+                stdout, stderr = p.communicate()
+                if p.returncode != 0:
+                    raise ProcessError(p.returncode, "umount", stderr, stdout)
+            except OSError, e:
+                raise RuntimeError("'umount' could not be called", e)
+            except:
+                raise
+            del self.__mount_point
+            os.rmdir(mount_point)
+        finally:
+            _module_lock.release()
 
     def umount(self, retries=15):
         """U(n)mount the image.
