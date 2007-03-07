@@ -5,6 +5,7 @@ log = logging.getLogger(__name__)
 
 from optparse import OptionParser
 from textwrap import dedent
+from xbe.util.singleton import Singleton
 
 class NoPrintOptionParser(OptionParser):
     def __init__(self, usage=None, add_help_option=True):
@@ -17,6 +18,27 @@ class CommandFailed(Exception):
 
 class UnknownCommand(Exception):
     pass
+
+class CommandFactory(Singleton):
+
+    def __init__(self):
+        Singleton.__init__(self)
+        self.__commands = {}
+
+    def registerCommand(self, cmd, *cmd_names):
+        if not self.__commands.has_key(cmd):
+            self.__commands[cmd] = [n for n in cmd_names]
+        else:
+            self.__commands[cmd].extend(cmd_names)
+
+    def lookupCommand(self, name):
+        for cmd, names in self.__commands.iteritems():
+            if name in names:
+                return cmd
+        raise LookupError("no command registered with that name", name)
+
+    def getCommands(self):
+        return self.__commands
 
 class Command(object):
     """The base class for commands."""
@@ -75,7 +97,7 @@ class RemoteCommand(Command, SimpleCommandLineProtocol):
         Command.__init__(self, argv)
         p = self.parser
         p.add_option("-T", "--timeout",
-                     dest="timeout", type="int", default=30,
+                     dest="timeout", type="float", default=10,
                      help="number of seconds (default %defaults) to wait for an answer from server")
         p.add_option("--user-cert",
                      dest="user_cert",  type="string",
@@ -138,6 +160,7 @@ class RemoteCommand(Command, SimpleCommandLineProtocol):
         self.ca_cert = X509Certificate.load_from_files(opts.ca_cert)
 
     def connectionMade(self):
+        self.cancelTimeout()
         try:
             self.execute()
         except Exception, e:
@@ -153,22 +176,29 @@ class RemoteCommand(Command, SimpleCommandLineProtocol):
             del self.__timeoutCall
             to.cancel()
 
-    def scheduleTimeout(self):
+    def scheduleTimeout(self, timeout=None, *args, **kw):
         self.cancelTimeout()
         from twisted.internet import reactor
+        if timeout is None:
+            timeout = self.opts.timeout
         self.__timeoutCall = reactor.callLater(self.opts.timeout,
-                                               self.timeout)
+                                               self.timeout, *args, **kw)
 
-    def timeout(self):
+    def timeout(self, name=None):
         del self.__timeoutCall
-        self.failed(RuntimeError("timed out"))
+        msg = "timed out"
+        if name is not None:
+            msg = "%s %s" % (name, msg)
+        self.failed(RuntimeError(msg))
 
     def done(self):
+        self.cancelTimeout()
         from twisted.internet import reactor
         reactor.callLater(0.5, reactor.stop)
         Command.done(self)
 
     def failed(self, exception):
+        self.cancelTimeout()
         from twisted.internet import reactor
         reactor.callLater(0.5, reactor.stop)
         Command.failed(self, exception)
@@ -241,11 +271,14 @@ class Command_help(Command):
             sb.append("")
             sb.append("available subcommands:")
             sb.append("")
-            for cls in globals().keys():
-                if cls.startswith("Command_"):
-                    sb.append("   "+cls.split("Command_")[1])
+            cmds = CommandFactory.getInstance().getCommands()
+            for cmd, names in cmds.iteritems():
+                line = names[0]
+                if len(names) > 1:
+                    line += " (" + ", ".join(names[1:]) + ")"
+                sb.append("   "+line)
             print >>sys.stderr, "\n".join(sb)
-
+CommandFactory.getInstance().registerCommand(Command_help, "help", "h", "?")
 
 class Command_reserve(RemoteCommand):
     """\
@@ -257,18 +290,20 @@ class Command_reserve(RemoteCommand):
         RemoteCommand.__init__(self, argv)
 
     def execute(self):
-        self.scheduleTimeout()
+        self.scheduleTimeout(name="reserve")
         self.requestReservation()
 
     def reservationResponseReceived(self, reservationResponse):
         self.cancelTimeout()
         self.ticket = reservationResponse.ticket()
         self.task = reservationResponse.task_id()
+        self.print_info(self.ticket, self.task)
         self.madeReservation(self.ticket, self.task)
 
     def print_info(self, ticket, task):
         print dedent("""\
-        Your ticket is:
+        Your ticket identification code:
+        ================================
 
         *%(bar1)s*
         *%(bar2)s*
@@ -276,11 +311,11 @@ class Command_reserve(RemoteCommand):
         *%(bar2)s*
         *%(bar1)s*
 
-        The task is registered as: %(task)s
-        
-        please remember that id, it will be
-        needed  in subsequent calls and use
-        it in subsequent calls.
+        please remember that ticket-id, it will be
+        required in subsequent calls.
+
+        A task has been registered for you as:
+        %(task)s
         """ % {"ticket": ticket,
                "task": task,
                "bar1": ("*" * (len(ticket)+2)),
@@ -289,9 +324,8 @@ class Command_reserve(RemoteCommand):
         )
 
     def madeReservation(self, ticket, task):
-        self.ticket = ticket
-        self.print_info(ticket, task)
         self.done()
+CommandFactory.getInstance().registerCommand(Command_reserve, "reserve", "res")
 
 class Command_terminate(RemoteCommand, HasTicket):
     """\
@@ -315,7 +349,8 @@ class Command_terminate(RemoteCommand, HasTicket):
         ticket = self.get_ticket()
         self.requestTermination(ticket)
         self.done()
-Command_tr = Command_terminate
+CommandFactory.getInstance().registerCommand(Command_terminate,
+                                             "terminate", "term", "kill", "cancel")
 
 class Command_confirm(Command_terminate):
     """\
@@ -327,7 +362,7 @@ class Command_confirm(Command_terminate):
         Command_terminate.__init__(self, argv)
         
         p = self.parser
-        p.add_option("-x", "--xsdl", dest="xsdl",  type="string", default="-",
+        p.add_option("-x", "--xsdl", dest="xsdl",  type="string",
                      help="the xsdl document to submit or %default")
 
     def check_opts_and_args(self, opts, args):
@@ -336,7 +371,7 @@ class Command_confirm(Command_terminate):
             if len(args):
                 opts.xsdl = args.pop(0)
             else:
-                raise CommandFailed("xsdl required")
+                opts.xsdl = "-"
         return True
     
     def execute(self):
@@ -372,6 +407,7 @@ class Command_confirm(Command_terminate):
         xsdl = etree.parse(f).getroot()
         # TODO: validate the xsdl
         return xsdl
+CommandFactory.getInstance().registerCommand(Command_confirm, "confirm")
         
 class Command_submit(Command_reserve, Command_confirm):
     """\
@@ -423,8 +459,8 @@ class Command_submit(Command_reserve, Command_confirm):
     def madeReservation(self, ticket, task):
         self.ticket = ticket
         self.task = task
-        self.print_info(ticket, task)
         Command_confirm.execute(self)
+CommandFactory.getInstance().registerCommand(Command_submit, "submit", "sub", "s")
 
 class Command_status(RemoteCommand, HasTicket):
     """\
@@ -447,15 +483,14 @@ class Command_status(RemoteCommand, HasTicket):
     
     def execute(self):
         ticket = self.get_ticket()
-        self.scheduleTimeout()
+        self.scheduleTimeout(name="status-request")
         self.requestStatus(ticket)
 
     def statusListReceived(self, statusList):
         self.cancelTimeout()
         print repr(statusList)
         self.done()
-        
-Command_st = Command_status
+CommandFactory.getInstance().registerCommand(Command_status, "status", "st")
 
 class Command_showcache(RemoteCommand):
     """\
@@ -468,14 +503,14 @@ class Command_showcache(RemoteCommand):
         RemoteCommand.__init__(self, argv)
 
     def execute(self):
-        self.scheduleTimeout()
+        self.scheduleTimeout(name="show-cache")
         self.requestCacheList()
 
     def cacheEntriesReceived(self, cache_entries):
         self.cancelTimeout()
         print repr(cache_entries)
         self.done()
-Command_sc = Command_showcache
+CommandFactory.getInstance().registerCommand(Command_showcache, "showcache", "sc")
 
 class CommandLineClient:
     def __init__(self):
@@ -534,6 +569,8 @@ class CommandLineClient:
                         host, port = h_p
                     else:
                         host, port = h_p[0], 61613
+                    # schedule a Timeout
+                    cmd.scheduleTimeout(name="connect")
                     reactor.connectTCP(host, port, factory)
                     reactor.run()
                 else:
@@ -559,13 +596,14 @@ def createCommand(argv):
     """Creates a command object from the given command line."""
     if len(argv):
         try:
-            clsname = "Command_%s" % argv[0]
-            if clsname in globals():
-                cmd = globals()[clsname](argv)
-                cmd.buildHelp()
-                return cmd
-            else:
-                raise UnknownCommand(argv[0])
+            cmdname = argv[0]
+            try:
+                cmdcls = CommandFactory.getInstance().lookupCommand(cmdname)
+            except LookupError:
+                raise UnknownCommand(cmdname)
+            cmd = cmdcls(argv)
+            cmd.buildHelp()
+            return cmd
         except UnknownCommand, uc:
             print >>sys.stderr, "Unknown command: '%s'" % uc
             return None

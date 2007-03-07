@@ -519,10 +519,9 @@ class Task(TaskFSM):
     def _eb_stage_in_failed(self, results, *a, **kw):
         try:
             self.mtx.acquire()
-            self.log.warn(results)
         finally:
             self.mtx.release()
-        self.failed()
+        self.failed(results[0])
         
     def __unprepare(self):
         self.log.debug("starting un-preparation")

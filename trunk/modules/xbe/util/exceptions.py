@@ -28,6 +28,6 @@ class ProcessError(CalledProcessError):
         self.stdout = stdout
 
     def __str__(self):
-        s = subprocess.CalledProcessError.__str__(self)
+        s = CalledProcessError.__str__(self)
         s += ": %s" % (self.stderr)
         return s

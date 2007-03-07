@@ -112,11 +112,13 @@ class ActivityQueue:
         except Exception, e:
             log.warn("exception in thread loop", e)
         finally:
-            cv.release()
+            try:
+                cv.release()
+            except:
+                pass
 
         try:
             self._workerFinished.acquire()
             self._workerFinished.notify()
         finally:
             self._workerFinished.release()
-

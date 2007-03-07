@@ -195,10 +195,10 @@ class XBEDaemon(Daemon):
         self.userDatabase = UserDatabase.getInstance(self.opts.user_db)
         log.info("  done.")
 
+        log.info("initializing reactor...")
         from twisted.internet import reactor
         from xbe.xbed.proto import XenBEEDaemonProtocolFactory
 
-        log.info("initializing reactor...")
         from xbe.util.network import urlparse
         proto, host, queue, _, _, _ = urlparse(self.opts.uri)
         if proto != "stomp":

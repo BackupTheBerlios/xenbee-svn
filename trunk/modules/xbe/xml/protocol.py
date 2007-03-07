@@ -178,7 +178,6 @@ class SecureProtocol(XMLProtocol):
     def do_EstablishMLS(self, elem, *a, **kw):
         """handle a MLS establish request."""
         
-        log.debug("got EstablishMLS message")
         if isinstance(elem, etree._Element):
             root = elem.getroottree().getroot()
         elif isinstance(elem, etree._ElementTree):

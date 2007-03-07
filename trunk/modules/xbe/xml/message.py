@@ -75,9 +75,10 @@ class MessageBuilder(object):
         if isinstance(xml_document, basestring):
             # got a string as an argument, so parse it
             try:
+                etree.clearErrorLog()
                 xml_document = etree.fromstring(xml_document)
             except etree.XMLSyntaxError, e:
-                raise MessageParserError("syntax error: %s" % e)
+                raise MessageParserError("syntax error", e)
         if not isinstance(xml_document, (etree._Element, etree._ElementTree)):
             raise MessageParserError("the passed document must be an xml document")
 

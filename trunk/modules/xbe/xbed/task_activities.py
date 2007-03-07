@@ -101,21 +101,52 @@ class URILocationHandler(StagingActivity):
 
     def __transform_cache_uri_hack(self, uri):
         # XXX: this is a hack, please, think about a better way!
+        xbed = XBEDaemon.getInstance()
+        if not hasattr(xbed, "cache") or xbed.cache is None:
+            raise ValueError("could not transform uri, no cache", uri)
+        
+        cache_id = uri.split("/")[-1]
+        log.debug("looking up cache-id %s" % cache_id)
+
+        import threading
+        from twisted.python import failure
+        from twisted.internet import defer
+
+        cv = threading.Condition()
+        def notify(result, deferred):
+            cv.acquire()
+            cv.notifyAll()
+            self.__result = result
+            cv.release()
+        d = xbed.cache.lookupByUUID(cache_id)
+        d.addBoth(notify, d)
+
         try:
-            xbed = XBEDaemon.getInstance()
-            if not hasattr(xbed, "cache") or xbed.cache is None:
-                raise ValueError("could not transform uri, no cache", uri)
-
-            cache_id = uri.split("/")[-1]
-            log.debug("looking up cache-id %s" % cache_id)
-
-            from twisted.internet import defer
-            cache_uri = defer.waitForDeferred(
-                xbed.cache.lookupByUUID(cache_id)).getResult()
-            return cache_uri
-        except Exception, e:
-            log.warn("could not look up cache entry", e)
-            raise
+            cv.acquire()
+            while not d.called:
+                cv.wait(1)
+        finally:
+            cv.release()
+            
+        result = self.__result
+        del self.__result
+        if isinstance(result, failure.Failure):
+            result.raiseException()
+        return result
+        
+#        def cache_waiter():
+#            cache_lookup = defer.waitForDeferred(xbed.cache.lookupByUUID(cache_id))
+#            yield cache_lookup
+#            cache_lookup = cache_lookup.getResult()
+#            yield cache_lookup
+#            return
+#        cache_waiter = defer.deferredGenerator(cache_waiter)
+#        deferred = cache_waiter()
+#        result = deferred.result
+#        deferred.addBoth(str).addBoth(log.debug)
+#        if isinstance(result, failure.Failure):
+#            result.raiseException()
+#        return result
 
     def handle(self, location,
                dst_dir,
@@ -130,7 +161,7 @@ class URILocationHandler(StagingActivity):
             uri = self.__transform_cache_uri_hack(uri)
             
         # retrieve
-        log.debug("retrieving: %s" % (uri))
+        log.debug("retrieving: %s" % (repr(uri)))
         if dst_file is None:
             filename = uri.split("/")[-1]
         else:
