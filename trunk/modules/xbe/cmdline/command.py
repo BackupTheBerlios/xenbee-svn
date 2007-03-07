@@ -165,12 +165,12 @@ class RemoteCommand(Command, SimpleCommandLineProtocol):
 
     def done(self):
         from twisted.internet import reactor
-        reactor.callLater(1, reactor.stop)
+        reactor.callLater(0.5, reactor.stop)
         Command.done(self)
 
     def failed(self, exception):
         from twisted.internet import reactor
-        reactor.callLater(1, reactor.stop)
+        reactor.callLater(0.5, reactor.stop)
         Command.failed(self, exception)
 
     def errorReceived(self, error):
@@ -498,6 +498,9 @@ class CommandLineClient:
         print >>sys.stderr, "Type '%s help' for usage." % self.argv[0]
 
     def main(self, argv=sys.argv, prog_name=None):
+        from twisted.python import threadable
+        threadable.init()
+
         if prog_name is None:
             argv[0] = os.path.basename(argv[0])
         self.argv = argv
