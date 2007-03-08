@@ -27,15 +27,15 @@ function check_logfile() {
 }
 
 function save_environ() {
-	if [ -z "$XBE_SERVER" ]; then
+	if [ -n "$XBE_SERVER" ]; then
 		:> "$envfile"
-		echo "XBE_SERVER=$XBE_SERVER" >> "$envfile"
-		echo "XBE_UUID=$XBE_UUID" >> "$envfile"
+		echo "export XBE_SERVER=$XBE_SERVER" >> "$envfile"
+		echo "export XBE_UUID=$XBE_UUID" >> "$envfile"
 	fi
 }
 
 function load_environ() {
-	if [ -n "$XBE_SERVER" -a -r "$envfile" ]; then
+	if [ -z "$XBE_SERVER" -a -r "$envfile" ]; then
 		source "$envfile"
 	fi
 }
