@@ -298,7 +298,6 @@ class TaskActivity(ActivityProxy):
     def _call_scripts(self, script_dir, script_prefix, jail_path, *args):
         if not os.path.exists(script_dir):
             return
-        
         for script in filter(lambda s: s.startswith(script_prefix),
                              os.listdir(script_dir)):
             self.check_abort()
@@ -440,6 +439,12 @@ class SetUpActivity(TaskActivity):
                 os.makedirs(self.xbe_spool)
             except Exception, e:
                 raise StageInFailed("jail setup failed, could not create spool directory", e)
+        self.proc_path = os.path.join(self.jail_path, "proc")
+        if not os.path.exists(proc):
+            try:
+                os.makedirs(proc)
+            except Exception, e:
+                raise StageInFailed("jail setup failed, could not create proc directory", e)
         log.info("jail has been set up")
 
 
@@ -478,27 +483,34 @@ class SetUpActivity(TaskActivity):
         except KeyError, e:
             stagings = None
 
-        # call the pre-setup hooks, they may modify the image in place
-        self._call_scripts(os.path.join(self.xbe_spool, "scripts"), "pre-setup", self.jail_path)
-        
-        img = self._mount_image(os.path.join(self.xbe_spool, "image"),
-                                self.xbe_spool)
         try:
-            # staging operations
-            if stagings is not None:
-                self._prepare_stagings(stagings,
-                                       img.mount_point(),
-                                       jsdl_doc.get_file_systems())
+            # mount the proc filesystem
+            subprocess.check_call(["mount", "-t", "proc", "proc", self.proc_path])
+            
+            # call the pre-setup hooks, they may modify the image in place
+            self._call_scripts(os.path.join(self.xbe_spool, "scripts"), "pre-setup", self.jail_path)
+        
+            img = self._mount_image(os.path.join(self.xbe_spool, "image"),
+                                    self.xbe_spool)
+            try:
+                # staging operations
+                if stagings is not None:
+                    self._prepare_stagings(stagings,
+                                           img.mount_point(),
+                                           jsdl_doc.get_file_systems())
 
-            self.check_abort()
+                    self.check_abort()
 
-            # setup scripts
-            self._call_scripts(os.path.join(self.xbe_spool, "scripts"), "setup", self.jail_path,
-                               self.make_path_relative_to(img.mount_point(),
-                                                          self.jail_path) # passed to the script
-            )
+                # setup scripts
+                self._call_scripts(os.path.join(self.xbe_spool, "scripts"), "setup", self.jail_path,
+                                   self.make_path_relative_to(img.mount_point(),
+                                                              self.jail_path) # passed to the script
+                )
+            finally:
+                del img
         finally:
-            del img
+            # umount the proc filesystem
+            subprocess.check_call(["umount", self.proc_path])
 
         self.check_abort()
 
@@ -651,25 +663,34 @@ class TearDownActivity(TaskActivity):
         except Exception, e:
             wd = "/"
 
-        img = self._mount_image(os.path.join(self.xbe_spool, "image"),
-                                self.xbe_spool)
+
         try:
-            self._call_scripts(os.path.join(self.xbe_spool, "scripts"), "cleanup", self.jail_path,
-                    self.make_path_relative_to(img.mount_point(), self.jail_path) # passed to the script
-            )
+            # mount the proc filesystem
+            subprocess.check_call(["mount", "-t", "proc", "proc", self.proc_path])
 
-            # staging operations
-            if stagings is not None:
-                self._unprepare_stagings(stagings,
-                                         img.mount_point(),
-                                         wd, jsdl_doc.get_file_systems())
+            img = self._mount_image(os.path.join(self.xbe_spool, "image"),
+                                    self.xbe_spool)
+            try:
+                self._call_scripts(os.path.join(self.xbe_spool, "scripts"), "cleanup", self.jail_path,
+                                   # passed to the script
+                                   self.make_path_relative_to(img.mount_point(), self.jail_path)
+                )
 
-            self.check_abort()
+                # staging operations
+                if stagings is not None:
+                    self._unprepare_stagings(stagings,
+                                             img.mount_point(),
+                                             wd, jsdl_doc.get_file_systems())
+
+                self.check_abort()
+            finally:
+                del img
+
+            # call the post-cleanup hooks, they may for instance transfer the image to some place
+            self._call_scripts(os.path.join(self.xbe_spool, "scripts"), "post-cleanup", self.jail_path)
         finally:
-            del img
-
-        # call the post-cleanup hooks, they may for instance transfer the image to some place
-        self._call_scripts(os.path.join(self.xbe_spool, "scripts"), "post-cleanup", self.jail_path)
+            # umount the proc filesystem
+            subprocess.check_call(["umount", self.proc_path])
         
         log.info("un-preparation complete!")
 
