@@ -421,6 +421,7 @@ class JsdlDocument:
             "Hash": self._parse_hash,
             "Compression": self._parse_compression,
             "Script": self._parse_complex_array,
+            "Mode": self._parse_mode,
         }
 
         self.parserMaps = {
@@ -553,6 +554,8 @@ class JsdlDocument:
         algo = xml.attrib.get("algorithm", "sha1").lower()
         hexdigest = self._parse_normative_text(xml)
         return HashValidator(hexdigest, algo)
+    def _parse_mode(self, xml):
+        return int(xml.text, 8)
     def _parse_compression(self, xml):
         algo = xml.attrib.get("algorithm").lower()
         return Decompressor(algo)

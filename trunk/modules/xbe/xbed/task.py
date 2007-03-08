@@ -412,7 +412,7 @@ class Task(TaskFSM):
 
     def _cb_assign_files_to_inst(self):
         inst = self.__inst
-        spool = self.__spool
+        spool = os.path.join(self.__spool, "jail", "var", "xbe-spool")
 
         # images, kernel and probably initrd
         images = []
@@ -491,13 +491,14 @@ class Task(TaskFSM):
         self.__inst.task = self
 
         from xbe.xbed.task_activities import SetUpActivity, AcquireResourceActivity
-        from xbe.util.activity import ComplexActivity, ThreadedActivity, HOOK_SUCCESS
+        from xbe.util.activity import ComplexActivity, ThreadedActivity
 
         mac_pool = XBEDaemon.getInstance().macAddresses
+        jail_package = XBEDaemon.getInstance().opts.jail_package
         mac_acquirer = ThreadedActivity(
             AcquireResourceActivity(mac_pool))
         setup_activity = ThreadedActivity(
-            SetUpActivity(self.__spool), (self.__jsdl_doc,))
+            SetUpActivity(self.__spool, jail_package), (self.__jsdl_doc,))
 
         complex_activity = ComplexActivity([setup_activity, mac_acquirer])
         self.mgr.registerActivity(self, complex_activity,
@@ -525,15 +526,32 @@ class Task(TaskFSM):
         
     def __unprepare(self):
         self.log.debug("starting un-preparation")
+        from xbe.xbed.task_activities import TearDownActivity
+        from xbe.util.activity import ComplexActivity, ThreadedActivity
 
-        # unprepare the task (i.e. stage-out)
-        from xbe.xbed import task_unpreparer
-        unpreparer = task_unpreparer.UnPreparer()
+        teardown_activity = ThreadedActivity(
+            TearDownActivity(self.__spool), (self.__jsdl_doc,))
 
-        d = threads.deferToThread(unpreparer.unprepare,
-                                  self.__spool, self.__jsdl_doc)
-        d.addCallback(self.cb_stage_out_completed)
-        d.addErrback(self.failed)
+        complex_activity = ComplexActivity([teardown_activity])
+        self.mgr.registerActivity(self, complex_activity,
+                                  on_finish=self._cb_stage_out_succeed,
+                                  on_fail=self._eb_stage_out_failed,
+                                  on_abort=None)
+
+    def _cb_stage_out_succeed(self, results, *a, **kw):
+        try:
+            self.mtx.acquire()
+        finally:
+            self.mtx.release()
+        self.log.debug("stage out completed")
+        self.cb_stage_out_completed()
+
+    def _eb_stage_out_failed(self, results, *a, **kw):
+        try:
+            self.mtx.acquire()
+        finally:
+            self.mtx.release()
+        self.failed(results[0])
 
     def _cb_check_deferred_list(self, results):
         for code, result in results:

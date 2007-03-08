@@ -67,9 +67,9 @@ class Image(object):
         """
         if not self.is_mounted():
             raise NotMountedException()
-        return self.__mount_point
+        return self.__mount_point[0]
 
-    def mount(self, *args, **kw):
+    def mount(self, mount_point=None, *args, **kw):
         """Mount the image to a temporary mount-point.
 
         All arguments and keywords are passed through to tempfile.mkdtemp.
@@ -77,12 +77,17 @@ class Image(object):
         On success it returns the path to the mount-point. If any
         error occurs, the created temporary directory gets removed.
         """
-        mount_point = tempfile.mkdtemp(*args, **kw)
         _module_lock.acquire()
         try:
+            if mount_point is None:
+                mount_point = [tempfile.mkdtemp(*args, **kw),
+                               True]
+            else:
+                mount_point = [mount_point,
+                               False]
             try:
                 p = subprocess.Popen(["mount", "-o", "loop", "-t",
-                                      self.__fs_type, self.__path, mount_point],
+                                      self.__fs_type, self.__path, mount_point[0]],
                                      stdout=devnull, stderr=subprocess.PIPE)
                 stdout, stderr = p.communicate()
                 if p.returncode != 0:
@@ -90,12 +95,14 @@ class Image(object):
             except OSError, e:
                 raise RuntimeError("'mount' could not be called", e)
             except:
-                os.rmdir(mount_point)
+                # if it was a temporary mount point, remove it
+                if mount_point[1]:
+                    os.rmdir(mount_point[0])
                 raise
             self.__mount_point = mount_point
         finally:
             _module_lock.release()
-        return self.__mount_point
+        return self.__mount_point[0]
 
     def __umount(self):
         try:
@@ -106,7 +113,7 @@ class Image(object):
         _module_lock.acquire()
         try:
             try:
-                p = subprocess.Popen(["umount", mount_point],
+                p = subprocess.Popen(["umount", mount_point[0]],
                                      stdout=devnull, stderr=subprocess.PIPE)
                 stdout, stderr = p.communicate()
                 if p.returncode != 0:
@@ -116,7 +123,8 @@ class Image(object):
             except:
                 raise
             del self.__mount_point
-            os.rmdir(mount_point)
+            if mount_point[1]:
+                os.rmdir(mount_point[0])
         finally:
             _module_lock.release()
 

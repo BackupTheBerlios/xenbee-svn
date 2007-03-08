@@ -5,7 +5,9 @@ set -e
 
 export PYTHONPATH="$PYTHONPATH":/root/xenbee/modules
 daemon=/root/xenbee/bin/xbeinstd
-pidfile=/var/run/xbeinstd.pid
+logfile="/var/log/xenbee/xbeinstd.log"
+pidfile="/var/run/xbeinstd.pid"
+envfile="/var/run/xbeinstd.env"
 
 test -x $daemon || exit 0
 
@@ -17,9 +19,32 @@ fi
 
 export PATH="${PATH:+$PATH:}/usr/sbin:/sbin"
 
+function check_logfile() {
+	logdir=`dirname $logfile`
+	mkdir -p "$logdir"
+	# empty the logfile
+	:> "$logfile"
+}
+
+function save_environ() {
+	if [ -z "$XBE_SERVER" ]; then
+		:> "$envfile"
+		echo "XBE_SERVER=$XBE_SERVER" >> "$envfile"
+		echo "XBE_UUID=$XBE_UUID" >> "$envfile"
+	fi
+}
+
+function load_environ() {
+	if [ -n "$XBE_SERVER" -a -r "$envfile" ]; then
+		source "$envfile"
+	fi
+}
+
 case "$1" in
   start)
 	log_begin_msg "Starting XenBEE instance daemon..."
+	check_logfile
+	save_environ
 	"$daemon" start --pidfile "$pidfile" $XBEINSTD_OPTS || log_end_msg 1
 	log_end_msg 0
 	;;
@@ -31,13 +56,16 @@ case "$1" in
 
   reload|force-reload)
 	log_begin_msg "Reloading XenBEE instance daemon..."
-	check_config
+	check_logfile
+	load_environ
 	"$daemon" restart --pidfile "$pidfile" $XBEINSTD_OPTS || log_end_msg 1
 	log_end_msg 0
 	;;
 
   restart)
 	log_begin_msg "Restarting XenBEE instance daemon..."
+	check_logfile
+	load_environ
 	"$daemon" restart --pidfile "$pidfile" $XBEINSTD_OPTS || log_end_msg 1
 	log_end_msg 0
 	;;

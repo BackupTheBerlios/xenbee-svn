@@ -46,6 +46,10 @@ class XBEDaemon(Daemon):
             default=True,
             help="do not daemonize")
         p.add_option(
+            "-j", "--jail-package", dest="jail_package",
+            default="/srv/xen-images/xenbee/jail-package.tar.bz2",
+            help="path to a tar.bz2 that contains a jail hierarchy")
+        p.add_option(
             "--pidfile", dest="pidfile", type="string",
             default="/var/run/xbed.pid",
             help="the pidfile to use")

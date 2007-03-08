@@ -165,7 +165,7 @@ class Backend(object):
         # (that should not happen!)
         if self.retrieveID(inst) >= 0:
             log.error("backend: another instance with that name is already known to xen")
-            raise InstanceCreationError("instance already known")
+            raise InstanceCreationError("instance already known", inst.id())
 
         # build configuration
         generator = XenConfigGenerator() # TODO: create factory for 'backend'
@@ -190,15 +190,14 @@ class Backend(object):
             self._runcmd("dry-run", cfg_path)
         except ProcessError, e:
             log.error("backend: could not execute dry-run: %d: %s" % (e.returncode, e.stdout))
-            raise InstanceCreationError("dry-run failed: %d: %s" % (e.returncode, e.stdout))
+            raise InstanceCreationError("dry-run failed", inst.id(), e.returncode, e.stdout)
 
         try:
             self._runcmd("create", cfg_path)
         except ProcessError, e:
             log.error("backend: could not create backend instance: %d: %s" %
                       (e.returncode, e.stdout))
-            raise InstanceCreationError("create failed: %d, %s" %
-                                        (e.returncode, e.stdout))
+            raise InstanceCreationError("create failed", inst.id(), e.returncode, e.stdout)
         backend_id = self.retrieveID(inst)
         log.debug("created backend instance with id: %d" % (backend_id,))
         return backend_id
@@ -256,5 +255,5 @@ class Backend(object):
         finally:
             self.releaseLock()
         if self.waitState(inst, (BE_INSTANCE_NOSTATE, BE_INSTANCE_SHUTOFF), timeout) == None:
-            raise BackendException("shutdown timed out")
+            raise BackendException("shutdown timed out", inst.id())
         return True

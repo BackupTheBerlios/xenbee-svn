@@ -28,8 +28,10 @@
   <!--========================================================================-->
   <xsd:simpleType name="ScriptTargetEnumeration">
     <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="pre-setup"/>
       <xsd:enumeration value="setup"/>
       <xsd:enumeration value="cleanup"/>
+      <xsd:enumeration value="post-cleanup"/>
     </xsd:restriction>
   </xsd:simpleType>
   <xsd:simpleType name="FileSystemTypeEnumeration">
@@ -53,6 +55,12 @@
     </xsd:simpleContent>
   </xsd:complexType>
 
+  <xsd:simpleType name="Mode_Type">
+    <xsd:restriction base="xsd:normalizedString">
+      <xsd:pattern value='[0-7]{4}'/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  
   <xsd:complexType name="Compression_Type">
     <xsd:attribute name="algorithm" type="CompressionTypeEnumeration" use="required"/>
   </xsd:complexType>
@@ -67,6 +75,7 @@
     </xsd:annotation>
     <xsd:sequence>
       <xsd:element ref="xsdl:URI" minOccurs="0"/>
+      <xsd:element ref="xsdl:Mode" minOccurs="0"/>
       <xsd:element ref="xsdl:Hash" minOccurs="0"/>
       <xsd:element ref="xsdl:Compression" minOccurs="0"/>
       <xsd:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
@@ -210,6 +219,7 @@
   <xsd:element name="Control" type="xsdl:Control_Type"/>
   <xsd:element name="Instance" type="xsdl:Instance_Type"/>
   <xsd:element name="URI" type="xsd:anyURI"/>
+  <xsd:element name="Mode" type="xsdl:Mode_Type"/>
 </xsd:schema>
 
 <!--

@@ -9,9 +9,9 @@ class XenBeeException(Exception):
     pass
 
 class BackendException(XenBeeException):
-    def __init__(self, msg, err=None):
-        XenBeeException.__init__(self, msg)
-        self.err = err
+    def __init__(self, msg, inst_id, *args):
+        XenBeeException.__init__(self, msg, *args)
+        self.inst_id = inst_id
 
 class InstanceCreationError(BackendException):
     pass
