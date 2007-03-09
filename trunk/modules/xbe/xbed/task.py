@@ -20,8 +20,9 @@ except:
 
 from xbe.util import singleton
 from xbe.util.exceptions import *
-from xbe import util
 from xbe.util import fsm
+from xbe.util.observer import Observable
+from xbe import util
 from xbe.xbed.task_fsm import TaskFSM
 from xbe.xbed.daemon import XBEDaemon
 from xbe.xbed.instance import InstanceManager
@@ -40,7 +41,7 @@ class Task(TaskFSM):
     def __init__(self, id, mgr):
         """Initialize a new task."""
         TaskFSM.__init__(self)
-        self.mtx = threading.RLock()
+        self.mtx = self.fsm.getLock()
         self.__timestamps = {}
         self.__timestamps["submit"] = time.time()
         self.__id = id
@@ -57,15 +58,50 @@ class Task(TaskFSM):
             "state": self.state(),
         }
 
+    def signalExecutionEnd(self, exitcode):
+        self.mtx.acquire()
+        try:
+            self.signalExecutionDone(exitcode)
+        finally:
+            self.mtx.release()
+
+    def signalExecutionFailed(self, reason):
+        self.mtx.acquire()
+        try:
+            self.signalExecutionDone(reason)
+        finally:
+            self.mtx.release()
+        
+    def signalExecutionDone(self, result):
+        try:
+            wait_tuple = self.__executionWaitTuple
+        except AttributeError:
+            pass
+        else:
+            wait_tuple[0].acquire()
+            try:
+                wait_tuple[1] = result
+                wait_tuple[0].notify()
+            finally:
+                wait_tuple[0].release()
+
+    def sendJSDLToInstance(self):
+        self.mtx.acquire()
+        try:
+            self.__inst.protocol.executeTask(self.__jsdl_xml, self)
+            self.log.info("task sent to instance")
+        finally:
+            self.mtx.release()
+
     def getStatusInfo(self):
         """Return all possible information about this task in a
         dictionary.
         
         The information returned depends on the current state.
         """
+        info = {}
         self.mtx.acquire()
         try:
-            info = {}
             times = {}
             # timestamp information
             for time, tstamp in self.__timestamps.iteritems():
@@ -85,9 +121,9 @@ class Task(TaskFSM):
             if self.state() == "Running:Executing":
                 # instance is available and has an IP
                 info["IP"] = self.__inst.ip
-            return info
         finally:
             self.mtx.release()
+        return info
 
     #
     # FSM transitions
@@ -98,6 +134,7 @@ class Task(TaskFSM):
         self.mtx.acquire()
         try:
             self.__timestamps["confirm"] = time.time()
+            self.log.info("confirmed")
             self.__jsdl_xml = jsdl_xml
             self.__jsdl_doc = jsdl_doc
         finally:
@@ -112,11 +149,7 @@ class Task(TaskFSM):
         try:
             self.__timestamps["terminate"] = time.time()
             self.reason = reason
-            if isinstance(reason, failure.Failure):
-                msg = reason.getErrorMessage()
-            else:
-                msg = str(reason)
-            self.log.info("terminating pending reserved: %s" % msg)
+            self.log.info("terminating pending reserved: %s" % self.reason_as_str())
         finally:
             self.mtx.release()
 
@@ -126,11 +159,7 @@ class Task(TaskFSM):
         try:
             self.__timestamps["terminate"] = time.time()
             self.reason = reason
-            if isinstance(reason, failure.Failure):
-                msg = reason.getErrorMessage()
-            else:
-                msg = str(reason)
-            self.log.info("terminating pending confirmed: %s" % msg)
+            self.log.info("terminating pending confirmed: %s" % self.reason_as_str())
             del self.__jsdl_xml
             del self.__jsdl_doc
         finally:
@@ -159,12 +188,7 @@ class Task(TaskFSM):
         try:
             self.__timestamps["terminate"] = time.time()
             self.reason = reason
-            if isinstance(reason, failure.Failure):
-                msg = reason.getErrorMessage()
-            else:
-                msg = str(reason)
-            self.log.info("terminating stage-in: %s" % msg)
-            self.mgr.abortActivities(self)
+            self.log.info("terminating stage-in: %s" % self.reason_as_str())
             self.__clean_up_spool()
         finally:
             self.mtx.release()
@@ -175,11 +199,7 @@ class Task(TaskFSM):
         try:
             self.__timestamps["failed"] = time.time()
             self.reason = reason
-            if isinstance(reason, failure.Failure):
-                msg = reason.getErrorMessage()
-            else:
-                msg = str(reason)
-            self.log.warn("stage-in failed: %s" % msg)
+            self.log.warn("stage-in failed: %s" % self.reason_as_str())
             self.__clean_up_spool()
         finally:
             self.mtx.release()
@@ -189,12 +209,13 @@ class Task(TaskFSM):
            addCallback(self.cb_instance_started).addErrback(self.failed)"""
         self.mtx.acquire()
         try:
+            self.log.debug("initiating instance startup")
             self.__timestamps["instance-start"] = time.time()
             self.__configureInstance(self.__inst, self.__jsdl_doc)
-            self.__inst.start().addCallback(self.cb_instance_started).\
-                                addErrback(self.failed)
+            self.__start_instance()
         finally:
             self.mtx.release()
+        self.log.debug("instance start initiated")
 
     def do_terminate_instance_starting(self, reason, *args, **kw):
         """terminate the start process of the instance."""
@@ -202,11 +223,9 @@ class Task(TaskFSM):
         try:
             self.__timestamps["terminate"] = time.time()
             self.reason = reason
-            if isinstance(reason, failure.Failure):
-                msg = reason.getErrorMessage()
-            else:
-                msg = str(reason)
-            self.log.info("terminating instance-start: %s" % msg)
+            self.log.info("terminating instance-start: %s" % self.reason_as_str())
+            self._cb_release_resources()
+            self.__clean_up_spool()
         finally:
             self.mtx.release()
 
@@ -216,12 +235,9 @@ class Task(TaskFSM):
         try:
             self.__timestamps["failed"] = time.time()
             self.reason = reason
-            if isinstance(reason, failure.Failure):
-                msg = reason.getErrorMessage()
-            else:
-                msg = str(reason)
-            self.log.warn("instance start failed: %s" % msg)
-            self.__stop_instance(self.__inst)
+            self.log.warn("instance start failed: %s" % self.reason_as_str())
+            self._cb_release_resources()
+            self.__clean_up_spool()
         finally:
             self.mtx.release()
 
@@ -232,31 +248,25 @@ class Task(TaskFSM):
         """
         self.mtx.acquire()
         try:
+            self.log.info("executing task")
             self.__timestamps["execute"] = time.time()
-            log.info("executing task")
-            self.__inst.protocol.executeTask(
-                self.__jsdl_xml, self).\
-                addCallback(self._cb_store_exitcode).\
-                addCallback(self.cb_execution_finished).\
-                addErrback(self.failed)
+            self.__execute()
         finally:
             self.mtx.release()
 
     def do_terminate_execution(self, reason, *args, **kw):
         """terminate the execution within the instance.
 
-        1. terminate the task within the instance
-        2. shutdown the instance
+        shutdown the instance
         """
         self.mtx.acquire()
         try:
             self.__timestamps["terminate"] = time.time()
             self.reason = reason
-            if isinstance(reason, failure.Failure):
-                msg = reason.getErrorMessage()
-            else:
-                msg = str(reason)
-            self.log.info("terminating execution: %s" % msg)
+            self.log.info("terminating execution: %s" % self.reason_as_str())
+            self.__stop_instance()
+            self._cb_release_resources()
+            self.__clean_up_spool()
         finally:
             self.mtx.release()
 
@@ -269,52 +279,10 @@ class Task(TaskFSM):
         try:
             self.__timestamps["failed"] = time.time()
             self.reason = reason
-            if isinstance(reason, failure.Failure):
-                msg = reason.getErrorMessage()
-            else:
-                msg = str(reason)
-            self.log.warn("execution failed: %s" % msg)
-            self.__stop_instance(self.__inst)
-        finally:
-            self.mtx.release()
-
-    def do_stop_instance(self, *args, **kw):
-        """the task has finished its execution stop the instance"""
-        self.mtx.acquire()
-        try:
-            self.log.info("stopping instance")
-            self.__timestamps["instance-stop"] = time.time()
-            self.__stop_instance(self.__inst).addCallback(self.cb_instance_stopped)
-        finally:
-            self.mtx.release()
-
-    def do_terminate_instance_stopping(self, reason, *args, **kw):
-        """terminate the shutdown-process
-        I think that has to be a 'noop', but the 'instance-stopped' callback
-        must not do any harm!"""
-        self.mtx.acquire()
-        try:
-            self.__timestamps["terminate"] = time.time()
-            self.reason = reason
-            if isinstance(reason, failure.Failure):
-                msg = reason.getErrorMessage()
-            else:
-                msg = str(reason)
-            self.log.info("terminate instance-stop: %s" % msg)
-        finally:
-            self.mtx.release()
-
-    def do_instance_stopping_failed(self, reason, *args, **kw):
-        """i really do not know, what to do about that, maybe force the destroying"""
-        self.mtx.acquire()
-        try:
-            self.__timestamps["failed"] = time.time()
-            self.reason = reason
-            if isinstance(reason, failure.Failure):
-                msg = reason.getErrorMessage()
-            else:
-                msg = str(reason)
-            self.log.warn("instance-stop failed: %s" % msg)
+            self.log.warn("execution failed: %s" % self.reason_as_str())
+            self.__stop_instance()
+            self._cb_release_resources()
+            self.__clean_up_spool()
         finally:
             self.mtx.release()
 
@@ -334,13 +302,9 @@ class Task(TaskFSM):
         """stage out process failed, so handle that"""
         self.mtx.acquire()
         try:
-            self.reason = reason
             self.__timestamps["failed"] = time.time()
-            if isinstance(reason, failure.Failure):
-                msg = reason.getErrorMessage()
-            else:
-                msg = str(reason)
-            self.log.warn("stage-out failed: %s" % msg)
+            self.reason = reason
+            self.log.warn("stage-out failed: %s" % self.reason_as_str())
             self.__clean_up_spool()
         finally:
             self.mtx.release()
@@ -349,13 +313,10 @@ class Task(TaskFSM):
         """terminate the stage out process"""
         self.mtx.acquire()
         try:
-            self.__timestamps["terminate"] = time.time()
             self.reason = reason
-            if isinstance(reason, failure.Failure):
-                msg = reason.getErrorMessage()
-            else:
-                msg = str(reason)
-            self.log.info("terminating stage out: %s" % msg)
+            self.log.info("terminating stage out: %s" % self.reason_as_str())
+            self.__timestamps["terminate"] = time.time()
+            self.__clean_up_spool()
         finally:
             self.mtx.release()
 
@@ -374,6 +335,13 @@ class Task(TaskFSM):
     #
     # these methods are used internally by the task
     #
+
+    def reason_as_str(self):
+        if isinstance(self.reason, failure.Failure):
+            msg = self.reason.getErrorMessage()
+        else:
+            msg = str(self.reason)
+        return msg
     
     def __createSpool(self):
         """Creates the spool-directory for this task.
@@ -462,18 +430,12 @@ class Task(TaskFSM):
         inst.config().setMemory(pmem)
         return inst
 
-    def __stop_instance(self, inst):
-        """returns a deferred"""
-        return inst.stop().addErrback(
-            self.__inst.destroy).addCallback(self._cb_release_resources)
-
-    def _cb_release_resources(self, arg):
+    def _cb_release_resources(self):
         self.log.info("releasing acquired resources")
         mac_ip = (self.__inst.config().getMac(), self.__inst.ip)
         XBEDaemon.getInstance().macAddresses.release(mac_ip)
         self.__delete_instance()
         log.info("resources released")
-        return arg
 
     def __delete_instance(self, *a, **kw):
         InstanceManager.getInstance().removeInstance(self.__inst)
@@ -520,9 +482,9 @@ class Task(TaskFSM):
     def _eb_stage_in_failed(self, results, *a, **kw):
         try:
             self.mtx.acquire()
+            self.failed(results[0])
         finally:
             self.mtx.release()
-        self.failed(results[0])
         
     def __unprepare(self):
         self.log.debug("starting un-preparation")
@@ -553,12 +515,69 @@ class Task(TaskFSM):
             self.mtx.release()
         self.failed(results[0])
 
-    def _cb_check_deferred_list(self, results):
-        for code, result in results:
-            if code == defer.FAILURE:
-                return result
+    def __start_instance(self):
+        from xbe.xbed.task_activities import StartInstanceActivity
+        from xbe.util.activity import ComplexActivity, ThreadedActivity
+ 
+        # start the instance with a 3 minute timeout
+        instance_starter = ThreadedActivity(
+            StartInstanceActivity(self.__inst), (3*60,))
 
-class TaskManager(singleton.Singleton):
+        complex_activity = ComplexActivity([instance_starter])
+        self.mgr.registerActivity(self, complex_activity,
+                                  on_finish=self._cb_instance_start_succeed,
+                                  on_fail=self._eb_instance_start_failed,
+                                  on_abort=None)
+
+    def _cb_instance_start_succeed(self, result, *a, **kw):
+        try:
+            self.mtx.acquire()
+        finally:
+            self.mtx.release()
+        self.log.debug("instance successfully started")
+        self.cb_instance_started()
+
+    def _eb_instance_start_failed(self, results, *a, **kw):
+        try:
+            self.mtx.acquire()
+        finally:
+            self.mtx.release()
+        self.failed(results[0])
+
+    def __stop_instance(self):
+        # this is un-interruptable
+        if not self.__inst.is_stopped():
+            try:
+                self.__inst.stop()
+            except Exception, e:
+                assert(False, "instance::stop() is not supposed to raise any exception")
+        
+    def _cb_execution_finished(self, result):
+        try:
+            self.mtx.acquire()
+            self.__stop_instance()
+            self._cb_release_resources()
+            self.cb_execution_finished()
+        finally:
+            self.mtx.release()
+
+    def __execute(self):
+        try:
+            from xbe.xbed.task_activities import ExecutionActivity
+            from xbe.util.activity import ComplexActivity, ThreadedActivity
+
+            self.__executionWaitTuple = [threading.Condition(), None]
+            execution_waiter = ThreadedActivity(
+                ExecutionActivity(self, self.__executionWaitTuple))
+            complex_activity = ComplexActivity([execution_waiter])
+            self.mgr.registerActivity(self, complex_activity,
+                                      on_finish=self.cb_execution_finished,
+                                      on_fail=self.failed,
+                                      on_abort=None)
+        except Exception, e:
+            log.debug("execution failed: %s" % e)
+        
+class TaskManager(singleton.Singleton, Observable):
     """The task-manager.
 
     Through this class every known task can be controlled:
@@ -568,19 +587,12 @@ class TaskManager(singleton.Singleton):
     def __init__(self, daemon, spool):
         """Initialize the TaskManager."""
         singleton.Singleton.__init__(self)
+        Observable.__init__(self)
         self.spool = spool
         self.tasks = {}
         self.mtx = threading.RLock()
         self.daemon = daemon
-        self.observers = [] # they are called when a new task has been created
         self.activityQueue = ActivityQueue()
-
-    def notify(self, task, event):
-        for observer, args, kw in self.observers:
-            reactor.callLater(0.5, observer, task, event, *args, **kw)
-
-    def addObserver(self, observer, *args, **kw):
-        self.observers.append( (observer, args, kw) )
 
     def new(self):
         """Returns a new task."""
@@ -592,7 +604,7 @@ class TaskManager(singleton.Singleton):
         self.tasks[task.id()] = task
         self.mtx.release()
 
-        self.notify(task, "newTask")
+        self.notify( (task, "newTask") )
         return task
 
     def removeTask(self, task):
@@ -601,11 +613,12 @@ class TaskManager(singleton.Singleton):
             self.mtx.acquire()
             self.tasks.pop(task.id())
             del task.mgr
-            self.notify(task, "removeTask")
+            self.notify( (task, "removeTask") )
         finally:
             self.mtx.release()
 
     def registerActivity(self, task, activity, on_finish, on_fail, on_abort):
+        log.debug("registering new activity %s for task %s" % (repr(activity), task.id()))
         self.activityQueue.registerActivity(task, activity,
                                             on_finish, on_fail, on_abort)
 
@@ -620,15 +633,18 @@ class TaskManager(singleton.Singleton):
         """
         return self.tasks.get(id)
 
+    def terminateTask(self, task, reason):
+        self.abortActivities(task)
+        task.terminate(reason)
+
     def taskFailed(self, task):
         """Called when a task has failed somehow."""
-        self.notify(task, "taskFailed")
+        self.notify( (task, "taskFailed") )
 
     def taskReady(self, task):
         """Called when a task says, that it's ready."""
-        self.notify(task, "taskReady")
+        self.notify( (task, "taskReady") )
 
     def taskFinished(self, task):
         """Called when a task finished."""
-        self.notify(task, "taskFinished")
-
+        self.notify( (task, "taskFinished") )

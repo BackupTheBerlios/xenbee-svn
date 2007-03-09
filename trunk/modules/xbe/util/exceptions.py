@@ -5,15 +5,26 @@ Common exceptions.
 __version__ = "$Rev$"
 __author__ = "$Author: petry $"
 
+from pprint import pformat
+
 class XenBeeException(Exception):
-    pass
+    def __str__(self):
+        return "<%(cls)s - %(msg)s: %(args)s>" % {
+            "cls": self.__class__.__name__,
+            "msg": str(self.message),
+            "args": pformat(self.args),
+        }
+    __repr__ = __str__
 
 class BackendException(XenBeeException):
     def __init__(self, msg, inst_id, *args):
-        XenBeeException.__init__(self, msg, *args)
+        XenBeeException.__init__(self, msg, inst_id, *args)
         self.inst_id = inst_id
 
 class InstanceCreationError(BackendException):
+    pass
+
+class DomainLookupError(BackendException):
     pass
 
 class SecurityError(XenBeeException):

@@ -323,6 +323,8 @@ class ThreadedActivity(Hookable):
                     self.proxy.abort()
                 except:
                     pass
+            else:
+                self.__aborted = True
         finally:
             self.__mtx.release()
 
@@ -355,10 +357,13 @@ class ThreadedActivity(Hookable):
             self.__mtx.acquire()
             if not self.startable():
                 raise RuntimeError("already started")
-            self.__started = True
-
-            self.__worker = threading.Thread(target=self.__thread_entry)
-            self.__worker.start()
+            if self.__aborted or self.__do_abort:
+                self.__result = None
+                self.__do_abort = False
+            else:
+                self.__started = True
+                self.__worker = threading.Thread(target=self.__thread_entry)
+                self.__worker.start()
         finally:
             self.__mtx.release()
 
@@ -534,6 +539,8 @@ class ComplexActivity(Hookable):
         self.__do_abort = True
         if self.__current is not None:
             self.__current.abort()
+        if not self.__started:
+            self.__aborted = True
         self.__mtx.release()
 
     def getResult(self):

@@ -47,19 +47,19 @@ class TaskFSM(object):
                         "start_token", self.do_stage_in)
 #
 #                                 +----------+
-#                +--------------->|  Failed  |<--------------+------------------+----------+
-#                |                +----------+               |                  |          |
-#                |stage in            ^ inst                 | exec             |          |stage out
-#                | failed             |failed                |failed            |          | failed
-#                |                    |                      |                  |          |
-#  start  +------+---+ stagein +------+-------+ instance +---+-----+ exec    +-------+ +---+-----+
-# ------->|  Running |-------->|   Running    |--------->| Running |-------->|Running|-|Running  |--->..
-#         | Stage-In |completed|inst starting | started  |Executing|finished |  stop | |Stage-Out|
-#         +------+---+         +------+-------+          +----+----+         |  inst | +----+----+
-#                |                    |                       |              +-------+      |
-#                |                    v                       |                             |
-#                |             +-------------+                |                             |
-#                `------------>| Terminated  |<---------------+-----------------------------+
+#                +--------------->|  Failed  |<--------------+-------------------+
+#                |                +----------+               |                   |
+#                |stage in            ^ inst                 | exec              |stage out
+#                | failed             |failed                |failed             | failed
+#                |                    |                      |                   |
+#  start  +------+---+ stagein +------+-------+ instance +---+-----+ exec    +---+-----+
+# ------->|  Running |-------->|   Running    |--------->| Running |-------->|Running  |--->..
+#         | Stage-In |completed|inst starting | started  |Executing|finished |Stage-Out|
+#         +------+---+         +------+-------+          +----+----+         +----+----+
+#                |                    |                       |                   |
+#                |                    v                       |                   |
+#                |             +-------------+                |                   |
+#                `------------>| Terminated  |<---------------+-------------------+
 #                              +-------------+
 
         m.addTransition("Running:Stage-In",
@@ -87,17 +87,8 @@ class TaskFSM(object):
                         "Failed",
                         "fail_token", self.do_execution_failed)
         m.addTransition("Running:Executing",
-                        "Running:Instance-Stopping",
-                        "execution_finished_token", self.do_stop_instance)
-        m.addTransition("Running:Instance-Stopping",
-                        "Terminated",
-                        "terminate_token", self.do_terminate_instance_stopping)
-        m.addTransition("Running:Instance-Stopping",
-                        "Failed",
-                        "fail_token", self.do_instance_stopping_failed)
-        m.addTransition("Running:Instance-Stopping",
                         "Running:Stage-Out",
-                        "instance_stopped_token", self.do_stage_out)
+                        "execution_finished_token", self.do_stage_out)
         m.addTransition("Running:Stage-Out",
                         "Failed",
                         "fail_token", self.do_stage_out_failed)
@@ -114,6 +105,17 @@ class TaskFSM(object):
         m.addTransition("Running:Stage-Out",
                         "Finished",
                         "stage_out_completed_token", self.do_task_finished)
+
+        # no-op transitions
+        m.addTransition("Terminated",
+                        "Terminated",
+                        "terminate_token", None)
+        m.addTransition("Failed",
+                        "Failed",
+                        "terminate_token", None)
+        m.addTransition("Failed",
+                        "Failed",
+                        "fail_token", None)
         self.fsm = m
 
     def state(self):
@@ -133,9 +135,6 @@ class TaskFSM(object):
     def start(self, *args, **kw):
         """initiate the starting of the task."""
         self.fsm.consume("start_token", *args, **kw)
-    def execute(self, *args, **kw):
-        """triggers the execution of the task."""
-        self.fsm.consume("execute_task_token", *args, **kw)
 
     # the  only errback to  be used,  it will  be transformed  into an
     # appropriate errback using the fsm

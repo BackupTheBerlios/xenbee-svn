@@ -100,7 +100,7 @@ class XenBEEClientProtocol(protocol.XMLProtocol):
         log.debug(str(msg.ticket()))
         ticket = TicketStore.getInstance().lookup(msg.ticket())
         if ticket is not None:
-            ticket.task.terminate("UserCancel")
+            TaskManager.getInstance().terminateTask(ticket.task, "UserCancel")
             del ticket.task
             TicketStore.getInstance().release(ticket)
         else:
@@ -161,16 +161,13 @@ class XenBEEInstanceProtocol(protocol.XMLProtocol):
 
         return a Deferred, that gets called when the task has finished.
         """
-        self.__defer = defer.Deferred()
-
         msg = message.ExecuteTask(jsdl, task.id())
         self.task_id = task.id()
         self.sendMessage(msg.as_xml())
 
-        return self.__defer
-
     def queryStatus(self):
-        pass
+        # TODO: implement
+        raise NotImplementedError("queryStatus is not yet implemented")
 
     #########################
     #                       #
@@ -183,9 +180,9 @@ class XenBEEInstanceProtocol(protocol.XMLProtocol):
 
         inst = InstanceManager.getInstance().lookupByUUID(inst_id)
         if inst is not None:
-            inst.available(inst_avail, self)
+            inst.available(self)
         else:
-            return message.Error(errcode.INSTANCE_LOOKUP_FAILURE)
+            log.warn("got available message from suspicious source")
 
     def do_ExecutionFinished(self, xml, *args, **kw):
         msg = message.MessageBuilder.from_xml(xml.getroottree())
@@ -194,31 +191,34 @@ class XenBEEInstanceProtocol(protocol.XMLProtocol):
         inst = InstanceManager.getInstance().lookupByUUID(inst_id)
         if inst is not None:
             log.debug("execution on instance %s finished" % inst_id)
-            d = self.__defer
-            del self.__defer
-            d.callback(exitcode)
+            try:
+                inst.task.signalExecutionEnd(exitcode)
+            except Exception, e:
+                log.warn("could not signal execution end: %s" % e)
         else:
-            return message.Error(errcode.INSTANCE_LOOKUP_FAILURE)
+            log.warn("got execution finished from suspicious source")
 
     def do_InstanceAlive(self, xml, *a, **kw):
         msg = message.MessageBuilder.from_xml(xml.getroottree())
         inst_id = msg.inst_id()
         inst = InstanceManager.getInstance().lookupByUUID(msg.inst_id())
         if inst is not None:
-            inst.alive()
+            inst.update_alive()
         else:
-            return message.Error(errcode.INSTANCE_LOOKUP_FAILURE)
-
+            log.warn("got alive message from suspicious source")
+            
     def do_ExecutionFailed(self, xml, *a, **kw):
         msg = message.MessageBuilder.from_xml(xml.getroottree())
         inst_id = msg.inst_id()
         inst = InstanceManager.getInstance().lookupByUUID(inst_id)
         if inst is not None:
-            d = self.__defer
-            del self.__defer
-            d.errback(failure.Failure(Exception("execution failed", msg)))
+            log.debug("execution on instance %s failed: %s" % (inst_id, msg.reason()))
+            try:
+                inst.task.signalExecutionFailed(Exception("execution failed", msg))
+            except Exception, e:
+                log.warn("could not signal execution failure: %s" % e)
         else:
-            return message.Error(errcode.INSTANCE_LOOKUP_FAILURE)
+            log.warn("got ExecutionFailed message from suspicious source")
 
     def do_InstanceShuttingDown(self, xml, *a, **kw):
         msg = message.MessageBuilder.from_xml(xml.getroottree())
@@ -226,16 +226,13 @@ class XenBEEInstanceProtocol(protocol.XMLProtocol):
         inst = InstanceManager.getInstance().lookupByUUID(inst_id)
         if inst is not None:
             log.info("instance is shutting down...")
-            # check if we still have a deferred that may be called
+            log.debug("execution on instance %s finished" % inst_id)
             try:
-                d = self.__defer
-                del self.__defer
-            except AttributeError:
-                pass
-            else:
-                d.callback(0)  # call with an exitcode of 0
+                inst.task.signalExecutionEnd(0)
+            except Exception, e:
+                log.warn("could not signal execution end: %s" % e)
         else:
-            log.info("old instance %s is shutting down" % inst_id)
+            log.warn("got execution finished from suspicious source")
 
 class _XBEDProtocol(XenBEEProtocol):
     def post_connect(self):
@@ -305,10 +302,10 @@ class XenBEEDaemonProtocolFactory(XenBEEProtocolFactory):
                      "sending message %(message)s to %(client)s failed: %(result)s",
                      { "client":id, "message": str(msg)})
 
-    def logCallback(self, result, logfunc, fmt, dictionary, *args, **kw):
+    def logCallback(self, result, logfunc, fmt, dictionary):
         if result is not None:
-            dictionary["result"] = result
-            logfunc(fmt, dictionary, *args, **kw)
+            dictionary["result"] = str(result)
+            logfunc(fmt % dictionary)
             
     def clientMessage(self, transport, msg, client):
         self.__messageHelper(client, msg, transport,

@@ -10,7 +10,7 @@ contains:
 __version__ = "$Rev$"
 __author__ = "$Author: petry $"
 
-import logging, os, os.path, time
+import logging, os, os.path, time, threading
 import threading
 log = logging.getLogger(__name__)
 
@@ -48,6 +48,7 @@ class Instance(object):
 	    config.name must be a UUID.
 
         """
+        self.__mtx = threading.RLock()
         self.__state = "created"
         self.__config = config
         self.__spool = spool
@@ -97,11 +98,44 @@ class Instance(object):
     def spool(self):
         return self.__spool
 
+    def _setState(self, s):
+        self.__mtx.acquire()
+        try:
+            self.__state = s
+        finally:
+            self.__mtx.release()
+
+    def state(self):
+        self.__mtx.acquire()
+        try:
+            rv = self.__state
+        finally:
+            self.__mtx.release()
+        return rv
+
+    def is_available(self):
+        return self.state() == "started:available"
+    def has_failed(self):
+        return self.state() == "failed"
+    def is_stopped(self):
+        return self.state() == "stopped"
+    def is_started(self):
+        return self.state().startswith("started")
+        
     def getBackendID(self):
-        return self.__backend_id
+        self.__mtx.acquire()
+        try:
+            rv = self.__backend_id
+        finally:
+            self.__mtx.release()
+        return rv
 
     def setBackendID(self, b_id):
-        self.__backend_id = b_id
+        self.__mtx.acquire()
+        try:
+            self.__backend_id = b_id
+        finally:
+            self.__mtx.release()
 
     def getBackendState(self):
         """Return the backend state of this instance.
@@ -109,111 +143,85 @@ class Instance(object):
         see: xbe.xbed.backend.status
 
         """
-        return backend.getStatus(self)
+        self.__mtx.acquire()
+        try:
+            rv = backend.getStatus(self)
+        finally:
+            self.__mtx.release()
+        return rv
 
     def getInfo(self):
         """Return all information known about the backend instance."""
-        binfo = backend.getInfo(self)
-        binfo.ips = getattr(self, 'ips', [])
-        return binfo
-
-    def stopped(self, result):
-        self.state = "stopped"
-        self.backend_id = -1
-        return self
+        self.__mtx.acquire()
+        try:
+            rv = backend.getInfo(self)
+        finally:
+            self.__mtx.release()
+        return rv
 
     def stop(self):
         """Stop the instance."""
-        if self.state in ["started"]:
-            return threads.deferToThread(backend.shutdownInstance,
-                                         self).addCallback(self.stopped)
-        else:
-            return defer.succeed(self)
-
-    def cleanUp(self):
-        """Removes all data belonging to this instance."""
-        return
-
-    def destroy(self, *args, **kw):
-        """Destroys the given instance."""
-        return threads.deferToThread(backend.destroyInstance,
-                                     self).addBoth(str).\
-                                     addCallback(log.error).addCallback(self.stopped)
-
-    def startable(self):
-        return self.state == "start-pending"
-
-    def start(self, timeout=None):
-        """Starts a new backend instance.
-
-        It returns a Deferred object, that is called back, when the
-        instance has notified us, i.e. when the instance could be
-        started correctly and is able to contact us.
-
-        """
+        self.__mtx.acquire()
         try:
-            self.__availableDefer
-        except AttributeError:
-            # no deferred currently active
-            self.__availableDefer = defer.Deferred()
-            self.state = "starting"
-        else:
-            return defer.fail(RuntimeError("instance already starting"))
-        
-        if timeout is None:
-            timeout = self.__availableTimeout
+            if self.is_stopped():
+                return True
+            try:
+                backend.shutdownInstance(self)
+            except Exception, e:
+                self.log.debug("shutdown failed, destroying: %s" % str(e))
+                backend.destroyInstance(self)
+            self._setState("stopped")
+            self.setBackendID(-1)
+        finally:
+            self.__mtx.release()
+        return True
 
-        def __timeout_func(deferred):
-            self.log.warn("timed out")
-            deferred.errback(InstanceTimedout("instance timedout", self.id()))
+    def start(self):
+        """Starts a new backend instance."""
+        self.__mtx.acquire()
+        try:
+            if self.is_started():
+                return
+            self.setBackendID(backend.createInstance(self))
+            self.update_alive()
+            self._setState("started")
+        except:
+            self._setState("failed")
+            raise
+        finally:
+            self.__mtx.release()
 
-        def __cancelTimer(arg, timer):
-            # got signal from the backend instance
-            timer.cancel()
-            return arg
-            
-        self.__availableTimer = reactor.callLater(timeout,
-                                                  __timeout_func,
-                                                  self.__availableDefer)
-        self.__availableDefer.addCallback(__cancelTimer, self.__availableTimer)
-        
-        # use the backend to start
-	def __started(backendId):
-	    self.state = "started"
-            self.setBackendID(backendId)
-            self.__startTime = time.time()
-            self.alive()
-            return self
-        def __failed(err):
-            self.state = "failed"
-            self.log.error("starting failed: " + err.getErrorMessage())
-            self.__availableTimer.cancel()
-            self.__availableDefer.errback(err)
-            return self
-        threads.deferToThread(backend.createInstance,
-                              self).addCallback(__started).addErrback(__failed)
-            
-        return self.__availableDefer
-
-    def available(self, inst_avail_msg, protocol):
+    def available(self, protocol):
         """Callback called when the 'real' instance has notified us."""
-        self.ips = inst_avail_msg.ips()
-        self.log.debug("now available at [%s]" % (", ".join(self.ips)))
-        if not self.__availableDefer.called:
+        self.__mtx.acquire()
+        try:
+            self.log.debug("now available")
+            self._setState("started:available")
             self.protocol = protocol
-            self.alive()
-            self.__availableDefer.callback(self)
-            del self.__availableDefer
-            del self.__availableTimer
+        finally:
+            self.__mtx.release()
 
-    def alive(self):
-        self.__last_message_tstamp = time.time()
+    def update_alive(self):
+        self.__mtx.acquire()
+        try:
+            self.__last_message_tstamp = time.time()
+        finally:
+            self.__mtx.release()
+
+    def is_alive(self, consider_dead=5*60):
+        return (self.timeOfLastMessage() + consider_dead) > time.time()
 
     def timeOfLastMessage(self):
-        return self.__last_message_tstamp
+        self.__mtx.acquire()
+        try:
+            rv = self.__last_message_tstamp
+        finally:
+            self.__mtx.release()
+        return rv
 
-from xbe.util import singleton
-class InstanceManager(singleton.Singleton):
+from xbe.util.singleton import Singleton
+from xbe.util.observer import Observable
+class InstanceManager(Singleton, Observable):
     """The instance-manager.
 
     Through this class every known instance can be controlled:
@@ -224,10 +232,11 @@ class InstanceManager(singleton.Singleton):
     """
     def __init__(self, daemon):
         """Initialize the InstanceManager."""
-        singleton.Singleton.__init__(self)
+        Singleton.__init__(self)
+        Observable.__init__(self)
+        
         self.mtx = threading.RLock()
         self.instances = {}
-        self.cache = daemon.cache
         self.__iter__ = self.instances.itervalues
         self.reaper = task.LoopingCall(self.reap, 5*60)
         self.reaper.start(1*60, now=False)
@@ -263,12 +272,11 @@ class InstanceManager(singleton.Singleton):
         be alive."""
         now = time.time()
         for inst in self.instances.values():
-            if inst.state == "started":
+            if inst.state().startswith("started"):
                 if (inst.timeOfLastMessage() + timeout) < now:
                     log.info("reaping stale instance %s" % inst.id())
-                    inst.task.failed(
-                        failure.Failure(
-                        InstanceTimedout("instance seems dead", inst.id())))
+                    inst.task.signalExecutionFailed(
+                        InstanceTimedout("instance seems dead", inst.id()))
             
     def removeInstance(self, inst):
         """Remove the instance 'inst' from the manager.

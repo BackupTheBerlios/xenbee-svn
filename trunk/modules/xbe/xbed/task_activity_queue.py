@@ -47,8 +47,10 @@ class ActivityQueue:
             return
         
         for act, on_finish, on_fail, on_abort in acts:
+            log.debug("aborting %s" % (act))
             act.abort()
             while not act.done():
+                log.debug("waiting")
                 time.sleep(0.5)
             try:
                 act.undo()
@@ -108,7 +110,7 @@ class ActivityQueue:
                                     log.debug("activity callback failed:", e)
                     finally:
                         cv.acquire()
-                cv.wait(10)
+                cv.wait(3)
         except Exception, e:
             log.warn("exception in thread loop", e)
         finally:

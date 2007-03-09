@@ -814,10 +814,9 @@ class ExecutionFailed(InstanceMessage):
     tag = XBE("ExecutionFailed")
     
     def __init__(self, inst_id, reason):
-        """Create a new ExecutionFinished message.
+        """Create a new ExecutionFailed message.
 
         @param inst_id - the instance id in which the task has been running
-        @param task_id - if the instance does know the task_id, it may be set here.
         """
         InstanceMessage.__init__(self)
         if inst_id is None:

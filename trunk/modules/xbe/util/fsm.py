@@ -34,6 +34,9 @@ class FSM(object):
         else:
             self.start = None
 
+    def getLock(self):
+        return self.__mtx
+
     def newState(self, name):
         try:
             self.__mtx.acquire()
@@ -112,7 +115,7 @@ class FSM(object):
             args = [ a for a in args ]
             args.extend(extra_args)
             kw.update(extra_kw)
-            if o:
+            if o is not None and callable(o):
                 # call transition method
                 rv = o(*args, **kw)
             self.__inTransition = False

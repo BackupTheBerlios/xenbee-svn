@@ -81,18 +81,27 @@ class Backend(object):
         stdout, stderr = p.communicate()
         if p.returncode != 0:
             raise ProcessError(p.returncode, "xm", stderr, stdout)
-        
+
+    def _getDomainByID(self, inst):
+        try:
+            return self.con.lookupByID(inst.getBackendID())
+        except Exception, e:
+            raise DomainLookupError("domain not found", inst.id(), e)
+            
     def _getDomainByName(self, inst):
-        return self.con.lookupByName(inst.id())
+        try:
+            return self.con.lookupByName(inst.id())
+        except Exception, e:
+            raise DomainLookupError("domain not found", inst.id(), e)
 
     def _getDomain(self, inst):
         try:
             if inst.getBackendID() in self.con.listDomainsID():
-                d = self._getDomainByName(inst)
+                d = self._getDomainByID(inst)
             else:
-                raise BackendException("domain not found", inst.id())
+                d = self._getDomainByName(inst)
         except Exception, e:
-            raise BackendException("domain not found", inst.id(), e)
+            raise DomainLookupError("domain not found", inst.id(), e)
         return d
 
     def retrieveID(self, inst):
@@ -123,7 +132,8 @@ class Backend(object):
         """
         try:
             return self.getInfo(inst).state
-        except:
+        except DomainLookupError, e:
+            log.debug("no such domain %r" % repr(e))
             return BE_INSTANCE_NOSTATE
 
     def getInfo(self, inst):
@@ -137,6 +147,7 @@ class Backend(object):
 
     def getDefinedDomains(self):
         """Return a mapping from 'name' to id for all known domains."""
+        self.acquireLock()
         try:
             domains = {}
             ids = self.con.listDomainsID()
@@ -198,7 +209,16 @@ class Backend(object):
             log.error("backend: could not create backend instance: %d: %s" %
                       (e.returncode, e.stdout))
             raise InstanceCreationError("create failed", inst.id(), e.returncode, e.stdout)
-        backend_id = self.retrieveID(inst)
+        
+        backend_id = -1
+        for trial in xrange(10):
+            backend_id = self.retrieveID(inst)
+            if backend_id < 0:
+                time.sleep(trial+1)
+            else:
+                break
+        if backend_id < 0:
+            raise InstanceCreationError("create failed, could not retrieve domain id", inst.id())
         log.debug("created backend instance with id: %d" % (backend_id,))
         return backend_id
 
@@ -217,8 +237,16 @@ class Backend(object):
 	within the instance will be killed(!). From the xm
 	man-page: it is equivalent to ripping the power cord.
         """
-        domain = self._getDomain(inst)
-        domain.destroy()
+        self.acquireLock()
+        try:
+            domain = self._getDomain(inst)
+            domain.destroy()
+        except DomainLookupError:
+            pass
+        except Exception, e:
+            log.fatal("could not destroy domain: %s" % str(e))
+        finally:
+            self.releaseLock()
 
     def waitState(self, inst, states=(BE_INSTANCE_SHUTOFF), timeout=60):
         """wait until the instance reached one of the given states.
@@ -252,6 +280,8 @@ class Backend(object):
             self.acquireLock()
             domain = self._getDomain(inst)
             domain.shutdown()
+        except DomainLookupError, e:
+            pass
         finally:
             self.releaseLock()
         if self.waitState(inst, (BE_INSTANCE_NOSTATE, BE_INSTANCE_SHUTOFF), timeout) == None:

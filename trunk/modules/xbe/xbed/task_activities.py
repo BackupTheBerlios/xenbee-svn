@@ -6,7 +6,7 @@
 * stage-in files into an image
 """
 
-import sys, signal, os, os.path, threading, subprocess, errno, stat
+import sys, signal, os, os.path, threading, subprocess, errno, stat, time
 import logging
 log = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ class ScriptFailed(Exception):
         }
     __repr__ = __str__
 
-class StagingException(Exception):
+class ActivityFailed(Exception):
     def __str__(self):
         return "<%(cls)s - %(msg)s - %(args)s>" % {
             "cls": self.__class__.__name__,
@@ -45,6 +45,8 @@ class StagingException(Exception):
         }
     __repr__ = __str__
 
+class StagingException(Exception):
+    pass
 class StagingAborted(StagingException):
     pass
 class StageInFailed(StagingException):
@@ -440,9 +442,9 @@ class SetUpActivity(TaskActivity):
             except Exception, e:
                 raise StageInFailed("jail setup failed, could not create spool directory", e)
         self.proc_path = os.path.join(self.jail_path, "proc")
-        if not os.path.exists(proc):
+        if not os.path.exists(self.proc_path):
             try:
-                os.makedirs(proc)
+                os.makedirs(self.proc_path)
             except Exception, e:
                 raise StageInFailed("jail setup failed, could not create proc directory", e)
         log.info("jail has been set up")
@@ -639,6 +641,7 @@ class TearDownActivity(TaskActivity):
         self.check_abort()
 
         self.jail_path = os.path.join(self.spool, "jail")
+        self.proc_path = os.path.join(self.jail_path, 'proc')
         self.xbe_spool = os.path.join(self.jail_path, "var", "xbe-spool")
 
         if not os.path.exists(os.path.join(self.xbe_spool, "image")):
@@ -743,3 +746,94 @@ class AcquireResourceActivity(ActivityProxy):
             self.pool.release(r)
         finally:
             self.unlock()
+
+class InstanceStartFailed(ActivityFailed):
+    pass
+class InstanceStartTimedOut(InstanceStartFailed):
+    pass
+    
+class StartInstanceActivity(ActivityProxy):
+    def __init__(self, instance):
+        ActivityProxy.__init__(self)
+        self.instance = instance
+
+    def __call__(self, ctxt, timeout, **kw):
+        # 1. start the  instance
+        try:
+            self.instance.start()
+        except Exception, e:
+            raise InstanceStartFailed("backend instance could not be started", e)
+
+        # 2. wait until it is really available
+        timeout_time = time.time() + timeout
+        while not ctxt.check_abort():
+            if time.time() > timeout_time:
+                raise InstanceStartTimedOut("instance start timed out", self.instance)
+            
+            if self.instance.is_available():
+                break
+            elif self.instance.has_failed():
+                raise InstanceStartFailed("instance start failed", self.instance)
+            # wait a little bit
+            try:
+                time.sleep(2)
+            except:
+                pass
+        if ctxt.check_abort():
+            try:
+                self.instance.stop()
+            except Exception, e:
+                log.warn("could not stop instance", self.instance, e)
+
+    def undo(self):
+        try:
+            self.lock()
+            if self.instance.is_started():
+                try:
+                    self.instance.stop()
+                except Exception,e:
+                    log.warn("could not stop instance", self.instance, e)
+        finally:
+            self.unlock()
+
+class ExecutionFailed(ActivityFailed):
+    pass
+
+class ExecutionActivity(ActivityProxy):
+    def __init__(self, task, wait_tuple):
+        ActivityProxy.__init__(self)
+        self.task = task
+        self.wait_tuple = wait_tuple
+
+    def __call__(self, ctxt, *args, **kw):
+        if not ctxt.check_abort():
+            self.task.sendJSDLToInstance()
+        else:
+            return
+        
+        rv = None
+        while not ctxt.check_abort():
+            self.wait_tuple[0].acquire()
+            try:
+                self.wait_tuple[0].wait()
+                if self.wait_tuple[1] is not None:
+                    rv = self.wait_tuple[1]
+                    break
+            finally:
+                self.wait_tuple[0].release()
+
+        if ctxt.check_abort():
+            return
+
+        # if the result is not an exitcode (int-type), raise an error
+        if not isinstance(rv, int):
+            raise ExecutionFailed("execution failed", rv)
+        else:
+            return rv
+
+    def abort(self):
+        self.wait_tuple[0].acquire()
+        try:
+            self.wait_tuple[0].notify()
+        finally:
+            self.wait_tuple[0].release()
