@@ -205,7 +205,7 @@ class XenConfigGenerator:
         # all disks
         disks = []
         for disk in self.config.getDisks():
-            disks.append( "file:%(path)s,%(target)s,w" % disk )
+            disks.append( "tap:aio:%(path)s,%(target)s,w" % disk )
         self._write_helper("disk", disks)
 
     def write_networking(self):

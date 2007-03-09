@@ -768,6 +768,12 @@ class StartInstanceActivity(ActivityProxy):
         timeout_time = time.time() + timeout
         while not ctxt.check_abort():
             if time.time() > timeout_time:
+                log.debug("instance did not come up correctly within %d seconds" % timeout)
+                try:
+                    log.debug("stopping the timed out instance")
+                    self.instance.stop()
+                except Exception, e:
+                    log.warn("stopping of instance failed", e)
                 raise InstanceStartTimedOut("instance start timed out", self.instance)
             
             if self.instance.is_available():
