@@ -65,7 +65,7 @@ class XMLProtocol(object):
                 rv = method(elem, *args, **kw)
             except Exception, e:
                 from traceback import format_exc
-                log.warn("exception during message handling: %s\n%s", e, format_exc(e))
+                log.warn("exception during message handling: %s\n%s" % (e, format_exc(e)))
             else:
                 return rv
 
@@ -276,10 +276,10 @@ class SecureProtocol(XMLProtocol):
         log.info("disconnecting...")
         try:
             p = self.protocol
+            del self.protocol
         except AttributeError:
             pass
         else:
-            del self.protocol
             p.connectionLost()
             
         try:
@@ -289,20 +289,31 @@ class SecureProtocol(XMLProtocol):
         self.__state = "disconnected"
 
     # handle security related messages
-    def do_Message(self, msg):
+    def do_Message(self, xml):
         from xbe.xml.security import SecurityError
-    
+
+        try:
+            msg_obj = message.MessageBuilder.from_xml(xml)
+            if isinstance(msg_obj, message.Error):
+                log.debug("got error: %r", msg_obj)
+                self.__disconnect()
+                raise SecurityError("got error", msg_obj)
+        except SecurityError:
+            return
+        except Exception:
+            pass
+
         # decompose into header and body
-        hdr = msg.find(XBE("MessageHeader"))
-        bod = msg.find(XBE("MessageBody"))
+        hdr = xml.find(XBE("MessageHeader"))
+        bod = xml.find(XBE("MessageBody"))
 
         if hdr is None:
-            log.error("ignoring illegal message: '%r'" % (etree.tostring(msg)))
+            log.error("ignoring illegal message: '%r'" % (etree.tostring(xml)))
             return
 
         # is it a EstablishMLS message
         if bod is not None and bod.find(XBE("EstablishMLS")) is not None:
-            return self.do_EstablishMLS(msg)
+            return self.do_EstablishMLS(xml)
 
         #
         # if we are still disconnected but got some encrypted data,
@@ -310,7 +321,7 @@ class SecureProtocol(XMLProtocol):
         #
         if self.__state == "disconnected":
             log.debug("i am still disconnected, remembering message")
-            self.__message_queue.append(msg)
+            self.__message_queue.append(xml)
             from xbe.xml.security import X509SecurityLayer
 
             securityLayer = X509SecurityLayer(self.__cert, # my own certificate
@@ -325,7 +336,7 @@ class SecureProtocol(XMLProtocol):
             return None
         
         if self.__state == "established":
-            return self.dispatch(bod[0], msg)
+            return self.dispatch(bod[0], xml)
 
     def do_CipherData(self, cipherdata, msg):
         """handle ciphered data.
@@ -350,7 +361,7 @@ class SecureProtocol(XMLProtocol):
         try:
             rv = self.protocol.messageReceived(real_msg)
         except Exception, e:
-            log.debug("handling of application data failed: %s", e)
+            log.debug("handling of application data failed", exc_info=1)
         else:
             return rv
 

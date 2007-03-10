@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- image submission extension for JSDL -->
+
+<jsdl:JobDefinition xmlns:jsdl="http://schemas.ggf.org/jsdl/2005/11/jsdl"
+		    xmlns:jsdl-posix="http://schemas.ggf.org/jsdl/2005/11/jsdl-posix"
+		    xmlns:xsdl="http://www.example.com/schemas/xbe/2007/01/xsdl">
+ <jsdl:JobDescription>
+    <jsdl:Application>
+      <xbe:XBEApplication xmlns:xbe="http://www.example.com/schemas/xbe/2007/01/xbe">
+	<xbe:ContinuousTask/>
+      </xbe:XBEApplication>
+    </jsdl:Application>
+    <jsdl:Resources>
+      <jsdl:TotalCPUCount>
+	<jsdl:Exact>2</jsdl:Exact>
+      </jsdl:TotalCPUCount>
+
+      <xsdl:InstanceDefinition>
+	<xsdl:InstanceDescription>
+	  <xsdl:Instance>
+	    <xsdl:Kernel>
+	      <xsdl:Location>
+		<xsdl:URI>
+                  file:///srv/xen-images/kernel-2.6.19
+		</xsdl:URI>
+	      </xsdl:Location>
+	    </xsdl:Kernel>
+
+	    <!-- the initrd is optional -->
+	    <xsdl:Initrd>
+	      <xsdl:Location>
+		<xsdl:URI>
+                  file:///srv/xen-images/initrd-2.6.19
+                </xsdl:URI>
+	      </xsdl:Location>
+	    </xsdl:Initrd>
+
+	    <!-- the image is mandatory -->
+	    <xsdl:Image fs-type="ext3">
+	      <xsdl:Location>
+		<xsdl:URI>
+		  file:///srv/xen-images/base.img
+		</xsdl:URI>
+	      </xsdl:Location>
+	    </xsdl:Image>
+	  </xsdl:Instance>
+	</xsdl:InstanceDescription>
+      </xsdl:InstanceDefinition>
+
+    </jsdl:Resources>
+  </jsdl:JobDescription>
+</jsdl:JobDefinition>
+
+<!--
+    Local Variables: ***
+    mode: nxml ***
+    End: ***
+-->

@@ -91,7 +91,7 @@ class DataStager:
         self.curl.setopt(pycurl.WRITEFUNCTION, self._write)
 
 	try:
-	    log.debug("beginning retrieving uri: %s" % self.src)
+	    log.debug("beginning retrieving uri: %s", self.src)
 	    start = time.time()
 
             directory = os.path.dirname(self.tmpdst)
@@ -100,23 +100,24 @@ class DataStager:
         
             self.fp = open(self.tmpdst, "wb")
 	    self.curl.perform()
-            self.fp.close()
+            self.fp.flush()
 	    self.duration = time.time() - start
 
             os.rename(self.tmpdst, self.dst)
             self.tmpdst = None
             
-	    log.debug("finished retrieving uri: %s: %ds" % (self.src, self.duration))
+	    log.debug("finished retrieving uri: %s: %ds", self.src, self.duration)
 	except Exception, e:
             if self.aborted():
                 log.info("staging aborted")
                 os.unlink(self.tmpdst)
                 raise StagingAborted("staging aborted", self.src, self.dst)
             else:
-                log.error("retrieval failed: %s" % str(e))
+                log.error("retrieval failed: %s", e)
                 raise
         finally:
             self.curl.close()
+            self.fp.close()
         return self.dst
 
     def perform_upload(self):
@@ -127,20 +128,21 @@ class DataStager:
         self.curl.setopt(pycurl.INFILESIZE, os.path.getsize(self.src))
 
 	try:
-	    log.debug("beginning upload of: %s" % self.src)
+	    log.debug("beginning upload of: %s", self.src)
 	    start = time.time()
 	    self.curl.perform()
 	    dur = time.time() - start
-	    log.debug("finished uploading of %s after %ds" % (self.src, dur))
+	    log.debug("finished uploading of %s after %ds", self.src, dur)
 	except Exception, e:
             if self.aborted():
                 log.info("staging aborted")
                 raise StagingAborted("staging aborted", self.src, self.dst)
             else:
-                log.error("upload failed: %s" % str(e))
+                log.warn("upload failed: %s", e)
                 raise
         finally:
             self.curl.close()
+            self.fp.close()
         return self.dst
 
     def __perform(self):
@@ -149,7 +151,7 @@ class DataStager:
         if self.aborted():
             raise StagingAborted("staging has been aborted")
 
-	log.debug("staging %s" % str(self))
+	log.debug("staging %s", self)
         from urlparse import urlparse
         (scheme, netloc, path, params, query, fragment) = urlparse(self.src)
         try:

@@ -5,8 +5,10 @@
      (smaller) activities
 """
 
+import threading, logging
 from zope.interface import Interface, implements
-import threading
+
+log = logging.getLogger(__name__)
 
 class IActivity(Interface):
     """I represent a single activity."""
@@ -220,12 +222,19 @@ class _ThreadContext:
 
     def __init__(self):
         self.__aborted = False
+        self.__failed = False
 
     def set_aborted(self):
         self.__aborted = True
 
+    def set_failed(self):
+        self.__failed = True
+
     def aborted(self):
         return self.__aborted
+
+    def failed(self):
+        return self.__failed
 
 class ActivityProxy:
     def __init__(self):
@@ -442,6 +451,7 @@ class ThreadedActivity(Hookable):
                 self.__failed = True
             finally:
                 self.__mtx.release()
+
         try:
             self.__mtx.acquire()
             del self.__worker

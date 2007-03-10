@@ -293,6 +293,8 @@ class Task(TaskFSM):
         try:
             self.log.info("staging out")
             self.__timestamps["stage-out-start"] = time.time()
+            self.__stop_instance()
+            self._cb_release_resources()
             rv = self.__unprepare()
         finally:
             self.mtx.release()
@@ -417,16 +419,16 @@ class Task(TaskFSM):
             ncpus = int(jsdl.lookup_path("JobDefinition/JobDescription/Resources/"+
                                          "TotalCPUCount").get_value())
         except Exception, e:
-            self.log.debug("using default number of cpus: 1", e)
             ncpus = 1
+            self.log.debug("using default number of cpus: %d", ncpus)
         inst.config().setNumCpus(ncpus)
 
         try:
             pmem = int(jsdl.lookup_path("JobDefinition/JobDescription/Resources/"+
                                         "TotalPhysicalMemory").get_value())
         except Exception, e:
-            self.log.debug("using default memory: 134217728", e)
             pmem = 134217728
+            self.log.debug("using default memory: %d: %s", pmem, e)
         inst.config().setMemory(pmem)
         return inst
 
@@ -575,7 +577,7 @@ class Task(TaskFSM):
                                       on_fail=self.failed,
                                       on_abort=None)
         except Exception, e:
-            log.debug("execution failed: %s" % e)
+            log.debug("execution failed", exc_info=1)
         
 class TaskManager(singleton.Singleton, Observable):
     """The task-manager.

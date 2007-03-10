@@ -77,15 +77,15 @@ class StagingActivity:
 
         try:
             rv = self.activity.stager.perform_download()
-            log.debug("retrieved to %s" % (dst))
+            log.debug("retrieved to %s", dst)
         except StagingAborted:
             return
-
-        try:
-            self.activity.lock()
-            self.activity.stager = None
         finally:
-            self.activity.unlock()
+            try:
+                self.activity.lock()
+                self.activity.stager = None
+            finally:
+                self.activity.unlock()
         return rv
 
     def perform_upload(self, src, dst):
@@ -98,15 +98,15 @@ class StagingActivity:
 
         try:
             rv = self.activity.stager.perform_upload()
-            log.debug("uploaded %s" % (src))
+            log.debug("uploaded %s", src)
         except StagingAborted:
             return
-
-        try:
-            self.activity.lock()
-            self.activity.stager = None
         finally:
-            self.activity.unlock()
+            try:
+                self.activity.lock()
+                self.activity.stager = None
+            finally:
+                self.activity.unlock()
         return rv
 
 class URILocationHandler(StagingActivity):
@@ -125,7 +125,7 @@ class URILocationHandler(StagingActivity):
             raise ValueError("could not transform uri, no cache", uri)
         
         cache_id = uri.split("/")[-1]
-        log.debug("looking up cache-id %s" % cache_id)
+        log.debug("looking up cache-id %s", cache_id)
 
         import threading
         from twisted.python import failure
@@ -166,7 +166,7 @@ class URILocationHandler(StagingActivity):
             uri = self.__transform_cache_uri_hack(uri)
             
         # retrieve
-        log.debug("retrieving: %s" % (repr(uri)))
+        log.debug("retrieving: %r", uri)
         if dst_file is None:
             filename = uri.split("/")[-1]
         else:
@@ -192,7 +192,7 @@ class URILocationHandler(StagingActivity):
         # decompress the file if necessary
         compression = location.get("Compression")
         if compression is not None:
-            log.debug("decompressing %s" % (dst))
+            log.debug("decompressing %s", dst)
             compression.decompress(file_name=dst, remove_original=True)
 
         # change the mode if desired
@@ -229,7 +229,7 @@ class StageOutHandler(StagingActivity):
         if ds.get("Target") is not None:
             uri = ds["Target"]["URI"]
             
-            log.debug("uploading: %s -> %s" % (file_name, uri))
+            log.debug("uploading: %s -> %s", file_name, uri)
             
             # make file relative to image mount_point
             file_name = os.path.join(mount_point, file_name.lstrip("/"))
@@ -273,7 +273,7 @@ class TaskActivity(ActivityProxy):
                 try:
                     os.kill(self.process.pid, signal.SIGTERM)
                 except OSError,e :
-                    log.info("error while terminating subprocess", e)
+                    log.info("error while terminating subprocess", exc_info=1)
                     raise
         finally:
             self.unlock()
@@ -289,6 +289,9 @@ class TaskActivity(ActivityProxy):
             rv = self.perform(jsdl_doc)
         except StagingAborted:
             log.debug("staging has been aborted")
+        except Exception, e:
+            log.debug("staging operation failed", exc_info=1)
+            raise e
         return rv
 
     def perform(self, jsdl_doc):
@@ -305,7 +308,7 @@ class TaskActivity(ActivityProxy):
             self.check_abort()
             script_path = os.path.join(script_dir, script)
             script_path = self.make_path_relative_to(script_path, jail_path)
-            log.debug("calling script '%s'" % (script_path))
+            log.debug("calling script '%s'", script_path)
             self._run_script(script_path, jail_path, *args)
 
     def _run_script(self, script, jail_path, *args):
@@ -365,7 +368,7 @@ class TaskActivity(ActivityProxy):
             fs_type=disk.FS_EXT3,                # filesystem type
             dir=directory                        # where to mount the image
         )
-        log.debug("mounted image to '%s'" % img.mount_point())
+        log.debug("mounted image to '%s'", img.mount_point())
         return img
 
     def make_path_relative_to(self, path, parent):
@@ -425,8 +428,8 @@ class SetUpActivity(TaskActivity):
         try:
             self._handle_location(self._jail_location, self.spool)
         except Exception, e:
-            log.debug("jail could not be retrieved %s" % (e))
-            raise
+            log.debug("jail could not be retrieved: %s", e)
+            raise e
 
         self.check_abort()
 
@@ -768,12 +771,12 @@ class StartInstanceActivity(ActivityProxy):
         timeout_time = time.time() + timeout
         while not ctxt.check_abort():
             if time.time() > timeout_time:
-                log.debug("instance did not come up correctly within %d seconds" % timeout)
+                log.debug("instance did not come up correctly within %d seconds", timeout)
                 try:
                     log.debug("stopping the timed out instance")
                     self.instance.stop()
                 except Exception, e:
-                    log.warn("stopping of instance failed", e)
+                    log.warn("stopping of instance failed", exc_info=1)
                 raise InstanceStartTimedOut("instance start timed out", self.instance)
             
             if self.instance.is_available():
@@ -789,7 +792,7 @@ class StartInstanceActivity(ActivityProxy):
             try:
                 self.instance.stop()
             except Exception, e:
-                log.warn("could not stop instance", self.instance, e)
+                log.warn("could not stop instance %s: %s", self.instance, e)
 
     def undo(self):
         try:
@@ -798,7 +801,7 @@ class StartInstanceActivity(ActivityProxy):
                 try:
                     self.instance.stop()
                 except Exception,e:
-                    log.warn("could not stop instance", self.instance, e)
+                    log.warn("could not stop instance %s: %s", self.instance, e)
         finally:
             self.unlock()
 

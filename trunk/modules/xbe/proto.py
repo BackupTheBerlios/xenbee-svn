@@ -64,15 +64,13 @@ class XenBEEProtocol(StompClient):
             transport = XMLTransport(StompTransport(self, replyTo))
             self.factory.dispatchToProtocol(transport, msg.body, *components)
         except Exception, e:
-            log.error(
-                "could not dispatch according to MOM identifier: %s: %s" % (
-                momIdentifier, e))
+            log.error("could not dispatch according to MOM identifier: %s", momIdentifier, exc_info=1)
             
     def messageReceived(self, msg):
         reactor.callInThread(self._messageReceived, msg)
 
     def errorOccured(self, msg, detail):
-	log.error("error-message: '%s', details: '%s'" % (msg, detail))
+	log.error("error-message: '%s', details: '%s'", msg, detail)
 
 class XenBEEProtocolFactory(StompClientFactory):
     """Basic protocol factory.

@@ -37,8 +37,11 @@ class ActivityQueue:
     def abortActivities(self, task, wait=True):
         try:
             self._cv.acquire()
-            log.debug("aborting activities for task %s" % (str(task.id())))
-            acts = self._activities.pop(task.id())
+            log.debug("aborting activities for task %s", task.id())
+            try:
+                acts = self._activities.pop(task.id())
+            except KeyError:
+                return
             self._cv.notify()
         finally:
             self._cv.release()
@@ -47,7 +50,7 @@ class ActivityQueue:
             return
         
         for act, on_finish, on_fail, on_abort in acts:
-            log.debug("aborting %s" % (act))
+            log.debug("aborting %s", act)
             act.abort()
             while not act.done():
                 log.debug("waiting")
@@ -55,7 +58,7 @@ class ActivityQueue:
             try:
                 act.undo()
             except Exception, e:
-                log.debug("undo of %s failed" % repr(act))
+                log.debug("undo of %r failed", repr(act))
             if on_abort is not None:
                 on_abort(act.getResult())
 
@@ -85,7 +88,7 @@ class ActivityQueue:
                     to_be_removed = []
                     for act in acts:
                         if not act[0].done() and act[0].startable():
-                            log.debug("starting %s" % repr(act[0]))
+                            log.debug("starting %r", act[0])
                             act[0].start()
                         elif act[0].finished():
                             to_be_removed.append( (act, act[1]) )
@@ -96,7 +99,7 @@ class ActivityQueue:
                             
                     # remove activities
                     if len(to_be_removed):
-                        log.debug("removing %d done activities" % len(to_be_removed))
+                        log.debug("removing %d done activities", len(to_be_removed))
                         map(acts.remove, [tbr[0] for tbr in to_be_removed])
 
                     # call callbacks
@@ -107,12 +110,12 @@ class ActivityQueue:
                                 try:
                                     cb(act[0].getResult())
                                 except Exception, e:
-                                    log.debug("activity callback failed:", e)
+                                    log.debug("activity callback failed:", exc_info=1)
                     finally:
                         cv.acquire()
                 cv.wait(3)
         except Exception, e:
-            log.warn("exception in thread loop", e)
+            log.warn("exception in thread loop", exc_info)
         finally:
             try:
                 cv.release()

@@ -1,6 +1,6 @@
 """Commands used by the commandline tool"""
 
-import logging, sys, re, os
+import logging, sys, re, os, uuid
 log = logging.getLogger(__name__)
 
 from optparse import OptionParser
@@ -556,7 +556,7 @@ class CommandLineClient:
                     from xbe.cmdline.protocol import ClientProtocolFactory, ClientXMLProtocol
                     # TODO: generate ID or use some given one
                     factory = ClientProtocolFactory(
-                        id="2",
+                        id=str(uuid.uuid4()),
                         stomp_user="test-user-1", stomp_pass="test-pass-1",
                         certificate=cmd.user_cert, ca_cert=cmd.ca_cert,
                         server_queue=stomp_queue,

@@ -133,7 +133,6 @@ class Backend(object):
         try:
             return self.getInfo(inst).state
         except DomainLookupError, e:
-            log.debug("no such domain %r" % repr(e))
             return BE_INSTANCE_NOSTATE
 
     def getInfo(self, inst):

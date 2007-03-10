@@ -5,7 +5,7 @@
    
 """
 
-import subprocess, tempfile, os, errno, time, random
+import subprocess, tempfile, os, errno, time, random, sys
 import threading
 from xbe.util.exceptions import ProcessError
 
@@ -128,7 +128,7 @@ class Image(object):
         finally:
             _module_lock.release()
 
-    def umount(self, retries=15):
+    def umount(self, retries=5):
         """U(n)mount the image.
 
         If the image is currently mounted, umount it and delete the
@@ -166,6 +166,7 @@ class Image(object):
             except NotMountedException:
                 raise
             except Exception, e:
+                print >>sys.stderr, "umount failed", e
                 do, retries, delay = retry(retries, delay)
                 if not do:
                     raise
