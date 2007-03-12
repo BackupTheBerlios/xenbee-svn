@@ -1,0 +1,150 @@
+\documentclass
+[
+  a4paper,
+  12pt,
+  oneside,
+  openright,
+  chapterprefix,
+%  draft,
+  bibtotoc,
+  idxtotoc,
+%  liststotoc,
+%  bigheadings,
+] {scrbook} %scrreprt}
+
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{enumerate}
+% DO NOT use amsthm. Most of its functionality is in ntheorem anyway.
+
+\usepackage{parskip} %Supposed to tidy up space if using space between pars
+  % tex-archive/macros/latex/contrib/other/misc/parskip.sty
+
+\usepackage[amsmath,thmmarks]{ntheorem}
+  % macros/latex/contrib/supported/ntheorem/
+  % To install this package, download ntheorem.ins and ntheorem.dtx
+  % These can be found from www.tex.ac.uk
+  % run latex ntheorem.dtx
+  % Copy the files ntheorem.sty and ntheorem.std to the same
+  % folder as your latex source.
+
+\usepackage{setspace}
+  % tex-archive/macros/latex/contrib/supported/setspace/
+
+%\usepackage{multicol}
+
+\usepackage[compact]{titlesec}
+  % tex-archive/macros/latex/contrib/supported/titlesec/
+
+
+% There's probably loads of packages needed by various people.
+\usepackage{url}
+\usepackage{pdfsync}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{subfigure}
+\usepackage{graphicx}
+\usepackage{color}
+\usepackage{fancyhdr}
+\usepackage{palatino}
+\usepackage{a4}
+\usepackage{listing}
+\usepackage{makeidx}
+\usepackage[light,first,conditional]{draftcopy}
+\usepackage[plainpages=false,pdfpagelabels,pdftex]{hyperref}
+\graphicspath{{graphics/}}
+
+% include some often used commands
+\include{commands}
+
+
+% Tweak the margins to match requirements. Seems to work OK.
+\topmargin-0.5cm
+\footskip1cm
+\oddsidemargin0.5cm
+\evensidemargin0cm
+\textwidth16cm
+\textheight22cm
+\vfuzz1pc
+\hfuzz1pc
+
+\pagestyle{fancy}
+\fancyhf{}                                %Clears all header and footer fields, in preparation.
+\fancyhead[LE,RO]{\textbf{\thepage}}      %Displays the page number in bold in the header,
+                                          % to the left on even pages and to the right on odd pages.
+\fancyhead[RE]{\nouppercase{\leftmark}}   %Displays the upper-level (chapter) information---
+                                          % as determined above---in non-upper case in the header, to the right on even pages.
+\fancyhead[LO]{\nouppercase{\rightmark}}  %Displays the lower-level (section) information---as
+                                          % determined above---in the header, to the left on odd pages.
+\renewcommand{\headrulewidth}{0.5pt}      %Underlines the header. (Set to 0pt if not required).
+\renewcommand{\footrulewidth}{0pt}      %Underlines the footer. (Set to 0pt if not required).
+\renewcommand*{\partpagestyle}{empty}
+\renewcommand*{\chapterpagestyle}{empty}
+
+\makeindex
+
+\begin{document}
+\frontmatter
+\include{title}
+
+%  A B S T R A C T
+\chapter{Preface}
+\thispagestyle{empty}
+put the abstract here
+\clearpage
+
+%  A C K N O W L E D G E M E N T S
+
+\chapter{Acknowledgements}
+\thispagestyle{empty}
+So long and thanks for all the fish.
+\clearpage
+
+%  C O N T E N T S ,   T A B L E S  ,   F I G U R E S
+
+\newpage
+\tableofcontents
+\thispagestyle{empty}
+\clearpage
+
+\listoffigures      %optional list of figures and stuff
+\thispagestyle{empty}
+\clearpage
+
+\mainmatter
+%\setcounter{page}{1}
+
+%  C H A P T E R S
+% Each chapter is in its own file that starts
+% with \chapter{Things And Widgits}
+
+\include{introduction}
+\include{design}
+\include{security}
+\include{results}
+\include{conclusions}
+
+%  A P P E N D I C E S
+\appendix
+\def\chaptername{Appendix}
+%\include{appendix1}
+%\include{appendix2}
+
+
+%  R E F E R E N C E S
+
+\renewcommand{\bibname}{List of References}
+%\addcontentsline{toc}{chapter}{\quad\,\,{List of References}}
+
+\bibliographystyle{plain}
+\bibliography{bibliography}
+
+\printindex
+
+% Supplementary references?
+
+
+% Theses do not have indices.
+
+\end{document}

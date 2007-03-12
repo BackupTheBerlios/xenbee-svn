@@ -1,0 +1,124 @@
+%% Title page
+
+\title{{\Huge Diploma Thesis} \\
+    {\large Department for computer science} \\
+  \vspace{2cm}
+  \emph{\huge Design and Implementation of a Xen-based execution environment} \\
+  \vspace{1.5cm}
+  {\large
+    Supervisor: Mathias Dalheimer, AG Distributed Algorithms\\
+    University of Kaiserslautern} \\
+}
+\author{Alexander Petry \footnote{E-Mail: $<$petry@itwm.\@fhg.\@de$>$, Matrikelnummer: 345466}}
+\date{\today}
+\pagestyle{empty}
+\maketitle
+\thispagestyle{empty}
+
+%% Eidesstattliche Erklärung
+\newpage
+
+\thispagestyle{empty}
+\begin{center}  
+{\Large Erklärung an Eides Statt}
+\end{center}
+
+\vspace{1cm}
+
+\begin{center}
+\fbox{
+  \begin{minipage}{0.9\textwidth}
+    Ich versichere hiermit, dass ich die vorliegende Projektarbeit mit dem
+    Thema ,,Eventbasierte Simulation von Middleware Plattformen''
+    selbständig verfasst und keine anderen als die angegebenen Hilfsmittel
+    benutzt habe.  Die Stellen, die anderen Werken dem Wortlaut oder dem
+    Sinn nach entnommen wurden, habe ich durch die Angabe der Quelle, auch
+    der benutzten Sekundärliteratur, als Entlehnung kenntlich gemacht.
+
+    \vspace{1.5cm}
+
+    \begin{tabular*}{.9\textwidth}%
+      {ll}%
+      \rule{0.45\textwidth}{.5pt} & \rule{0.45\textwidth}{.5pt} \\
+      (Ort, Datum) & (Name, Unterschrift)
+    \end{tabular*}
+
+\end{minipage}
+}
+\end{center}
+
+\newpage
+
+%% Summary
+\pagestyle{fancy}
+\begin{abstract}
+%%  In dieser  Arbeit stelle ich eine  eventbasierte Simulationsumgebung für
+%%  \emph{Calana}  vor. \emph{Calana}  ist eine  Grid-Scheduler Architektur,
+%%  die mittels Auktionen die Aufträge an die einzelnen Ressourcen verteilt.
+%%  Dabei werden  die Anbieter  der Ressourcen durch  Agenten repräsentiert,
+%%  die während einer  Auktion auf die Aufträge bieten  können.  Ziel dieses
+%%  Schedulers ist  es, die \emph{Wünsche der Benutzer}  zu berücksichtigen. 
+%%  Die  Wünsche werden durch  Präferenzen realisiert  --- zum  Beispiel die
+%%  Zeit-Präferenz,  die besagt, dass  der Auftrag  \emph{möglichst} schnell
+%%  ausgeführt werden soll.
+%%  
+%%  Als erstes werde ich einen  kurzen Überblick über das Grid-Umfeld geben. 
+%%  Dabei spreche ich verschiedene Scheduling-Verfahren (sowohl für Cluster,
+%%  als auch  für Grids)  an und werde  die verwendeten  Präferenzen genauer
+%%  erläutern.   In dieser  Arbeit gehe  ich von  reinen \emph{computational
+%%    Grids} aus  --- in späteren Erweiterungen des  Simulator können jedoch
+%%  zusätzliche  Komponenten  (Netzwerke,  Datenbanken,  etc.)   hinzugefügt
+%%  werden.
+%%  
+%%  Als    nächstes   werden    das   \emph{Calana}-Protokoll    und   seine
+%%  Implementierung   in  Java   ausführlich   beschrieben.   Mit   diversen
+%%  Experimenten, die  sowohl eine  kleine Zahl an  Anbietern, als  auch ein
+%%  Grid mit 50 Anbietern umfassen,  soll gezeigt werden, dass der Scheduler
+%%  das  gestellte  Ziel (die  Benutzer-Präferenzen  zu erfüllen)  erreichen
+%%  kann.   Es zeigte sich  dabei, dass  die Average  Response Time  für die
+%%  Benutzer, die  schnell ihre Ergebnisse wollen,  \emph{unabhängig von der
+%%    Load}  ist.   Die Average  Response  Time  ist  in dieser  Arbeit  die
+%%  maßgebliche Metrik, um Simulationsläufe zu vergleichen.
+%%  
+%%  Zuletzt stelle ich anhand  der \emph{Koallokation} eine Möglichkeit vor,
+%%  das  System zu  erweitern ohne  bestehende  Teile verändern  zu müssen.  
+%%  Dabei zeigt sich  der Vorteil des agentenbasierten Ansatzes,  da nur ein
+%%  neuer (jedoch  spezieller) Agent dem  System hinzugefügt werden  musste. 
+%%  Experimente,  die  mit   verschiedenen  Anteilen  an  Koallokation  (dem
+%%  gleichzeitigen  Reservieren verschiedener  Ressourcen) in  den Workloads
+%%  durchgeführt wurden, zeigten,  dass auch hier die ART  für die Benutzer,
+%%  die schnell ihre Ergebnisse benötigen, \emph{unabhängig} war.
+%%
+%%  
+
+%  \begin{comment}
+%    Das Schlagwort \emph{Grid Computing} ist mittlerweile in aller Munde
+%    und dies nicht zu Unrecht.  Grids dienen der gemeinsamen Nutzung von
+%    verteilten Ressourcen.  Sie bieten allen Teilnehmern (sowohl den
+%    Benutzern als auch den Anbietern) ganz neue Möglichkeiten Ressourcen
+%    zu teilen.  Beispielsweise können Wetterdaten von gemeinsam genutzten
+%    Sensoren auf einem High-Performance Cluster aufbereitet und analysiert
+%    werden. Anschließend können die Ergebnisse in einer Datenbank für
+%    viele Benutzer zur Verfügung gestellt werden.
+%    
+%    \medskip
+%    \noindent
+%    Die vorliegende Arbeit beschäftigt sich mit der Implementierung einer
+%    Simulationsumgebung für Grid-Umgebungen. Dabei wurde der agentenbasierte
+%    Scheduler \emph{Calana} (\cite{dalheimer05agentbased}) implementiert und
+%    mit verschiedenen Workloads getestet.
+%  \end{comment}
+
+\end{abstract}
+
+\tableofcontents
+\listoffigures
+%\listoftables
+%\listofalgorithms
+\newpage
+
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "main"
+%%% End: 
