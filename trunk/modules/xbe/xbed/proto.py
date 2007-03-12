@@ -127,7 +127,7 @@ class XenBEEClientProtocol(protocol.XMLProtocol):
             for task in TaskManager.getInstance().tasks.values():
                 status_list.add(task.id(), task.state(), task.getStatusInfo())
         else:
-            return message.Error(errcode.TICKET_INVALID, msg.ticket())
+            return message.Error(errcode.TICKET_INVALID, request.ticket())
         return status_list
 
     def do_ListCache(self, elem, *args, **kw):

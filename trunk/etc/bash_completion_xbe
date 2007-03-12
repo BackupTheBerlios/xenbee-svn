@@ -1,0 +1,37 @@
+shopt -s extglob
+_xbe()
+{
+	local cur prev special i
+
+	COMPREPLY=()
+	cur=${COMP_WORDS[COMP_CWORD]}
+	prev=${COMP_WORDS[COMP_CWORD-1]}
+
+#	for (( i=0; i < ${#COMP_WORDS}-1; i++ )); do
+#		if [[ ${COMP_WORDS[i]} == @(list) ]]; then
+#			special=${COMP_WORDS[i]}
+#		fi
+#	done
+#
+#	if [ -n "$special" ]; then
+#            COMPREPLY=( $( apt-cache pkgnames $cur 2> /dev/null ) )
+#            return 0
+#        fi
+
+	if [[ "$cur" == -* ]]; then
+
+		COMPREPLY=( $( compgen -W '-T' -- $cur ) )
+	else
+                if [ "$prev" == "submit" ]
+		then
+			return 0
+		else
+			COMPREPLY=( $( compgen -W 'help reserve terminate \
+			                status showcache submit confirm' -- $cur ) )
+		fi
+	fi
+
+	return 0
+
+}
+complete -F _xbe -o default xbe
