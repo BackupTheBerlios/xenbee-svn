@@ -204,6 +204,7 @@ class RemoteCommand(Command, SimpleCommandLineProtocol):
         Command.failed(self, exception)
 
     def errorReceived(self, error):
+        self.cancelTimeout()
         from xbe.xml import errcode
         
         code = error.code()
@@ -217,6 +218,8 @@ class RemoteCommand(Command, SimpleCommandLineProtocol):
 
         if code >= errcode.INTERNAL_SERVER_ERROR:
             print "This is a very serious error, bailing out!"
+            sys.exit(2)
+        self.failed(RuntimeError(error.description()))
 
     #########################################
     #                                       #
@@ -352,6 +355,40 @@ class Command_terminate(RemoteCommand, HasTicket):
 CommandFactory.getInstance().registerCommand(Command_terminate,
                                              "terminate", "term", "kill", "cancel")
 
+class Command_cache(RemoteCommand):
+    """\
+    cache: Cache a given file in the server's cache.
+    """
+
+    def __init__(self, argv):
+        """initialize the 'cache' command."""
+        RemoteCommand.__init__(self, argv)
+        p = self.parser
+        p.add_option("-u", "--uri", dest="uri", type="string",
+                     help="the uri which is to be cached")
+        p.add_option("--type", dest="type", type="string", default="data",
+                     help="the type of the file (default: %default)")
+        p.add_option("--desc", dest="desc", type="string",
+                     help="some description")
+        
+    def check_opts_and_args(self, opts, args):
+        if opts.uri is None:
+            if len(args):
+                opts.uri = args.pop(0)
+            else:
+                raise CommandFailed("uri required")
+
+        if opts.desc is None:
+            if len(args):
+                opts.desc = args.pop(0)
+            else:
+                opts.desc = "Not available"
+        return True
+    
+    def execute(self):
+        self.cacheFile(self.opts.uri, self.opts.type, self.opts.desc)
+        self.done()
+CommandFactory.getInstance().registerCommand(Command_cache, "cache")
 class Command_confirm(Command_terminate):
     """\
     confirm: confirm a previously made reservation

@@ -216,6 +216,25 @@ class TestClientMessages(unittest.TestCase):
         msg = message.MessageBuilder.from_xml(xml)
         self.assertTrue(isinstance(msg, message.ListCache))
 
+    def test_CacheFile_as_xml(self):
+        msg = message.CacheFile('www.example.org', "image", "some file", "deadbeef", "sha1")
+
+    def test_CacheFile_from_xml(self):
+        xml = """
+        <xbe:Message xmlns:xbe="http://www.example.com/schemas/xbe/2007/01/xbe">
+        <xbe:MessageHeader/>
+        <xbe:MessageBody>
+        <xbe:CacheFile type="image">
+        <ns0:Location xmlns:ns0="http://www.example.com/schemas/xbe/2007/01/xsdl">
+        <ns0:URI>www.example.org</ns0:URI>
+        <ns0:Hash algorithm="sha1">deadbeef</ns0:Hash>
+        </ns0:Location>
+        <ns1:Description xmlns:ns1="http://www.example.com/schemas/xbe/2007/01/xsdl">some file</ns1:Description>
+        </xbe:CacheFile>
+        </xbe:MessageBody>
+        </xbe:Message>"""
+        msg = message.MessageBuilder.from_xml(xml)
+
     def test_StatusRequest_as_xml(self):
         msg = message.StatusRequest("ticket 1")
         xml = msg.as_xml()

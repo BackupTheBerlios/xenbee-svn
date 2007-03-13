@@ -148,6 +148,17 @@ class XenBEEClientProtocol(protocol.XMLProtocol):
             self.transformResultToMessage).addCallback(self.sendMessage)
         return None
 
+    def do_CacheFile(self, elem, *a, **kw):
+        msg = message.MessageBuilder.from_xml(elem)
+        log.debug("caching file: %s", msg.uri())
+        cached = XBEDaemon.getInstance().cache
+        d = cached.cache(msg.uri(), msg.type_of_file(), msg.description())
+
+        def _success(uid):
+            return message.Error(errcode.OK, uid)
+        def _failure(reason):
+            return message.Error(errcode.CACHING_FAILED, reason.getErrorMessage())
+        d.addCallback(_success).addErrback(_failure).addCallback(self.sendMessage)
 	
 class XenBEEInstanceProtocol(protocol.XMLProtocol):
     """The XBE instance side protocol.

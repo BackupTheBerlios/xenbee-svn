@@ -11,6 +11,7 @@ TASK_LOOKUP_FAILURE = 404
 INSTANCE_LOOKUP_FAILURE = 405
 NO_APPLICATION = 406
 EXECUTION_FAILED = 407
+CACHING_FAILED = 408
 SIGNAL_OUT_OF_RANGE = 450
 
 INTERNAL_SERVER_ERROR = 500
@@ -44,4 +45,5 @@ info = {
                             "you sent me an illegal request", None),
     TICKET_INVALID: ("TICKET_INVALID", "no ticket specified, or illegal ticket", None),
     EXECUTION_FAILED: ("EXECUTION_FAILED", "execution of the task failed", None),
+    CACHING_FAILED: ("CACHING_FAILED", "caching of your file failed", None),
 }

@@ -85,6 +85,10 @@ class BaseCommandLineProtocol(BaseProtocol):
     def errorReceived(self, error):
         pass
 
+    def cacheFile(self, uri, type, desc):
+        msg = message.CacheFile(uri, type, desc)
+        self.transport.sendMessage(msg.as_xml())
+
     def requestTermination(self, ticket):
         msg = message.TerminateRequest(ticket)
         self.transport.sendMessage(msg.as_xml())

@@ -299,6 +299,73 @@ class CacheEntries(BaseServerMessage):
     from_xml = classmethod(from_xml)
 MessageBuilder.register(CacheEntries)
 
+class CacheFile(BaseClientMessage):
+    """Sends a request for caching a file.
+
+    - uri the file to cache
+
+    - hash which represents the hash-value of
+      the file (this will also be stored)
+
+    - description some meaningful description of that file
+    - type one of "image", "kernel", "initrd", "data"
+    """
+    tag = XBE("CacheFile")
+    
+    def __init__(self, uri, type, desc, hash_value=None, hash_algo=None):
+        BaseClientMessage.__init__(self)
+        self.__uri = uri
+        if type not in ("image", "kernel", "initrd", "data"):
+            raise ValueError("illegal value for 'type'", type)
+        self.__type = type
+        self.__desc = desc
+
+        if hash_value is not None:
+            from xbe.xml.jsdl import HashValidator
+            self.__validator = HashValidator(hash_value, hash_algo)
+        else:
+            self.__validator = None
+
+    def uri(self):
+        return self.__uri
+    def validator(self):
+        return self.__validator
+    def type_of_file(self):
+        return self.__type
+    def description(self):
+        return self.__desc
+
+    def as_xml(self):
+        root, hdr, body = MessageBuilder.xml_parts()
+        elem = etree.SubElement(body, self.tag)
+        elem.attrib["type"] = self.type_of_file()
+        loc = etree.SubElement(elem, XSDL("Location"))
+        etree.SubElement(loc, XSDL("URI")).text = self.uri()
+        if self.validator() is not None:
+            hv = etree.SubElement(loc, XSDL("Hash"))
+            hv.text =  self.validator().hexdigest()
+            hv.attrib["algorithm"] = self.validator().algorithm()
+        etree.SubElement(elem, XSDL("Description")).text = self.description()
+        return root
+    def from_xml(cls, root, hdr, body):
+        elem = body.find(cls.tag)
+        if elem is None:
+            raise MessageParserError("could not find 'CacheFile' element")
+        tof = elem.attrib["type"]
+        uri = elem.findtext(XSDL("Location/URI"))
+        desc = elem.findtext(XSDL("Description"))
+        h = elem.find(XSDL("Location/Hash"))
+        if h is not None:
+            ha = h.attrib.get("algorithm", "sha1")
+            hd = h.text
+        else:
+            ha = None
+            hd = None
+        return cls(uri, tof, desc, hd, ha)
+    from_xml = classmethod(from_xml)
+MessageBuilder.register(CacheFile)
+    
+
 class ReservationRequest(BaseClientMessage):
     """Sends a request for a reservation.
 
