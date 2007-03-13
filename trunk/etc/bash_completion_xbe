@@ -27,7 +27,7 @@ _xbe()
 			return 0
 		else
 			COMPREPLY=( $( compgen -W 'help reserve terminate \
-			                status showcache submit confirm' -- $cur ) )
+			                status showcache submit confirm cache' -- $cur ) )
 		fi
 	fi
 

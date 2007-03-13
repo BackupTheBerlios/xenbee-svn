@@ -148,9 +148,16 @@ class Cache(object):
         return err
 
     def __cb_computeHash(self, path):
+        log.info("computing a sha1 digest of")
         import hashlib
         algo = hashlib.sha1()
-        algo.update(open(path).read())
+        f = open(path, 'rb')
+        bs = 8096
+        while True:
+            data = f.read(bs)
+            algo.update(data)
+            if len(data) < bs:
+                break
         return (path, algo.hexdigest())
 
     def __cb_insertEntry(self, uri_hash, uid, type, **meta_info):

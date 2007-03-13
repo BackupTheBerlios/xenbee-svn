@@ -219,7 +219,10 @@ class RemoteCommand(Command, SimpleCommandLineProtocol):
         if code >= errcode.INTERNAL_SERVER_ERROR:
             print "This is a very serious error, bailing out!"
             sys.exit(2)
-        self.failed(RuntimeError(error.description()))
+        if code == errcode.OK:
+            self.done()
+        else:
+            self.failed(RuntimeError(error.description()))
 
     #########################################
     #                                       #
@@ -387,8 +390,9 @@ class Command_cache(RemoteCommand):
     
     def execute(self):
         self.cacheFile(self.opts.uri, self.opts.type, self.opts.desc)
-        self.done()
+        print >>sys.stderr, "waiting for response from server..."
 CommandFactory.getInstance().registerCommand(Command_cache, "cache")
+
 class Command_confirm(Command_terminate):
     """\
     confirm: confirm a previously made reservation

@@ -149,7 +149,7 @@ class XenBEEClientProtocol(protocol.XMLProtocol):
         return None
 
     def do_CacheFile(self, elem, *a, **kw):
-        msg = message.MessageBuilder.from_xml(elem)
+        msg = message.MessageBuilder.from_xml(elem.getroottree())
         log.debug("caching file: %s", msg.uri())
         cached = XBEDaemon.getInstance().cache
         d = cached.cache(msg.uri(), msg.type_of_file(), msg.description())

@@ -181,7 +181,7 @@ class URILocationHandler(StagingActivity):
         hash_validator = location.get("Hash")
         if hash_validator is not None:
             log.debug("validating data")
-            if not hash_validator.validate(open(dst).read()):
+            if not hash_validator.validate(open(dst, 'rb')):
                 raise ValidationError("the retrieved file did not match the hash-value",
                                       uri, hash_validator.algorithm(),
                                       hash_validator.hexdigest()

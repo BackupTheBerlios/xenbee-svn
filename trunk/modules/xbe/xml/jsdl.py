@@ -223,17 +223,22 @@ class HashValidator:
     def algorithm(self):
         """Return the used algorithm (as string)."""
         return self.__algorithm
-    
-    def validate(self, data):
+
+    def validate(self, file_obj):
         """Validate the data against the stored digest using the
         stored algorithm."""
-        h = hashlib.new(self.__algorithm)
-        h.update(data)
-        return self.__hexdigest == h.hexdigest()
+        h = hashlib.new(self.algorithm())
+        bs = 8096
+        while True:
+            data = file_obj.read(bs)
+            h.update(data)
+            if len(data) < bs:
+                break
+        return self.hexdigest() == h.hexdigest()
 
-    def __call__(self, data):
+    def __call__(self, file_obj):
         """Does the same as 'validate(data)'."""
-        return self.validate(data)
+        return self.validate(file_obj)
 
     def __repr__(self):
         return "<%(cls)s using %(algo)s with digest %(digest)s>" % {
