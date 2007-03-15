@@ -11,6 +11,7 @@ log = logging.getLogger(__name__)
 
 import base64, hashlib
 from M2Crypto import X509, RSA, BIO, m2, EVP
+from pprint import pformat
 from lxml import etree
 from xbe.xml import cloneDocument
 from xbe.xml.namespaces import XBE, DSIG, XBE_SEC
@@ -38,6 +39,28 @@ class PrivateKeyCheckFailed(ValueError):
     pass
 
 
+class Subject(object):
+    def __init__(self, text):
+        self.__text = text
+        self.__dict__.update(
+            dict([c.split("=", 1) for c in text[1:].split("/")])
+        )
+
+    def __getitem__(self, x):
+        return getattr(self, x)
+
+    def __eq__(self, other):
+        return self.__text.__eq__(str(other))
+
+    def __str__(self):
+        return self.__text
+
+    def __repr__(self):
+        return "<%(cls)s CN=%(name)s>" % {
+            "cls": self.__class__.__name__,
+            "name": self["CN"]
+        }
+
 class X509Certificate(object):
     """This class wraps around the M2Crypto.X509 class."""
 
@@ -57,13 +80,8 @@ class X509Certificate(object):
         self.__priv_key = priv_key
         self.__padding = padding
 
-    def subject_as_dict(self):
-        return dict(
-            [c.split("=", 1) for c in self.subject().split(", ")]
-        )
-        
     def subject(self):
-        return self.__x509.get_subject().as_text()
+        return Subject(str(self.__x509.get_subject()))
 
     def issuer(self):
         return self.__x509.get_issuer().as_text()

@@ -4,6 +4,8 @@ import logging, sys, re, os, uuid
 log = logging.getLogger(__name__)
 
 from optparse import OptionParser
+from ConfigParser import ConfigParser
+
 from textwrap import dedent
 from xbe.util.singleton import Singleton
 
@@ -76,6 +78,9 @@ class Command(object):
                      dest="verbose", action="store_true",
                      help="be verbose",
                      default=False)
+        p.add_option("-c", "--config",
+                     dest="config", default=os.path.expanduser("~/.xbe/xberc"),
+                     help="config file to use, default: %default")
         self.parser = p
 
     def buildHelp(self):
@@ -97,24 +102,26 @@ class RemoteCommand(Command, SimpleCommandLineProtocol):
         Command.__init__(self, argv)
         p = self.parser
         p.add_option("-T", "--timeout",
-                     dest="timeout", type="float", default=10,
-                     help="number of seconds (default %defaults) to wait for an answer from server")
+                     dest="timeout", type="float",
+                     help="number of seconds to wait for an answer from server")
         p.add_option("--user-cert",
                      dest="user_cert",  type="string",
-                     default=os.path.join(os.environ["HOME"], ".xbe", "user.pem"),
-                     help="the certificate to use (default: %default)")
+                     help="the certificate to use")
         p.add_option("--user-key",
                      dest="user_key",  type="string",
-                     default=os.path.join(os.environ["HOME"], ".xbe", "user-key.pem"),
-                     help="the private key to use (default: %default)")
+                     help="the private key to use")
         p.add_option("--ca-cert",
                      dest="ca_cert",  type="string",
-                     default=os.path.join(os.environ["HOME"], ".xbe", "ca-cert.pem"),
-                     help="the certificate of the CA (default: %default)")
+                     help="the certificate of the CA")
         p.add_option("-S", "--server",
                      dest="server", type="string",
-                     help="the server to connect to or %default is used",
-                     default="stomp://xen-o-matic.itwm.fhrg.fraunhofer.de/queue/xenbee.daemon.1")
+                     help="the server to connect to")
+        p.add_option(
+            "--stomp-user", dest="stomp_user", type="string",
+            help="username for the stomp connection")
+        p.add_option(
+            "--stomp-pass", dest="stomp_pass", type="string",
+            help="password for the stomp connection")
 
     def __call__(self, *args, **kw):
         """We need to callable, so that we can act as a protocol factory."""
@@ -140,18 +147,29 @@ class RemoteCommand(Command, SimpleCommandLineProtocol):
         self.tearDown()
 
     def __pre_parse(self, opts, args):
+        cp = ConfigParser()
+        self.cp = cp
+        read_files = cp.read(["/etc/xbe/xberc",
+                              os.path.expanduser("~/.xbe/xberc"),
+                              opts.config])
+        if not len(read_files):
+            raise CommandFailed("no configuration file found")
+        
+        if opts.timeout is None:
+            opts.timeout = cp.getfloat("network", "timeout")
+        if opts.server is None:
+            opts.server = cp.get("network", "server")
+        if opts.stomp_user is None:
+            opts.stomp_user = cp.get("network", "user")
+        if opts.stomp_pass is None:
+            opts.stomp_pass = cp.get("network", "pass")
+
         if opts.user_cert is None:
-            opts.user_cert = os.path.join(
-                os.environ["HOME"], ".xbe", "user.pem"
-            )
+            opts.user_cert = os.path.expanduser(cp.get("security", "pubkey"))
         if opts.user_key is None:
-            opts.user_key = os.path.join(
-                os.environ["HOME"], ".xbe", "user-key.pem"
-            )
+            opts.user_key = os.path.expanduser(cp.get("security", "privkey"))
         if opts.ca_cert is None:
-            opts.ca_cert = os.path.join(
-                os.environ["HOME"], ".xbe", "ca-cert.pem"
-            )
+            opts.ca_cert = os.path.expanduser(cp.get("security", "cacert"))
 
         from xbe.xml.security import X509Certificate
         # build the certificate
@@ -598,9 +616,9 @@ class CommandLineClient:
                     # TODO: generate ID or use some given one
                     factory = ClientProtocolFactory(
                         id=str(uuid.uuid4()),
-                        stomp_user="test-user-1", stomp_pass="test-pass-1",
+                        stomp_user=cmd.opts.stomp_user, stomp_pass=cmd.opts.stomp_pass,
                         certificate=cmd.user_cert, ca_cert=cmd.ca_cert,
-                        server_queue=stomp_queue,
+                        server_queue="/queue"+stomp_queue,
                         protocolFactory=ClientXMLProtocol,
                         protocolFactoryArgs=(cmd,))
                     

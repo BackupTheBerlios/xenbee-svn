@@ -17,26 +17,26 @@ class XBEDaemon(Daemon):
         Daemon.__init__(self, pidfile="/var/run/xbed.pid", umask=0007, name="xbed", user="root", group="root")
         p = self.parser
         p.add_option(
+            "-c", "--config", dest="config", type="string",
+            default=os.path.join(os.environ.get("XBED_HOME", "/"), "etc", "xbed", "xbedrc"),
+            help="config file to use, default: %default")
+        p.add_option(
             "-u", "--uri", dest="uri", type="string",
-            default="stomp://xen-o-matic.itwm.fhrg.fraunhofer.de/xenbee.daemon.1",
             help="the uri through which I'am reachable")
         p.add_option(
             "-U", "--user-database", dest="user_db", type="string",
             help="list CNs that are allowed to use this server")
         p.add_option(
-            "-b", "--backend", dest="backend", type="string", default="xen",
+            "-b", "--backend", dest="backend", type="string",
             help="the backend to be used")
         p.add_option(
             "-s", "--spool", dest="spool", type="string",
-            default="/srv/xen-images/xenbee",
             help="the spool directory to use")
         p.add_option(
             "-S", "--schema-dir", dest="schema_dir", type="string",
-            default="/root/xenbee/etc/xml/schema",
             help="path to a directory where schema definitions can be found.")
         p.add_option(
-            "-l", "--logfile", dest="logfile", type="string",
-            default="/var/log/xenbee/xbed.log",
+            "-l", "--logfile", dest="log_file", type="string",
             help="the logfile to use")
         p.add_option(
             "-L", "--logconf", dest="log_conf", type="string",
@@ -47,11 +47,9 @@ class XBEDaemon(Daemon):
             help="do not daemonize")
         p.add_option(
             "-j", "--jail-package", dest="jail_package",
-            default="/srv/xen-images/xenbee/jail-package.tar.bz2",
             help="path to a tar.bz2 that contains a jail hierarchy")
         p.add_option(
             "--pidfile", dest="pidfile", type="string",
-            default="/var/run/xbed.pid",
             help="the pidfile to use")
         p.add_option(
             "--key", dest="p_key", type="string",
@@ -68,11 +66,9 @@ class XBEDaemon(Daemon):
                  "paired with IP addresses.")
         p.add_option(
             "--stomp-user", dest="stomp_user", type="string",
-            default="daemon",
             help="username for the stomp connection")
         p.add_option(
             "--stomp-pass", dest="stomp_pass", type="string",
-            default="Aefith3s",
             help="password for the stomp connection")
         try:
             import optcomplete
@@ -84,34 +80,53 @@ class XBEDaemon(Daemon):
 
     def configure(self):
         self.daemonize = self.opts.daemonize
-        self.pidfile = self.opts.pidfile
+        from ConfigParser import ConfigParser
+        cp = ConfigParser()
+        read_files = cp.read([ "/etc/xbed/xbedrc",
+                               os.path.expanduser("~/.xbed/xbedrc"),
+                               self.opts.config])
+        if not len(read_files):
+            raise RuntimeError("no configuration file found")
+        
+        if self.opts.pidfile is not None:
+            self.pidfile = self.opts.pidfile
+        elif cp.has_option("global", "pidfile"):
+            self.pidfile = cp.get("global", "pidfile")
+        else:
+            self.pidfile = "/var/run/xbed.pid"
 
-        __search_prefix = [ "/etc",
-                            "/etc/xbed",
-                            os.path.join(os.environ["XBED_HOME"], "etc"),
-                            os.path.join(os.environ["XBED_HOME"], "etc", "xbed") ]
+        if self.opts.backend is None:
+            self.opts.backend = cp.get("global", "backend")
+        if self.opts.schema_dir is None:
+            self.opts.schema_dir = cp.get("global", "schema_dir")
+        if self.opts.spool is None:
+            self.opts.spool = cp.get("global", "spool")
 
-        def __locate_file(path):
-            for prefix in __search_prefix:
-                p = os.path.join(prefix, path)
-                if os.path.exists(p):
-                    return p
-            return None
+        if self.opts.log_conf is None:
+            self.opts.log_conf = cp.get("logging", "logconf")
+        if self.opts.log_conf is None and self.opts.log_file is None:
+            self.opts.log_file = cp.get("logging", "logfile")
+
+        if self.opts.uri is None:
+            self.opts.uri = cp.get("stomp", "uri")
+        if self.opts.stomp_user is None:
+            self.opts.stomp_user = cp.get("stomp", "user")
+        if self.opts.stomp_pass is None:
+            self.opts.stomp_pass = cp.get("stomp", "pass")
 
         if self.opts.x509 is None:
-            self.opts.x509 = __locate_file("xbed.pem")
+            self.opts.x509 = cp.get("security", "pubkey")
         if self.opts.p_key is None:
-            self.opts.p_key = __locate_file(os.path.join("private", "xbed-key.pem"))
+            self.opts.p_key = cp.get("security", "privkey")
         if self.opts.ca_cert is None:
-            self.opts.ca_cert = __locate_file(os.path.join("CA", "ca-cert.pem"))
-        if self.opts.mac_file is None:
-            self.opts.mac_file = __locate_file("mac-addresses")
-        if self.opts.log_conf is None:
-            self.opts.log_conf = __locate_file("logging.rc")
-        if self.opts.schema_dir is None:
-            self.opts.schema_dir = __locate_file(os.path.join("xml", "schema"))
+            self.opts.ca_cert = cp.get("security", "cacert")
         if self.opts.user_db is None:
-            self.opts.user_db = __locate_file(os.path.join("allowed-users"))
+            self.opts.user_db = cp.get("security", "userdb")
+
+        if self.opts.mac_file is None:
+            self.opts.mac_file = cp.get("instance", "macdb")
+        if self.opts.jail_package is None:
+            self.opts.jail_package = cp.get("instance", "jailpkg")
 
     def setup_logging(self):
         try:
@@ -123,7 +138,7 @@ class XBEDaemon(Daemon):
             else:
                 import xbe
                 # fall back and use a simple logfile
-                xbe.initLogging(self.opts.logfile)
+                xbe.initLogging(self.opts.log_file)
         except IOError, ioe:
             raise Exception("%s: %s" % (ioe.strerror, ioe.filename))
         global log
@@ -150,16 +165,14 @@ class XBEDaemon(Daemon):
         # read in the certificate and private-key
         from xbe.xml.security import X509Certificate
         self.ca_certificate = X509Certificate.load_from_files(self.opts.ca_cert)
-        subj_comp = self.ca_certificate.subject_as_dict()
-        log.info("   CA certificate: %s" % (subj_comp["CN"]))
+        log.info("   CA certificate: %s", self.ca_certificate.subject()["CN"])
 
         cert = X509Certificate.load_from_files(self.opts.x509,
                                                self.opts.p_key)
         if not self.ca_certificate.validate_certificate(cert):
             self.error("the given x509 certificate has not been signed by the given CA")
         self.certificate = cert
-        subj_comp = self.certificate.subject_as_dict()
-        log.info("   my certificate: %s" % (subj_comp["CN"]))
+        log.info("   my certificate: %s" % (self.certificate.subject()["CN"]))
         log.info("  done.")
 
         log.info("initializing twisted...")

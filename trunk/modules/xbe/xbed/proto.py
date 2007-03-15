@@ -100,7 +100,7 @@ class XenBEEClientProtocol(protocol.XMLProtocol):
         log.debug(str(msg.ticket()))
         ticket = TicketStore.getInstance().lookup(msg.ticket())
         if ticket is not None:
-            TaskManager.getInstance().terminateTask(inst.task, "UserCancel")
+            TaskManager.getInstance().terminateTask(ticket.task, "UserCancel")
             TicketStore.getInstance().release(ticket)
             del ticket.task
         else:

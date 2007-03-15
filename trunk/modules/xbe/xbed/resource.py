@@ -295,7 +295,7 @@ class MacIPAddressPool(ValidatingPool):
         for line in f.readlines():
             line = line.split("#", 1)[0].strip().lower()
             if len(line):
-                mac, ip = line.split()
+                mac, ip = line.split(None, 1)
                 pool.add((mac,ip))
         return pool
     from_file = classmethod(from_file)

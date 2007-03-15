@@ -4,27 +4,27 @@ import sys, os, os.path, threading, logging, signal
 log = logging.getLogger(__name__)
 
 from xbe.util.singleton import Singleton
+from xbe.xml.security import Subject
 
 from twisted.internet import task
 
 class User:
-    def __init__(self, commonName):
-        self.__commonName = commonName
+    def __init__(self, subject):
+        self.__subject = subject
 
     def __repr__(self):
-        return "<%(cls)s CN=%(name)s>" % {
+        return "<%(cls)s Subject=%(subj)s>" % {
             "cls": self.__class__.__name__,
-            "name": self.commonName()
+            "subj": repr(self.subject())
         }
 
-    def commonName(self):
-        return self.__commonName
+    def subject(self):
+        return self.__subject
 
     def matches(self, certificate):
         if certificate is None:
             raise ValueError("certificate must not be None")
-        subj = certificate.subject_as_dict()
-        return self.commonName() == subj.get("CN")
+        return self.subject() == certificate.subject()
 
 class UserDatabase(Singleton):
     def __init__(self, path):
@@ -38,10 +38,10 @@ class UserDatabase(Singleton):
     def __read_file(self):
         users = []
         for line in open(self.__user_db).readlines():
-            cn = line.split("#", 1)[0].strip()
-            if len(cn):
-                users.append(User(cn))
-        log.debug("rebuilt user database")
+            line = line.split("#", 1)[0].strip()
+            if len(line):
+                users.append(User(Subject(line)))
+        log.debug("rebuilt user database: %d user(s) allowed", len(users))
         self.__users = users
 
     def rebuild(self, force=False):
