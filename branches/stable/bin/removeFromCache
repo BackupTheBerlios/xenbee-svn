@@ -1,0 +1,30 @@
+#!/usr/bin/python
+
+import xbe, sys
+from twisted.internet import reactor
+xbe.initLogging("/tmp/foo")
+
+from xbe.cached.cache import Cache
+path = "/srv/xen-images/xenbee/cache"
+
+if len(sys.argv) != 2:
+    print >>sys.stderr, "usage:", sys.argv[0], "uuid"
+    sys.exit(1)
+
+uuid = sys.argv[1]
+
+cache = Cache(path)
+
+def _s(uid):
+    print "done."
+    reactor.exitcode = 0
+    reactor.stop()
+
+def _f(err):
+    print err.getErrorMessage()
+    reactor.exitcode = 1
+    reactor.stop()
+
+cache.remove(uuid).addCallback(_s).addErrback(_f)
+reactor.run()
+sys.exit(reactor.exitcode)

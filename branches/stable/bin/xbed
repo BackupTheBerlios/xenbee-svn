@@ -1,0 +1,17 @@
+#!/usr/bin/env python
+"""
+The Xen Based Execution Environment managing daemon
+"""
+
+__version__ = "$Rev: $"
+__author__ = "$Author: $"
+
+import sys
+
+# add some temporary module paths
+sys.path.append("/root/xenbee/modules")
+
+from xbe.xbed.daemon import main
+if __name__ == "__main__":
+    import profile
+    profile.run("main(sys.argv)", "/tmp/xbed.profile")
