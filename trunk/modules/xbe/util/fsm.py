@@ -95,6 +95,7 @@ class FSM(object):
             return (s1, o, args, kw)
 
     def consume(self, symbol, *extra_args, **extra_kw):
+        rv = None
         try:
             self.__mtx.acquire()
 

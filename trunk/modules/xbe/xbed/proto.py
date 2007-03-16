@@ -100,9 +100,9 @@ class XenBEEClientProtocol(protocol.XMLProtocol):
         log.debug(str(msg.ticket()))
         ticket = TicketStore.getInstance().lookup(msg.ticket())
         if ticket is not None:
-            TaskManager.getInstance().terminateTask(ticket.task, "UserCancel")
-            TicketStore.getInstance().release(ticket)
-            del ticket.task
+            if not ticket.task.is_done():
+                TaskManager.getInstance().terminateTask(ticket.task, "UserCancel")
+                return message.Error(errcode.OK, "termination in progress")
         else:
             return message.Error(errcode.TICKET_INVALID, msg.ticket())
 
@@ -123,6 +123,13 @@ class XenBEEClientProtocol(protocol.XMLProtocol):
             if ticket is not None:
                 task = ticket.task
                 status_list.add(task.id(), task.state(), task.getStatusInfo())
+                
+                # remove the task entry
+                if task.is_done() and request.removeEntry():
+                    log.debug("removing task-entry: %s", task.id())
+                    TaskManager.getInstance().removeTask(task)
+                    TicketStore.getInstance().release(ticket)
+                    del ticket.task
             elif request.ticket() == "all":
                 log.info("user requested the status of all tasks, remove that functionality")
                 for task in TaskManager.getInstance().tasks.values():

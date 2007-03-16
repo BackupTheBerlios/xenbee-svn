@@ -404,6 +404,10 @@ Checking the status of your task:
         Unfortunatly, you have to poll the current status of your
         task using 'xbe status <ticket-id>'.
 
+	If your  desire is to  remove the status-entry after  the task
+	has finished, you may give the '-r or --remove' option to 'xbe
+	status'
+
 
 Using the cache:
 ----------------

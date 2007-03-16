@@ -94,6 +94,11 @@ class Task(TaskFSM):
         finally:
             self.mtx.release()
 
+    def is_done(self):
+        return self.state() in ["Finished",
+                                "Terminated",
+                                "Failed"]
+
     def getStatusInfo(self):
         """Return all possible information about this task in a
         dictionary.

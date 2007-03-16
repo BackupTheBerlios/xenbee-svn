@@ -234,9 +234,6 @@ class RemoteCommand(Command, SimpleCommandLineProtocol):
             code, name, desc, msg
         )
 
-        if code >= errcode.INTERNAL_SERVER_ERROR:
-            print "This is a very serious error, bailing out!"
-            sys.exit(2)
         if code == errcode.OK:
             self.done()
         else:
@@ -532,6 +529,9 @@ class Command_status(RemoteCommand, HasTicket):
         """initialize the 'status' command."""
         RemoteCommand.__init__(self, argv)
         HasTicket.__init__(self, self.parser)
+        p = self.parser
+        p.add_option("-r", "--remove", dest="remove_entry", action="store_true", default=False,
+                     help="remove the status entry, if it has finished")
 
     def check_opts_and_args(self, opts, args):
         if opts.ticket is None:
@@ -544,7 +544,9 @@ class Command_status(RemoteCommand, HasTicket):
     def execute(self):
         ticket = self.get_ticket()
         self.scheduleTimeout(name="status-request")
-        self.requestStatus(ticket)
+        if self.opts.remove_entry:
+            print "removing the entry", ticket
+        self.requestStatus(ticket, self.opts.remove_entry)
 
     def statusListReceived(self, statusList):
         self.cancelTimeout()

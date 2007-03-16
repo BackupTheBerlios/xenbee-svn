@@ -17,8 +17,8 @@
         </jsdl-posix:Executable>
 	<jsdl-posix:Argument filesystemName="SPOOL">scene.pov</jsdl-posix:Argument>
         <jsdl-posix:Argument>+Q11</jsdl-posix:Argument>
+        <jsdl-posix:Argument>+W1600</jsdl-posix:Argument>
         <jsdl-posix:Argument>+H1280</jsdl-posix:Argument>
-        <jsdl-posix:Argument>+W1024</jsdl-posix:Argument>
         <jsdl-posix:Argument>+A0.01</jsdl-posix:Argument>
 	<jsdl-posix:Argument>+Oscene.png</jsdl-posix:Argument>
         <jsdl-posix:Output filesystemName="SPOOL">program.out</jsdl-posix:Output>

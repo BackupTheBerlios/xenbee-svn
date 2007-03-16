@@ -97,8 +97,8 @@ class BaseCommandLineProtocol(BaseProtocol):
         msg = message.TerminateRequest(ticket)
         self.transport.sendMessage(msg.as_xml())
 
-    def requestStatus(self, ticket):
-        msg = message.StatusRequest(ticket)
+    def requestStatus(self, ticket, remove_entry=False):
+        msg = message.StatusRequest(ticket, remove_entry)
         self.transport.sendMessage(msg.as_xml())
 
     def requestCacheList(self):

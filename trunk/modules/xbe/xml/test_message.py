@@ -245,10 +245,11 @@ class TestClientMessages(unittest.TestCase):
         self.assertEqual(res.text, "ticket 1")
 
     def test_StatusRequest_from_xml(self):
-        xml = """<xbe:Message xmlns:xbe="http://www.example.com/schemas/xbe/2007/01/xbe"><xbe:MessageHeader/><xbe:MessageBody><xbe:StatusRequest><xbe:Reservation><xbe:Ticket>ticket-1</xbe:Ticket></xbe:Reservation></xbe:StatusRequest></xbe:MessageBody></xbe:Message>"""
+        xml = """<xbe:Message xmlns:xbe="http://www.example.com/schemas/xbe/2007/01/xbe"><xbe:MessageHeader/><xbe:MessageBody><xbe:StatusRequest remove-entry="1"><xbe:Reservation><xbe:Ticket>ticket-1</xbe:Ticket></xbe:Reservation></xbe:StatusRequest></xbe:MessageBody></xbe:Message>"""
         msg = message.MessageBuilder.from_xml(xml)
         self.assertTrue(isinstance(msg, message.StatusRequest))
         self.assertEqual(msg.ticket(), "ticket-1")
+        self.assertTrue(msg.removeEntry())
 
 def suite():
     s1 = unittest.makeSuite(TestServerMessages, 'test')
