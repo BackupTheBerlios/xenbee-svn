@@ -24,6 +24,10 @@
         <jsdl-posix:Output filesystemName="SPOOL">program.out</jsdl-posix:Output>
         <jsdl-posix:Error filesystemName="SPOOL">program.err</jsdl-posix:Error>
 	<jsdl-posix:WorkingDirectory filesystemName="SPOOL"/>
+	<!-- the construct with the working directory is required, since
+             we can not specify +O<filesystemName>/scene.png directly and
+             povray does not support +O <...> (note the space). 
+	-->
       </jsdl-posix:POSIXApplication>
     </jsdl:Application>
     <jsdl:Resources>
