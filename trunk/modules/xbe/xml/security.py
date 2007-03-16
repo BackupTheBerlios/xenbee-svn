@@ -17,6 +17,11 @@ from xbe.xml import cloneDocument
 from xbe.xml.namespaces import XBE, DSIG, XBE_SEC
 from zope.interface import Interface, implements
 
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from StringIO import StringIO
+
 class SecurityError(Exception):
     pass
 
@@ -426,7 +431,9 @@ class X509SecurityLayer:
             etree.SubElement(dsig_key, DSIG("X509Certificate")).text = self.__my_cert.as_der()
 
         # sign the whole message as it is right now and put it into the header
-        signature = self.__my_cert.msg_signature(etree.tostring(_msg))
+        c14n = StringIO()
+        _msg.getroottree().write_c14n(c14n)
+        signature = self.__my_cert.msg_signature(c14n.getvalue())
         etree.SubElement(dsig_sig, DSIG("SignatureValue")).text = signature
         
         return (_msg, signature)
@@ -469,7 +476,10 @@ class X509SecurityLayer:
         dsig.remove(signature_value)
 
         # validate the signature
-        x509.msg_validate(etree.tostring(_msg), signature_value.text)
+        c14n = StringIO()
+        _msg.getroottree().write_c14n(c14n)
+
+        x509.msg_validate(c14n.getvalue(), signature_value.text)
         return _msg
 
     def encrypt(self, msg):

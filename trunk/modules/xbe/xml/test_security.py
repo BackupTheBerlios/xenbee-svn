@@ -290,12 +290,18 @@ class TestSecurityLayer(unittest.TestCase):
     def test_sign(self):
         pipe = X509SecurityLayer(self.cert, self.cert, [])
         msg, sig = pipe.sign(self.msg)
-        expected_sig = "fLKOiUJUc2ZpOpELRYFK0woiH5l8z4CHiArnOYH5sr1EO3PLx+SpfDaY9kUPE7m3gXQSZjlWPm/9LkeGTKYyZyLA4xuL/Jma9kpCZplW6A38HyJzxek5E4lq1gtDjaIlvrA4bGgLFWF8rljIxX+T4O3QQvvRAeXTSs3pxeRJ+ioYxaN8/TfNLS93oN159EsgT5ZHjtdT8NjlyAft7uL7ZsllAgxQmoRiM+mD4BmQp1eEmwq28sp0ssaP2xat9K7pjG4Fxsq15FV1m7fbAMi52Qp5aRb8+nboaA7Xt6A2HUH2vT2Sl1n76K01qXv5SIdj/Zt9f3BV+e0OogOzqv5jIg=="
+        expected_sig = 'Au8QrgMOHVLkB5+ab0G8LbSG341YGruouykNaaTIbFEhYshWrn/f0zHo0WoVKZWzR58RFv8VPd06XsfzaBhKjv1SfasmH2AzMXkuz7z0t84O+9UThdcZX+mCpXljPptYL+Y8onXfnYQVQwHBvREQxFvBpCUnxaOs2BFfb3tzHtFSo1I34jB8PwoK4akPuTUcQ57iAvQ4oBSglXf+YppaMRr1v7F1yKLCxbZsAfP8qGmJK1ShuXfMCtdYO4zM4ikAm1izG3nb8sBBLLzBL2tpVmsSeDlC/CXglIhzw38+YLmgav5CfeG9yqjtpS0iOJfli52O9mDiRGYk3z1oZH2ayQ=='
         self.assertEqual(expected_sig, sig)
 
     def test_validate(self):
-        pipe = X509SecurityLayer(self.cert, self.cert, [self.ca]) # encrypt to myself
+        pipe = X509SecurityLayer(self.cert, self.cert, [self.ca]) # sign
         recv_msg = pipe.validate(pipe.sign(self.msg))
+
+    def test_newlines(self):
+        pipe = X509SecurityLayer(self.cert, self.cert, [self.ca])
+        msg = self.__build_empty_body_message()
+        bod = msg.find(XBE("MessageBody"))
+        
 
     def test_novalidate_noca(self):
         pipe = X509SecurityLayer(self.cert, None, [])
@@ -382,7 +388,7 @@ class TestCipher(unittest.TestCase):
 
     def test_cipher_encrypt(self):
         enc = Cipher(key="01234", IV="01234", do_encryption=True)
-        expected = "E73YSx2GFpKGdfP3ftkIqE0jJqH8kgcIx26A/VZ1LMk89kPFml5A4B+baoZOgb4m"
+        expected = "jVCq+LaEZHERvCvpvru8FTcdWjMb6b/WLd41EwqXh/YXuCJ+fTGWGR0YXTI49Td/"
         encrypted = base64.b64encode(enc(ExampleData.text))
         self.assertEqual(expected, encrypted)
 
@@ -390,7 +396,7 @@ class TestCipher(unittest.TestCase):
         expected = ExampleData.text
         # this encrypted text should match the expected text, if decrypting it with
         # key and IV set to "01234"
-        encrypted = "E73YSx2GFpKGdfP3ftkIqE0jJqH8kgcIx26A/VZ1LMk89kPFml5A4B+baoZOgb4m"
+        encrypted = "jVCq+LaEZHERvCvpvru8FTcdWjMb6b/WLd41EwqXh/YXuCJ+fTGWGR0YXTI49Td/"
         dec = Cipher(key="01234", IV="01234", do_encryption=False)
         decrypted = dec(base64.b64decode(encrypted))
         self.assertEqual(expected, decrypted)

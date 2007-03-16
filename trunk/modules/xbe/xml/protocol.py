@@ -357,6 +357,7 @@ class SecureProtocol(XMLProtocol):
         try:
             real_msg = self.__securityLayer.validate(real_msg)
         except SecurityError, se:
+            log.debug("could not validate message: %s: %s", etree.tostring(real_msg), se)
             return message.Error(errcode.UNAUTHORIZED)
         try:
             rv = self.protocol.messageReceived(real_msg)

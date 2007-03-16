@@ -2,6 +2,35 @@
               ===============================
 
 
+The system contains several progams and daemons, that taken together
+build up the execution environment. These programs are:
+
+    * xbed
+    
+        The daemon  handling user requests and  starting up instances,
+        i.e. the 'heart' of the system.
+        
+    * xbeinstd
+    
+        The daemon that must be  running on all instances. This daemon
+        is responsible  for 'managing' a single  instance, that means,
+        he is responsible for starting up the real user task.
+
+        For an  user, that means in  particular, he has  to make sure,
+        that  this daemon  will be  started in  his image  during boot
+        up. If  that does  not happen, the  system asumes  an instance
+        failure and aborts the job execution at all.
+
+    * xbe
+    
+        The only  currently available user-client. This  client can be
+        used to create and  confirm reservations as well as cancelling
+        them later on.
+
+        Note that  a reservation is always required  prior executing a
+        task.
+
+
 +==============+
 |              |
 | Requirements |
@@ -20,7 +49,7 @@ Common Requirements:
 
 Additional requirements for the 'xbed':
         * must run on the Xen-Dom0
-	* a DHCP server that answers to the MAC addresses described below
+        * a DHCP server that answers to the MAC addresses described below
         * python-libvirt (virtualization module for python that binds to xen)
 
 
@@ -53,21 +82,21 @@ xbed:
         * obtain the source (svn) from:
               - http://developer.berlios.de/projects/xenbee/
 
-	* assume the following directory structure:
-	
+        * assume the following directory structure:
+        
              etc-+-xbed
-		 |   `+-xbedrc
-		 |    |
+                 |   `+-xbedrc
+                 |    |
                  |    +-xbed.pem (X509 Certifcate with public key)
                  |    |
-	         |    +-xbed-key.pem (private key in PEM format)
-		 |    |
+                 |    +-xbed-key.pem (private key in PEM format)
+                 |    |
                  |    +-ca-cert.pem (Certificate Authority X.509)
-		 |    |
+                 |    |
                  |    +-mac-addresses
                  |    |
                  |    +-allowed-users
-		 |    |
+                 |    |
                  |    `-logging.rc
                  |
                  `-xml
@@ -80,15 +109,15 @@ xbed:
 
 
 
-	Configuration File:
-	===================
+        Configuration File:
+        ===================
 
-	     * -c or --config lets you specify a configuration file
-	     * this file holds all configuration information required
-	       for the xbed
+             * -c or --config lets you specify a configuration file
+             * this file holds all configuration information required
+               for the xbed
 
 
-	Certificates:
+        Certificates:
         =============
              * the daemon requires two certificates:
                      - the certificate (X.509) of the CA and
@@ -107,14 +136,14 @@ xbed:
                      --key     points to a file containing the private key
                      --x509    points to the X.509 certificate of the server
 
-	     * using the config file it would be:
+             * using the config file it would be:
 
-	     	     [security]
-		     privkey: %(etc)s/xbed/xbed-key.pem
-		     pubkey: %(etc)s/xbed/xbed.pem
-		     cacert: %(etc)s/xbed/ca-cert.pem
+                     [security]
+                     privkey: %(etc)s/xbed/xbed-key.pem
+                     pubkey: %(etc)s/xbed/xbed.pem
+                     cacert: %(etc)s/xbed/ca-cert.pem
 
-	       for example.
+               for example.
    
         mac-addresses:
         ==============
@@ -137,8 +166,8 @@ xbed:
 
              * using the config file it is:
 
-	             [instance]
-		     macdb: %(etc)s/xbed/mac-addresses
+                     [instance]
+                     macdb: %(etc)s/xbed/mac-addresses
 
         allowed-users:
         ==============
@@ -148,7 +177,7 @@ xbed:
                        subject= /OU=Persons/CN=test user 1
 
                     Then the 'allowed-users' file should contain a line with:
-	               /OU=Persons/CN=test user 1
+                       /OU=Persons/CN=test user 1
              * any other user trying to connect to the daemon will not be able to do so
 
              * this  file  is watched  for  changes  and the  internal
@@ -159,8 +188,8 @@ xbed:
 
              * using the config file it is:
 
-	             [security]
-		     userdb: %(etc)s/xbed/allowed-users
+                     [security]
+                     userdb: %(etc)s/xbed/allowed-users
 
         logging.rc:
         ===========
@@ -171,11 +200,11 @@ xbed:
              * the following commandline option may be used to specify a different path:
                      --logconf
 
-	     * using the config file:
-	     
-		     [logging]
-		     logconf: %(etc)s/xbed/logging.rc
-		     ;logfile: /var/log/xenbee/xbed.log
+             * using the config file:
+             
+                     [logging]
+                     logconf: %(etc)s/xbed/logging.rc
+                     ;logfile: /var/log/xenbee/xbed.log
 
 
         XML-Schema definitions:
@@ -187,12 +216,12 @@ xbed:
 
                command line option
 
-	     * using the config file:
-	     
-		     [global]
-		     shema_dir: %(etc)s/xml/schema
+             * using the config file:
+             
+                     [global]
+                     shema_dir: %(etc)s/xml/schema
 
-	Spool-directory:
+        Spool-directory:
         ================
              * the  spool directory will  contain all  information and
                files about a  given task in the system,  so make shure
@@ -203,10 +232,10 @@ xbed:
 
                       --spool (default is /srv/xen-images/xenbee)
 
-	     * using the config file:
-	     
-		     [global]
-		     spool: /srv/xen-images/xenbee
+             * using the config file:
+             
+                     [global]
+                     spool: /srv/xen-images/xenbee
 
 
              * The directory will be something like:
@@ -229,22 +258,22 @@ xbed:
            the logfile if something went wrong. You can also use 'xbed
            start -D' to prohibit the daemonization of the program.
 
-	 * use the '--uri' to specify the stomp server and the message
+         * use the '--uri' to specify the stomp server and the message
            queue on which the daemon acts.
 
-	        WARNING: the host given  in this URI must be reachable
-	        by the instances.
+                WARNING: the host given  in this URI must be reachable
+                by the instances.
 
-		Example:
-		   stomp://<yourhost>[:61613]/xenbee.daemon.1
+                Example:
+                   stomp://<yourhost>[:61613]/xenbee.daemon.1
 
-		This information gets  directly passed to the instance
-		daemon, which uses it to connect back to the 'xbed'.
+                This information gets  directly passed to the instance
+                daemon, which uses it to connect back to the 'xbed'.
 
-	* you can also use the config file to set the URI:
+        * you can also use the config file to set the URI:
 
-		[stomp]
-		uri: stomp://<yourhost>/xenbee.daemon.1
+                [stomp]
+                uri: stomp://<yourhost>/xenbee.daemon.1
 
 
 xbeinstd (instance daemon):
@@ -275,11 +304,11 @@ xbe (command line tool):
                configure the paths to the certificates.
 
                      [security]
-		     privkey: ~/.xbe/user-key.pem
-		     pubkey: ~/.xbe/user.pem
-		     cacert: ~/.xbe/ca-cert.pem
+                     privkey: ~/.xbe/user-key.pem
+                     pubkey: ~/.xbe/user.pem
+                     cacert: ~/.xbe/ca-cert.pem
 
-	Connecting to the server:
+        Connecting to the server:
         =========================
 
              * You have to specify  the stomp-server through which the
@@ -297,30 +326,30 @@ Executing some task:
         actually JSDL-documents with  some extensions, examples can be
         found in the 'xsdl' directory of the source distribution.
 
-	Currently  there is no  tool, that  generates those  files, so
+        Currently  there is no  tool, that  generates those  files, so
         modify one of the example*.xsdl documents to your needs.
 
 
-	1. make shure, that you can connect to the daemon, for
+        1. make shure, that you can connect to the daemon, for
            instance by retrieving the list of cached entries:
 
-	       xbe showcache
+               xbe showcache
 
-	   that  should result in  either an  empty list  or something
-	   useful. If an error  occured, then there is something wrong
-	   with your setup ;-( If you get an timeout or something like
+           that  should result in  either an  empty list  or something
+           useful. If an error  occured, then there is something wrong
+           with your setup ;-( If you get an timeout or something like
            that, try using '-v' to get verbose output.
 
-	2. execution of a job is  split into two parts, the first part
+        2. execution of a job is  split into two parts, the first part
            is the  reservation part, that gives you  a special ticket,
            that is only known to you (and the server of course) and
            the second part is the confirmation part.
 
-	   For your  convenience, there is also  the command 'submit',
-	   which make automatically a reservation for you and confirms
-	   it afterwards.
+           For your  convenience, there is also  the command 'submit',
+           which make automatically a reservation for you and confirms
+           it afterwards.
 
-	2a.    xbe reserve
+        2a.    xbe reserve
 
                     Your ticket identification code:
                     ================================
@@ -340,43 +369,78 @@ Executing some task:
            write  down that  ticket id  somewhere, since  all requests
            according that task will require this ticket.
 
-	      xbe status f86d10a5-912b-46e3-95e2-3344614b3d71
+              xbe status f86d10a5-912b-46e3-95e2-3344614b3d71
 
                     <StatusList with 1 entry:
                       {'252cb37f-f703-4706-824e-058c0e2cdf92': {'Meta': {'times':
                                                                         {'submit-time': '1173926933.46'}},
                                                                 'State': 'Pending:Reserved'}}>
 
-	   as you can see, your task is now in the state
-	   'Pending:Reserved'.
+           as you can see, your task is now in the state
+           'Pending:Reserved'.
 
 
-	2b. After reserving a slot, you must confirm it with some XSDL
-	    document.
+        2b. After reserving a slot, you must confirm it with some XSDL
+            document.
 
-	       xbe confirm f86d10a5-912b-46e3-95e2-3344614b3d71 \
-	          <path-to-xsdl>
+               xbe confirm f86d10a5-912b-46e3-95e2-3344614b3d71 \
+                  <path-to-xsdl>
 
-	    This will transfer the document to the server and initiate
-	    the staging and resource gathering process.
+            This will transfer the document to the server and initiate
+            the staging and resource gathering process.
 
-	    After that you may query the status and watch what
-	    happens.
+            After that you may query the status and watch what
+            happens.
 
-	3. At any time you have the possibility to terminate your task
+        3. At any time you have the possibility to terminate your task
            with
 
-	       xbe terminate f86d10a5-912b-46e3-95e2-3344614b3d71
+               xbe terminate f86d10a5-912b-46e3-95e2-3344614b3d71
+
+
+Checking the status of your task:
+---------------------------------
+
+        Unfortunatly, you have to poll the current status of your
+        task using 'xbe status <ticket-id>'.
+
 
 Using the cache:
 ----------------
 
-	* List what's in the cache:
-	      xbe showcache
+        * List what's in the cache:
+              xbe showcache
 
-	* Add something to the cache:
-	      xbe cache ...
+          The  result will  a list  of  all entries  available in  the
+          cache, consisting  of an  URI that you  can use to  refer to
+          that particular cache  entry, a user-defined description and
+          the type of cached data.
 
-	* in any URI element within the XSDL document, you can use the
-          URIs given to you by 'xbe showcache'
+          The cache distinguishes four different types of data:
+          
+             * image, indicates that the  entry is an 'instance image'
+               you can use. The image contains all necessary files and
+               the  description should  indicate,  what application(s)
+               can be used.
 
+	     * kernel, this type of entry is, as you may have guessed,
+               a  kernel-file (note:  the kernel  must be  a xen-aware
+               kernel)
+
+	     * initrd, if the used kernel requires an initrd image,
+               here you can find it.
+
+	     * data,   indicates  that   the  entry   represents  some
+               arbitrary data.
+	       
+        * Add something to the cache:
+              xbe cache -u <URI> --type <type> --desc "<description>"
+
+	      The URI  must be reachable by the  xbed. The commandline
+	      tool, waits  until the xbed says, that  it has completed
+	      the caching.
+
+        * In the XSDL all files  (in the staging operations as well as
+          in the  location elements  for the instance)  are referenced
+          using URIs. In  all that cases, you may as  well give an URI
+          you received using 'xbe showcache'.

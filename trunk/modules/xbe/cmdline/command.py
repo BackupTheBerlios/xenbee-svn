@@ -439,6 +439,7 @@ class Command_confirm(Command_terminate):
             xsdl = self.get_xsdl()
             self.confirmReservation(ticket, xsdl)
         except Exception, e:
+            print e
             print "cancelling reservation %s" % ticket
             Command_terminate.execute(self)
             raise

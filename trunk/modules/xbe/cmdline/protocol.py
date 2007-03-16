@@ -42,22 +42,26 @@ class ClientXMLProtocol(protocol.XMLProtocol):
     def do_CacheEntries(self, elem, *args, **kw):
         cache_entries = message.MessageBuilder.from_xml(elem.getroottree())
         if self.protocol is not None:
-            return self.protocol.cacheEntriesReceived(cache_entries)
+            self.protocol.cacheEntriesReceived(cache_entries)
 
     def do_StatusList(self, elem, *args, **kw):
-        status_list = message.MessageBuilder.from_xml(elem.getroottree())
-        if self.protocol is not None:
-            return self.protocol.statusListReceived(status_list)
+        try:
+            status_list = message.MessageBuilder.from_xml(elem.getroottree())
+        except Exception, e:
+            log.warn("could not build status_list: %s", e)
+        else:
+            if self.protocol is not None:
+                self.protocol.statusListReceived(status_list)
         
     def do_ReservationResponse(self, elem, *args, **kw):
         response = message.MessageBuilder.from_xml(elem.getroottree())
         if self.protocol is not None:
-            return self.protocol.reservationResponseReceived(response)
+            self.protocol.reservationResponseReceived(response)
 
     def do_Error(self, elem, *a, **kw):
         error = message.MessageBuilder.from_xml(elem.getroottree())
         if self.protocol is not None:
-            return self.protocol.errorReceived(error)
+            self.protocol.errorReceived(error)
 
 class BaseCommandLineProtocol(BaseProtocol):
     connected = 0

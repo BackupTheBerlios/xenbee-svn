@@ -44,6 +44,7 @@ class Task(TaskFSM):
         self.mtx = self.fsm.getLock()
         self.__timestamps = {}
         self.__timestamps["submit"] = time.time()
+        self.__activity_logs = {}
         self.__id = id
         self.log = logging.getLogger("task."+self.id())
         self.mgr = mgr
@@ -118,6 +119,12 @@ class Task(TaskFSM):
             if hasattr(self, 'exitcode'):
                 info["exitcode"] = self.exitcode
 
+            logentries = {}
+
+            for key, logbook in self.__activity_logs.iteritems():
+                logentries[key] = "\n".join(logbook)
+            info["logs"] = logentries
+
             if self.state() == "Running:Executing":
                 # instance is available and has an IP
                 info["IP"] = self.__inst.ip
@@ -177,6 +184,7 @@ class Task(TaskFSM):
         self.mtx.acquire()
         try:
             self.__timestamps["stage-in-start"] = time.time()
+            self.__activity_logs["stage-in"] = []
             rv = self.__prepare()
         finally:
             self.mtx.release()
@@ -293,8 +301,7 @@ class Task(TaskFSM):
         try:
             self.log.info("staging out")
             self.__timestamps["stage-out-start"] = time.time()
-            self.__stop_instance()
-            self._cb_release_resources()
+            self.__activity_logs["stage-out"] = []
             rv = self.__unprepare()
         finally:
             self.mtx.release()
@@ -462,7 +469,7 @@ class Task(TaskFSM):
         mac_acquirer = ThreadedActivity(
             AcquireResourceActivity(mac_pool))
         setup_activity = ThreadedActivity(
-            SetUpActivity(self.__spool, jail_package), (self.__jsdl_doc,))
+            SetUpActivity(self.__spool, jail_package), (self.__jsdl_doc, self.__activity_logs["stage-in"]))
 
         complex_activity = ComplexActivity([setup_activity, mac_acquirer])
         self.mgr.registerActivity(self, complex_activity,
@@ -494,7 +501,7 @@ class Task(TaskFSM):
         from xbe.util.activity import ComplexActivity, ThreadedActivity
 
         teardown_activity = ThreadedActivity(
-            TearDownActivity(self.__spool), (self.__jsdl_doc,))
+            TearDownActivity(self.__spool), (self.__jsdl_doc, self.__activity_logs["stage-out"]))
 
         complex_activity = ComplexActivity([teardown_activity])
         self.mgr.registerActivity(self, complex_activity,
@@ -557,6 +564,7 @@ class Task(TaskFSM):
     def _cb_execution_finished(self, result):
         try:
             self.mtx.acquire()
+            self._cb_store_exitcode(result[0])
             self.__stop_instance()
             self._cb_release_resources()
             self.cb_execution_finished()
@@ -573,7 +581,7 @@ class Task(TaskFSM):
                 ExecutionActivity(self, self.__executionWaitTuple))
             complex_activity = ComplexActivity([execution_waiter])
             self.mgr.registerActivity(self, complex_activity,
-                                      on_finish=self.cb_execution_finished,
+                                      on_finish=self._cb_execution_finished,
                                       on_fail=self.failed,
                                       on_abort=None)
         except Exception, e:

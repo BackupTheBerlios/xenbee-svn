@@ -232,8 +232,10 @@ class StageOutHandler(StagingActivity):
             log.debug("uploading: %s -> %s", file_name, uri)
             
             # make file relative to image mount_point
-            file_name = os.path.join(mount_point, file_name.lstrip("/"))
-            return self.perform_upload(file_name, uri)
+            real_file_name = os.path.join(mount_point, file_name.lstrip("/"))
+            if not os.path.exists(real_file_name):
+                raise OSError(errno.ENOENT, os.strerror(errno.ENOENT), file_name)
+            return self.perform_upload(real_file_name, uri)
 
 class TaskActivity(ActivityProxy):
     implements(IUndoable)
@@ -278,13 +280,14 @@ class TaskActivity(ActivityProxy):
         finally:
             self.unlock()
 
-    def __call__(self, context, jsdl_doc):
+    def __call__(self, context, jsdl_doc, logbook=[]):
         if not isinstance(jsdl_doc, jsdl.JsdlDocument):
             raise ValueError("jsdl_doc must be a JsdlDocument", jsdl_doc)
         if not os.path.exists(self.spool):
             raise ValueError("spool_path must exist", self.spool)
 
         self.ctxt = context
+        self.logbook = logbook
         try:
             rv = self.perform(jsdl_doc)
         except StagingAborted:
@@ -709,10 +712,19 @@ class TearDownActivity(TaskActivity):
         for staging in stagings:
             if staging.get("Target") is None:
                 continue
-            self._handle_location(staging,
-                                  img_mount_point,
-                                  working_directory, known_filesystems)
+            self.check_abort()
 
+            try:
+                self._handle_location(staging,
+                                      img_mount_point,
+                                      working_directory, known_filesystems)
+            except OSError, e:
+                log.info("could not perform upload: %s", e)
+                self.logbook.append("warning: upload failed: " + str(e))
+            except Exception, e:
+                log.info("could not perform upload: %s", e)
+                self.logbook.append("warning: upload failed: " + str(e))
+                
 class AcquireResourceActivity(ActivityProxy):
     implements(IUndoable)
     

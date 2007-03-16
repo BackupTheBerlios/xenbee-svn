@@ -119,16 +119,19 @@ class XenBEEClientProtocol(protocol.XMLProtocol):
         request = message.MessageBuilder.from_xml(elem.getroottree())
         ticket = TicketStore.getInstance().lookup(request.ticket())
         status_list = message.StatusList()
-        if ticket is not None:
-            task = ticket.task
-            status_list.add(task.id(), task.state(), task.getStatusInfo())
-        elif request.ticket() == "all":
-            log.info("user requested the status of all tasks, remove that functionality")
-            for task in TaskManager.getInstance().tasks.values():
+        try:
+            if ticket is not None:
+                task = ticket.task
                 status_list.add(task.id(), task.state(), task.getStatusInfo())
-        else:
-            return message.Error(errcode.TICKET_INVALID, request.ticket())
-        return status_list
+            elif request.ticket() == "all":
+                log.info("user requested the status of all tasks, remove that functionality")
+                for task in TaskManager.getInstance().tasks.values():
+                    status_list.add(task.id(), task.state(), task.getStatusInfo())
+            else:
+                return message.Error(errcode.TICKET_INVALID, request.ticket())
+            return status_list
+        except Exception, e:
+            self.log.warn("status request failed %s", e, exc_info=1)
 
     def do_ListCache(self, elem, *args, **kw):
         log.debug("retrieving cache list...")

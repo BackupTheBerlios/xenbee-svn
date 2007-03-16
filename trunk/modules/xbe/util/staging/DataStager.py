@@ -114,7 +114,7 @@ class DataStager:
                 raise StagingAborted("staging aborted", self.src, self.dst)
             else:
                 log.error("retrieval failed: %s", e)
-                raise
+                raise StagingError("upload failed", e)
         finally:
             self.curl.close()
             self.fp.close()
@@ -139,7 +139,7 @@ class DataStager:
                 raise StagingAborted("staging aborted", self.src, self.dst)
             else:
                 log.warn("upload failed: %s", e)
-                raise
+                raise StagingError("upload failed", e)
         finally:
             self.curl.close()
             self.fp.close()
