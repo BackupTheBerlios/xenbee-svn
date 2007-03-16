@@ -81,6 +81,19 @@ class Backend(object):
         stdout, stderr = p.communicate()
         if p.returncode != 0:
             raise ProcessError(p.returncode, "xm", stderr, stdout)
+        return (stdout, stderr)
+
+    def getHostInfo(self):
+        self.acquireLock()
+        try:
+            hinfo = {}
+            output = self._runcmd("info")
+            for line in output.split("\n"):
+                key, value = line.split(":", 1)
+                hinfo[key.strip()] = value.lstrip()
+        finally:
+            self.releaseLock()
+        return hinfo
 
     def _getDomainByID(self, inst):
         try:

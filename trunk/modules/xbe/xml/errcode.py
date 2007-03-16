@@ -18,6 +18,8 @@ INTERNAL_SERVER_ERROR = 500
 TICKET_INVALID = 501
 SECURITY_ERROR = 502
 UNAUTHORIZED = 503
+SIGNATURE_MISSMATCH = 504
+DECYPHER_FAILED = 505
 
 info = {
     OK: ( "OK", "everything ok", None ),
@@ -37,6 +39,9 @@ info = {
                           "the signal you have sent was out of range", None),
     SECURITY_ERROR: ("SECURITY_ERROR", "general security violation", None),
     UNAUTHORIZED: ("UNAUTHORIZED", "you are not authorized", None),
+    SIGNATURE_MISSMATCH: ("SIGNATURE MISSMATCH", "the signature did not match the message", None),
+    DECYPHER_FAILED: ("DECYPHER FAILED", "message could not be decrypted", None),
+    
     SERVER_BUSY: ("SERVER_BUSY",
                   "I cannot handle your request right now, try again later", None),
     NO_APPLICATION: ("NO_APPLICATION",

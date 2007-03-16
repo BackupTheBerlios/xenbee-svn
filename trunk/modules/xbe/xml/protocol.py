@@ -352,13 +352,13 @@ class SecureProtocol(XMLProtocol):
             from traceback import format_exc
             log.error("decyphering *failed*: %s\n%s" % (e, format_exc(e)))
             self.__disconnect()
-            raise
+            return message.Error(errcode.DECYPHER_FAILED)
         # validate the message
         try:
             real_msg = self.__securityLayer.validate(real_msg)
         except SecurityError, se:
             log.debug("could not validate message: %s: %s", etree.tostring(real_msg), se)
-            return message.Error(errcode.UNAUTHORIZED)
+            return message.Error(errcode.SIGNATURE_MISSMATCH)
         try:
             rv = self.protocol.messageReceived(real_msg)
         except Exception, e:

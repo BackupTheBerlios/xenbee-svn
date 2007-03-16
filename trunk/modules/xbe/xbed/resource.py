@@ -5,7 +5,7 @@ A module used to gather resources for some task.
 __version__ = "$Rev$"
 __author__ = "$Author$"
 
-import logging, time
+import logging, time, random
 log = logging.getLogger(__name__)
 
 import threading
@@ -88,6 +88,9 @@ class Pool(object):
             self.__mtx.release()
         return rv
 
+    def empty(self):
+        return self.free() == 0
+
     def acquire(self, timeout=None):
         """ acquire() -> item
 
@@ -99,12 +102,12 @@ class Pool(object):
         """
         try:
             self.__available.acquire()
-            while self.free() == 0:
+            while self.empty():
                 self.__available.wait(timeout)
                 if not self.free():
                     raise PoolEmpty("try again later")
             # take a free item
-            item = self.__get_free_items().pop()
+            item = random.choice(self.__get_free_items())
             item.status = _Item.USED
         finally:
             self.__available.release()
