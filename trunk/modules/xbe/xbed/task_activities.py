@@ -480,17 +480,6 @@ class SetUpActivity(TaskActivity):
         self.check_abort()
 
         
-        ##############################################
-        #
-        # Perform the Stage-In definitions
-        #
-        ##############################################
-        try:
-            stagings = jsdl_doc.lookup_path("JobDefinition/JobDescription/"+
-                                        "DataStaging")
-        except KeyError, e:
-            stagings = None
-
         try:
             # mount the proc filesystem
             subprocess.check_call(["mount", "-t", "proc", "proc", self.proc_path])
@@ -501,13 +490,24 @@ class SetUpActivity(TaskActivity):
             img = self._mount_image(os.path.join(self.xbe_spool, "image"),
                                     self.xbe_spool)
             try:
-                # staging operations
-                if stagings is not None:
+
+                ##############################################
+                #
+                # Perform the Stage-In definitions
+                #
+                ##############################################
+                try:
+                    stagings = jsdl_doc.lookup_path("JobDefinition/JobDescription/"+
+                                                    "DataStaging")
+                except KeyError, e:
+                    stagings = None
+                else:
+                    # staging operations
                     self._prepare_stagings(stagings,
                                            img.mount_point(),
                                            jsdl_doc.get_file_systems())
 
-                    self.check_abort()
+                self.check_abort()
 
                 # setup scripts
                 self._call_scripts(os.path.join(self.xbe_spool, "scripts"), "setup", self.jail_path,

@@ -70,15 +70,15 @@ class XenBEEClientProtocol(protocol.XMLProtocol):
                 "JobDefinition/JobDescription/Resources/"+
                 "InstanceDefinition/InstanceDescription")
         except Exception, e:
+            TicketStore.getInstance().release(ticket)
             TaskManager.getInstance().removeTask(ticket.task)
             del ticket.task
-            TicketStore.getInstance().release(ticket)
             msg = message.Error(errcode.NO_INSTANCE_DESCRIPTION, str(e))
         else:
             ticket.task.confirm(confirm.jsdl(), jsdl_doc)
             if confirm.start_task():
                 ticket.task.start()
-            msg = None
+            msg = message.Error(errcode.OK, "reservation confirmed")
         return msg
 
     def do_ReservationRequest(self, dom_node, *args, **kw):
