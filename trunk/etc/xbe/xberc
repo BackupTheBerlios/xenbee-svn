@@ -1,6 +1,9 @@
 [DEFAULT]
 prefix: ~/.xbe
 
+[global]
+schema_dir: /root/xenbee/etc/xml/schema
+
 [network]
 timeout: 10
 server: stomp://xen-o-matic.itwm.fhrg.fraunhofer.de/xenbee.daemon.1

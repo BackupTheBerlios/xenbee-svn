@@ -121,7 +121,7 @@ class Error(SimpleMessage):
     
     def __init__(self, code=errcode.OK, msg=None):
         self.__info = errcode.info[code]
-        self.__code = code
+        self.__code = int(code)
         self.__message = msg
 
     def __repr__(self):

@@ -1,6 +1,6 @@
 """Commands used by the commandline tool"""
 
-import logging, sys, re, os, uuid
+import logging, sys, re, os, uuid, os.path, threading
 log = logging.getLogger(__name__)
 
 from optparse import OptionParser
@@ -49,6 +49,9 @@ class Command(object):
         self.opts, self.args = self.parser.parse_args(self.argv)
 
     def execute(self):
+        self._execute()
+
+    def _execute(self):
         """run the specified command."""
         raise RuntimeError("can't execute the base Command.")
 
@@ -60,7 +63,11 @@ class Command(object):
         pass
 
     def failed(self, exception):
-        self.status_info = (True, exception)
+        self.mtx.acquire()
+        try:
+            self.status_info = (True, exception)
+        finally:
+            self.mtx.release()
 
     def __init__(self, argv):
         """initialize the command.
@@ -68,7 +75,7 @@ class Command(object):
         argv -- the arguments passed to this command.
 
         """
-
+        self.mtx = threading.RLock()
         self.status_info = (False, '')
         self.name = argv[0]
         self.argv = argv[1:]
@@ -135,12 +142,15 @@ class RemoteCommand(Command, SimpleCommandLineProtocol):
 #            pass
 #        else:
 #            optcomplete.autocomplete(self.parser)
-        opts, args = self.parser.parse_args(self.argv)
-        self.__pre_parse(opts, args)
-        self.check_opts_and_args(opts, args)
-        self.opts, self.args = opts, args
-        self.buildHelp()
-
+        self.mtx.acquire()
+        try:
+            opts, args = self.parser.parse_args(self.argv)
+            self.__pre_parse(opts, args)
+            self.check_opts_and_args(opts, args)
+            self.opts, self.args = opts, args
+            self.buildHelp()
+        finally:
+            self.mtx.release()
         self.setUp()
 
     def post_execute(self):
@@ -182,10 +192,10 @@ class RemoteCommand(Command, SimpleCommandLineProtocol):
         try:
             self.execute()
         except Exception, e:
-            self.cancelTimeout()
             self.failed(e)
 
     def cancelTimeout(self):
+        self.mtx.acquire()
         try:
             to = self.__timeoutCall
         except AttributeError:
@@ -193,33 +203,62 @@ class RemoteCommand(Command, SimpleCommandLineProtocol):
         else:
             del self.__timeoutCall
             to.cancel()
+        finally:
+            self.mtx.release()
+
+    def execute(self):
+        try:
+            self.scheduleTimeout()
+            rv = self._execute()
+            self.cancelTimeout()
+        except Exception, e:
+            self.failed(e)
+        else:
+            if rv:
+                self.done()
 
     def scheduleTimeout(self, timeout=None, *args, **kw):
-        self.cancelTimeout()
-        from twisted.internet import reactor
-        if timeout is None:
-            timeout = self.opts.timeout
-        self.__timeoutCall = reactor.callLater(self.opts.timeout,
-                                               self.timeout, *args, **kw)
+        self.mtx.acquire()
+        try:
+            self.cancelTimeout()
+            from twisted.internet import reactor
+            if timeout is None:
+                timeout = self.opts.timeout
+            self.__timeoutCall = reactor.callLater(self.opts.timeout,
+                                                   self.timeout, *args, **kw)
+        finally:
+            self.mtx.release()
 
     def timeout(self, name=None):
-        del self.__timeoutCall
-        msg = "timed out"
-        if name is not None:
-            msg = "%s %s" % (name, msg)
-        self.failed(RuntimeError(msg))
+        self.mtx.acquire()
+        try:
+            del self.__timeoutCall
+            msg = "timed out"
+            if name is not None:
+                msg = "%s %s" % (name, msg)
+            self.failed(RuntimeError(msg))
+        finally:
+            self.mtx.release()
 
     def done(self):
-        self.cancelTimeout()
-        from twisted.internet import reactor
-        reactor.callLater(0.5, reactor.stop)
-        Command.done(self)
+        self.mtx.acquire()
+        try:
+            self.cancelTimeout()
+            from twisted.internet import reactor
+            reactor.stop()
+            Command.done(self)
+        finally:
+            self.mtx.release()
 
     def failed(self, exception):
-        self.cancelTimeout()
-        from twisted.internet import reactor
-        reactor.callLater(0.5, reactor.stop)
-        Command.failed(self, exception)
+        self.mtx.acquire()
+        try:
+            self.cancelTimeout()
+            from twisted.internet import reactor
+            reactor.stop()
+            Command.failed(self, exception)
+        finally:
+            self.mtx.release()
 
     def errorReceived(self, error):
         self.cancelTimeout()
@@ -250,7 +289,7 @@ class RemoteCommand(Command, SimpleCommandLineProtocol):
     def setUp(self):
         pass
     
-    def execute(self):
+    def _execute(self):
         raise CommandFailed("please implement me")
 
     def tearDown(self):
@@ -284,7 +323,7 @@ class Command_help(Command):
         Command.__init__(self, argv)
         self.subcmd = createCommand(self.argv)
         
-    def execute(self):
+    def _execute(self):
         if self.subcmd:
             print >>sys.stderr, dedent(self.subcmd.__doc__).strip()
         else:
@@ -310,9 +349,10 @@ class Command_reserve(RemoteCommand):
         """initialize the 'create' command."""
         RemoteCommand.__init__(self, argv)
 
-    def execute(self):
+    def _execute(self):
         self.scheduleTimeout(name="reserve")
         self.requestReservation()
+        return False
 
     def reservationResponseReceived(self, reservationResponse):
         self.cancelTimeout()
@@ -366,10 +406,10 @@ class Command_terminate(RemoteCommand, HasTicket):
                 raise CommandFailed("ticket required")
         return True
     
-    def execute(self):
+    def _execute(self):
         ticket = self.get_ticket()
         self.requestTermination(ticket)
-        self.done()
+        return False
 CommandFactory.getInstance().registerCommand(Command_terminate,
                                              "terminate", "term", "kill", "cancel")
 
@@ -403,9 +443,10 @@ class Command_cache(RemoteCommand):
                 opts.desc = "Not available"
         return True
     
-    def execute(self):
+    def _execute(self):
         self.cacheFile(self.opts.uri, self.opts.type, self.opts.desc)
         print >>sys.stderr, "waiting for response from server..."
+        return False
 CommandFactory.getInstance().registerCommand(Command_cache, "cache")
 
 class Command_confirm(Command_terminate):
@@ -420,7 +461,9 @@ class Command_confirm(Command_terminate):
         p = self.parser
         p.add_option("-x", "--xsdl", dest="xsdl",  type="string",
                      help="the xsdl document to submit or %default")
-
+        p.add_option("--schema-dir", dest="schema_dir", type="string",
+                     help="path to a directory, containing required xsd schema definitions.")
+        
     def check_opts_and_args(self, opts, args):
         Command_terminate.check_opts_and_args(self, opts, args)
         if opts.xsdl is None:
@@ -428,19 +471,25 @@ class Command_confirm(Command_terminate):
                 opts.xsdl = args.pop(0)
             else:
                 opts.xsdl = "-"
+        if opts.schema_dir is None:
+            opts.schema_dir = os.path.expanduser(self.cp.get("global", "schema_dir"))
+            print "schema dir:", opts.schema_dir
         return True
     
-    def execute(self):
+    def _execute(self):
         ticket = self.get_ticket()
         try:
+            self.read_schema_documents()
+            self.scheduleTimeout(name="file reading failed", timeout=10)
             xsdl = self.get_xsdl()
+            self.cancelTimeout()
             self.confirmReservation(ticket, xsdl)
         except Exception, e:
-            print e
+            print repr(e)
             print "cancelling reservation %s" % ticket
-            Command_terminate.execute(self)
+            Command_terminate._execute(self)
             raise
-        self.done()
+        return True
 
     def get_xsdl(self, path=None):
         if path is None:
@@ -458,11 +507,30 @@ class Command_confirm(Command_terminate):
         else:
             f = open(path, 'rb')
         return self.read_xsdl(f)
+
+    def read_schema_documents(self):
+        log.info("initializing schema documents...")
+        from lxml import etree
+        self.schema_map = {}
+        for schema in os.listdir(self.opts.schema_dir):
+            if not schema.endswith(".xsd"): continue
+            path = os.path.join(self.opts.schema_dir, schema)
+            log.info("   reading %s" % path)
+            xsd_doc = etree.parse(path)
+            namespace = xsd_doc.getroot().attrib["targetNamespace"]
+            self.schema_map[namespace] = etree.XMLSchema(xsd_doc)
+        log.info("  done.")
+        return self.schema_map
     
     def read_xsdl(self, f):
         from lxml import etree
         xsdl = etree.parse(f).getroot()
-        # TODO: validate the xsdl
+        from xbe.xml.jsdl import JsdlDocument
+        try:
+            doc = JsdlDocument(self.schema_map)
+            doc.parse(xsdl)
+        except Exception, e:
+            raise CommandFailed("document invalid", e)
         return xsdl
 CommandFactory.getInstance().registerCommand(Command_confirm, "confirm")
         
@@ -480,35 +548,20 @@ class Command_submit(Command_reserve, Command_confirm):
         """
         Command_confirm.__init__(self, argv)
 
-# this has to be moved into some other tool
-#
-#        p.add_option("-k", "--kernel", dest="kernel",  type="string",
-#                     help="the uri to the kernel")
-#        p.add_option("-r", "--initrd", dest="initrd",  type="string",
-#                     help="the uri to a initrd")
-#        p.add_option("-m", "--mem",    dest="memory",  type="int",
-#                     help="the amount of memory to use (in MB)", default=128)
-#        p.add_option("-s", "--swap",   dest="swap",    type="int",
-#                     help="the amount of swap space to use (in MB)", default=128)
-#        p.add_option("-i", "--image",  dest="image",   type="string",
-#                     help="the main image to boot")
-#        p.add_option("-C", "--cpus",   dest="cpus",    type="int",
-#                     help="the number of cpus to use", default=1)
-#        p.add_option("-j", "--jsdl",   dest="jsdl",    type="string",
-#                     help="a jsdl document", default="-")
-#        p.add_option("-K", "--keep",   dest="keep_instance", action="store_true",
-#                     help="a jsdl document", default=False)
-
     def check_opts_and_args(self, opts, args):
         if opts.xsdl is None:
             if len(args):
                 opts.xsdl = args.pop(0)
             else:
                 opts.xsdl = "-"
-        return True
+        if opts.schema_dir is None:
+            opts.schema_dir = os.path.expanduser(self.cp.get("global", "schema_dir"))
     
-    def execute(self):
-        Command_reserve.execute(self)
+    def _execute(self):
+        if self.opts.xsdl != "-" and not os.path.exists(self.opts.xsdl):
+            raise CommandFailed("file not found: %s" % self.opts.xsdl)
+        Command_reserve._execute(self)
+        return False
 
     def get_ticket(self):
         return self.ticket
@@ -516,7 +569,7 @@ class Command_submit(Command_reserve, Command_confirm):
     def madeReservation(self, ticket, task):
         self.ticket = ticket
         self.task = task
-        Command_confirm.execute(self)
+        Command_confirm._execute(self)
 CommandFactory.getInstance().registerCommand(Command_submit, "submit", "sub", "s")
 
 class Command_status(RemoteCommand, HasTicket):
@@ -541,12 +594,13 @@ class Command_status(RemoteCommand, HasTicket):
                 raise CommandFailed("ticket required")
         return True
     
-    def execute(self):
+    def _execute(self):
         ticket = self.get_ticket()
         self.scheduleTimeout(name="status-request")
         if self.opts.remove_entry:
             print "removing the entry", ticket
         self.requestStatus(ticket, self.opts.remove_entry)
+        return False
 
     def statusListReceived(self, statusList):
         self.cancelTimeout()
@@ -564,9 +618,10 @@ class Command_showcache(RemoteCommand):
         """initialize the 'status' command."""
         RemoteCommand.__init__(self, argv)
 
-    def execute(self):
+    def _execute(self):
         self.scheduleTimeout(name="show-cache")
         self.requestCacheList()
+        return False
 
     def cacheEntriesReceived(self, cache_entries):
         self.cancelTimeout()
@@ -626,6 +681,9 @@ class CommandLineClient:
                         protocolFactoryArgs=(cmd,))
                     
                     from twisted.internet import reactor
+                    from twisted.python import threadable
+                    threadable.init()
+
                     h_p = host.split(":")
                     if len(h_p) == 2:
                         host, port = h_p
