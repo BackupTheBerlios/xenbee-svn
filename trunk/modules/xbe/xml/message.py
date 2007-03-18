@@ -517,18 +517,23 @@ class TerminateRequest(BaseClientMessage):
     """Client sends a terminate request."""
     tag = XBE("TerminateRequest")
 
-    def __init__(self, ticket):
+    def __init__(self, ticket, remove_entry=False):
         BaseClientMessage.__init__(self)
         if ticket is None:
             raise ValueError("ticket must not be None")
         self.__ticket = str(ticket)
+        self.__remove_entry = remove_entry
 
     def ticket(self):
         return self.__ticket
 
+    def removeEntry(self):
+        return self.__remove_entry
+    
     def as_xml(self):
         root, hdr, body = MessageBuilder.xml_parts()
         elem = etree.SubElement(body, self.tag)
+        elem.attrib["remove-entry"] = self.removeEntry() and "1" or "0"
         reservation = etree.SubElement(elem, XBE("Reservation"))
         etree.SubElement(reservation, XBE("Ticket")).text = self.__ticket
         return root
@@ -537,6 +542,7 @@ class TerminateRequest(BaseClientMessage):
         elem = body.find(cls.tag)
         if elem is None:
             raise MessageParserError("could not find 'TerminateRequest' element")
+        remove = str(elem.attrib.get("remove-entry")).lower() in ["1", "yes", "true"]
         ticket = elem.findtext(XBE("Reservation/Ticket"))
         if ticket is None:
             raise MessageParserError("could not find Reservation information")

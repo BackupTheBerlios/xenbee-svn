@@ -405,7 +405,7 @@ class Command_terminate(RemoteCommand, HasTicket):
             else:
                 raise CommandFailed("ticket required")
         return True
-    
+
     def _execute(self):
         ticket = self.get_ticket()
         self.requestTermination(ticket)
@@ -473,7 +473,6 @@ class Command_confirm(Command_terminate):
                 opts.xsdl = "-"
         if opts.schema_dir is None:
             opts.schema_dir = os.path.expanduser(self.cp.get("global", "schema_dir"))
-            print "schema dir:", opts.schema_dir
         return True
     
     def _execute(self):

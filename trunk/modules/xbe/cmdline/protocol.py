@@ -93,8 +93,11 @@ class BaseCommandLineProtocol(BaseProtocol):
         msg = message.CacheFile(uri, type, desc)
         self.transport.sendMessage(msg.as_xml())
 
-    def requestTermination(self, ticket):
-        msg = message.TerminateRequest(ticket)
+    def requestTermination(self, ticket, remove_entry=False):
+        if remove_entry:
+            log.warn("TODO: entry removal not yet implemented upon termination")
+            remove_entry = False
+        msg = message.TerminateRequest(ticket, remove_entry)
         self.transport.sendMessage(msg.as_xml())
 
     def requestStatus(self, ticket, remove_entry=False):

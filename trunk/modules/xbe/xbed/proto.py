@@ -15,7 +15,7 @@ from lxml import etree
 
 # twisted imports
 from twisted.python import failure
-from twisted.internet import defer
+from twisted.internet import defer, reactor, threads
 
 # XBE imports
 from xbe.proto import XenBEEProtocolFactory, XenBEEProtocol
@@ -92,16 +92,13 @@ class XenBEEClientProtocol(protocol.XMLProtocol):
             msg = message.ReservationResponse(ticket.id(), task.id())
         return msg
 
-    def do_CancelReservation(self, elem, *args, **kw):
-        return self.do_TerminateRequest(elem, *args, **kw)
-
     def do_TerminateRequest(self, elem, *args, **kw):
         msg = message.MessageBuilder.from_xml(elem.getroottree())
         log.debug(str(msg.ticket()))
         ticket = TicketStore.getInstance().lookup(msg.ticket())
         if ticket is not None:
             if not ticket.task.is_done():
-                TaskManager.getInstance().terminateTask(ticket.task, "UserCancel")
+                reactor.callInThread(TaskManager.getInstance().terminateTask, ticket.task, "UserCancel")
                 return message.Error(errcode.OK, "termination in progress")
         else:
             return message.Error(errcode.TICKET_INVALID, msg.ticket())
@@ -110,7 +107,7 @@ class XenBEEClientProtocol(protocol.XMLProtocol):
         msg = message.MessageBuilder(elem.getroottree())
         ticket = TicketStore.getInstance().lookup(msg.ticket())
         if ticket is not None:
-            ticket.task.start()
+            reactor.callInThread(ticket.task.start)
         else:
             return message.Error(errcode.TICKET_INVALID, msg.ticket())
 
