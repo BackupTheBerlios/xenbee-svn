@@ -17,7 +17,7 @@ if __name__ == "__main__":
     if do_profiling:
         try:
             import profile
-            return profile.run("main(sys.argv)", "/tmp/xbed.profile")
+            profile.run("main(sys.argv)", "/tmp/xbed.profile")
         except ImportError:
             main(sys.argv)
     else:
