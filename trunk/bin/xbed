@@ -10,8 +10,15 @@ import sys
 
 # add some temporary module paths
 sys.path.append("/root/xenbee/modules")
+do_profiling = False
 
 from xbe.xbed.daemon import main
 if __name__ == "__main__":
-    import profile
-    profile.run("main(sys.argv)", "/tmp/xbed.profile")
+    if do_profiling:
+        try:
+            import profile
+            return profile.run("main(sys.argv)", "/tmp/xbed.profile")
+        except ImportError:
+            main(sys.argv)
+    else:
+        main(sys.argv)
