@@ -50,27 +50,22 @@
 	  <xsdl:Instance>
 	    <xsdl:Kernel>
 	      <xsdl:Location>
-		<xsdl:URI>
-		  file:///srv/xen-images/kernel-2.6.19
-		</xsdl:URI>
+                <xsdl:URI>ftp://xen-o-rama.itwm.fhrg.fraunhofer.de/kernel-2.6.19</xsdl:URI>
 	      </xsdl:Location>
 	    </xsdl:Kernel>
 
 	    <!-- the initrd is optional -->
 	    <xsdl:Initrd>
 	      <xsdl:Location>
-		<xsdl:URI>
-		  file:///srv/xen-images/initrd-2.6.19
-		</xsdl:URI>
+                <xsdl:URI>ftp://xen-o-rama.itwm.fhrg.fraunhofer.de/initrd-2.6.19</xsdl:URI>
 	      </xsdl:Location>
 	    </xsdl:Initrd>
 
 	    <!-- the image is mandatory -->
 	    <xsdl:Image fs-type="ext3">
 	      <xsdl:Location>
-		<xsdl:URI>
-		  file:///srv/xen-images/base.img
-		</xsdl:URI>
+	         <xsdl:URI>ftp://xen-o-rama.itwm.fhrg.fraunhofer.de/base.img.bz2</xsdl:URI>
+		 <xsdl:Compression algorithm="bzip2"/>
 	      </xsdl:Location>
 	    </xsdl:Image>
 	  </xsdl:Instance>
@@ -84,7 +79,7 @@
       <jsdl:CreationFlag>overwrite</jsdl:CreationFlag>
       <jsdl:DeleteOnTermination>true</jsdl:DeleteOnTermination>
       <jsdl:Source>
-	<jsdl:URI>ftp://xen-o-rama.itwm.fhrg.fraunhofer.de/cornell.pov</jsdl:URI>
+	      <jsdl:URI>ftp://xen-o-rama.itwm.fhrg.fraunhofer.de/povray/cornell.pov</jsdl:URI>
       </jsdl:Source>
     </jsdl:DataStaging>
     <jsdl:DataStaging>
