@@ -159,7 +159,7 @@ class RemoteCommand(Command, SimpleCommandLineProtocol):
     def __pre_parse(self, opts, args):
         cp = ConfigParser()
         self.cp = cp
-        read_files = cp.read(["/etc/xbe/xberc",
+        read_files = cp.read([os.path.join(os.environ.get("XBE_HOME", "/"), "etc", "xbe", "xberc"),
                               os.path.expanduser("~/.xbe/xberc"),
                               opts.config])
         if not len(read_files):

@@ -18,7 +18,6 @@ class XBEDaemon(Daemon):
         p = self.parser
         p.add_option(
             "-c", "--config", dest="config", type="string",
-            default=os.path.join(os.environ.get("XBED_HOME", "/"), "etc", "xbed", "xbedrc"),
             help="config file to use, default: %default")
         p.add_option(
             "-u", "--uri", dest="uri", type="string",
@@ -82,9 +81,10 @@ class XBEDaemon(Daemon):
         self.daemonize = self.opts.daemonize
         from ConfigParser import ConfigParser
         cp = ConfigParser()
-        read_files = cp.read([ "/etc/xbed/xbedrc",
+        
+        read_files = cp.read([ os.path.join(os.environ.get("XBED_HOME", "/"), "etc", "xbed", "xbedrc"),
                                os.path.expanduser("~/.xbed/xbedrc"),
-                               self.opts.config])
+                               self.opts.config or ""])
         if not len(read_files):
             raise RuntimeError("no configuration file found")
         
