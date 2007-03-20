@@ -227,8 +227,9 @@ class HashValidator:
     def validate(self, file_obj):
         """Validate the data against the stored digest using the
         stored algorithm."""
+        import resource
         h = hashlib.new(self.algorithm())
-        bs = 8096
+        bs = resource.getpagesize()
         while True:
             data = file_obj.read(bs)
             h.update(data)
@@ -273,6 +274,7 @@ class Decompressor:
         if dst is None src is decompressed to the same directory as
         src.
         """
+        import resource
         if dst_dir is None:
             dst_dir = os.path.dirname(file_name)
         start = time.time()
@@ -287,42 +289,34 @@ class Decompressor:
                 # decompression successful, remove the original file
                 log.debug("removing %s" % (file_name))
                 os.unlink(file_name)
-        elif self.format() == "bzip2":
-            import bz2
-            bz2_file = bz2.BZ2File(file_name)
+        elif self.format() in ["bzip2", "gzip"]:
+            if self.format() == "bzip2":
+                import bz2
+                compressed_file = bz2.BZ2File(file_name)
+            else:
+                import gzip
+                compressed_file = gzip.GzipFile(file_name)
             # decompress to temporary file
             tmp_file_fd, tmp_path = tempfile.mkstemp(dir=dst_dir)
             tmp_file = os.fdopen(tmp_file_fd, 'w')
+            blksize = resource.getpagesize()
             try:
-                tmp_file.write(bz2_file.read())
+                while True:
+                    data = compressed_file.read(blksize)
+                    tmp_file.write(data)
+                    if len(data) < blksize:
+                        break
             except Exception, e:
                 raise
             finally:
-                bz2_file.close()
+                compressed_file.close()
                 tmp_file.close()
             # decompression successful, rename the file
             try:
-                open(file_name, 'wb').write(open(tmp_path).read())
-            finally:
-                os.unlink(tmp_path)
-        elif self.format() == "gzip":
-            import gzip
-            gzip_file = gzip.GzipFile(file_name)
-            # decompress to temporary file
-            tmp_file_fd, tmp_path = tempfile.mkstemp(dir=dst_dir)
-            tmp_file = os.fdopen(tmp_file_fd, 'w')
-            try:
-                tmp_file.write(gzip_file.read())
-            except Exception, e:
-                raise
-            finally:
-                gzip_file.close()
-                tmp_file.close()
-            # decompression successful, rename the file
-            try:
-                open(file_name, 'wb').write(open(tmp_path).read())
-            finally:
-                os.unlink(tmp_path)
+                os.unlink(file_name)
+            except OSError, e:
+                pass
+            os.rename(tmp_path, file_name)
         else:
             raise NotImplementedError(
                 "decompression for this format is not yet implemented", self.__format

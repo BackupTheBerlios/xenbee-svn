@@ -54,7 +54,7 @@ Additional requirements for the 'xbed':
         * a DHCP server that answers to the MAC addresses described below
         * python-libvirt (virtualization module for python that binds to xen)
 	* python-pysqlite2 (for the cache database)
-
+	* python-pycurl
 
 
 +===========================+

@@ -482,6 +482,7 @@ class Command_confirm(Command_terminate):
             self.scheduleTimeout(name="file reading failed", timeout=10)
             xsdl = self.get_xsdl()
             self.cancelTimeout()
+            self.scheduleTimeout(name="server seems down", timeout=60)
             self.confirmReservation(ticket, xsdl)
         except Exception, e:
             print repr(e)
