@@ -12,7 +12,7 @@ logconf: %(etc)s/xbed/logging.rc
 ;logfile: /var/log/xenbee/xbed.log
 
 [stomp]
-uri: stomp://xen-o-matic.itwm.fhrg.fraunhofer.de/xenbee.daemon.2
+uri: stomp://xen-o-matic.itwm.fhrg.fraunhofer.de/xenbee.daemon.1
 user: daemon
 pass: Aefith3s
 

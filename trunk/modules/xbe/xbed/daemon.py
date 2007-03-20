@@ -225,8 +225,8 @@ class XBEDaemon(Daemon):
             port = int(port)
         except ValueError, e:
             port = 61613
-        log.info(" connecting to %s:%d using %s" % (
-            host, port, proto
+        log.info(" connecting to %s:%d using %s, queue: %s" % (
+            host, port, proto, queue
         ))
                  
         reactor.connectTCP(host,

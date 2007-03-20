@@ -38,11 +38,12 @@ class XenBEEProtocol(StompClient):
     def connectedReceived(self, _):
 	# i am connected to the stomp server
 	log.debug("successfully connected to STOMP server, avaiting your commands.")
-        self.factory.stompConnectionMade(self)
+        self.setReplyTo(self.factory.queue)
 
         log.debug("TODO: move the subscription code to the client protocol")
-        self.setReplyTo(self.factory.queue)
 	self.subscribe(self.factory.queue, auto_ack=True, exclusive=True)
+
+        self.factory.stompConnectionMade(self)
 
     def _messageReceived(self, msg):
         # use the reply-to field

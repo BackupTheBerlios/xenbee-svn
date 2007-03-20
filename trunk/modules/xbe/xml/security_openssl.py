@@ -229,7 +229,11 @@ class X509Certificate(object):
             temp.close()
             
     def as_pem(self):
-        return self.x509()
+        output, error, exitcode = self._openssl(self.x509(), "x509", "-inform", self.format(), "-outform", "pem")
+        if exitcode == 0:
+            return output
+        else:
+            raise RuntimeError("openssl failed: %d" % exitcode, output, error, exitcode)
 
     def as_der(self, encode=True):
         """return the x509 certificate as a X509_Stack in DER encoding."""
