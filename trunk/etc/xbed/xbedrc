@@ -5,14 +5,14 @@ etc: /root/xenbee/etc
 pidfile: /var/run/xbed.pid
 backend: xen
 schema_dir: %(etc)s/xml/schema
-spool: /srv/xen-images/xenbee
+spool: /srv/xenbee
 
 [logging]
 logconf: %(etc)s/xbed/logging.rc
 ;logfile: /var/log/xenbee/xbed.log
 
 [stomp]
-uri: stomp://xen-o-matic.itwm.fhrg.fraunhofer.de/xenbee.daemon.1
+uri: stomp://xen-o-matic.itwm.fhrg.fraunhofer.de/xenbee.daemon.2
 user: daemon
 pass: Aefith3s
 
@@ -24,4 +24,4 @@ userdb: %(etc)s/xbed/allowed-users
 
 [instance]
 macdb: %(etc)s/xbed/mac-addresses
-jailpkg: /srv/xen-images/xenbee/jail-package.tar.bz2
+jailpkg: /srv/xenbee/jail-package.tar.bz2

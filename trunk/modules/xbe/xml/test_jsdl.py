@@ -7,6 +7,7 @@ __author__ = "$Author$"
 
 import unittest, os, sys
 from pprint import pprint
+from StringIO import StringIO
 
 from xbe.xml import jsdl
 from lxml import etree
@@ -133,17 +134,19 @@ class TestRangeValue(unittest.TestCase):
 
 class TestHashValidator(unittest.TestCase):
     def setUp(self):
-        pass
+        self.file = StringIO()
+        self.file.write("hello world!")
+        self.file.seek(0,0)
     def tearDown(self):
         pass
 
     def test_valid(self):
         validator = jsdl.HashValidator('430ce34d020724ed75a196dfc2ad67c77772d169', "sha1")
-        self.assertTrue(validator.validate('hello world!'))
+        self.assertTrue(validator.validate(self.file))
 
     def test_invalid(self):
         validator = jsdl.HashValidator('0123456789abcdef', "sha1")
-        self.assertFalse(validator.validate('hello world!'))
+        self.assertFalse(validator.validate(self.file))
 
 class TestJsdlParser(unittest.TestCase):
     def setUp(self):
@@ -256,7 +259,6 @@ class TestJsdlParser(unittest.TestCase):
         jsdl_schema = etree.XMLSchema(etree.parse(schema_path))
         doc = jsdl.JsdlDocument()
         doc.register_schema(str(JSDL), jsdl_schema)
-        pprint(doc.parse(elem))
         
 def suite():
     s1 = unittest.makeSuite(TestRangeValue, 'test')

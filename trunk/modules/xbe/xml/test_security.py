@@ -24,8 +24,8 @@ class ExampleData(object):
     get_sample_cert = classmethod(get_sample_cert)
 
     text = """The quick brown fox jumps over the lazy dog"""
-    text_sig = """NKfK302gpJwtXe5nnUs3dVjUktnrcVPiJn7xH/LMGjGFTZ+2+482NkxoTHikdrvemBagunBwxKBXTrmntcpUz/kPVNAHdO9Ola/YImIRZntiS3GQ4/OGODaQ4jlnPQPsolNwRdZVzBFY8pbFl0KoQqgcK2367mVWF2FEZmArZRlx3C1Yhqy9AUWfbF78ERFfRE7D5jIIz1FJlZVMw2L7h53Awu1Rw1agvkgR0yvLhWe7rcFNQUFziqJuDEzk7KFq+oH38Hx+VPqWXoLI3JFS1N+d6aaMJKOR6ynjRGUXb+iWlUAdAmLhT8vktcqu/mrhh8omqpqK2NTldJ9NoV5bKA=="""
-    
+#    text_sig = """NKfK302gpJwtXe5nnUs3dVjUktnrcVPiJn7xH/LMGjGFTZ+2+482NkxoTHikdrvemBagunBwxKBXTrmntcpUz/kPVNAHdO9Ola/YImIRZntiS3GQ4/OGODaQ4jlnPQPsolNwRdZVzBFY8pbFl0KoQqgcK2367mVWF2FEZmArZRlx3C1Yhqy9AUWfbF78ERFfRE7D5jIIz1FJlZVMw2L7h53Awu1Rw1agvkgR0yvLhWe7rcFNQUFziqJuDEzk7KFq+oH38Hx+VPqWXoLI3JFS1N+d6aaMJKOR6ynjRGUXb+iWlUAdAmLhT8vktcqu/mrhh8omqpqK2NTldJ9NoV5bKA=="""
+    text_sig = 'KfYhUbZzuQqesq6UdswsK9F07+k5yp/6EpKC3askFW1HiTI0+ou8pdXyL7lGj65krlZujpum3lgb4VFV/fWIvpjBzN/2t7h0Om+FBo4x2+Zwm3BZAdlNE851AAakTK8NF3QYCAIndSb5UfqaawQx/5L5rSjKkCJyXobB3YAoYiwdQFTHJMLohMkTN/oL44YvUpTZm/PDr5MC4+nA64WE1/3hLiZ7Mrfw1p6l0As6IiM1VXOrxV6OCtIpS2TvQuG/bMijb3mjoNmDJMV2BE9Zy4lmCMFRrjZr22pwNficpBTe/W99Kz++IkCMMq5vu7t/i0ShWIzSgJtlnvoP7+r7Kw=='    
 
     cert = """\
 -----BEGIN CERTIFICATE-----
@@ -116,7 +116,8 @@ XurN/5dfA3mjTbi2lGoXhqalgtVFCLVcS7YDxPYykb39gurnLUfZXci/pMyZ9Fnr
 lXXk4zn93vFIjWvJlqkmOntjXgf0f/hajNwD7Mlo+6tWDdmj4kO7yzo384PVV++N
 RZybIT9dpvOHQwfcFxsGRi8wOogmFl59TyRaB9j3tWJn2oxdBf8AMTWWFMvQH23V
 Hnz9sZ44fBi2G/aNWwl6ZAJbOynCyyNHk41dD10i+PMApjNwqy4L7X0sOGN9WNTZ
-9sEYp1OU"""
+9sEYp1OU
+"""
 
     cert_as_der_stack = """\
 MIIE5jCCBOIwggPKoAMCAQICAQIwDQYJKoZIhvcNAQEFBQAwgZQxFjAUBgNVBAMT
@@ -201,7 +202,6 @@ Yj30VN3oen0CEF/RMt8D
 class TestCertificate(unittest.TestCase):
 
     def setUp(self):
-
         self.ca = X509Certificate.load(ExampleData.ca_cert)
         
     def test_load(self):
@@ -211,6 +211,10 @@ class TestCertificate(unittest.TestCase):
 	except Exception:
 	    self.fail("sample certificate could not be built.")
 
+    def test_subject(self):
+        cert = ExampleData.get_sample_cert()
+        self.assertEqual(cert.subject()["CN"], "test user 1")
+
     def test_signing(self):
 	"""Tests whether signing as such works."""
 	cert = ExampleData.get_sample_cert()
@@ -218,11 +222,14 @@ class TestCertificate(unittest.TestCase):
 	self.assertEqual(ExampleData.text_sig, sig)
 
     def test_validate(self):
+        """tests whether validation works"""
 	cert = ExampleData.get_sample_cert()
 	try:
-	    cert.msg_validate(ExampleData.text, ExampleData.text_sig)
-	except Exception:
-	    self.fail("validation failed")
+            #sig = """NKfK302gpJwtXe5nnUs3dVjUktnrcVPiJn7xH/LMGjGFTZ+2+482NkxoTHikdrvemBagunBwxKBXTrmntcpUz/kPVNAHdO9Ola/YImIRZntiS3GQ4/OGODaQ4jlnPQPsolNwRdZVzBFY8pbFl0KoQqgcK2367mVWF2FEZmArZRlx3C1Yhqy9AUWfbF78ERFfRE7D5jIIz1FJlZVMw2L7h53Awu1Rw1agvkgR0yvLhWe7rcFNQUFziqJuDEzk7KFq+oH38Hx+VPqWXoLI3JFS1N+d6aaMJKOR6ynjRGUXb+iWlUAdAmLhT8vktcqu/mrhh8omqpqK2NTldJ9NoV5bKA=="""
+            sig = 'KfYhUbZzuQqesq6UdswsK9F07+k5yp/6EpKC3askFW1HiTI0+ou8pdXyL7lGj65krlZujpum3lgb4VFV/fWIvpjBzN/2t7h0Om+FBo4x2+Zwm3BZAdlNE851AAakTK8NF3QYCAIndSb5UfqaawQx/5L5rSjKkCJyXobB3YAoYiwdQFTHJMLohMkTN/oL44YvUpTZm/PDr5MC4+nA64WE1/3hLiZ7Mrfw1p6l0As6IiM1VXOrxV6OCtIpS2TvQuG/bMijb3mjoNmDJMV2BE9Zy4lmCMFRrjZr22pwNficpBTe/W99Kz++IkCMMq5vu7t/i0ShWIzSgJtlnvoP7+r7Kw=='
+	    self.assertTrue(cert.msg_validate(ExampleData.text, sig))
+	except Exception, e:
+	    self.fail("validation failed: %s" % e)
 
     def test_ca(self):
         self.assertTrue(self.ca.is_CA())
@@ -232,28 +239,31 @@ class TestCertificate(unittest.TestCase):
         self.assertFalse(nonca_cert.is_CA())
 
     def test_ca_validate(self):
+        """tests if a certificate is signed by a CA certificate"""
         cert = ExampleData.get_sample_cert()
         self.assertTrue(self.ca.validate_certificate(cert))
 
     def test_ca_nonvalidate(self):
+        """tests if a certificate is not signed by a CA certificate"""
         self_signed = X509Certificate.load(ExampleData.self_signed_cert)
         self.assertFalse(self.ca.validate_certificate(self_signed))
         
     def test_both(self):
-	cert = ExampleData.get_sample_cert()
+        """tests signing and validating"""
+        cert = ExampleData.get_sample_cert()
 
 	test_data = "hello world!"
 	sig = cert.msg_signature(test_data)
 	try:
 	    cert.msg_validate(test_data, sig)
-	except Exception:
-	    self.fail("validation failed")
+	except Exception, e:
+	    self.fail("validation failed: %r" % e)
 
     def test_load_der(self):
+        """tests loading a certifcate from DER representation"""
         cert = ExampleData.get_sample_cert()
         der_string = cert.as_der()
-        import base64
-        cert_from_der = X509Certificate.load_der(ExampleData.cert_as_der_stack)
+        cert_from_der = X509Certificate.load_der(ExampleData.cert_as_der)
         self.assertEqual(der_string, cert_from_der.as_der())
 
 class TestSecurityLayer(unittest.TestCase):
@@ -290,7 +300,8 @@ class TestSecurityLayer(unittest.TestCase):
     def test_sign(self):
         pipe = X509SecurityLayer(self.cert, self.cert, [])
         msg, sig = pipe.sign(self.msg)
-        expected_sig = 'Au8QrgMOHVLkB5+ab0G8LbSG341YGruouykNaaTIbFEhYshWrn/f0zHo0WoVKZWzR58RFv8VPd06XsfzaBhKjv1SfasmH2AzMXkuz7z0t84O+9UThdcZX+mCpXljPptYL+Y8onXfnYQVQwHBvREQxFvBpCUnxaOs2BFfb3tzHtFSo1I34jB8PwoK4akPuTUcQ57iAvQ4oBSglXf+YppaMRr1v7F1yKLCxbZsAfP8qGmJK1ShuXfMCtdYO4zM4ikAm1izG3nb8sBBLLzBL2tpVmsSeDlC/CXglIhzw38+YLmgav5CfeG9yqjtpS0iOJfli52O9mDiRGYk3z1oZH2ayQ=='
+#        expected_sig = 'Au8QrgMOHVLkB5+ab0G8LbSG341YGruouykNaaTIbFEhYshWrn/f0zHo0WoVKZWzR58RFv8VPd06XsfzaBhKjv1SfasmH2AzMXkuz7z0t84O+9UThdcZX+mCpXljPptYL+Y8onXfnYQVQwHBvREQxFvBpCUnxaOs2BFfb3tzHtFSo1I34jB8PwoK4akPuTUcQ57iAvQ4oBSglXf+YppaMRr1v7F1yKLCxbZsAfP8qGmJK1ShuXfMCtdYO4zM4ikAm1izG3nb8sBBLLzBL2tpVmsSeDlC/CXglIhzw38+YLmgav5CfeG9yqjtpS0iOJfli52O9mDiRGYk3z1oZH2ayQ=='
+        expected_sig = 'Iu9VETIAytqRffUvHN9hxDp/X7x9dlBqwkWQNGwiPO0w4cTkga/nApqzyX1IAV7BQbPmflFXSIxA25ePmOpOezZyP+qcCEu0mKqnvZ7GgYiRcGTuulHNcY0IGvDVOqYVDXwm9kID/p9VuKeQgWO1arOwN3Vji+L5o6S4z54yb4eAcSEV1LihwqwZW2isxj4IB7P9fNCR3xAKKCid0JXLN67rK1zvjZWYZ5FtnYTLPItkBV1cvXlPTfLq1LEZZ25voJir6EVH3GzzG4hDM1RRmphLrT97UolF2G3+EuiDZz6m/NSEPbcKq9PgbChm1a1N1m69e7/QSqPNM6iHZowQKA=='
         self.assertEqual(expected_sig, sig)
 
     def test_validate(self):
@@ -301,7 +312,6 @@ class TestSecurityLayer(unittest.TestCase):
         pipe = X509SecurityLayer(self.cert, self.cert, [self.ca])
         msg = self.__build_empty_body_message()
         bod = msg.find(XBE("MessageBody"))
-        
 
     def test_novalidate_noca(self):
         pipe = X509SecurityLayer(self.cert, None, [])
@@ -339,7 +349,7 @@ class TestSecurityLayer(unittest.TestCase):
         try:
             recv_msg = pipe.validate(send_msg)
         except ValidationError, ve:
-            self.fail("ValidationError should not occur, since certificate has been included.")
+            self.fail("ValidationError should not occur, since certificate has been included: %s" % ve)
         else:
             pass
 
@@ -387,18 +397,21 @@ class TestCipher(unittest.TestCase):
         pass
 
     def test_cipher_encrypt(self):
-        enc = Cipher(key="01234", IV="01234", do_encryption=True)
-        expected = "jVCq+LaEZHERvCvpvru8FTcdWjMb6b/WLd41EwqXh/YXuCJ+fTGWGR0YXTI49Td/"
-        encrypted = base64.b64encode(enc(ExampleData.text))
+        enc = Cipher(key=1234, IV=1234, do_encryption=True)
+        expected = "Um74EPKT063t/IQdGFNvVcfzS1FL/F0fFeU+UawGflTo60nwORFP7MDffCesEtdV"
+#        expected = 'nrzLfA2YAGzOC/pvV29w5Ylsaol5CoBBIB7raU1CbjgWGRXh8xo/WdR30pRdMpYe'
+#        expected = "5ym+gWja28Y3ovcsiK0rzs6xSjcMowpu3qWmt3ZozldocW8ReMU7lMMORfj9nwso"
+        encrypted = enc(ExampleData.text)
         self.assertEqual(expected, encrypted)
 
     def test_cipher_decrypt(self):
         expected = ExampleData.text
         # this encrypted text should match the expected text, if decrypting it with
         # key and IV set to "01234"
-        encrypted = "jVCq+LaEZHERvCvpvru8FTcdWjMb6b/WLd41EwqXh/YXuCJ+fTGWGR0YXTI49Td/"
-        dec = Cipher(key="01234", IV="01234", do_encryption=False)
-        decrypted = dec(base64.b64decode(encrypted))
+        encrypted = "Um74EPKT063t/IQdGFNvVcfzS1FL/F0fFeU+UawGflTo60nwORFP7MDffCesEtdV"
+#        encrypted = "5ym+gWja28Y3ovcsiK0rzs6xSjcMowpu3qWmt3ZozldocW8ReMU7lMMORfj9nwso"
+        dec = Cipher(key=1234, IV=1234, do_encryption=False)
+        decrypted = dec(encrypted)
         self.assertEqual(expected, decrypted)
 
     def test_cipher_encrypt_decrypt(self):
@@ -415,7 +428,7 @@ def suite():
     return unittest.TestSuite((s1,s2,s3))
 
 if __name__ == '__main__':
-#    s1 = unittest.makeSuite(TestSecurityLayer, 'test_special_decrypt')
+#    s1 = unittest.makeSuite(TestCertificate, 'test_')
 #    runner = unittest.TextTestRunner()
 #    runner.run(s1)
 #    sys.exit(1)

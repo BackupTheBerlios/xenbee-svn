@@ -9,6 +9,7 @@ from pprint import pformat
 
 from xbe.xml.namespaces import *
 from xbe.xml import message, errcode
+from xbe.xml.security_exceptions import *
 
 from lxml import etree
 from twisted.internet import defer, reactor
@@ -184,10 +185,9 @@ class SecureProtocol(XMLProtocol):
             root = elem.getroot()
         other_state = root.find(XBE("MessageBody/EstablishMLS")).attrib["state"]
 
-        from xbe.xml.security import SecurityError, ValidationError, X509SecurityLayer
+        from xbe.xml.security import X509SecurityLayer
         if self.__state == "disconnected":
             try:
-                from xbe.xml.security import X509SecurityLayer
                 # initialize the security layer
                 securityLayer = X509SecurityLayer(self.__cert, # my own certificate
                                                   None, # the other's certificate
@@ -290,8 +290,6 @@ class SecureProtocol(XMLProtocol):
 
     # handle security related messages
     def do_Message(self, xml):
-        from xbe.xml.security import SecurityError
-
         try:
             msg_obj = message.MessageBuilder.from_xml(xml)
             if isinstance(msg_obj, message.Error):
@@ -343,8 +341,6 @@ class SecureProtocol(XMLProtocol):
 
         decrypts the received data and validates it.
         """
-        from xbe.xml.security import SecurityError
-    
         # decrypt the whole message and validate it
         try:
             real_msg = self.__securityLayer.decrypt(msg)
