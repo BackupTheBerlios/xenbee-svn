@@ -212,7 +212,7 @@ class TestCertificate(unittest.TestCase):
 	    self.fail("sample certificate could not be built.")
 
     def test_signing(self):
-	"""Tests whether siging as such works."""
+	"""Tests whether signing as such works."""
 	cert = ExampleData.get_sample_cert()
 	sig = cert.msg_signature(ExampleData.text)
 	self.assertEqual(ExampleData.text_sig, sig)
