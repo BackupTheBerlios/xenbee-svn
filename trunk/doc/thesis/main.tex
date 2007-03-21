@@ -52,12 +52,13 @@
 \usepackage{listing}
 \usepackage{makeidx}
 \usepackage[light,first,conditional]{draftcopy}
-\usepackage[plainpages=false,pdfpagelabels,pdftex]{hyperref}
+\usepackage[style=super,cols=3,toc=true]{glossary}
+%\usepackage[plainpages=false,pdfpagelabels,pdftex]{hyperref}
 \graphicspath{{graphics/}}
 
 % include some often used commands
 \include{commands}
-
+\include{glossary}
 
 % Tweak the margins to match requirements. Seems to work OK.
 \topmargin-0.5cm
@@ -68,6 +69,16 @@
 \textheight22cm
 \vfuzz1pc
 \hfuzz1pc
+
+% Tweak the url-package
+%% Define a new 'ap' style for the package that will use a smaller font.
+\makeatletter
+\def\url@apstyle{%
+  \@ifundefined{selectfont}{\def\UrlFont{\sf}}{\def\UrlFont{\small\ttfamily}}}
+\makeatother
+%%% Now actually use the newly defined style.
+\urlstyle{ap}
+
 
 \pagestyle{fancy}
 \fancyhf{}                                %Clears all header and footer fields, in preparation.
@@ -82,24 +93,18 @@
 \renewcommand*{\partpagestyle}{empty}
 \renewcommand*{\chapterpagestyle}{empty}
 
-\makeindex
+%\makeindex
+\makeglossary
 
 \begin{document}
 \frontmatter
 \include{title}
 
-%  A B S T R A C T
-\chapter{Preface}
-\thispagestyle{empty}
-put the abstract here
-\clearpage
+%  P R E F A C E
+\include{preface}
 
 %  A C K N O W L E D G E M E N T S
-
-\chapter{Acknowledgements}
-\thispagestyle{empty}
-So long and thanks for all the fish.
-\clearpage
+\include{acknowledgements}
 
 %  C O N T E N T S ,   T A B L E S  ,   F I G U R E S
 
@@ -108,7 +113,7 @@ So long and thanks for all the fish.
 \thispagestyle{empty}
 \clearpage
 
-\listoffigures      %optional list of figures and stuff
+\listoffigures
 \thispagestyle{empty}
 \clearpage
 
@@ -128,7 +133,7 @@ So long and thanks for all the fish.
 
 %  A P P E N D I C E S
 \appendix
-\def\chaptername{Appendix}
+%\def\chaptername{Appendix}
 %\include{appendix1}
 %\include{appendix2}
 
@@ -141,7 +146,9 @@ So long and thanks for all the fish.
 \bibliographystyle{plain}
 \bibliography{bibliography}
 
-\printindex
+%\printindex
+\printglossary
+
 
 % Supplementary references?
 

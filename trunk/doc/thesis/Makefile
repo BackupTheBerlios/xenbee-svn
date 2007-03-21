@@ -4,6 +4,7 @@ SRC=$(NAME).tex
 PDF=$(NAME).pdf
 IDX=$(NAME).idx
 LOG=$(NAME).log
+GLS=$(NAME).gls
 
 latex = pdflatex
 bibtex = bibtex
@@ -22,12 +23,14 @@ viewer = open
 endif
 endif
 
-INCLUDES=$(wildcard *.tex *.bib)
+GRAPHICS = $(shell find ./graphics/ -name "*.pdf")
+TEX = $(wildcard *.tex)
+BIB = $(wildcard *.bib)
 
 default: all
 all: $(PDF)
 
-$(PDF): $(SRC) $(INCLUDES)
+$(PDF): $(SRC) $(GLS) $(GRAPHICS) $(TEX) $(BIB)
 	@echo "Running $(latex)..."
 	$(latex) $(SRC)
 	@echo "Running $(bibtex).."
@@ -47,6 +50,11 @@ $(PDF): $(SRC) $(INCLUDES)
 		echo "WARNING: There where overful hboxes:"; \
 	fi
 
+main.glo: main.tex
+	$(latex) $<
+
+$(GLS): $(TEX) main.glo
+	$(makeindex) -s $(NAME).ist -t $(NAME).glg -o $@ $(NAME).glo
 
 view: view-pdf;
 

@@ -1,19 +1,20 @@
-\setchapterpreamble[u]{%
-  \dictum[Anonymous]{Introduction is really important}}
+\setchapterpreamble[o]{%
+  \dictum[Intel Corporation]{``Virtualization is a paradigm shift; it
+    changes how you think about your resources.''}}
 
 \chapter{Introduction}
 \label{cha:intro}
 
-The  title  of  this  work   is  ``The  design  and  implementation  of  a
-Xen\index{Xen}  based  execution  environment''.  So, why  should  someone
+The  title  of  this  work   is  ``Design  and  Implementation  of  a
+\gls{glo:XEN}-based  Execution  Environment''.  So, why  should  someone
 implement such a system if  there are already productive grid middle-wares
 such as Globus or Unicore?
 
 Cluster or Grid environments usually accept tasks or work-flows (such as a
-computation) from a user and execute them on a more or less arbitrary node
-somewhere in the cloud of  nodes\footnote{of course does scheduling play a
-  role here}.  The  problem with that is, that our user's  job need not be
-the only one being executed on that particular node.
+complex  computation) from  a user  and  execute them  on a  more or  less
+arbitrary node somewhere in the cloud of nodes.  The problem with that is,
+that  our user's  job need  not be  the only  one being  executed  on that
+particular node.
 
 This sharing of computation power may introduce problems with security and
 availability. To  make that clear,  imagine two jobs from  different users
@@ -36,18 +37,98 @@ assigning each  task to a  physical node, assigning  it to a  virtual node
 makes  better use  of available  resources. That  is  where virtualization
 technologies such as Xen come into play.
 
-Before I  am going to describe what  this thesis exactly is  about, let me
-introduce some of the various virtualization technologies available.
+\section{The history of virtualization technologies}
+\label{sec:virtualization-history}
 
-\section{Virtualization technologies}
+The history of virtualization starts  with a paper entitled ``Time sharing
+in  large,  fast  computers''  \cite{Strachey59}  written  by  Christopher
+Strachey in  1959. His idea bases  on a single-CPU  system which processes
+jobs one  after each  other. If  a program blocks  due to  some peripheral
+access the  next program in the queue  gets started and will  be run until
+the next peripheral  access occurs and so forth.   The system presents the
+user with  a \emph{logical CPU} and  a scheduler assigns  this logical CPU
+transparently  for   the  user  to   a  physical  CPU.   His   concept  of
+``time-sharing''  is now  known  as \emph{\gls{glo:multi-programming}}  as
+Christopher Strachey states in a letter to Donald E. Knuth in 1974.
 
-The  history  of virtualization  starts  already  in  the 1960s  when  IBM
-developed  that  technique first  to  provide  concurrent and  interactive
-access to its mainframe computers.  It has been a nice way to enable time-
-and resource-sharing  on their  expensive hardware.  The  virtual machines
+This very simple scheduling strategy maximizes the utilization of the most
+worthy resource  to that time  --- the CPU  --- and provides the  base for
+current scheduling strategies such as \gls{glo:multi-tasking}.
+
+\subsubsection{The Atlas Project}
+
+Later on  in the  early 1960s,  the ``Atlas project''  --- a  joint effort
+between the  University of Manchester and  Ferranti~Ltd.~has been founded.
+The Atlas  computer has been the  most powerful mainframe  computer in the
+world in  those days.   It provided spooling  mechanisms and  pioneered in
+\emph{demand  paging}  and  \emph{supervisor  calls}, they  also  invented
+``\gls{glo:virtmem}'' --- called ``one-level store'' in
+the Atlas system.
+
+The  supervisor calls  where activated  through interrupt  routines  or by
+so-called \emph{\gls{glo:extracode}}  instructions within an object
+program.  Atlas made use of two ``virtual machines'' --- one executing the
+\gls{glo:supervisor}  and   the  other   was  used  to   run  user
+programs\cite{virtualization-overview}.
+
+\subsubsection{The M44/44X Project}
+
+The IBM Watson  Research Center has been the home  for the M44/44X Project
+in the  mid 1960s. The goal of  this project was to  evaluate the upcoming
+concepts of  \gls{glo:time-sharing}.
+
+The research team, led by R.~A.~Nelson, developed a way of partitioning an
+IBM 7044 machine into sub-machines that  were each images of the 7044 with
+less memory  --- the  main machine was  called M44, the  sub-machines 44X,
+thus the project's name\cite{virtualization-overview}.
+
+Especially David  Sayre and Belady made extensive  experimental studies to
+evaluate the  performance of  \gls{glo:virtmem}, load control  and various
+scheduling policies\cite{Belady66,denning81}.
+
+\subsubsection{IBM virtual machines and the ``virtual machine monitor''}
+
+IBM    has   been   perhaps    the   most    important   force    in   the
+\gls{glo:virtualization} area  and a  number of IBM-based  virtual machine
+systems were developed: the CP-40  (for a modified version of IBM 360/40),
+the CP-67 (for  the IBM 360/67) and of course the  famous VM/370, and many
+more.
+
+These  virtual  machines  were   typically  identical  ``copies''  of  the
+underlying  hardware. A  special  component called  the ``virtual  machine
+monitor''  (\gls{glo:VMM}) ran  directly  on the  real hardware.   Several
+virtual machines could then be created using the VMM by assigning parts of
+the hardware to the virtual machine. The virtual machine could then run an
+operating system on its own and  only had access to those parts configured
+through the VMM.
+
+\begin{figure}
+  \begin{center}
+  \begin{minipage}{0.75\textwidth}
+    \begin{center}
+      \includegraphics[scale=.75]{architecture-with-virtualization}
+    \end{center}
+    \caption[Virtualization   architecture]{The   so-called   bare-metal
+      virtualization:   A  virtual   machine  monitor   runs   as  small
+      ``operating system'' on the  real hardware and provides access for
+      virtual machines.}
+    \label{fig:arch-virt}
+  \end{minipage}
+  \end{center}
+\end{figure}
+
+This  kind   of  virtualization  is  called   ``full''  or  ``bare-metal''
+virtualization  ---  an operating  system  running  in  a virtual  machine
+provided by the  VMM thinks it runs on real  hardware. An abstract picture
+of such an architecture is shown in Fig.~\ref{fig:arch-virt}.
+
+%%
+%% TODO: to be continued
+%%
+
+The  virtual machines
 (VMs)  ran as  an instance  on the  real hardware  and provided  a logical
-machine to  each user. The users  could not tell whether  the hardware was
-real or just a virtual machine (see \cite{virtualization-survey}).
+machine to  each user. 
 
 Later  on with  the emergence  and  broad availability  of cheap  Personal
 Computers  the demand  for virtualization  shrank. But  with the  birth of
