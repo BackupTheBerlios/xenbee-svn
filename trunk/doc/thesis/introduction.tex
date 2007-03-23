@@ -5,37 +5,46 @@
 \chapter{Introduction}
 \label{cha:intro}
 
-The  title  of  this  work   is  ``Design  and  Implementation  of  a
-\gls{glo:XEN}-based  Execution  Environment''.  So, why  should  someone
-implement such a system if  there are already productive grid middle-wares
-such as Globus or Unicore?
+Virtual machine (VM) technology is a major development in computer systems
+design   \cite{buzen73}.     They   have   extended    the   multi-access,
+multi-programming  and multi-processing  systems  to be  multi-environment
+systems  as well by  providing efficient  ``copies'' of  complete computer
+systems \cite{goldberg73}.
 
-Cluster or Grid environments usually accept tasks or work-flows (such as a
-complex  computation) from  a user  and  execute them  on a  more or  less
-arbitrary node somewhere in the cloud of nodes.  The problem with that is,
-that  our user's  job need  not be  the only  one being  executed  on that
-particular node.
+Todays  personal   computer  systems   are  powerful  enough   to  provide
+virtualization  technology, which  has been  long time  reserved  for high
+performance  mainframe  systems. The  paper  \emph{Analysis  of the  Intel
+  Pentium's    Ability    to   Support    a    Secure   Virtual    Machine
+  Monitor}\cite{robin00analysis}  discusses the  problems  of how  virtual
+machines can be efficiently supported by the IA32 architecture.
 
-This sharing of computation power may introduce problems with security and
-availability. To  make that clear,  imagine two jobs from  different users
-that are being executed on the same (logical) node\footnote{with logical I
-  mean, that  the node could also be  a virtual node}. Further  let one of
-the jobs have a memory leak,  which is a common programming mistake as you
-probably know  --- so this task  will eventually eat up  all the available
-memory.  So,  what is  going to happen  to the  other task?  To  match the
-increasing  memory requirements,  the  operating system  has  to page  out
-memory  areas or  even  kill arbitrary  processes.   As you  can see,  the
-problematic task also  imposed problems on the other task  and that is not
-desired.
+In  the last few  years, the  remote execution  of applications  gained on
+importance, because powerful server systems need not be maintained locally
+but  could be  deployed elsewhere.  Grid  middle-wares such  as Globus  or
+Unicore  are examples  for environments,  in  which users  can send  their
+computation to  some computer  connected to the  grid and get  the results
+back.
 
-One solution to this problem is: separation. A simple approach would be to
-modify the scheduler  and let him only  assign one task at a  time to each
-node. While this is not bad as long as each task uses its assigned node to
-full capacity, but that is rarely the case. A more modern approach to that
-may  be  called  ``separation  through virtualization''.   So  instead  of
-assigning each  task to a  physical node, assigning  it to a  virtual node
-makes  better use  of available  resources. That  is  where virtualization
-technologies such as Xen come into play.
+This work  is about  the execution of  arbitrary applications on  a remote
+system exploiting virtual machines. It addresses the problem that multiple
+potentially  broken applications  are typically  executed on  remote hosts
+side by  side ---  if one application  behaves ``wrong''  (e.~g.~CPU cycle
+consumption,  memory  leakage, etc.)  it  may  involve other  applications
+running on the same host.
+
+Sharing of computing resources must always consider security, availability
+of  the resources and  fairness among  the resource  users.  To  make that
+clear,  take  two jobs  from  different users  that  are  scheduled to  be
+executed on the  same grid-node with overlapping execution  times. Let one
+of the jobs have  a memory leak --- which is not  as uncommon as you might
+think --- that task will eventually  eat up all the available memory. This
+misbehavior not only  harms the other job, but also  may harm the software
+used to connect the host to the grid.
+
+The here  proposed solution is separation using  virtual machines provided
+by  the Xen  hypervisor. Each  job  will be  executed in  its own  virtual
+machine and  is not  able to harm  either other  jobs running on  the same
+physical host, or the physical node itself.
 
 \section{The history of virtualization technologies}
 \label{sec:virtualization-history}
@@ -66,10 +75,10 @@ world in  those days.   It provided spooling  mechanisms and  pioneered in
 the Atlas system.
 
 The  supervisor calls  where activated  through interrupt  routines  or by
-so-called \emph{\gls{glo:extracode}}  instructions within an object
+so-called   \emph{\gls{glo:extracode}}  instructions   within   an  object
 program.  Atlas made use of two ``virtual machines'' --- one executing the
-\gls{glo:supervisor}  and   the  other   was  used  to   run  user
-programs\cite{virtualization-overview}.
+\gls{glo:supervisor}  and  the  other   was  used  to  run  user  programs
+\cite{virtualization-overview}.
 
 \subsubsection{The M44/44X Project}
 
@@ -80,11 +89,11 @@ concepts of  \gls{glo:time-sharing}.
 The research team, led by R.~A.~Nelson, developed a way of partitioning an
 IBM 7044 machine into sub-machines that  were each images of the 7044 with
 less memory  --- the  main machine was  called M44, the  sub-machines 44X,
-thus the project's name\cite{virtualization-overview}.
+thus the project's name \cite{virtualization-overview}.
 
 Especially David  Sayre and Belady made extensive  experimental studies to
 evaluate the  performance of  \gls{glo:virtmem}, load control  and various
-scheduling policies\cite{Belady66,denning81}.
+scheduling policies \cite{Belady66,denning81}.
 
 \subsubsection{IBM virtual machines and the ``virtual machine monitor''}
 
@@ -94,15 +103,24 @@ systems were developed: the CP-40  (for a modified version of IBM 360/40),
 the CP-67 (for  the IBM 360/67) and of course the  famous VM/370, and many
 more.
 
+The  VM/370 is  the name  for three  operating systems,  the \emph{Control
+  Program}  (CP),  \emph{Conversational  Monitor  System}  (CMS)  and  the
+\emph{Remote Spooling and Communications Subsystem} (RSCS) \cite{creasy81}.
+Together they provide a way to form virtual machines, which can be used by
+many users. The CP therefore  simulates multiple copies of the hardware on
+which it is running.  The CMS is the operating system which runs in such a
+``virtual machine'' and provides access for the users.
+
 These  virtual  machines  were   typically  identical  ``copies''  of  the
 underlying  hardware. A  special  component called  the ``virtual  machine
 monitor''  (\gls{glo:VMM}) ran  directly  on the  real hardware.   Several
 virtual machines could then be created using the VMM by assigning parts of
 the hardware to the virtual machine. The virtual machine could then run an
 operating system on its own and  only had access to those parts configured
-through the VMM.
+through  the VMM.  By  this, new  operating  systems could  be tested  and
+developed in a stable and secure manner.
 
-\begin{figure}
+\begin{figure}[htbp]
   \begin{center}
   \begin{minipage}{0.75\textwidth}
     \begin{center}
@@ -122,45 +140,93 @@ virtualization  ---  an operating  system  running  in  a virtual  machine
 provided by the  VMM thinks it runs on real  hardware. An abstract picture
 of such an architecture is shown in Fig.~\ref{fig:arch-virt}.
 
-%%
-%% TODO: to be continued
-%%
+\section{Virtualization techniques}
+\label{sec:techniques}
 
-The  virtual machines
-(VMs)  ran as  an instance  on the  real hardware  and provided  a logical
-machine to  each user. 
+According   to    the   Church-Turing~Thesis   \cite{church_turing_thesis}
+\emph{``Any real-world  computation can  be translated into  an equivalent
+  computation involving  a Turing machine.''}, every  computer can simulate
+any other computer.
 
-Later  on with  the emergence  and  broad availability  of cheap  Personal
-Computers  the demand  for virtualization  shrank. But  with the  birth of
-dozens of  operating and hardware systems (DOS,  Windows, Linux, Free-BSD,
-Mac OS and many more),  the need for virtualization technologies came back
-into mind  and today's computers are  powerful enough to  provide VMs. The
-main scenario in that case is, that software developers want to be able to
-test their applications on many  of these systems without having access to
-a physical system.
+\bigskip
 
-\subsection{Taxonomy}
+\subsection{Partitioning}
+\label{sec:vt-partitioning}
+
+The first virtualization technique  bases on partitioning of the available
+hardware \cite{borden89}.   It is available  since the 1960s and  has been
+provided  by  two  approaches  ---  a software  approach  and  a  hardware
+approach.
+
+\subsubsection{Software partitioning}
+\label{sec:softw-part}
+
+The IBM CP/67  has been the first operating  system which provided virtual
+machine support, it  was running on the System/360 Model  67 and was first
+available in 1967 \cite{borden89}.
+
+As described earlier, the CP gave each user a virtual machine on which the
+CMS (a  single user  operating system) was  running and provided  the user
+with command processing and information management functions. Each virtual
+machine was ``copy'' of the base hardware architecture, it was possible to
+run OS/360 in  a virtual machine and ``in fact, even  CP/67 itself was run
+"second  level" in a  virtual machine  for the  purposes of  debugging and
+testing \cite{borden89}''.
+
+\subsubsection{Hardware partitioning}
+\label{sec:hardw-part}
+
+Hardware partitioning is an enhancement over software partitioning and was
+introduced  by  the  IBM   \emph{System/370  158  MP}  and  \emph{168  MP}
+systems. In 1967,  IBM introduced multiprocessor versions of  Model 65 and
+67, which  provided duplexed hardware to achieve  tolerance against single
+hardware failures.  By  splitting up the whole system  into two sides, two
+separate systems could be created  which ran totally independent from each
+other.
+
+\subsection{Emulation}
+\label{sec:emulation}
+
+This kind of virtualization  simulates a complete hardware architecture in
+all  details. By  that every  operating system  and  therefore application
+which has been  developed for that particular application  may be executed
+within the emulator. Some examples are:
+\begin{itemize}
+\item  \emph{Wine \cite{wine}}  --- Wine  is  not quite  an emulator,  but
+  nonetheless I put it in this list, too. It emulates the Windows API, but
+  executes many functions directly  on the underlying x86 hardware without
+  emulating each instruction.
+\item \emph{Bochs  \cite{bochs}} --- this  is a very portable  open source
+  IA-32 PC emulator.  Each machine  instruction will be interpreted and is
+  handled in software.  This emulator may for instance be  used to run x86
+  code on a PowerPC platform.
+\item  \emph{QEMU  \cite{qemu}} ---  this  is  both  an emulator  and  an
+  virtualizer, since  it support  two modes of  operation. As  an emulator
+  each instruction  gets interpreted  as it is  the case  of \emph{bochs},
+  e.g.~it is possible  to emulate an ARM processor on  your PC. To achieve
+  better  performances a  technique called  \emph{dynamic  translation} is
+  used.   Running as  a virtualizer,  QEMU is  able achieve  nearly native
+  performance, since most of the instructions are directly executed on the
+  host CPU --- to make this possible a kernel module (QEMU accelerator) is
+  required.
+\end{itemize}
 
 There are several software  and hardware solutions available which provide
-such a  virtualized platform.  One can distinguish  these attempts  by the
-following criteria (see \cite{virtualization-survey}):
+a  virtualized  platform.
 
 \begin{description}
 \item[Emulation] An  emulator simulates the complete hardware  and as such
   allows the execution of unmodified guest operating systems. Examples are
   Bochs and Qemu (without its acceleration techniques) for instance.
 \item[Native vir\-tu\-ali\-za\-tion] The  virtual machine in this approach
-  simulates  enough hardware  to let  an unmodified  guest to  be  run. As
-  mentioned earlier, this field was  pioneered within the 1960s with CP-40
-  and  CP[-67]/CMS (all  predecessors of  IBMs VM).   Examples  are VMware
-  Workstation, VMWare Server, z/VM etc..
+  simulates just enough hardware to let  an unmodified guest to be run. As
+  mentioned earlier,  this field  was pioneered in  the beginnings  of the
+  1960s.
 \item[Paravirtualization]  In  this case,  the  virtual  machine does  not
   necessarily need to simulate hardware, instead it provides a special API
   to which a guest system has to  be ported. That means one can not run an
-  unmodified guest on top of a paravirtualized machine --- modern hardware
-  virtualization  techniques  such  as  Intel's  Vanderpool  VT  or  AMD's
-  Pacifica make this possible, too. Examples in this field include Xen and
-  VMWare ESX Server.
+  unmodified guest on  top of a paravirtualized machine.  Examples in this
+  field include Xen and VMWare ESX Server.
 \item[Operating system-level  virtualization] This kind  of virtualization
   uses the same  kernel for the host and all guest  systems --- the guests
   run  ``within''  the  host.   Examples include  Solaris  Containers  and
@@ -175,18 +241,41 @@ following criteria (see \cite{virtualization-survey}):
 \end{description}
 
 In this  work I am  dealing with the ``paravirtualization''  technique and
-especially with the Xen.
+especially with the Xen hypervisor.
 
-\subsection{Xen --- what's that again?}
+\subsection{Problems on x86 hardware}
+\label{sec:x86-problems}
+\nocite{robin00analysis}
+
+From \cite{popek75}: New architectures are discussed in \cite{goldberg73},
+while hardware and software methods  which have been employed for existing
+third generation  architectures are described in  \cite{buzen73}. In these
+latter cases, the  virtual machine monitor typically is  run in privileged
+mode,  and all  other  software in  user  mode. For  this  approach to  be
+successful,  all ``sensitive''  instructions must  trap when  execution is
+attempted in user mode, so that they can be simulated.
+
+
+
+
+\section{The Xen hypervisor}
+\label{sec:xen-hypervisor}
+
+\cite{hendricks79}: ``The term “hypervisor” is applied to computer systems
+that present a very basic  user program interface-one which is so nearly
+identical to a  particular computer machine interface that  an operating
+system intended  to support such machines  may serve as  a hypervisor user
+program without  software modification. The user interface  presented by a
+hypervisor is commonly called a  virtual machine; the term “subsystem” may
+be applied to the complex of software used within a virtual machine.''
 
 Xen  \cite{xen}  is  a  virtualization  technology to  partition  a  given
-physical machine into smaller virtual  machines (i.e. VMs).  Each of these
-VMs have  their own main memory,  file space and most  important their own
-operating system.  Xen belongs  to the paravirtualization group of virtual
-machines  and  thus  provides  a  small virtualization  layer  called  the
-\emph{hypervisor} or  \emph{Xen Virtual Machine  Monitor}. This hypervisor
-provides an API to which a guest operating system must be ported.
-
+physical machine into smaller virtual machines (i.e. \gls{glo:VM}s).  Each
+of these  \gls{glo:VM}s has their own  main memory, file  space, access to
+one or  more virtual CPUs and everything  else that is required  to run an
+operating system.   Xen belongs to the hosted  virtualization group, which
+means that the \gls{glo:VMM} still requires an operating system to run and
+does not represent a stand-alone operating system itself.
 
 \begin{figure}[htbp]
   \begin{center}
@@ -199,606 +288,94 @@ provides an API to which a guest operating system must be ported.
 
 Xen  virtual  machines  (see Fig.~\ref{fig:xen-architecture})  are  called
 ``domains''  and   the  top-level  or   most  privileged  one   is  called
-\texttt{Domain-0} or \texttt{dom0}\footnote{dom-zero} --- this is the only
-one, that  is able  to create new  virtual machines.  The  virtual machine
-instances  beside  \texttt{dom0} are  called  ``user  domains'' or  called
-\texttt{domU}s, they are less privileged  and do not have direct access to
-the (real) hardware.
+\texttt{Domain-0}  --- or  \texttt{dom0} for  short ---  this is  the one,
+which runs the control and management programs that are required to create
+new virtual machines.  The  virtual machine instances beside \texttt{dom0}
+are called ``user  domains'' --- or \texttt{domU}s for  short --- they are
+less privileged and their access to the hardware is controlled and managed
+by the hypervisor running in \texttt{dom0}.
 
-The  operating  system running  within  a  \texttt{domU} accesses  virtual
+The  operating  system  running  within  a user  domain  accesses  virtual
 hardware  provided by  the Xen-architecture  (SCSI or  IDE  controllers to
-access  virtual  hard  drives,  network  interface cards  to  be  able  to
-communicate with other computers and so on).
+access virtual hard drives, network interface cards, virtual CPUs, graphic
+card device and so on).
 
-\subsection{Nomenclature}
 
-The area of  virtualization needs a small vocabulary, which  I am going to
-introduce in this section.  I am only considering Xen as relevant for this
-thesis, so I am concentrating especially on vocabulary found in that area.
-\begin{description}
-\item[image] An image  is a file that contains  a complete file-system and
-  can  be  ``mounted'' by  an  operating  system as  if  it  was a  normal
-  file-system on  a physical drive.  On  such an image could  be all files
-  that are  needed to run  an operating system  for instance or  a special
-  application installation.
-\item[node] A machine  or a node is in this work  considered as a computer
-  that  can be accessed  through Internet  technology, i.e.  it has  an IP
-  address and thus speaks TCP.
-\item[task] A  task or an application is  a piece of software  that a user
-  desires to execute.
-\item[URI]   A   URI  is   a   ``Universal   Resource  Identifier''   (see
-  \cite{rfc2396}).
-\end{description}
+\section{Benefits of virtualization}
+\label{sec:benefits}
 
-\section{Execution environment}
-
-I have already mentioned, that the approach taken in this work is based on
-``separation  through  virtualization''.   This  section  deals  with  the
-requirements to  the system  and what a  user should  be able to  do.
-
-An \emph{execution environment} should at least meet the following points:
-\begin{enumerate}
-\item start new tasks
-\item stop running tasks
-\item list running tasks
-\item query the status of tasks
-\item reservation of remote resources
-\item providing input data for a task
-\item retrieving generated data from a finished task
-\end{enumerate}
-
-Additionally this work is  about a \emph{Xen based} execution environment,
-so that  means that if a user  wants to execute an  application the system
-will create a new virtual machine.
-
-The application  need not to  be run  locally, it can  be run on  a remote
-system  --- the  only requirement  is, that  the data  can  be transferred
-there.  That will be the base functionality of the here designed system:
-
-\begin{quote}
-  \emph{``executing applications on remote systems using Xen instances''}
-\end{quote}
-
-\paragraph{Starting an application}
-
-To be able to create a virtual  machine on the remote site the user has to
-specify not only  the application she wants to run but  also an image that
-contains the  required operating  system.  The execution  environment then
-takes care of starting up the  virtual machine with the provided image and
-eventually execute the application.
-
-For later  reference to the  just created task, the  execution environment
-must assign a unique identifier that can  be used by the user to manage or
-query the status of that task.
-
-\paragraph{Managing running tasks}
-
-Given  that the user  started a  task earlier,  he may  want to  query the
-status of  that task. He could  also want to abort  the task, if  he is no
-longer  interested in  it. The  execution  environment gave  out a  unique
-identifier with which the user now can refer to the task.
-
-The may also be interested in an overview of tasks that he has started, so
-the environment  should present  him a  list of all  his tasks  along with
-their states.
-
-\paragraph{Reserving resources}
-
-A more  advanced usage  is the reservation  of resources in  advance. That
-means a user can specify everything she  would as if she wanted to start a
-new task but additionally she says  for example when the task shall start. 
-The execution environments is required to meet that constraint.
-
-\paragraph{Accessing the data}
-
-Computational programs usually work on some input data and generate output
-data of differing  amount. The system I am going to  design must offer the
-user functionalities  to transfer  input data to  the virtual  machine and
-output data back.
+To  satisfy customer  demands,  not a  single,  general purpose  operating
+system  can be  used, over  the time  dozens of  specialized  systems have
+evolved --- for instance on  consumer desktop systems one can find Apple's
+MacOS,  Microsoft   Windows,  some  Linux  distribution   with  a  desktop
+environment,  on cluster  systems  or  on systems  which  have to  provide
+outstanding  security and availability  typically other  operating systems
+are  used   (Linux  for  instance,  may   be  an  exception   due  to  its
+adaptiveness).  Each  system has been designed  to address the  needs of a
+large segment of the marketplace \cite{borden89}.
 
 \bigskip
 
-We have now sketched the requirements  to the environment and can now have
-a look at its building blocks.
-
-\section{Architecture}
-\label{sec:architecture}
-
-This  section  introduces  the  desired architecture  of  the  ``Xen-based
-execution     environment''.      The     system    as     depicted     in
-Fig.~\ref{fig:architecture}   essentially   consists   of  the   following
-components:
-\begin{enumerate}
-  
-\item some kind of a user --- that could be a real person using the system
-  on  one hand  or  a script  or some  other  program such  as a  ``Calana
-  Broker''        (described        in        \cite{dalheimer05agentbased,
-    dalheimer06calanaprotocol}) on the other hand.
-  
-\item a central  managing daemon running on a Xen  \cite{xen} host or more
-  concretely within \texttt{dom0}.  This part is, for instance, accessible
-  through a command line, a web service or some other interface. A user in
-  general  does  only   talk  directly  to  this  part   of  the  system.  
-  Fig.~\ref{fig:architecture} shows this part  as the ``Xen Manager''.
-  
-\item the third component resides  directly on a Xen instance and provides
-  several functions to the  managing daemon (``Xen instance controller''). 
-  Functionalities  of this component  include: monitoring  and controlling
-  the user's  application, mounting external data  locations and providing
-  access to generated results.
-
-\end{enumerate}
-
-\begin{figure}[htbp]
-  \begin{center}
-%    \includegraphics[height=80mm]{architecture-overview}
-  \end{center}
-  \caption[Architecture overview]{An overview over the conceptual
-    architecture}
-  \label{fig:architecture}
-\end{figure}
-
-The other parts of the figure are storage locations, such as ``image'' and
-``data'' locations.   That are those sites  where a user  can store images
-with applications  or data  and that  can be accessed  by the  system.
-
-The  application images  for  instance  must be  accessible  by the  ``Xen
-Manager'' to be able to boot  up a virtual machine.  Data images, used for
-input to  and output from the  application, must be made  available to the
-``Xen  instance  controller''.  The  ``image  cache''  can  be seen  as  a
-secondary image  location, it can be  used to store images  to access them
-faster (``locality of reference'', \cite{locality-principle}).
-
-The next  section deals with  several use cases  that are of  interest for
-users and administrators of this system.
-
-\section{Use cases}
-
-In  an  earlier   section  I  have  shortly  described,   what  the  basic
-requirements to this  system are and now  I am going to show  you some use
-cases and which parts of the architecture are involved in each.
-
-The  big  picture  is  shown  in  \ref{fig:system-usecases},  it  shows  a
-compendium of several possible use cases from a very high level.
-
-\begin{figure}[htbp]
-  \begin{center}
-%    \includegraphics[width=0.9\textwidth]{system-usecase}
-  \end{center}
-  \caption[Use case overview]{an overview over several possible use cases}
-  \label{fig:system-usecases}
-\end{figure}
-
-The use cases are split into several scenarios which can arise during that
-particular  case. Now  let's go  through each  use case  step by  step and
-analyze on that way where possible problems could occur.
-
-\subsection{Use case 1: image submission}
-\label{uc:1}
-
-The  first use case  is about  the submission  of images,  that are  to be
-executed on a remote host. The main  objective of this use case is how the
-user can specify which image he wants to submit and eventually be run.
-
-\subsubsection{Scenario 1.1 --- submitting a single image}
-
-The easiest scenario  is in which the user only has  one image. This image
-contains  everything: the  operating  system, the  application and  needed
-input  data.  That  means  all needed  information  is within  the image.  
-Figure~\ref{fig:arch-uc-1.1} shows the  relevant parts of the architecture
-that are involved in this scenario.
-
-\begin{figure}[htbp]
-  \begin{center}
-%    \includegraphics[height=8cm]{architecture-uc-1-1}
-  \end{center}
-  \caption[Architecture UC 1.1]{parts of the architecture relevant to use
-    case 1.1}
-  \label{fig:arch-uc-1.1}
-\end{figure}
-
-The user specifies the location (i.e. an URI) of the image and passes this
-information to  the ``Xen Manager'' along  with a description  of the task
-that  he desires  to execute.  The ``Xen  Manager'' will  then  attempt to
-download the  image from the  specified location. 
-
-\begin{figure}[htbp]
-  \begin{center}
-%    \includegraphics[height=8cm]{sequence-image-submission-1}
-  \end{center}
-  \caption[Sequence UC 1.1]{sequence diagram for the image submission}
-  \label{fig:seq-uc-1.1}
-\end{figure}
-
-When the image  has been successfully retrieved, the  ``Xen Manager'' will
-create  a  special  Xen  instance  to  run the  image.
-
-\bigskip
-
-\paragraph*{When will the image be started?}
-
-The answer simply  is ``it depends''. That is because  the boot up process
-takes some  time and may vary  of course.  Additionally the  image must be
-transferred from some  location to the server and  that consumes even more
-time. If a user wants to have some guaranty, it will be required, that
-\begin{enumerate}
-\item the image does already reside on the server
-\item a reservation has been made
-\end{enumerate}
-
-This  particular topic is  a use  case on  its own  and will  be discussed
-later.
-
-\paragraph*{What happens if errors occur?}
-
-Errors can occur  in each step of the  submission.  During the interactive
-part (i.e. submission  of the job description) errors  may be communicated
-directly back to the user.
-
-If an error  occurs during the transfer of some image,  there is no direct
-way  to tell  the user  about it.   But  the user  can check  later on  if
-something went  wrong using the  unique identifier she  got.  Additionally
-could there be  a notification service, to which  the user subscribes with
-the unique identifier. This service could then send out messages to inform
-the user.
-
-\subsubsection{Scenario 1.2 --- submitting several images}
-
-In the first  scenario all data had to be within  one image, this drawback
-is addressed in this scenario. The components used in this scenario are
-shown in Fig.~\ref{fig:arch-uc-1.2}
-
-Along with an  image the user can specify locations  from which input data
-may be retrieved  and to which generated data should  be sent --- commonly
-known as staging operations. These locations can be any URI as long as the
-appropriate operation (read/write) can be executed.
-
-\begin{figure}[htbp]
-  \begin{center}
-%    \includegraphics[height=8cm]{architecture-uc-1-2}
-  \end{center}
-  \caption[Architecture UC 1.2]{parts of the architecture relevant to use
-    case 1.2}
-  \label{fig:arch-uc-1.2}
-\end{figure}
-
-\subsection{Use case 2: caching of images}
-\label{uc:2}
-
-Imagine a user,  who wants to execute the same  application several times. 
-That would  mean he has  to submit the  same image again and  again, which
-imposes a heavy load on the network connecting user and provider (i.e. the
-host  on which the  Xen Manager  runs). It  is wise  to provide  a caching
-mechanism, that allows the user to store his image at server-side.
-
-The    architecture    needed    for     this    case    is    shown    in
-Fig.~\ref{fig:arch-uc-caching}.
-
-\begin{figure}[htbp]
-  \begin{center}
-%    \includegraphics[height=5cm]{architecture-uc-caching-1}
-  \end{center}
-  \caption[Architecture UC 2]{parts of the architecture relevant for caching}
-  \label{fig:arch-uc-caching}
-\end{figure}
-
-\paragraph{How gets the image transferred?} There are two answers to this
-question, that can be  categorized into ``active'' and ``passive'' caching
-from the user's point of view.
-\begin{itemize}
-\item Prior to any job submission, the user (actively) transfers the image
-  to the server  (Fig.~\ref{fig:seq-image-caching-1}).
-  \begin{figure}[htbp]
-    \begin{center}
-%      \includegraphics[width=0.75\textwidth]{sequence-image-caching-1}
-    \end{center}
-    \caption[Image caching sequence 1]{actively caching an image}
-    \label{fig:seq-image-caching-1}
-  \end{figure}
-  Later  on, when the  user wants  to submit  a job,  he passes  the cache
-  location --- represented by a unique identifier --- to the server.
-  
-\item The user specifies a job description as described in use case 1. The
-  Xen Manager  not only  retrieves the  image to start  the job,  but also
-  stores it in the cache (Fig.~\ref{fig:seq-image-caching-2}).
-  \begin{figure}[htbp]
-    \begin{center}
-%      \includegraphics[width=0.75\textwidth]{sequence-image-caching-2}
-    \end{center}
-    \caption[Image caching sequence 2]{an image gets passively cached by
-      the Xen Manager}
-    \label{fig:seq-image-caching-2}
-  \end{figure}
-\end{itemize}
-
-
-\paragraph{How is the cached image referenced?} To efficiently use cached
-images, it is required that the user can reference them somehow. More than
-one solution is here possible, too.
-\begin{itemize}
-\item The user uses the unique  identifier he got when he stored the image
-  in   the    cache   in   the    first   place,   this   is    shown   in
-  Fig.~\ref{fig:seq-image-caching-3}.
-  \begin{figure}[htbp]
-    \begin{center}
-%      \includegraphics[width=0.75\textwidth]{sequence-image-caching-3}
-    \end{center}
-    \caption[Image referencing]{retrieving a referenced image from the cache}
-    \label{fig:seq-image-caching-3}
-  \end{figure}
-\item The user  queries the Xen Manager to give him  a descriptive list of
-  all   cached   images,   that   are   accessible  by   the   user   (see
-  Fig.~\ref{fig:seq-image-caching-4}).   Descriptive means here,  that the
-  user is presented with some detailed information about the images.
-  \begin{figure}[htbp]
-    \begin{center}
-%      \includegraphics[width=0.75\textwidth]{sequence-image-caching-4}
-    \end{center}
-    \caption[Image referencing]{retrieving a referenced image from the cache}
-    \label{fig:seq-image-caching-4}
-  \end{figure}
-\end{itemize}
-
-The    components   involved    in    this   scenario    are   shown    in
-Fig.~\ref{fig:arch-referencing-images-1}.
-\begin{figure}[htbp]
-  \begin{center}
-%    \includegraphics[height=5cm]{architecture-referencing-cached-images-1}
-  \end{center}
-  \caption{Architecture of use case 2}
-  \label{fig:arch-referencing-images-1}
-\end{figure}
-
-
-\subsection{Use case 3: image deployment}
-
-This use case  deals with the starting process of  images. The Xen Manager
-uses the image  that the user specified and starts up  a Xen instance. The
-steps  required   to  start   up  such  a   new  instance  are   shown  in
-Fig.~\ref{fig:seq-image-deployment-1} and consist of:
-\begin{enumerate}
-\item  The instance  itself has  to be  started.
-\item  During  that an  instance  controller  is  being started  ---  this
-  controller  is   responsible  for  starting,   monitoring  and  stopping
-  applications and several other housekeeping functionalities.
-\item The Xen Manager connects to the instance controller, thus confirming
-  that the instance is fully available.
-\end{enumerate}
-
-\begin{figure}[htbp]
-  \begin{center}
-%    \includegraphics[height=5cm]{sequence-image-deployment-1}
-  \end{center}
-  \caption[Image deployment sequence]{the steps required to be taken to
-    start up a new instance}
-  \label{fig:seq-image-deployment-1}
-\end{figure}
-
-After  successfully  connecting  from  the  Xen Manager  to  the  instance
-controller, both  sides are in  the state ``instance  controllable'', that
-means that:
-\begin{itemize}
-\item applications can be started through the controller
-\item started applications can be monitored and controlled
-\end{itemize}
-
-Additionally  it   is  possible  to   retrieve  the  streams   of  started
-applications.        The        architecture       as       shown       in
-Fig.~\ref{fig:arch-deployment-1}   is  now   enriched   by  the   instance
-controller running on a Xen instance.
-
-\begin{figure}[htbp]
-  \begin{center}
-%    \includegraphics[height=5cm]{architecture-deployment-1}
-  \end{center}
-  \caption[Image deployment architecture]{a Xen Manager controlling three
-    Xen instances}
-  \label{fig:arch-deployment-1}
-\end{figure}
-
-
-\subsection{Use case 4: controlling and monitoring}
-
-A  full-fledged execution  environment demands  mechanisms to  control and
-monitor its activities.   At all times the user must be  able to:
-\begin{itemize}
-\item  query the status  of her  running application  --- the  sequence of
-  actions is shown in Fig.~\ref{fig:seq-status-query-1}.
-  \begin{figure}[htbp]
-    \begin{center}
-%      \includegraphics[height=5cm]{sequence-status-query-1}
-    \end{center}
-    \caption[Querying the status]{a user querying the status of his application}
-    \label{fig:seq-status-query-1}
-  \end{figure}
-\item and  she should also be able  to abort the very  same execution (see
-  Fig.~\ref{fig:seq-abort-task-1}).
-  \begin{figure}[htbp]
-    \begin{center}
-%      \includegraphics[height=5cm]{sequence-abort-task-1}
-    \end{center}
-    \caption[Aborting a running task]{a user requesting the abortion of a
-      running task}
-    \label{fig:seq-abort-task-1}
-  \end{figure}
-\end{itemize}
-
-The OGSA-BES  draft \cite{ogsa-bes} defines a  standardized description of
-job states (Fig.~\ref{fig:ogsa-bes-model-1})  which can easily be extended
-without breaking  components relying on the  ``non-extended'' model.  This
-standard  can be used  to describe  the states  of an  application running
-within a Xen instance.
-
-\begin{figure}[htbp]
-  \begin{center}
-%    \includegraphics[height=5cm]{ogsa-bes-state-model-1}
-  \end{center}
-  \caption{The basic OGSA-BES state model}
-  \label{fig:ogsa-bes-model-1}
-\end{figure}
-
-
-\paragraph{What, if the application is not running yet?}
-
-Imagine a  user requesting the current  state of his  newly submitted job,
-the Xen  Manager answers all  questions as best  as it can. That  means he
-would       for       example       react      as       described       in
-Table~\ref{tab:monitor-cases-overview}.
-\begin{table}[htbp]
-  \begin{center}
-    \begin{tabular*}{0.9\textwidth}{p{0.4\textwidth}|p{0.4\textwidth}}
-      current situation & state returned \\ \hline\hline
-      image not yet available & \texttt{pending} (image loading)\\ \hline
-      instance not yet started & \texttt{pending} (instance) \\ \hline
-      application not yet started & \texttt{pending} (application) \\ \hline
-      image could not be retrieved & \texttt{failed} (image retrieval) \\ \hline
-      instance could not be started & \texttt{failed} (instance) \\ \hline
-      application could not be started & \texttt{failed} (application)
-    \end{tabular*}
-    \caption[States returned by the Xen Manager]{States returned by the Xen Manager in several cases}
-    \label{tab:monitor-cases-overview}
-  \end{center}
-\end{table}
-
-
-\subsection{Use case 5: resource reservation}
-
-An advanced subject is to provide advance reservation. That means that the
-user  has the  possibility  to tell  the  Xen Manager,  that  he needs  an
-instance for a given  time and at a specific point in  time.  Later on the
-user can specify which image the Xen Manager should use.
-
-The steps taken are presumably as follows:
-\begin{enumerate}
-\item The user  makes a reservation of some resource,  i.e. number of CPUs
-  for a given duration --- five hours  for example --- and a point in time
-  at       which      the       reservation      may       start      (see
-  Fig.~\ref{fig:seq-advance-reservation-1}).
-  \begin{figure}[htbp]
-    \begin{center}
-%      \includegraphics[width=0.75\textwidth]{sequence-advance-reservation-1}
-    \end{center}
-    \caption{Making a reservation}
-    \label{fig:seq-advance-reservation-1}
-  \end{figure}
-  
-\item After obtaining  a (unique) reservation ID, the  user can submit any
-  job  he  likes  and  he  is  guaranteed, that  job  will  start  by  the
-  reservation's start time.
-  \begin{figure}[htbp]
-    \begin{center}
-%      \includegraphics[width=0.75\textwidth]{sequence-advance-reservation-2}
-    \end{center}
-    \caption{Submitting a job using a reservation}
-    \label{fig:seq-advance-reservation-2}
-  \end{figure}
-  
-\item The  Xen Manager acts as if  it was an ordinary  job submission, but
-  this time he waits with starting up the instance until the start time of
-  the reservation is reached.
-  \begin{figure}[htbp]
-    \begin{center}
-%      \includegraphics[width=0.75\textwidth]{sequence-advance-reservation-3}
-    \end{center}
-    \caption{Starting an instance with a reservation}
-    \label{fig:seq-advance-reservation-3}
-  \end{figure}
-\end{enumerate}
-
-So  the  actual submission  of  an  image is  split  into  two parts,  the
-reservation  part  and  the  eventual  assignment  of  an  image  to  that
-reservation.
-
-It seems  to be  very simple but  there are  some problems that  come into
-mind.
-
-\paragraph{What happens if the image is not available?}
-
-This case can easily been run into, if the reservation shall start but the
-image is not yet available. The user has to be informed about that and the
-job can not be run.
-
-One  solution  to  that  is   to  provide  the  image  before  making  any
-reservations or  submissions using that  image, thus the user  makes sure,
-that  the image  will be  available when  needed. Another  (less failsafe)
-solution  is to  have  enough time  between  submission and  start of  the
-reservation  ---  this  highly  depends  on  how fast  the  image  can  be
-retrieved.
-
-\paragraph{What if a reservation ends before the application exits}
-
-This may  happen, since  users can not  always exactly foresee  when their
-application will  end and thus  may specify a  too short duration  for the
-reservation.  Ordinary batch-scheduler usually  give a little more time to
-the application and stop it (i.e.  forcing it to quit) eventually.
-
-\begin{figure}[htbp]
-  \begin{center}
-%    \includegraphics[width=0.75\textwidth]{sequence-advance-reservation-4}
-  \end{center}
-  \caption{Suspending an instance}
-  \label{fig:seq-advance-reservation-4}
-\end{figure}
-
-Xen provides  the possibility  to suspend the  instance and  continuing it
-later  (Fig.~\ref{fig:seq-advance-reservation-4}).  The  problems involved
-with suspension of  a running instance are discussed in  the next use case
-``check-pointing''.
-
-
-\subsection{Use case 6: check-pointing}
-
-In Fig.~\ref{fig:seq-advance-reservation-4} you  have seen how an instance
-has been  suspended in the case  of reservation expiry  --- suspension can
-also    be    used    to    provide    the   user    with    a    snapshot
-(\cite{distributed-snapshots}) or check-pointing mechanism.
-
-The steps taken  are essentially the same ---  suspending the instance due
-to some event,  saving the state and resuming it later  --- this is called
-an ``offline snapshot''.
-
-\paragraph{What are the events?}
-
-As        in         use        case        ``advance        reservation''
-(Fig.~\ref{fig:seq-advance-reservation-4}),   one   event   may   be   the
-expiration of a reservation, but there are more:
+The following list are reasons, why multiple operating systems may need to
+coexist and  even be used in the  same establishment at the  same time and
+how virtual machines fit into that \cite{borden89,virtualization-overview}:
 
 \begin{itemize}
-\item the application itself triggers  an event, indicating that now would
-  be a good point to do a snapshot
-\item a snapshot is taken regularly by the system
-\item  the user  wants to  make a  snapshot (manually  triggered)  --- for
-  instance after four hours of computation.
+\item  \emph{Diverse Workload}  --- in  large establishments  it  is often
+  required, that  different computing  requirements must be  fulfilled. An
+  airport, for instance, requires  a highly responsive reservation system,
+  a  database system  for aircraft  maintenance  and parts  and a  general
+  purpose system for payroll and planning.
+\item  \emph{Test  and  development}   ---  many  companies  require  high
+  availability and stability of  their computing components, but they also
+  may want to test, develop  and deploy new software or software versions.
+  
+  Here at  the Fraunhofer ITWM,  for instance, SuSE  Linux is used  as the
+  operating system for many desktop systems. To provide stability, updates
+  have to be tested prior deploying them everywhere.
+
+  The same holds for application  development --- a company will have some
+  productive system running the developed application, and this system has
+  to be available 24 hours  day. Clearly, development cannot take place on
+  the production machines,  since the probability of a  breakage is simply
+  too high --- machines solely dedicated for development are required.
+\item \emph{Backup  and recovery} --- server  applications which represent
+  important  components   for  the  daily   work  (e.g.~database  systems,
+  web-servers etc.) must  be available all the time. A  nice thing to have
+  in such  a situation  is automatic recovery  from failure ---  to reduce
+  down-time two systems can be used: one of them is the productive system,
+  the  other one  is a  backup system  that is  an exact  ``copy''  of the
+  productive system  and just waits  for a failure  of the other.   Upon a
+  system failure  in the  productive system, the  backup system  will take
+  over.
+\item  \emph{Platform  independent development}  ---  over  the time  many
+  different  operating  systems have  evolved  ---  various Unix  flavours
+  (FreeBSD, Linux for  instance), DOS, Microsoft Windows, Mac  OS, just to
+  name some of them --- not all of them are compatible to each other.
+
+  Application developers who  want to develop an application  that runs on
+  several of these operating systems are required to port and verify their
+  application on each  target system and maybe on  several versions of the
+  same target system.
+
+  One way  is to have  an extra machine  with the target  operating system
+  installed on  it just for testing  and porting issues ---  that not only
+  imposes energy  costs but also maintenance  costs.
+
+  The other way is to use  virtual machines instead of actual machines ---
+  each virtual machine runs a version of a target operating system.
+\item  \emph{Server consolidation} ---  a common  approach for  many small
+  companies is to have one server on which runs for instance a web server,
+  some content management system with a database as its back-end under the
+  same  operating system.
+
+  That approach  may involve security problems,  since if just  one of the
+  services   contains  a   security  hole,   the  whole   system   can  be
+  compromised. Using virtual  machines for each of the  services, the only
+  system  that is  now compromised  is the  one providing  this particular
+  service.
 \end{itemize}
 
-
-\paragraph{Problems that can occur}
-
-One big  problem of taking a  snapshot in this way  are active connections
-(e.g.  TCP  connections) from the instance,  those cannot be  saved by the
-system  and  must  therefore  be  reinitialized by  the  application  upon
-resuming.
-
-The application  does not necessarily need  to know that  the instance has
-been suspended, so it  seems to it like a link or  network failure. As you
-can  see, the  application  must be  able  to recover  from  that kind  of
-failure.
-
-Even worse are connections{\bf to}  the instance, since after resuming the
-IP address  of the instance  may have changed.  To overcome this,  the Xen
-Manager is required to assign the same address to this instance.
-
-\subsection{Use case 7: updating existing images}
-
-So far,  we were only interested  in how a  user is involved in  the image
-execution  process.  But  what  about  an site  administrator  who has  to
-administer all the cached or especially provided application images. Those
-applications and  operating system distributes  need updates from  time to
-time, but there could be plenty of such images residing in the database.
-
-This problem  directly leads to  the need for  an automated task  that can
-update the software components within  an image and execute a special test
-case designed to confirm that everything is still working.
 
 %%% Local Variables: 
 %%% TeX-master: "main.tex"

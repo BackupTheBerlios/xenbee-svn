@@ -5,25 +5,46 @@
 Virtualization  is a  concept that  one  cannot think  away from  computer
 science anymore.
 
+This work  is about  the execution of  arbitrary applications on  a remote
+system exploiting virtual machines. It addresses the problem that multiple
+potentially  broken applications  are typically  executed on  remote hosts
+side by  side ---  if one application  behaves ``wrong''  (e.~g.~CPU cycle
+consumption,  memory  leakage, etc.)  it  may  involve other  applications
+running on the same host.
+
+\vfill
 
 % chapter overview
 \begin{description}
-\item[Chapter  1] The  first chapter  contains some  introductory material
-  that  you  should read  if  you  are  not familiar  with  virtualization
-  technologies and especially the \emph{\gls{glo:XEN} hyper visor}.
-\item[Chapter   2]   This  chapter   deals   with   the   design  of   the
+\item[Chapter   \ref{cha:intro}]   The   first   chapter   contains   some
+  introductory material that you should  read if you are not familiar with
+  virtualization  technologies   and  especially  the  \emph{\gls{glo:XEN}
+    hypervisor}.
+  
+\item[Chapter \ref{cha:requirements}] In  this chapter the requirements of
+  the execution environment are discussed.
+  
+\item[Chapter \ref{cha:design}] This chapter  deals with the design of the
   \emph{\gls{glo:XEN}-based Execution Environment} and its components.
-\item[Chapter  3]  The third  chapter  discusses  the  protocols used  for
-  communication between the different  parts of the system.
-\item[Chapter 4]  In this chapter  security related topics  are discussed,
-  such  as securing  the messages  sent  between client  and server  using
-  \emph{Message Layer Security} (\gls{glo:MLS}) or executing user-supplied
-  scripts in a \emph{chroot environment}.
-\item[Chapter   5]  This  chapter   shows  some   results  of   using  the
-  \emph{\gls{glo:XEN}-based Execution  Environment} and compares  it against running
-  the same programs on a stand-alone machine.
-\item[Chapter 6] The final chapter draws some conclusions about the work
-  that has been done and provides ideas for future development.
+  
+\item[Chapter  \ref{cha:comm-prot}]  The   fourth  chapter  discusses  the
+  protocols  used for  communication between  the different  parts  of the
+  system.
+  
+\item[Chapter  \ref{cha:secur-cons}]  In  this  chapter  security  related
+  topics are discussed, such as  securing the messages sent between client
+  and server  using \emph{Message Layer Security}  (\gls{glo:MLS}) and how
+  the executing  of user-supplied  scripts are secured  using \emph{chroot
+    environment}.
+  
+\item[Chapter \ref{cha:results}] This chapter  shows some results of using
+  the  \emph{\gls{glo:XEN}-based Execution  Environment}  and compares  it
+  against running the same programs on a stand-alone machine.
+  
+\item[Chapter   \ref{cha:conclusions}]  The   final  chapter   draws  some
+  conclusions about  the work  that has been  done and provides  ideas for
+  future development.
+  
 \end{description}
 
 \clearpage
