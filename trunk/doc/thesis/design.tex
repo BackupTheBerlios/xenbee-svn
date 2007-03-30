@@ -2,6 +2,55 @@
 \chapter{Design}
 \label{cha:design}
 
+
+\section{Architecture}
+\label{sec:architecture}
+
+This  section  introduces  the  desired architecture  of  the  ``Xen-based
+execution     environment''.      The     system    as     depicted     in
+Figure~\ref{fig:architecture}   essentially   consists   of  the   following
+components:
+\begin{enumerate}
+  
+\item some kind of a user --- that could be a real person using the system
+  on  one hand  or  a script  or some  other  program such  as a  ``Calana
+  Broker''        (described        in        \cite{dalheimer05agentbased,
+    dalheimer06calanaprotocol}) on the other hand.
+  
+\item a central  managing daemon running on a Xen  \cite{xen} host or more
+  concretely within \texttt{dom0}.  This part is, for instance, accessible
+  through a command line, a web service or some other interface. A user in
+  general  does  only   talk  directly  to  this  part   of  the  system.  
+  Figure~\ref{fig:architecture} shows this part  as the ``Xen Manager''.
+  
+\item the third component resides  directly on a Xen instance and provides
+  several functions to the  managing daemon (``Xen instance controller''). 
+  Functionalities  of this component  include: monitoring  and controlling
+  the user's  application, mounting external data  locations and providing
+  access to generated results.
+
+\end{enumerate}
+
+\begin{figure}[htbp]
+  \begin{center}
+%    \includegraphics[height=80mm]{architecture-overview}
+  \end{center}
+  \caption[Architecture overview]{An overview over the conceptual
+    architecture}
+  \label{fig:architecture}
+\end{figure}
+
+The other parts of the figure are storage locations, such as ``image'' and
+``data'' locations.   That are those sites  where a user  can store images
+with applications  or data  and that  can be accessed  by the  system.
+
+The  application images  for  instance  must be  accessible  by the  ``Xen
+Manager'' to be able to boot  up a virtual machine.  Data images, used for
+input to  and output from the  application, must be made  available to the
+``Xen  instance  controller''.  The  ``image  cache''  can  be seen  as  a
+secondary image  location, it can be  used to store images  to access them
+faster (``locality of reference'', \cite{locality-principle}).
+
 \begin{figure}
   \begin{center}
     \includegraphics[scale=.75]{msc-establish-mls}

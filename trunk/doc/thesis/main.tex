@@ -49,11 +49,11 @@
 \usepackage{fancyhdr}
 \usepackage{palatino}
 \usepackage{a4}
-\usepackage{listing}
+\usepackage{listings}
 \usepackage{makeidx}
 \usepackage[sort&compress]{natbib}
 \usepackage[light,first,conditional]{draftcopy}
-\usepackage[style=super,cols=3,toc=true,number=none]{glossary}
+\usepackage[style=super,cols=3,toc=true,number=none]{glossary} % hyper=true for hyperrefs
 %\usepackage[plainpages=false,pdfpagelabels,pdftex]{hyperref}
 \graphicspath{{graphics/}}
 
@@ -80,6 +80,14 @@
 %%% Now actually use the newly defined style.
 \urlstyle{ap}
 
+% Tweak the listings-package
+\lstset{basicstyle=\small,
+  stringstyle=\ttfamily,
+  showstringspaces=false
+}
+
+% Tweak hyphenation
+\hyphenation{mid-dle-ware}
 
 \pagestyle{fancy}
 \fancyhf{}                                %Clears all header and footer fields, in preparation.
@@ -98,9 +106,9 @@
 \makeglossary
 
 \begin{document}
-\frontmatter
 \include{title}
 
+\frontmatter
 %  P R E F A C E
 \include{preface}
 
@@ -148,7 +156,9 @@
 \bibliographystyle{plain}
 \bibliography{bibliography}
 
-%\printindex
+% \printindex
+%\renewcommand{\glossarypreamble}{You need not to know everything, you just
+%  need to know where to find it.\par}
 \printglossary
 
 

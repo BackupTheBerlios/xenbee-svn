@@ -6,7 +6,7 @@ IDX=$(NAME).idx
 LOG=$(NAME).log
 GLS=$(NAME).gls
 
-latex = pdflatex
+latex = pdflatex -halt-on-error
 bibtex = bibtex
 makeindex = makeindex
 
