@@ -313,8 +313,8 @@ A  typical  way  of connecting  clients  with  some  server  is to  use  a
 communication which  takes place  in this environment  is message-oriented
 --- as  you will  see later,  each request to  the server  is mapped  to a
 single  XML document  ---  we can  abstract  from a  direct connection  to
-logical  connection.  This logical  connection  can  be established  using
-so-called \emph{message queue servers} (\gls{glo:MQS}).
+logical  connection.  This  logical  connection can  be established  using
+\emph{message-queue servers} (\gls{glo:MQS}).
 
 \gls{glo:MQS}   have  several  very   important  advantages   over  direct
 connections between the clients and the server:
@@ -676,12 +676,160 @@ by any person or system in between any two communication partners.
 A   typical  solution   to  make   the  transfer   secure  is   using  the
 \emph{Transport Layer  Security} protocol --- or  \gls{glo:TLS} for short.
 \gls{glo:TLS} makes sure that  traffic between two endpoints is transfered
-securely (i.e.~no eavesdropping, modification or message forgery).
+securely --- i.e.~no eavesdropping, modification or message forgery.
 
-\subsubsection{Transport Layer Security (TLS)}
+The  \emph{Transport Layer  Security} protocol,  which is  discussed  in a
+moment, and the afterwards examined \emph{Message Layer Security} protocol
+are  both using cryptographic  certificates such  as \emph{\gls{glo:X509}}
+certificates.
 
+The  certificates  are  based  on  public/private  key  pairs,  whereas  a
+certificate consists of a  pair's public-key combined with some additional
+information, e.g.~the owner and issuer of the certificate, used algorithms
+and  so  on.  Most  importantly  is the  fact,  that  certificates can  be
+\emph{cryptographically    signed}     by    a    certificate    authority
+(\gls{glo:CA}). The  next passage  will shortly describe  how certificates
+can  be  used  in  a  \emph{Public Key  Infrastructure}  using  public-key
+cryptography.
 
-\subsubsection{Message Layer Security (MLS)}
+\subsection{Public Key Infrastructure (PKI)}
+
+A  \emph{Public Key  Infrastructure} provides  the authentication  of user
+identities using certificates.  The main  aspect is that there are special
+\textbf{trusted} authorities (\emph{Certificate Authority}, \gls{glo:CA}),
+that are permitted  to \textbf{sign} other certificates.  If  a user wants
+to prove his  identity to another entity, his  certificate is validated by
+that entity, if it is valid, the prove has been successful.
+
+The \gls{glo:CA} is responsible for checking that the public-key contained
+in  the certificate  actually belongs  to the  requesting user,  server or
+other  entity denoted  in the  certificate. This  checking process  is for
+example done by  verifying the credentials of a user  (e.g.~with help of a
+photo identification or something similar).
+
+Any third-party that trusts a given CA will transparently trust any entity
+that offers a certificate signed by that particular CA.
+
+\begin{figure}[h]
+  \begin{center}
+    \includegraphics[scale=.75]{pki}
+  \end{center}
+  \caption[Public  Key Infrastructure]{Alice  proofs her  identity  to Bob
+    using a certificate  that is signed by a CA that  both, Alice and Bob,
+    trust.}
+  \label{fig:pki}
+\end{figure}
+
+Validation is performed by verifying  that the certificate itself has been
+signed  by a  trusted authority  --- the  actual validation  process  is a
+little   bit  more  complex,   since  it   involves  checking   against  a
+\emph{Revocation List} and  a ``best before'' date (i.e.~life  time of the
+certificate), too.
+
+The  signing  process  uses  the  authority's private  key  to  compute  a
+cryptographic signature. This private-key must of course be kept in a very
+secure  location  (e.g.~on a  physically  from  the Internet  disconnected
+computer) ---  if it would fall into  the wrong hands, the  whole chain of
+trust is compromised.
+
+An  example verification  process  is shown  in Figure~\ref{fig:pki},  the
+steps can be described as follows:
+\begin{enumerate}
+\item \emph{Alice} request the signing of her certificate by a CA and thus
+  sends a certificate request to the CA containing her public-key.
+\item The CA in turn verifies Alice's credentials and eventually signs the
+  certificate with its private key.
+\item The signed certificate is sent back to \emph{Alice} for her later use.
+\item Now,  \emph{Alice} wants to prove  her identity to a  friend of her,
+  \emph{Bob},   therefore   \emph{Alice}    sends   her   certificate   to
+  \emph{Bob}.  The   proof  may  be   necessary  to  establish   a  secure
+  communication over an insecure channel, e.g.~the Internet.
+\item \emph{Bob}  verifies the received certificate against  the very same
+  CA by  which \emph{Alice} had her certificate  signed.  Since \emph{Bob}
+  trusts the  CA and the received  certificate states, that  it belongs to
+  his  friend \emph{Alice},  he  can be  assured,  that he  is talking  to
+  \emph{Alice}.
+\end{enumerate}
+
+\bigskip
+
+Both  of  the following  protocols  can make  use  of  a \gls{glo:PKI}  to
+authenticate communication partners.
+
+\subsection{Transport Layer Security (TLS)}
+
+The \gls{glo:TLS}  protocol is often  offered by web- or  email-servers to
+make  the  communication   with  a  client  (such  as   a  browser  or  an
+email-client) secure.
+
+On-line   banking,   for   instance,   typically   requires   a   Personal
+Identification Number  (PIN) to make sure  that it is actually  you who is
+trying to access your accounts.  Using unencrypted transfer of the PIN and
+other data would mean, that any  system, which is in between your computer
+and the  one of your  bank, is  able to read  your PIN and  probably other
+information about you. It is also possible that a \emph{man-in-the-middle}
+spoofs or modifies  transactions to withdraw money from  your account. Two
+things are  very important in  this case: The  first and most  obvious is,
+that the information you and  your bank exchange are encrypted. The second
+requirement is,  that you  are able  to verify that  the receiver  of your
+messages is actually a computer belonging  to your bank and not to someone
+else.
+
+\gls{glo:TLS} uses  certificates on the  server-side, so that  clients can
+validate  that  they  are  actually  communicating with  the  server  they
+intended to  communicate with.  In  the case of  a bank or  any well-known
+service  provider   in  the  Internet,  the  certificates   in  place  are
+cryptographically  signed by a  \emph{trusted} authority.   A certificate,
+that is signed by such an authority you trust, is automatically assumed to
+actually belong to the server where the certificate came from.
+
+\bigskip
+
+Unfortunately, \gls{glo:TLS}  cannot be used in a  message-queue system to
+secure the traffic  between clients and servers. That  is because there is
+no direct connection between client and server --- both are just connected
+to their message-queue server. \gls{glo:TLS} can in this case only be used
+to secure  the communication between  any end-point and  the message-queue
+server it  is connected to.
+
+After transmitting a message over a with \gls{glo:TLS} secured connection,
+the  message is  stored in  clear text  on the  message-queue  server. The
+message   will  then   again  be   transmitted  securely   to   the  final
+destination. But  any person  or system with  access to  the message-queue
+server can read, modify or even spoof transmitted messages --- without the
+knowledge of either sender or receiver.
+
+To  secure  the  logical   message-based  communication  between  any  two
+end-points, a  different kind of security  layer has to be  used here: the
+\emph{Message Layer Security} --- or \gls{glo:MLS} for short.
+
+\subsection{Message Layer Security (MLS)}
+
+As the name of this protocol  may already suggest, the security focuses on
+the transmitted messages not on  the transportation of the messages.  That
+means, the transport layer over which  messages are sent is not altered or
+secured in any way  --- it can be as insecure as  before.  But even though
+the messages are transmitted over a potentially insecure channel, they are
+still protected against eavesdropping, tampering and spoofing.
+
+\gls{glo:MLS} too makes use  of certificates to provide authentication and
+encryption. To  establish a  secure communication between  a client  and a
+server,  the  client  needs  to  \emph{know}  (i.e.~have  access  to)  the
+certificate  of the server.   Since encryption  with a  public/private key
+algorithm   is    rather   slow,    in   most   cases    a   \emph{session
+  key}\footnote{typically  random data}  will be  negotiated  first.  This
+session  key is  then used  to perform  \emph{symmetric} ciphering  of the
+messages, which is a lot faster.
+
+\bigskip
+
+The \gls{glo:XenBEE}  must make use  of \gls{glo:MLS} to  provide security
+for  its users.   Additionally, as  it is  common  among Grid-middlewares,
+\gls{glo:X509}  certificates  are   used  to  authenticate  and  authorize
+users. The  server is going  to use a  user's certificate to  validate his
+identity and  possibly to send messages  the user --- thus  both sides may
+initiate a secure communication.
+
 
 %%% Local Variables: 
 %%% mode: latex
