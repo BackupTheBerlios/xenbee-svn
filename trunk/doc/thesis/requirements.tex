@@ -7,9 +7,8 @@ am going to describe, how such an environment can look like and what it is
 supposed to provide the users with.
 
 \begin{figure}[htbp]
-  \begin{center}
-    \includegraphics[scale=.5]{concept}
-  \end{center}
+  \centering
+  \includegraphics[scale=.5]{concept}
   \caption[Conceptual overview]{A conceptual overview}
   \label{fig:concept}
 \end{figure}
@@ -71,83 +70,6 @@ I  decided to  use this  description language,  so that  the Xen-execution
 environment can  easily be integrated  into various middlewares  that also
 use the \gls{glo:JSDL} to describe their jobs.
 
-\subsubsection{Job Submission Description Language (\gls{glo:JSDL})}
-
-\gls{glo:JSDL}  is a  very extensible  XML-based description  language for
-computational  jobs.  With  \gls{glo:JSDL} you  are able  to  describe all
-requirements that  a computational  job may need  for the submission  to a
-resource --- mainly the \gls{glo:JSDL}  addresses grid resources but it is
-not limited the latter.
-
-\paragraph{The building   blocks}
-
-A  \gls{glo:JSDL}   document  always  contains   a  \texttt{JobDefinition}
-element, which is the top-level element and holds all required information
-about the job.
-
-A  minimalistic  example is  shown  in Listing~\ref{lst:jsdl-example},  it
-describes the execution of the following command in a standard UNIX shell:
-
-\begin{minipage}{0.75\textwidth}
-  \begin{lstlisting}[language=ksh]
-    $ echo Hello World
-    Hello World
-    $
-  \end{lstlisting}
-\end{minipage}
-
-\lstinputlisting[float=ht,caption={A small ``Hello World''-example written in \gls{glo:JSDL}},label={lst:jsdl-example},language=XML]{examples/jsdl-example.jsdl}
-
-\bigskip
-
-A typical \gls{glo:JSDL} document consists  of the following parts --- job
-identification,  application description,  resource descriptions  and data
-staging elements:
-
-\begin{description}
-\item[\emph{JobIdentification}] This element  is used to hold information
-  about the job that is mostly  interesting for human beings --- such as a
-  descriptive  name  for the  job.   Nonetheless  it  may hold  additional
-  information  that  could  be  of  interest to  machines  processing  the
-  document  --- such  as  annotations (e.g.~a  unique task  identification
-  number can be stored in such an annotation).
-\item[\emph{Application}] With this element,  a user describes the program
-  itself  --- i.e.~the real  executable, that  is to  be used.   A special
-  extension   ---   \texttt{POSIXApplication},   also   defined   in   the
-  specification \cite{jsdl-spec}  --- can be used  to describe executables
-  for    \gls{glo:POSIX}-compliant    operating   systems    \cite{posix}.
-  Listing~\ref{lst:jsdl-example}   uses  this   element  to   execute  the
-  \texttt{echo} program.
-\item[\emph{Resources}]  This  element can  be  used  to describe  various
-  resource requirements  of the  application. Some examples  for resources
-  are:
-  \begin{itemize}
-  \item the number of CPUs the job requires
-  \item the operating system required by the job
-  \item amount of virtual memory that must be available for the job
-  \item file-systems and their mount-points that have to be made available
-    for the job
-  \end{itemize}
-  The file-system definitions  are placeholder variables for \emph{logical
-    places} within  the file-system hierarchy.  They can be used  in other
-  elements to refer to some file ``below'' a particular file-system.
-\item[\emph{DataStaging}]   The   \texttt{DataStaging}   element  can   be
-  specified  arbitrarily often  and  defines both  stage-in and  stage-out
-  operations.   A stage-in operation  is a  file-transfer that  must occur
-  prior executing  the job (i.e.~it prepares  the input data  for the job)
-  and obviously stage-out operations take place after the job has finished
-  its execution.
-
-  The  most relevant  elements within  a DataStaging  instruction  are the
-  \texttt{Source} and \texttt{Target} elements ---  both can hold a URI to
-  specify a  generic location ---  and the \texttt{FileName} element which
-  points to an actual file within the file-system hierarchy.
-\end{description}
-
-As you  can see, the \gls{glo:JSDL}  is really powerful and  it covers all
-requirements  a typical computational  job may  have. And  if it  does not
-cover a  special topic, one  is able to  extend the defined  elements with
-custom elements.
 
 \subsubsection{Extensions to the \gls{glo:JSDL}}
 
@@ -187,33 +109,6 @@ The OGSA is an approach to  use Web service concepts and technologies in a
 Grid  environment. Consequently, the BES defines a Web service, but I will
 just make use of the generic job-state-model they define.
 
-\subsubsection{The \gls{glo:BES} state-model}
-
-The  specification  for  the  \gls{glo:BES}  contains  a  very  extensible
-state-model for job execution.  The basic model just defines five distinct
-states      \texttt{Pending},     \texttt{Running},     \texttt{Finished},
-\texttt{Failed} and \texttt{Terminated} ---  the state-model and its valid
-transitions are shown in Figure~\ref{fig:bes-basic}.
-
-\begin{figure}
-  \begin{center}
-    \includegraphics[scale=.75]{bes-basic-job-model}
-  \end{center}
-  \caption[Basic BES Job-State-Model]{This is the job-state-model as it is
-    defined in the BES specification \cite{ogsa-bes}}
-  \label{fig:bes-basic}
-\end{figure}
-
-A real  application can  specialize this state-model  for its own  use and
-define new states and transitions as long as the \textbf{visual behaviour}
-stays the same as of the basic state-model --- i.e.~no transitions must be
-added that would not be allowed in the basic model.
-
-The nice  thing about the extensibility  of this state-model  is, that any
-client that  \emph{understands} the basic model,  will understand extended
-model as  well, that  is because  the outer behaviour  did not  change and
-therefore ``nothing unexpected'' ever happens.
-
 \subsubsection{Extensions to the BES state-model}
 
 Since the basic  \gls{glo:BES} state-model is a very  minimal one, we need
@@ -222,9 +117,8 @@ Fortunately,  the \gls{glo:BES}  provides such  an extended  model  in its
 specification, it is shown in Figure~\ref{fig:bes-extended}.
 
 \begin{figure}
-  \begin{center}
-    \includegraphics[scale=.75]{bes-staging-job-model}
-  \end{center}
+  \centering
+  \includegraphics[scale=.75]{bes-staging-job-model}
   \caption[BES State Model Staging Extension]{The basic BES state-model
     extended with sub-states to describe data-transfers.}
   \label{fig:bes-extended}
@@ -282,18 +176,13 @@ this component  is also going to  manage the virtual machines  for each of
 the tasks.
 
 \begin{figure}[htbp]
-  \begin{center}
-    \begin{minipage}{.75\textwidth}
-      \begin{center}
-        \includegraphics[scale=.5]{concrete-concept}
-      \end{center}
-      \caption[A  more  concrete  concept]{The  evolved concept,  using  a
-        managing component to control  the virtual machines.  Each virtual
-        machine  is   dedicated  to  a  single  task   submitted  by  some
-        user. Users only interact with the managing component.}
-      \label{fig:concrete-concept}
-    \end{minipage}
-  \end{center}
+  \centering
+  \includegraphics[scale=.5]{concrete-concept}
+  \caption[A more concrete concept]{The  evolved concept, using a managing
+    component to  control the virtual  machines.  Each virtual  machine is
+    dedicated to a single task submitted by some user. Users only interact
+    with the managing component.}
+  \label{fig:concrete-concept}
 \end{figure}
 
 Basically  this concept  defines a  client-server architecture,  where the
@@ -305,119 +194,8 @@ The following  sections motivate the communication  architecture, which is
 used  to connect up  clients and  the managing  component, and  a detailed
 description of how the tasks should be handled.
 
-\subsection{Basic communication architecture}
-\label{sec:basic-communcation-architecture}
-
-A  typical  way  of connecting  clients  with  some  server  is to  use  a
-\gls{glo:TCP}-connection  to  the  server  for  each  client.   Since  the
-communication which  takes place  in this environment  is message-oriented
---- as  you will  see later,  each request to  the server  is mapped  to a
-single  XML document  ---  we can  abstract  from a  direct connection  to
-logical  connection.  This  logical  connection can  be established  using
-\emph{message-queue servers} (\gls{glo:MQS}).
-
-\gls{glo:MQS}   have  several  very   important  advantages   over  direct
-connections between the clients and the server:
-
-\begin{itemize}
-\item All messages are  sent to \textbf{logical queues} (i.e.~end-points),
-  that  means   that  the  physical  address  (e.g.~IP   address)  of  any
-  participating  service  (be  it  the  server or  a  client)  may  change
-  unnoticeable to the communication partner.
-\item All connections are  \textbf{outbound}, which effectively means that
-  the server may also reside behind a firewall or a \gls{glo:NAT}-gateway.
-  This not only increases the security  of the server (in means of allowed
-  inbound  connections),  but  also  targets the  problems  which  typical
-  network-policies and  resulting network-layouts of  grid-environments or
-  companies impose.
-\item The  \gls{glo:MQS} need not  to be on  a single machine, but  can be
-  distributed  over  many computers  to  implement \textbf{fail-over}  and
-  \textbf{load-balancing}.
-\item  Messages are  stored within  the \gls{glo:MQS},  if they  cannot be
-  delivered right now.   That may happen, if the  communication partner is
-  temporarily disconnected  --- all pending messages will  be delivered as
-  soon as the end-point connects again.
-\item Multiple  \gls{glo:MQS} can be  configured to provide  forwarding of
-  messages  destined for a  particular queue  --- that  means independence
-  from the actual network-topology.
-\item A \gls{glo:MQS} can be configured to provide \textbf{authentication}
-  and \textbf{authorization} to limit  access to (i.e.~send to and receive
-  from) particular queues.
-\end{itemize}
-
-\begin{figure}[htbp]
-  \begin{center}
-    \begin{minipage}{.75\textwidth}
-      \begin{center}
-        \includegraphics[scale=.5]{mqs-topology}
-      \end{center}
-      \caption[Example MQS topology]{A simple message-oriented system
-        which is using a \gls{glo:MQS}.}
-      \label{fig:mqs-topology}
-    \end{minipage}
-  \end{center}
-\end{figure}
-
-As you can see in  Figure~\ref{fig:mqs-topology}, site B has some services
-connected to  a \gls{glo:MQS}.  These services can  be reached  by clients
-from site A through an internet connection. The steps involved in building
-up this communication scheme are:
-\begin{enumerate}
-\item  Each service  connects to  the \gls{glo:MQS}  and \emph{subscribes}
-  itself to a unique queue (e.g.~service.\emph{X}).
-\item    Clients   subscribe    themselves   to    unique    queues,   too
-  (e.g.~client.\emph{Y}).
-\end{enumerate}
-
-Now  that each  party is  subscribed to  its own  unique queue,  a two-way
-communication is possible:
-\begin{enumerate}
-\item A client  that wants to communicate with one  of the services, sends
-  its messages  to the unique queue  of that particular  service. The sent
-  message  contains a  \emph{reply-to} field  which is  set to  the unique
-  queue of the client.
-\item Answers from  a service to a connected client are  sent to the queue
-  specified in the reply-to field of received messages.
-\end{enumerate}
-
 \section{Support for Calana}
 \label{sec:calana-support}
-
-\emph{Calana} is  a new  Grid-scheduler approach proposed  by M.~Dalheimer
-\cite{dalheimer05agentbased}.  The  scheduler uses \emph{agents}  that are
-responsible for  a single  resource and at  least one  \emph{broker}.  The
-broker initiates an \emph{auction} among  the connected agents to assign a
-task to some resource.
-
-\begin{figure}[htbp]
-  \begin{center}
-    \includegraphics[scale=0.5]{calana-architecture}
-  \end{center}
-  \caption{Architecture of Calana}
-  \label{fig:calana-architecture}
-\end{figure}
-
-An  abstract   view  over   the  architecture  of   Calana  is   shown  in
-Figure~\ref{fig:calana-architecture}.   For a  detailed discussion  of the
-Calana-protocol  that  is used  to  perform an  auction,  have  a look  at
-\cite{dalheimer06calanaprotocol,petry06}, but  the  main steps  involved
-are:
-\begin{enumerate}
-\item When a user submits a job to the Calana-broker, the broker will open
-  up an auction and try to \emph{book} a resource for the task.
-\item    For   each   task    an   auction    is   created    by   sending
-  \texttt{BookingReq}-messages to the connected agents.
-\item The agents will make  one or more \emph{reservations} on their local
-  scheduler  and  answer with  a  \texttt{AuctionBid}.   Bids contain  for
-  example  the  cost  of   using  the  resource  and  various  reservation
-  parameters  such  as  the   earliest  start-time  and  duration  of  the
-  reservation.
-\item To make a decision, the  broker judges all received bids and chooses
-  the     best     one      according     to     some     preference-model
-  \cite{dalheimer05agentbased, petry06}.
-\item If  the user  accepts the decision,  the broker  \emph{confirms} the
-  reservation.
-\end{enumerate}
 
 To  support  Calana, the  \gls{glo:XenBEE}  must  provide some  additional
 functionality. One of these functionalities is a mechanism to \emph{make},
@@ -430,9 +208,8 @@ uses message queues to implement the communication between the brokers and
 the agents.
 
 \begin{figure}[htbp]
-  \begin{center}
-    \includegraphics[scale=0.7]{uc-calana-xenbee}
-  \end{center}
+  \centering
+  \includegraphics[scale=0.7]{uc-calana-xenbee}
   \caption[Calana and  XenBEE]{The actors and use cases  that are involved
     when a Calana agent uses the \gls{glo:XenBEE} as its resource.}
   \label{fig:calana-xenbee}
@@ -465,9 +242,8 @@ component\footnote{denoted   as   \emph{xbeinstd}   ---  the   ``Xen-based
 for a single virtual machine.
 
 \begin{figure}[htbp]
-  \begin{center}
-    \includegraphics[scale=0.7]{system-usecase}
-  \end{center}
+  \centering
+  \includegraphics[scale=0.7]{system-usecase}
   \caption[Use case  overview]{An overview  of several possible  use cases
     and the involved actors.}
   \label{fig:system-usecases}
@@ -489,9 +265,8 @@ refers to the  reservation) and then the user submits  his task using that
 reservation.
 
 \begin{figure}[htbp]
-  \begin{center}
-    \includegraphics[scale=.75]{uc-submit-task}
-  \end{center}
+  \centering
+  \includegraphics[scale=.75]{uc-submit-task}
   \caption[UC Task submission]{Actors involved  in the task submission use
     case.}
   \label{fig:uc-submit-task}
@@ -527,9 +302,8 @@ that  must  be  available  prior  executing  the task  and  that  must  be
 transfered back to user after the task has finished.
 
 \begin{figure}[htbp]
-  \begin{center}
-    \includegraphics[scale=.75]{uc-data-staging}
-  \end{center}
+  \centering
+  \includegraphics[scale=.75]{uc-data-staging}
   \caption[UC  Data  Staging]{A user  submitting  a  task with  additional
     data.}
   \label{fig:uc-data-staging}
@@ -575,9 +349,8 @@ caching efficiently  reduces network load and  decreases overall execution
 time \cite{locality-principle}.
 
 \begin{figure}[h]
-  \begin{center}
-    \includegraphics[scale=.75]{uc-data-caching}
-  \end{center}
+  \centering
+  \includegraphics[scale=.75]{uc-data-caching}
   \caption[UC  Data  Caching]{A user  who  is  requesting  the caching  of
     (arbitrary) data.}
   \label{fig:uc-data-caching}
@@ -603,10 +376,9 @@ of a  file, an obvious  way is  to use a  \gls{glo:URI} here as  well. The
 caching of some data should  therefore result in a \gls{glo:URI}, that the
 user can use in his job and staging descriptions.
 
-\begin{figure}[h!]
-  \begin{center}
-    \includegraphics[scale=.75]{uc-cache-lookup}
-  \end{center}
+\begin{figure}[h]
+  \centering
+  \includegraphics[scale=.75]{uc-cache-lookup}
   \caption[UC  Cache Lookup]{A user  who  is using cached entries within
     his task submission.}
   \label{fig:uc-cache-lookup}
@@ -628,9 +400,8 @@ terminate his  submitted task at any  time and no matter  what the current
 state of the task is.
 
 \begin{figure}[h!]
-  \begin{center}
-    \includegraphics[scale=.75]{uc-terminate-task}
-  \end{center}
+  \centering
+  \includegraphics[scale=.75]{uc-terminate-task}
   \caption[UC Terminate Task]{A user  who is requesting the termination of
     his  submitted task  and possible  use cases  that may  then  arise on
     server-side.}
@@ -658,178 +429,12 @@ wants  the \emph{xbed} to  use it  for execution,  the image-file  must be
 decrypted on server-side prior booting a virtual machine with it.
 
 \begin{figure}[h!]
-  \begin{center}
-    \includegraphics[scale=.75]{uc-encrypted-data}
-  \end{center}
+  \centering
+  \includegraphics[scale=.75]{uc-encrypted-data}
   \caption[UC  Encrypted  Data]{Submission   of  encrypted  data  and  its
     decryption prior execution by the \emph{xbed}.}
-  \label{fig:uc-terminate-task}
+  \label{fig:uc-encrypt-data}
 \end{figure}
-
-\section{Security issues}
-\label{sec:security-requirements}
-
-The proposed system  will use message queues to  transfer messages between
-clients and the server, that means  all messages that are sent can be read
-by any person or system in between any two communication partners. 
-
-A   typical  solution   to  make   the  transfer   secure  is   using  the
-\emph{Transport Layer  Security} protocol --- or  \gls{glo:TLS} for short.
-\gls{glo:TLS} makes sure that  traffic between two endpoints is transfered
-securely --- i.e.~no eavesdropping, modification or message forgery.
-
-The  \emph{Transport Layer  Security} protocol,  which is  discussed  in a
-moment, and the afterwards examined \emph{Message Layer Security} protocol
-are  both using cryptographic  certificates such  as \emph{\gls{glo:X509}}
-certificates.
-
-The  certificates  are  based  on  public/private  key  pairs,  whereas  a
-certificate consists of a  pair's public-key combined with some additional
-information, e.g.~the owner and issuer of the certificate, used algorithms
-and  so  on.  Most  importantly  is the  fact,  that  certificates can  be
-\emph{cryptographically    signed}     by    a    certificate    authority
-(\gls{glo:CA}). The  next passage  will shortly describe  how certificates
-can  be  used  in  a  \emph{Public Key  Infrastructure}  using  public-key
-cryptography.
-
-\subsection{Public Key Infrastructure (PKI)}
-
-A  \emph{Public Key  Infrastructure} provides  the authentication  of user
-identities using certificates.  The main  aspect is that there are special
-\textbf{trusted} authorities (\emph{Certificate Authority}, \gls{glo:CA}),
-that are permitted  to \textbf{sign} other certificates.  If  a user wants
-to prove his  identity to another entity, his  certificate is validated by
-that entity, if it is valid, the prove has been successful.
-
-The \gls{glo:CA} is responsible for checking that the public-key contained
-in  the certificate  actually belongs  to the  requesting user,  server or
-other  entity denoted  in the  certificate. This  checking process  is for
-example done by  verifying the credentials of a user  (e.g.~with help of a
-photo identification or something similar).
-
-Any third-party that trusts a given CA will transparently trust any entity
-that offers a certificate signed by that particular CA.
-
-\begin{figure}[h]
-  \begin{center}
-    \includegraphics[scale=.75]{pki}
-  \end{center}
-  \caption[Public  Key Infrastructure]{Alice  proofs her  identity  to Bob
-    using a certificate  that is signed by a CA that  both, Alice and Bob,
-    trust.}
-  \label{fig:pki}
-\end{figure}
-
-Validation is performed by verifying  that the certificate itself has been
-signed  by a  trusted authority  --- the  actual validation  process  is a
-little   bit  more  complex,   since  it   involves  checking   against  a
-\emph{Revocation List} and  a ``best before'' date (i.e.~life  time of the
-certificate), too.
-
-The  signing  process  uses  the  authority's private  key  to  compute  a
-cryptographic signature. This private-key must of course be kept in a very
-secure  location  (e.g.~on a  physically  from  the Internet  disconnected
-computer) ---  if it would fall into  the wrong hands, the  whole chain of
-trust is compromised.
-
-An  example verification  process  is shown  in Figure~\ref{fig:pki},  the
-steps can be described as follows:
-\begin{enumerate}
-\item \emph{Alice} request the signing of her certificate by a CA and thus
-  sends a certificate request to the CA containing her public-key.
-\item The CA in turn verifies Alice's credentials and eventually signs the
-  certificate with its private key.
-\item The signed certificate is sent back to \emph{Alice} for her later use.
-\item Now,  \emph{Alice} wants to prove  her identity to a  friend of her,
-  \emph{Bob},   therefore   \emph{Alice}    sends   her   certificate   to
-  \emph{Bob}.  The   proof  may  be   necessary  to  establish   a  secure
-  communication over an insecure channel, e.g.~the Internet.
-\item \emph{Bob}  verifies the received certificate against  the very same
-  CA by  which \emph{Alice} had her certificate  signed.  Since \emph{Bob}
-  trusts the  CA and the received  certificate states, that  it belongs to
-  his  friend \emph{Alice},  he  can be  assured,  that he  is talking  to
-  \emph{Alice}.
-\end{enumerate}
-
-\bigskip
-
-Both  of  the following  protocols  can make  use  of  a \gls{glo:PKI}  to
-authenticate communication partners.
-
-\subsection{Transport Layer Security (TLS)}
-
-The \gls{glo:TLS}  protocol is often  offered by web- or  email-servers to
-make  the  communication   with  a  client  (such  as   a  browser  or  an
-email-client) secure.
-
-On-line   banking,   for   instance,   typically   requires   a   Personal
-Identification Number  (PIN) to make sure  that it is actually  you who is
-trying to access your accounts.  Using unencrypted transfer of the PIN and
-other data would mean, that any  system, which is in between your computer
-and the  one of your  bank, is  able to read  your PIN and  probably other
-information about you. It is also possible that a \emph{man-in-the-middle}
-spoofs or modifies  transactions to withdraw money from  your account. Two
-things are  very important in  this case: The  first and most  obvious is,
-that the information you and  your bank exchange are encrypted. The second
-requirement is,  that you  are able  to verify that  the receiver  of your
-messages is actually a computer belonging  to your bank and not to someone
-else.
-
-\gls{glo:TLS} uses  certificates on the  server-side, so that  clients can
-validate  that  they  are  actually  communicating with  the  server  they
-intended to  communicate with.  In  the case of  a bank or  any well-known
-service  provider   in  the  Internet,  the  certificates   in  place  are
-cryptographically  signed by a  \emph{trusted} authority.   A certificate,
-that is signed by such an authority you trust, is automatically assumed to
-actually belong to the server where the certificate came from.
-
-\bigskip
-
-Unfortunately, \gls{glo:TLS}  cannot be used in a  message-queue system to
-secure the traffic  between clients and servers. That  is because there is
-no direct connection between client and server --- both are just connected
-to their message-queue server. \gls{glo:TLS} can in this case only be used
-to secure  the communication between  any end-point and  the message-queue
-server it  is connected to.
-
-After transmitting a message over a with \gls{glo:TLS} secured connection,
-the  message is  stored in  clear text  on the  message-queue  server. The
-message   will  then   again  be   transmitted  securely   to   the  final
-destination. But  any person  or system with  access to  the message-queue
-server can read, modify or even spoof transmitted messages --- without the
-knowledge of either sender or receiver.
-
-To  secure  the  logical   message-based  communication  between  any  two
-end-points, a  different kind of security  layer has to be  used here: the
-\emph{Message Layer Security} --- or \gls{glo:MLS} for short.
-
-\subsection{Message Layer Security (MLS)}
-
-As the name of this protocol  may already suggest, the security focuses on
-the transmitted messages not on  the transportation of the messages.  That
-means, the transport layer over which  messages are sent is not altered or
-secured in any way  --- it can be as insecure as  before.  But even though
-the messages are transmitted over a potentially insecure channel, they are
-still protected against eavesdropping, tampering and spoofing.
-
-\gls{glo:MLS} too makes use  of certificates to provide authentication and
-encryption. To  establish a  secure communication between  a client  and a
-server,  the  client  needs  to  \emph{know}  (i.e.~have  access  to)  the
-certificate  of the server.   Since encryption  with a  public/private key
-algorithm   is    rather   slow,    in   most   cases    a   \emph{session
-  key}\footnote{typically  random data}  will be  negotiated  first.  This
-session  key is  then used  to perform  \emph{symmetric} ciphering  of the
-messages, which is a lot faster.
-
-\bigskip
-
-The \gls{glo:XenBEE}  must make use  of \gls{glo:MLS} to  provide security
-for  its users.   Additionally, as  it is  common  among Grid-middlewares,
-\gls{glo:X509}  certificates  are   used  to  authenticate  and  authorize
-users. The  server is going  to use a  user's certificate to  validate his
-identity and  possibly to send messages  the user --- thus  both sides may
-initiate a secure communication.
-
 
 %%% Local Variables: 
 %%% mode: latex

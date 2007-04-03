@@ -1,13 +1,15 @@
 \documentclass
 [
   a4paper,
-  12pt,
+  11pt,
   oneside,
-  openright,
+%  openright,
   chapterprefix,
 %  draft,
   bibtotoc,
   idxtotoc,
+  BCOR12.0mm,
+  DIV11,
 %  liststotoc,
 %  bigheadings,
 ] {scrbook} %scrreprt}
@@ -45,16 +47,28 @@
 \usepackage[utf8]{inputenc}
 \usepackage{subfigure}
 \usepackage{graphicx}
-\usepackage{color}
+\usepackage[pdftex,usenames,dvipsnames]{color}
+\usepackage[hang, small, bf, margin=20pt, tableposition=top]{caption}
+\setlength{\abovecaptionskip}{0pt}
 \usepackage{fancyhdr}
 \usepackage{palatino}
 \usepackage{a4}
 \usepackage{listings}
+\usepackage{booktabs}
 \usepackage{makeidx}
-\usepackage[sort&compress]{natbib}
+\usepackage[square, comma, numbers, sort&compress]{natbib}
 \usepackage[light,first,conditional]{draftcopy}
-\usepackage[style=super,cols=3,toc=true,number=none]{glossary} % hyper=true for hyperrefs
-%\usepackage[plainpages=false,pdfpagelabels,pdftex]{hyperref}
+\usepackage[plainpages=false,pdfpagelabels,pdftex]{hyperref}
+\usepackage[figure,table]{hypcap} % Correct a problem with hyperref
+\hypersetup{
+   bookmarksnumbered,
+   pdfstartview={FitH},
+   citecolor={black},
+   linkcolor={black},
+   urlcolor={black},
+   pdfpagemode={UseOutlines}
+}
+\usepackage[style=super,cols=2,toc=true,hyper=true,number=none]{glossary} % hyper=true for hyperrefs
 \graphicspath{{graphics/}}
 
 % include some often used commands
@@ -71,6 +85,8 @@
 \vfuzz1pc
 \hfuzz1pc
 
+\parindent 0pt
+
 % Tweak the url-package
 %% Define a new 'ap' style for the package that will use a smaller font.
 \makeatletter
@@ -86,8 +102,20 @@
   showstringspaces=false
 }
 
+% Tweak tables
+\renewcommand{\arraystretch}{1.2}  % more space between rows
+
 % Tweak hyphenation
 \hyphenation{mid-dle-ware}
+
+% COLOR definitions
+\definecolor{listingcolor}{named}{White}
+
+% prevent latex from putting figures all too often on a single page
+\renewcommand{\topfraction}{0.85}
+\renewcommand{\textfraction}{0.1}
+\renewcommand{\floatpagefraction}{0.75}
+
 
 \pagestyle{fancy}
 \fancyhf{}                                %Clears all header and footer fields, in preparation.
@@ -118,11 +146,16 @@
 %  C O N T E N T S ,   T A B L E S  ,   F I G U R E S
 
 \newpage
+\pdfbookmark[0]{Contents}{contents} % Sets a PDF bookmark for the contents page
 \tableofcontents
 \thispagestyle{empty}
 \clearpage
 
 \listoffigures
+\thispagestyle{empty}
+\clearpage
+
+\listoftables
 \thispagestyle{empty}
 \clearpage
 
@@ -134,10 +167,9 @@
 % with \chapter{Things And Widgits}
 
 \include{introduction}
+\include{fundamentals}
 \include{requirements}
 \include{design}
-\include{communication}
-\include{security}
 \include{results}
 \include{conclusions}
 
@@ -150,7 +182,7 @@
 
 %  R E F E R E N C E S
 
-\renewcommand{\bibname}{List of References}
+\renewcommand{\bibname}{References}
 %\addcontentsline{toc}{chapter}{\quad\,\,{List of References}}
 
 \bibliographystyle{plain}

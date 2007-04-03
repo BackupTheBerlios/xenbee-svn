@@ -9,6 +9,7 @@ GLS=$(NAME).gls
 latex = pdflatex -halt-on-error
 bibtex = bibtex
 makeindex = makeindex
+makeglos = makeglos.pl
 
 SYS_NAME := $(shell uname -s)
 viewer = echo "could not open "
@@ -53,8 +54,9 @@ $(PDF): $(SRC) $(GLS) $(GRAPHICS) $(TEX) $(BIB)
 main.glo: main.tex
 	$(latex) $<
 
-$(GLS): $(TEX) main.glo
-	$(makeindex) -s $(NAME).ist -t $(NAME).glg -o $@ $(NAME).glo
+$(GLS): main.glo
+#$(makeindex) -t $(NAME).glg -o $@ -s $(NAME).ist $< #$(NAME) -s $(NAME).ist -t $(NAME).glg -o $@ $(NAME).glo
+	$(makeglos) $<
 
 view: view-pdf;
 

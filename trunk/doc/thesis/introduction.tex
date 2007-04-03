@@ -123,18 +123,13 @@ to those parts configured through the VMM.  By this, new operating systems
 could be tested and developed in a stable and secure manner.
 
 \begin{figure}[htbp]
-  \begin{center}
-  \begin{minipage}{0.75\textwidth}
-    \begin{center}
-      \includegraphics[scale=.75]{architecture-with-virtualization}
-    \end{center}
-    \caption[Virtualization   architecture]{The   so-called   bare-metal
-      virtualization:   A  virtual   machine  monitor   runs   as  small
-      ``operating system'' on the  real hardware and provides access for
-      virtual machines.}
-    \label{fig:arch-virt}
-  \end{minipage}
-  \end{center}
+  \centering
+  \includegraphics[scale=.75]{architecture-with-virtualization}
+  \caption[Virtualization     architecture]{The    so-called    bare-metal
+    virtualization: A  virtual machine  monitor runs as  small ``operating
+    system''  on  the  real  hardware  and  provides  access  for  virtual
+    machines.}
+  \label{fig:arch-virt}
 \end{figure}
 
 This  kind   of  virtualization  is  called   ``full''  or  ``bare-metal''
@@ -158,16 +153,11 @@ system running  on that hardware and  some applications running  on top of
 the operating system.
 
 \begin{figure}[htbp]
-  \begin{center}
-    \begin{minipage}{0.75\textwidth}
-      \begin{center}
-        \includegraphics[scale=.75]{architecture-without-virtualization}
-      \end{center}
-      \caption[No virtualization]{A computer system, that does not make use of
-        virtual machines.}
-      \label{fig:arch-novirt}
-    \end{minipage}
-  \end{center}
+  \centering
+  \includegraphics[scale=.75]{architecture-without-virtualization}
+  \caption[No virtualization]{A computer system, that does not make use of
+    virtual machines.}
+  \label{fig:arch-novirt}
 \end{figure}
 
 The  following  sections  describe  some  techniques,  how  this  physical
@@ -280,17 +270,12 @@ this kind of  binary rewriting, see Figure~\ref{fig:arch-userspace-virt} for
 a schematic overview.
 
 \begin{figure}[htbp]
-  \begin{center}
-    \begin{minipage}{0.75\textwidth}
-      \begin{center}
-        \includegraphics[scale=.75]{architecture-userspace-virtualization}
-      \end{center}
-      \caption[Virtualization  in  the   user-space]{Example  for  the  VMWare
-        virtualization software, which  runs as an application on  top of some
-        operating system}
-      \label{fig:arch-userspace-virt}
-    \end{minipage}
-  \end{center}
+  \centering
+  \includegraphics[scale=.75]{architecture-userspace-virtualization}
+  \caption[Virtualization  in  the   user-space]{Example  for  the  VMWare
+    virtualization software, which  runs as an application on  top of some
+    operating system}
+  \label{fig:arch-userspace-virt}
 \end{figure}
 
 The Xen  hypervisor \cite{xen} however,  avoids this problem  by providing
@@ -311,15 +296,10 @@ modifications --- legacy  systems cannot be executed as  long as they are
 not ported to the new architecture.
 
 \begin{figure}[htbp]
-  \begin{center}
-    \begin{minipage}{0.75\textwidth}
-      \begin{center}
-        \includegraphics[scale=.75]{architecture-with-paravirtualization}
-      \end{center}
-      \caption{A para-virtualization architecture}
-      \label{fig:arch-para-virt}
-    \end{minipage}
-  \end{center}
+  \centering
+  \includegraphics[scale=.75]{architecture-with-paravirtualization}
+  \caption{A para-virtualization architecture}
+  \label{fig:arch-para-virt}
 \end{figure}
 
 \subsection{Problems with the x86 architecture}
@@ -379,11 +359,13 @@ unmodified guest operating systems can be run under a VMM.
 \section{The Xen hypervisor}
 \label{sec:xen-hypervisor}
 
-``The term “hypervisor” is applied to computer systems that present a very
+\begin{quote}
+  ``The term “hypervisor” is applied to computer systems that present a very
 basic user  program interface ---  one which is  so nearly identical  to a
 particular computer machine interface that an operating system intended to
 support  such machines  may serve  as  a hypervisor  user program  without
 software modification.'' \cite{hendricks79}
+\end{quote}
 
 \bigskip
 
@@ -402,9 +384,8 @@ the  special  hardware assistance  for  virtualization  provided by  Intel
 (Intel-VT) and AMD (AMD-V or Pacifica) is supported.
 
 \begin{figure}[htbp]
-  \begin{center}
-    \includegraphics[height=8cm]{xen-architecture}
-  \end{center}
+  \centering
+  \includegraphics[height=8cm]{xen-architecture}
   \caption[Xen architecture]{The structure of a system running the Xen
     hypervisor and several user domains (taken from \cite{xen-art})}
   \label{fig:xen-architecture}
@@ -585,12 +566,13 @@ local policies or resource requirements.
 All of the  presented related work provide a user  with the possibility to
 execute his application on a  remote virtual machine.  The application may
 be untrustworthy and uncooperative. To provide Grid-semantics to the user,
-one can  install any middleware  withing the created virtual  machine.  My
-work differs in the way how jobs are handled: I take virtual machines just
-as \emph{containers} for some job and provide \emph{execute/return result}
-semantics  along  with specialized  staging  operations. Nonetheless,  the
-execution environment which is here proposed,  can also be used to run any
-Grid-middleware a user demands.
+one can install any middleware withing the created virtual machine.
+
+My work differs  in the way how jobs are handled:  I take virtual machines
+just as  \emph{containers} for  some job and  provide \emph{execute/return
+  result}      semantics      along      with     specialized      staging
+operations. Nonetheless, the execution environment which is here proposed,
+can also be used to run any Grid-middleware a user demands.
 
 
 %%% Local Variables: 
