@@ -382,18 +382,19 @@ shown in Figure~\ref{fig:bes-suspend-model}
 \end{figure}
 
 The nice  thing about the extensibility  of this state-model  is, that any
-client that  \emph{understands} the basic model,  will understand extended
-model as well,  that is because the \emph{visual  behavior} did not change
-and therefore ``nothing unexpected'' ever happens. This visual behavior is
-directly reflected  in the XML  specification.  Any additional  states are
-represented by  user-definable elements below  the \texttt{ActivityStatus}
-element. Lets  assume the  extension modeled above  defines its  own state
-representation  using its  own  namespace,  then the  current  state of  a
-suspended activity could be written as:
+client  that  \emph{understands}  the  basic model,  will  understand  any
+extended model  as well, that  is because the \emph{visual  behavior} does
+not change  and therefore will never ``anything  unexpected'' happen. This
+visual  behavior is  directly reflected  in the  XML specification  of the
+current state.   Any additional  states are represented  by user-definable
+elements attached to  the \texttt{ActivityStatus} element as sub-elements.
+Lets   assume  the  extension   modeled  above   defines  its   own  state
+representation using its own namespace,  then could the current state of a
+suspended activity be written as:
 
 \begin{lstlisting}[language=XML]
   <bes:ActivityStatus state="Running">
-     <ext:Suspended>
+     <ext:Suspended/>
   </bes:ActivityStatus>
 \end{lstlisting}
 
@@ -401,16 +402,37 @@ As you can see, the state  is still \texttt{Running}, but any client, that
 is   aware    of   this   extension,   knows   how    to   interpret   the
 \texttt{ext:Suspended} sub-element.
 
-\section{Message Oriented Middleware}
+\section[Message Oriented Middleware]{Message Oriented Middleware (MOM)}
 \label{sec:basic-communcation-architecture}
 
 A  typical  way  of connecting  clients  with  some  server  is to  use  a
-\gls{glo:TCP}-connection  to  the  server  for  each  client.   Since  the
-communication which  takes place  in this environment  is message-oriented
---- as  you will  see later,  each request to  the server  is mapped  to a
-single  XML document  ---  we can  abstract  from a  direct connection  to
-logical  connection.  This  logical  connection can  be established  using
-\emph{message-queue servers} (\gls{glo:MQS}).
+\gls{glo:TCP}-connection to the server for each client. This is especially
+useful if a continuous connection to  the server has to be maintained. For
+instance, web (i.e.~HTTP) and ftp (i.e.~FTP) servers are usually streaming
+a lot of data to the clients.
+
+Communication  in  distributed systems,  however,  can  take place  either
+\emph{synchronously}, or  \emph{asynchronously}. The programming  model of
+synchronous communication  is called \emph{Remote  Procedure Calls} (RPC),
+widespread  implementations  of  this  model  are  CORBA,  RMI  and  DCOM.
+Asynchronous   communication  follows   the  emerging   paradigm   of  the
+\emph{event-based  communication  model}  \cite{MeCa:2005:Taxonomy}.   The
+components that  comprise an application in a  potentially distributed and
+heterogeneous   environment   are   asynchronously  interconnected   using
+message-passing technologies.
+
+\bigskip
+
+\citet{dad-mom}  state, that  \emph{``Every  DAD (Distributed  Application
+  Developer) needs a MOM (Message Oriented Middleware)''}.
+
+Since the communication, which takes  place in the here proposed execution
+environment and in  the later discussed Calana Grid  scheduler, is loosely
+coupled  and message-oriented,  we  can abstract  from direct  connections
+between each party to logical connections.
+
+These logical  connections can be established using  a \gls{glo:MOM} based
+on one or more \emph{message-queue servers} (\gls{glo:MQS}).
 
 \gls{glo:MQS}   have  several  very   important  advantages   over  direct
 connections between the clients and the server:
@@ -429,17 +451,24 @@ connections between the clients and the server:
 \item The  \gls{glo:MQS} need not  to be on  a single machine, but  can be
   distributed  over  many computers  to  implement \textbf{fail-over}  and
   \textbf{load-balancing}.
-\item  Messages are  stored within  the \gls{glo:MQS},  if they  cannot be
-  delivered right now.   That may happen, if the  communication partner is
-  temporarily disconnected  --- all pending messages will  be delivered as
-  soon as the end-point connects again.
-\item Multiple  \gls{glo:MQS} can be  configured to provide  forwarding of
-  messages  destined for a  particular queue  --- that  means independence
-  from the actual network-topology.
+\item  Messages  are kept  in  a  \textbf{consistent  storage} within  the
+  \gls{glo:MQS}, if they cannot be  delivered right now.  That may happen,
+  if the communication partner is temporarily disconnected --- all pending
+  messages will be delivered as soon as the end-point connects again.
+\item    Multiple   \gls{glo:MQS}   can    be   configured    to   provide
+  \textbf{forwarding and  routing} of  messages destined for  a particular
+  queue --- that means independence from the actual network-topology.
 \item A \gls{glo:MQS} can be configured to provide \textbf{authentication}
   and \textbf{authorization} to limit  access to (i.e.~send to and receive
   from) particular queues.
+\item   Messages   sent   from   one   component   to   another   can   be
+  \textbf{transformed}  while passing  the \gls{glo:MQS}.   That  means in
+  particular,  that each  component may  send messages  in its  own native
+  format and the \gls{glo:MQS}  intelligently transforms the messages into
+  the native format of each receiver.
 \end{itemize}
+
+
 
 \begin{figure}[htbp]
   \centering
@@ -465,8 +494,8 @@ communication is possible:
 \begin{enumerate}
 \item A client  that wants to communicate with one  of the services, sends
   its messages  to the unique queue  of that particular  service. The sent
-  message  contains a  \emph{reply-to} field  which is  set to  the unique
-  queue of the client.
+  message  contains a  special \emph{reply-to}  field that  is set  to the
+  unique queue of the client
 \item Answers from  a service to a connected client are  sent to the queue
   specified in the reply-to field of received messages.
 \end{enumerate}
@@ -497,14 +526,69 @@ and  so  on.  Most  importantly  is the  fact,  that  certificates can  be
 can  be  used  in  a  \emph{Public Key  Infrastructure}  using  public-key
 cryptography.
 
+\subsection{Public-key cryptography}
+
+Public-key  cryptography describes  a form  of cryptography  where  a user
+holds  two  different  keys,  a  \emph{private  key}  and  a  \emph{public
+  key}.  These two  keys are  mathematically  related to  each other,  but
+nobody can practically derive the private key from the public key.
+
+The public key can be made  publicly available without any risk, while the
+private key must  be kept very secret. A widely used  algorithm is the RSA
+algorithm named  after its  creators \citet*{rivest77method}. It  has been
+the first algorithm, that  was suitable for both encryption/decryption and
+signing.  For more background information on public-key cryptosystems, you
+are encouraged to read \cite{rivest77method,diffie76new}.
+
+The RSA algorithm relies on the fact, that the factorization of reasonably
+large numbers is  computationally very hard and no  efficient algorithm is
+publicly known.  Especially  hard to factor are numbers  whose factors are
+two randomly-chosen prime numbers of sufficient length.
+
+In the following  I am going to describe  how the keys are set  up and how
+they are used to encrypt/decrypt or to sign/validate a clear text message.
+
+According  to  \cite{rivest77method},  places  each  user  his  encryption
+procedure $E$  in a publicly accessible file  (e.g.~database).  Using this
+public file, any  other user is able to  retrieve the encryption procedure
+of   some  other   user  (i.e.~the   one  he   wants  to   send  encrypted
+messages). Each user keeps his decryption procedure $D$ secret.
+
+The mentioned procedures $D$ and $E$ have the following properties:
+\begin{enumerate}
+\item Deciphering  the enciphered form of  a message $M$  yields $M$. That
+  is,
+  \begin{equation}
+    \label{eq:1}
+    D(E(M)) = M.
+  \end{equation}
+\item Both $D$ and $E$ are easy to compute.
+\item The user does not reveal an  easy way to compute $D$ if he makes $E$
+  publicly available.
+\item The enciphering of a previously ciphered message $M$ results in
+  $M$. That is,
+  \begin{equation}
+    \label{eq:1}
+    E(D(M)) = M.
+  \end{equation}
+\end{enumerate}
+
+\subsubsection{Key setup}
+
+\subsubsection{Encryption and Decryption}
+
+\subsubsection{Signing and Validating}
+
+
 \subsection[Public Key Infrastructure]{Public Key Infrastructure (PKI)}
 
 A  \emph{Public Key  Infrastructure} provides  the authentication  of user
 identities using certificates.  The main  aspect is that there are special
-\textbf{trusted} authorities (\emph{Certificate Authority}, \gls{glo:CA}),
-that are permitted  to \textbf{sign} other certificates.  If  a user wants
-to prove his  identity to another entity, his  certificate is validated by
-that entity, if it is valid, the prove has been successful.
+\textbf{trusted    third     parties}    (\emph{Certificate    Authority},
+\gls{glo:CA}), that are permitted  to \textbf{sign} other certificates. If
+a  user\footnote{or some  server, etc.}   wants to  prove his  identity to
+another entity,  his certificate is  validated by that entity  against the
+CA's certificate, if it is valid, the prove has been successful.
 
 The \gls{glo:CA} is responsible for checking that the public-key contained
 in  the certificate  actually belongs  to the  requesting user,  server or
