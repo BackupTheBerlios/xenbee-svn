@@ -137,10 +137,10 @@ that means in particular, that he has to learn two different syntaxes.
 
 XML-Schema is  itself defined  using XML as  its description  language and
 obsoletes the  DTD. It is much  more powerful, for instance,  an author is
-able to restrict the actual data an element or attribute may contain. Lets
-for  instance  say,  a  given  attribute can  only  take  on  non-negative
-integers.  To reflect this constraint in the schema definition, the author
-would      set      the       type      of      the      attribute      to
+able  to   restrict  the   actual  data  an   element  or   attribute  may
+contain.  Let's for  instance  say, a  given  attribute can  only take  on
+non-negative  integers.    To  reflect  this  constraint   in  the  schema
+definition,  the   author  would  set   the  type  of  the   attribute  to
 \texttt{xsd:nonNegativeInteger}.
 
 There are many predefined data types, an author may use to create new data
@@ -193,7 +193,7 @@ A    \gls{glo:JSDL}    document     does    always    start    with    the
 \texttt{JobDefinition} element,  which is the top-level  element and holds
 all required information about the job.
 
-Lets assume a user wants to  execute a small program on a remote resource.
+Let's assume a user wants to execute a small program on a remote resource.
 The  program  will  indeed be  very  simple,  it  just prints  the  string
 ``\texttt{Hello World}'' to the  screen. The execution of this application
 on the local computer of our user could be similar to:
@@ -388,9 +388,9 @@ not change  and therefore will never ``anything  unexpected'' happen. This
 visual  behavior is  directly reflected  in the  XML specification  of the
 current state.   Any additional  states are represented  by user-definable
 elements attached to  the \texttt{ActivityStatus} element as sub-elements.
-Lets   assume  the  extension   modeled  above   defines  its   own  state
-representation using its own namespace,  then could the current state of a
-suspended activity be written as:
+Let's  assume   the  extension  modeled   above  defines  its   own  state
+representation  using its  own  namespace,  then the  current  state of  a
+suspended activity could be written as:
 
 \begin{lstlisting}[language=XML]
   <bes:ActivityStatus state="Running">
@@ -556,29 +556,108 @@ messages). Each user keeps his decryption procedure $D$ secret.
 
 The mentioned procedures $D$ and $E$ have the following properties:
 \begin{enumerate}
+\renewcommand{\theenumi}{\alph{enumi}}
+\renewcommand{\labelenumi}{(\theenumi)}
+
 \item Deciphering  the enciphered form of  a message $M$  yields $M$. That
   is,
   \begin{equation}
     \label{eq:1}
     D(E(M)) = M.
   \end{equation}
+  \label{pubkey-cryptosystem-prop-1}
 \item Both $D$ and $E$ are easy to compute.
+  \label{pubkey-cryptosystem-prop-2}
 \item The user does not reveal an  easy way to compute $D$ if he makes $E$
   publicly available.
-\item The enciphering of a previously ciphered message $M$ results in
+  \label{pubkey-cryptosystem-prop-3}
+\item  The enciphering  of a  previously ciphered  message $M$  results in
   $M$. That is,
   \begin{equation}
     \label{eq:1}
     E(D(M)) = M.
   \end{equation}
+  \label{pubkey-cryptosystem-prop-4}
 \end{enumerate}
+
+A                  function                 $E$                 satisfying
+(\ref{pubkey-cryptosystem-prop-1})--(\ref{pubkey-cryptosystem-prop-3})   is
+said  to  be  a  \emph{``trap-door  one-way function''}  and  if  it  also
+satisfies  (\ref{pubkey-cryptosystem-prop-4})  it  is a  \emph{``trap-door
+  one-way permutation''} \cite{rivest77method,diffie76new}.
 
 \subsubsection{Key setup}
 
+The \emph{encryption  key} consists  of a pair  of positive  integers $(e,
+n)$,  where $e$  is the  \emph{encryption exponent}  and $n$  is  used for
+modulo  operations.  The \emph{decryption  key}  is  also  a pair  of  two
+integers, where only the exponent differs, thus $(d, n)$ is the decryption
+key and $d$  represents the \emph{decryption exponent}. $(e,  n)$ are made
+publicly available.
+
+\citet*{rivest77method} suggest the  following approach for the generation
+of $(e, n)$ and  $(d, n)$. The fist step is to  compute $n$ as the product
+of two very large, ``random'' primes $p$ and $q$:
+\begin{equation*}
+n = p \cdot q.
+\end{equation*}
+
+Although you  publish $n$, nobody is  able to compute the  factors $p$ and
+$q$ in  reasonably time due to  the enormous difficulty  of factoring $n$.
+In \cite{rivest77method}  it is assumed,  that the computation of  $p$ and
+$q$ from a given $n$ takes $1.5 \times 10^{29}$ operations, given that $n$
+has a length  of $300$ digits. If one operation  took one microsecond, the
+whole computation takes $4.9 \times 10^{15}$ years.
+
+The  next step  is to  choose  $d$, therefore  one picks  a large,  random
+integer that is \emph{co-prime}\footnote{two integers $a$ and $b$ are said
+  to be co-prime  if they do not  have a common factor other  than $1$ and
+  $-1$, i.e.~their greatest common divisor  (gcd) is $1$.} to $(p-1) \cdot
+(q-1)$.\footnote{the term $(p-1)\cdot(q-1)$ is the result of \emph{Euler's
+    Phi  function} ($\phi$) applied  to $n$}  In other  words, $d$  has to
+satisfy:
+\begin{equation*}
+  gcd(d, (p-1) \cdot (q-1)) = 1.
+\end{equation*}
+
+Finally,  the integer $e$  is computed  from $p$,  $q$ and  $d$ to  be the
+\emph{multiplicative inverse} of $d$, modulo $\phi(n)$:
+\begin{equation*}
+  e \cdot d \equiv 1\ \ (mod\ (p-1) \cdot (q-1))
+\end{equation*}
+
 \subsubsection{Encryption and Decryption}
+
+If  two  persons,  Alice  and   Bob,  want  to  send  each  other  private
+(i.e.~encrypted)  messages,  they   both  retrieve  the  other's  publicly
+available encryption  key first ---  Bob retrieves $(e_a, n_a)$  and Alice
+retrieves $(e_b, n_b)$.
+
+Let's say  Alice wants to send a  private message to Bob.   To encrypt the
+message, she has to  represent it as an integer between $0$  and $n_b - 1$
+(long  messages can  be broken  into smaller  blocks, so  that  each block
+fulfills the requirement). Alice then  encrypts the message $M$ by raising
+it to the $e_b$th power modulo $n_b$, the result is the cyphertext $C$:
+\begin{equation*}
+  C \equiv E(M) \equiv M^{e_b}\ \ (mod\ \ n_b).
+\end{equation*}
+
+On reception  of the cyphertext  $C$, Bob raises  it to the  $d_b$th power
+modulo $n_b$. He  is the only person, who knows $d_b$  and therefore he is
+solely able to decrypt $C$:
+\begin{equation*}
+  M \equiv D(C) \equiv C^{d_b}\ \ (mod\ \ n_b).
+\end{equation*}
 
 \subsubsection{Signing and Validating}
 
+Electronic  signatures, e.g.~in electronic  mail systems,  especially when
+used in  business transactions, must  provide provability to  the receiver
+that  the message  originated from  the sender.   This is  more  than just
+provide  \emph{authentication}, i.e.~the  receiver of  a  digitally signed
+message can verify that the message came from the sender.
+
+\textbf{TODO: write me}
 
 \subsection[Public Key Infrastructure]{Public Key Infrastructure (PKI)}
 
