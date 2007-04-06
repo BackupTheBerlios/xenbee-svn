@@ -654,10 +654,50 @@ solely able to decrypt $C$:
 Electronic  signatures, e.g.~in electronic  mail systems,  especially when
 used in  business transactions, must  provide provability to  the receiver
 that  the message  originated from  the sender.   This is  more  than just
-provide  \emph{authentication}, i.e.~the  receiver of  a  digitally signed
-message can verify that the message came from the sender.
+provide  mere \emph{authentication},  where the  recipient of  a digitally
+signed message can  verify that the message came  from the sender. Digital
+signatures must be  able to be used to convince  a ``judge'', that neither
+the recipient did  forge the message, nor the sender  can deny sending the
+message.
 
-\textbf{TODO: write me}
+That means,  an electronic signature must  be \emph{message}-dependent, as
+well as  \emph{signer}-dependent. If the  signature did not depend  on the
+message itself, a dishonorable recipient  could just change the message or
+attach the signature to a  completely different message before showing the
+message/signature pair  to a judge. If  the signature would  not depend on
+the \emph{signer}, obviously anybody could have signed the message.
+
+\medskip
+
+If   Bob  want  to   send  Alice   a  signed   message,  he   applies  his
+\emph{decryption}  function $D_b$  to the  clear text  message  $M$, which
+results in the signature $S$:
+
+\begin{equation*}
+  S = D_b(M).
+\end{equation*}
+
+To   perform  this,   the  cryptosystem   has  to   be   implemented  with
+\emph{trap-door         one-way        permutations},        i.e.~property
+(\ref{pubkey-cryptosystem-prop-4}) must hold.
+
+This signature  can now  be encrypted using  Alice's public key  to ensure
+privacy, there  is no need to  send the message along  with the signature,
+since it can  be computed from it. On reception,  Alice first decrypts the
+message which  results in the  plain signature $S$ again.   Applying Bob's
+\emph{encryption} function to the  received signature (Alice knows who the
+presumed sender  of the  message is) makes  perfect sense due  to property
+(\ref{pubkey-cryptosystem-prop-4}):
+
+\begin{equation*}
+  M = E_b(S)
+\end{equation*}
+
+Bob cannot  later on deny that he  sent the message, since  nobody but him
+could  have generated  the signature  $S$.  Alice  is able  to  convince a
+``judge'', that  Bob did send the  message, since $E_b(S) =  M$. But Alice
+cannot modify  $M$ or  provide a different  message $M'$ because  then she
+would also need to compute $S' = D_b(M')$ as well.
 
 \subsection[Public Key Infrastructure]{Public Key Infrastructure (PKI)}
 
