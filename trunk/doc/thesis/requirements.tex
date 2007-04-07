@@ -1,10 +1,14 @@
 \chapter{Requirements}
 \label{cha:requirements}
 
-This  work deals  with  an  execution environment  that  uses Xen  virtual
-machines to run  applications in a secure environment.   In this chapter I
-am going to describe, how such an environment can look like and what it is
-supposed to provide the users with.
+This  work  deals with  an  execution  environment  that exploits  virtual
+machines,  especially  those  provided  by  the  Xen  hypervisor,  to  run
+applications in a  secure environment. Each job that  is submitted to this
+execution  environment gets  executed  in its  own  virtual machine,  thus
+running in complete independence from other jobs.
+
+In this chapter I am going to describe, how such an environment could look
+like and what the main requirements to such a system are.
 
 \begin{figure}[htbp]
   \centering
@@ -13,8 +17,11 @@ supposed to provide the users with.
   \label{fig:concept}
 \end{figure}
 
-In Figure~\ref{fig:concept},  a conceptual overview  is shown, it  depicts a
-single user interacting with the execution environment.
+The first  glance at  an execution environment  based on  virtual machines
+results  in the concept  shown in  Figure~\ref{fig:concept}.  It  shows an
+``user'' who is somehow interacting with the execution environment.
+
+\medskip
 
 The next sections describe what  I think, an execution environment must at
 least provide to be useful. Furthermore, several use-cases are given, that
@@ -24,8 +31,8 @@ show possible usage scenarios of the execution environment.
 \label{sec:req-execution-environment}
 
 What should an execution environment  provide, so that users can work with
-it?  I  think  the following  list  gives  a  good  idea about  the  basic
-requirements any execution environment should fulfill:
+it?   I  think the  following  list  gives a  good  idea  about the  basic
+requirements any execution environment should at least fulfill:
 
 \begin{itemize}
 \item \emph{Submit new tasks} --- i.e.~inform the system about a new task,
@@ -35,86 +42,121 @@ requirements any execution environment should fulfill:
   finish.
 \item \emph{Stop running tasks} --- i.e.~a user must always have the
   possibility to cancel his own tasks.
+\item \emph{Security}  --- i.e.~any user of the  execution environment may
+  only gain access to his or her own tasks, additionally the tasks have to
+  be prohibited from accessing data that belongs to different tasks.
 \end{itemize}
 
-Typically, tasks  require some input data  to work on  and generate output
-data  ---  to describe  such  tasks  we  demand the  following  additional
-requirements:
+Typically, computational tasks  require some input data to  work on. Using
+the input data, a task generates output data the user is interested in. To
+describe  those  tasks  an  execution environment  demands  the  following
+additional requirements:
 \begin{itemize}
-\item Provide a way to specify input data for a task
-\item Provide a way to retrieve generated output data from a task
+\item Provision of a way to specify input data for a task
+\item Provision of a way to retrieve generated output data from a task
 \end{itemize}
 
-The next sections describe each point in more detail --- they also explain
-specifications  such  as the  \emph{Job  Submission Description  Language}
-(\gls{glo:JSDL}) \cite{jsdl-spec}  and the \emph{Basic  Execution Service}
-(\gls{glo:BES}) \cite{ogsa-bes}.
+Especially in the case of remote  execution, input and output data have to
+be  transfered to  and  from  the remote  resource  accordingly. The  next
+sections describe each point in more detail.
 
 \subsection{Submission of tasks}
 \label{sec:req-task-submission}
 
-In  grid environments,  for example,  the user  describes his  job  as the
-application he wants to execute,  additional parameters that are passed to
-the application, input and output data and many more.
+In  Grid  environments, for  example,  a user  describes  his  job as  the
+application he wants to  execute remotely along with additional parameters
+that are to be  passed to the application, input data that  has to be made
+available to  the application  prior execution, output  data that  must be
+transfered back  to the user  after the application finished,  and various
+additional resources that have to be provided at the remote site.
 
 The here proposed execution environment demands a way to describe not only
 the tasks, but also  the virtual machine that is going to  be used for the
-task.
+task. Virtual machines require at least a \emph{kernel} and a full-fledged
+operating system installation.
 
-An upcoming standard for a job description, that is not restricted to grid
-environments, but  can be used  in various environments, is  the \emph{Job
-  Submission  Description  Language}   ---  or  \gls{glo:JSDL}  for  short
-\cite{jsdl-spec}.
+An  upcoming standard  for job  descriptions in  Grid environments  is the
+\emph{Job Submission Description Language} --- or \gls{glo:JSDL} for short
+(see  Section~\ref{sec:fundamentals:jsdl}  and  \cite{jsdl-spec} for  more
+details).  This  specification is  not limited to  be used solely  in Grid
+environments;  it  can  be  extended  and adapted  to  fit  any  execution
+environment.  The \gls{glo:JSDL} is  an XML-based language that is capable
+of describing  a job in all its  details. Due to the  extensibility of the
+JSDL, it is rather easy to add descriptions of virtual machines to the job
+description.
 
 I  decided to  use this  description language,  so that  the Xen-execution
 environment can  easily be integrated  into various middlewares  that also
-use the \gls{glo:JSDL} to describe their jobs.
-
+use  the \gls{glo:JSDL}  to  describe their  jobs.   A common  description
+language  of jobs  that are  executed using  the Calana  Grid-scheduler is
+still an open topic but the JSDL is a very good candidate.
 
 \subsubsection{Extensions to the \gls{glo:JSDL}}
 
 To be able to create a virtual machine on the remote site, the user has to
-specify not only  the application she wants to run  but also a file-system
-\gls{glo:image}  that  contains  an  operating system  installation.   The
-execution environment then  takes care of starting up  the virtual machine
-with  the  provided  \gls{glo:image}   and  will  eventually  execute  the
-application.
+specify not only the application she wants  to run but also a kernel and a
+file-system   \gls{glo:image}   that    contains   an   operating   system
+installation.   The  image  contains  all dependencies  (applications  and
+programming libraries etc.) the user's task requires for execution.
 
-The  description  of a  virtual  machine cannot  be  done  using only  the
-\gls{glo:JSDL},  since one has  to describe  additional locations  for the
-\gls{glo:image}, a  kernel and probably an initial  RAM-disk.  Those files
-are not directly  related to the description of a job  and one cannot just
-use  \texttt{DataStaging}  elements, since  they  act  on the  file-system
-hierarchy seen from the job's  point of view, i.e.~from within the virtual
-machine.   The extensions  made  to the  \gls{glo:JSDL}  are discussed  in
-chapter \ref{cha:design} in more detail.
+The execution environment then takes care of starting up a virtual machine
+using the provided  \gls{glo:image} and kernel and is  eventually going to
+execute the application within this virtual machine.
+
+The description  of a  virtual machine  cannot be made  by using  just the
+elements defined in the \gls{glo:JSDL} specification itself, since one has
+to  describe additional locations  for the  \gls{glo:image}, a  kernel and
+probably an initial RAM-disk.  Those files are not directly related to the
+description  of  a  job  and  therefore  have  no  representation  in  the
+specification.
+
+The \texttt{DataStaging} element defined  by the specification seems to be
+a good candidate for the descriptionu  of the additional files. But, as it
+turns out to be, the \texttt{DataStaging} elements may only refer to files
+\textbf{within} the virtual machine. The  files that are used to build the
+virtual  machine files  are, on  the other  hand, \textbf{outside}  of the
+virtual  machine  (i.e.~outside the  file-system  defined  by the  virtual
+machine). That  means that we require  an extension to the  JSDL to define
+those files.
 
 \subsection{Query the status of tasks}
 \label{sec:status-query}
 
-A user  who submitted a task  to some remote system  for execution, surely
+A user who  has submitted a task to a remote  system for execution, surely
 wants to observe the current state of his job. The query for the status of
-a   job  requires  the   detailed  specification   of  which   states  are
-\textbf{allowed  states}  and  how  the \textbf{transitions}  between  the
+a job requires the detailed specification of which are the \textbf{allowed
+  states} a job can take on and how the \textbf{transitions} between those
 states look like.
 
 To provide  the possibility to connect the  Xen-execution environment with
-other  tools,  a  common  description  for job-states  is  required.   The
-\emph{Open Grid Services Architecture} (\gls{glo:OGSA}, \cite{ogsa}) has a
-working group which designs such a common state model for job execution in
-grid environments  --- the \emph{Basic  Execution Service} (\gls{glo:BES},
-\cite{ogsa-bes}).
+other tools,  a common description for job-states  is required, i.e.~both,
+user and  execution environment, must  have the same expectations  on what
+the current  state is and  what the next  states could be.
 
-The OGSA is an approach to  use Web service concepts and technologies in a
-Grid  environment. Consequently, the BES defines a Web service, but I will
-just make use of the generic job-state-model they define.
+To   the   \emph{Open   Grid   Services   Architecture}   (\gls{glo:OGSA},
+\cite{ogsa})  belongs a  working group  that designs  such a  common state
+model    for    the   job    execution    in    Grid   or    service-based
+environments\footnote{in     \emph{service-based}    environments,    each
+  functionality (an  ``Execution Service'' for instance) is  provided by a
+  single service  (e.g.~a web service).}. The  OGSA is an  approach to use
+Web service concepts and technologies in a Grid environment.
+
+The just  mentioned working group  defines a special service  that targets
+the  execution  of   \emph{activities}  (e.g.~jobs)  ---  the  \emph{Basic
+  Execution Service}  (\gls{glo:BES}, \cite{ogsa-bes}).  The specification
+defines a basic  and very simple state-model that  describes the execution
+of a job (see Section~\ref{sec:fundamentals:bes} and \cite{ogsa-bes} for a
+more detailed description).
 
 \subsubsection{Extensions to the BES state-model}
 
-Since the basic  \gls{glo:BES} state-model is a very  minimal one, we need
-to  extend   it  to  allow   the  description  of   data-transfer  states.
-Fortunately,  the \gls{glo:BES}  provides such  an extended  model  in its
-specification, it is shown in Figure~\ref{fig:bes-extended}.
+Since the basic \gls{glo:BES} state-model is a very minimal one which does
+not satisfy the requirement of data staging, we need to extend it to allow
+the  description  of additional  data-transfer  states.  Fortunately,  the
+\gls{glo:BES} provides such an extended  model in its specification, it is
+shown in  Figure~\ref{fig:bes-extended}. The transfer  of input (stage-in)
+and  output  (stage-out)  data  is  part  of  running  the  job,  i.e.~the
+additional states are sub-states of the (basic) \texttt{Running} state.
 
 \begin{figure}
   \centering
@@ -126,19 +168,27 @@ specification, it is shown in Figure~\ref{fig:bes-extended}.
 
 The  \texttt{Running}   state  has   been  split  into   three  sub-states
 \texttt{Stage-In}, \texttt{Stage-Out} and \texttt{Executing} --- the first
-two describe data-transfer operations and the last one describes the state
-in which the task is  actually being executed.  An invalid specialization,
-for  example,  would   have  been  the  addition  of   a  transition  from
-\texttt{Running:Stage-In} back  to \texttt{Pending}, since  that behaviour
-is impossible in the basic state-model.
+two describe  data-transfer operations and the latter  describes the state
+in  which  the task  is  actually  being  executed.  The  \texttt{Running}
+sub-state can be seen as the reincarnation of the \texttt{Executing} state
+of the  basic model.
 
-The  \gls{glo:BES}  specification  as  it  is for  the  JSDL,  defines  an
-XML-Schema,  that is  to  be  used for  state  description. The  following
-example shows  you the usage  of the state  description using XML  and how
-specialized sub-states are represented. The main state is \texttt{Running}
-and is  described using the \emph{ActivityStatus}  element, any sub-state,
-that may currently be active,  depends on the application and therefore is
-described using one or more elements from a different namespace.
+Of course,  not all extensions to  the state model are  valid.  An invalid
+extension of the specialization, for example, would have been the addition
+of a  transition from \texttt{Running:Stage-In}  back to \texttt{Pending}.
+This is  because the behavior  of this model,  which an user  observes, is
+different from the behavior the basic  model had. An user would not expect
+the  current  state of  his  task  to  change from  \texttt{Executing}  to
+\texttt{Pending} again.
+
+The \gls{glo:BES} specification, as well as the JSDL specification, define
+XML-Schemata, that can be instantiated when needed.  The following example
+shows the  usage of  the state description  using XML and  how specialized
+sub-states  are represented.  The  main state  is \texttt{Running}  and is
+described using the \emph{ActivityStatus} element, any sub-state, that may
+currently  be  active,  is   highly  depending  on  the  actual  execution
+environment in place and is therefore described using one or more elements
+from a different namespace.
 
 \begin{minipage}{0.75\textwidth}
   \begin{lstlisting}[language=XML]
@@ -150,38 +200,50 @@ described using one or more elements from a different namespace.
 
 The example  makes use of  the previously defined  specialized state-model
 and  describes an  activity  that is  currently  in the  \texttt{Stage-In}
-sub-state of \texttt{Running} --- i.e.~it is waiting for its input data to
-be  ready.  Any  client  which  is  not  aware  of  the  \texttt{Stage-In}
-sub-state, will only ``see'' that  the activity is in the \texttt{Running}
-state.
+sub-state of the \texttt{Running} state --- i.e.~the activity is currently
+waiting for its  input data to be ready.   The representation allows, that
+any client  which is  not aware of  the \texttt{Stage-In}  sub-state, does
+only ``see''  that the activity is  in the \texttt{Running}  state. On the
+other hand, any client that is aware of this extension, will recognise the
+\texttt{Stage-In} element and is able to react accordingly.
 
 
 \subsection{Stopping tasks}
 \label{sec:stopping-task}
 
-As  you can  see in  Figure~\ref{fig:bes-extended}, each  non-terminal state
-provides  a transition  to  the state  \texttt{Terminated}. That  directly
-resembles the requirements for \emph{stopping a task} on user request.
+Well, as  you can see in  Figure~\ref{fig:bes-extended}, each non-terminal
+state  of  the  model provides  a  transition  to  the state  final  state
+\texttt{Terminated}. This behavior does directly resemble the requirements
+for \emph{``stopping a  task''} on behalf of an user  request.  An user of
+any execution environment should be able to stop the execution of her task
+at any time regardless of the task's current state --- final states are an
+exception, of course.
 
 In  case of  this work,  stopping  a task  may involve  shutting down  the
-virtual  machine,  terminating active  data  transfers  and releasing  any
+virtual machine, terminating currently active data transfers and releasing
 acquired resources.
+
+\subsection{Security issues}
+
+\textbf{TODO}
 
 \section{A more concrete concept}
 
-This  section   outlines  a  more  concrete  concept   for  the  execution
-environment and its  components. We are going to need  a component that is
-responsible for  the requests a  user makes to the  execution environment,
-this component  is also going to  manage the virtual machines  for each of
-the tasks.
+The previous  section dealt with a  rather abstract view  on the execution
+environment, this  section outlines a  slightly more concrete  concept for
+the execution  environment and its  components.  Handling of  requests the
+users  make  to the  execution  environment  and  controlling the  virtual
+machines, requires an  additional component. If an user  wants to interact
+with the execution  environment, he does so by  communicating the managing
+component (see Figure~\ref{fig:concrete-concept}).
 
 \begin{figure}[htbp]
   \centering
   \includegraphics[scale=.5]{concrete-concept}
   \caption[A more concrete concept]{The  evolved concept, using a managing
     component to  control the virtual  machines.  Each virtual  machine is
-    dedicated to a single task submitted by some user. Users only interact
-    with the managing component.}
+    dedicated  to a  single task  submitted by  some user.  Users  do only
+    interact with the managing component.}
   \label{fig:concrete-concept}
 \end{figure}
 
@@ -190,39 +252,45 @@ client is represented  by the user (or some mediator  such as a web-portal
 or a  command-line client) and the  server is represented  by the managing
 component.
 
-The following  sections motivate the communication  architecture, which is
-used  to connect up  clients and  the managing  component, and  a detailed
-description of how the tasks should be handled.
+\medskip
 
-\section{Support for Calana}
-\label{sec:calana-support}
+The interaction between the users and the execution environment requires a
+communication   layer   over   which    the   requests   are   made.    In
+Section~\ref{sec:fundamentals:mom}   I   have   introduced   \emph{Message
+  Oriented  Middlewares} and  how  message-queue servers  can  be used  to
+provide logical  connections between the  involved distributed components.
+Using the  same concept in this  execution environment makes  sense due to
+the following reasons:
 
-To  support  Calana, the  \gls{glo:XenBEE}  must  provide some  additional
-functionality. One of these functionalities is a mechanism to \emph{make},
-\emph{cancel}   and   \emph{confirm}   reservations.   To   reflect   that
-requirement, we discussed about a common state-model for the jobs and came
-to the consensus of adopting the \gls{glo:BES} model to our needs.
+\begin{itemize}
+\item  There could be  more than  one server  providing such  an execution
+  environment.  Message-queue \emph{``topics''}\footnote{A \emph{topic} is
+    a special queue to which  arbitrary many consumers can subscribe. They
+    all receive  the same messages.} can  be used to handle  any number of
+  those servers  uniformly. The  clients send their  requests to  a single
+  queue on the  \gls{glo:MQS} and the \gls{glo:MQS} multiplexes  it to all
+  known servers.
+\item The server could be in  need of sending messages to clients that are
+  not connected anymore. Think of a notification that could be sent when a
+  task finished its execution.
+\item The use of a MQS renders  it possible that the server can be located
+  behind a very restrictive firewall or even a \gls{glo:NAT}-gateway.
+\item The  Calana scheduler  uses also a  \gls{glo:MQS} to  connect users,
+  broker and agents.
+\item  There is  no visible  difference for  a client,  whether it  uses a
+  direct connection or a connection through a \gls{glo:MQS}.
+\end{itemize}
 
-The implementation of Calana, which is currently still in development, too
-uses message queues to implement the communication between the brokers and
-the agents.
+The  network  layers  that  are  involved when  using  a  message-oriented
+communication      with     a      \gls{glo:MQS}     are      shown     in
+Figure~\ref{fig:mqs-layers}.
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[scale=0.7]{uc-calana-xenbee}
-  \caption[Calana and  XenBEE]{The actors and use cases  that are involved
-    when a Calana agent uses the \gls{glo:XenBEE} as its resource.}
-  \label{fig:calana-xenbee}
+  \includegraphics[scale=0.7]{mqs-layers}
+  \caption[Message Layers]{Message-oriented communication layers.}
+  \label{fig:mqs-layers}
 \end{figure}
-
-The picture  in Figure~\ref{fig:calana-xenbee} describes how  a user would
-interact  with  a  system,  that   uses  Calana  for  scheduling  and  the
-\gls{glo:XenBEE} as  its execution environment. The user  first requests a
-resource from  the broker, who in turn  will open up an  auction among the
-agents.   One of  those  agents are  shown  in the  figure,  he creates  a
-reservation on the \emph{xbed} he  is attached to.  The user is eventually
-presented  a unique identifier  for his  reservation which  he can  use to
-submit his task to the \emph{xbed}.
 
 \section{Use cases}
 \label{sec:use-cases}
@@ -435,6 +503,36 @@ decrypted on server-side prior booting a virtual machine with it.
     decryption prior execution by the \emph{xbed}.}
   \label{fig:uc-encrypt-data}
 \end{figure}
+
+\subsection{Support for Calana}
+\label{sec:calana-support}
+
+To  support  Calana, the  \gls{glo:XenBEE}  must  provide some  additional
+functionality. One of these functionalities is a mechanism to \emph{make},
+\emph{cancel}   and   \emph{confirm}   reservations.   To   reflect   that
+requirement, we discussed about a common state-model for the jobs and came
+to the consensus of adopting the \gls{glo:BES} model to our needs.
+
+The implementation of Calana, which is currently still in development, too
+uses message queues to implement the communication between the brokers and
+the agents.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[scale=0.7]{uc-calana-xenbee}
+  \caption[Calana and  XenBEE]{The actors and use cases  that are involved
+    when a Calana agent uses the \gls{glo:XenBEE} as its resource.}
+  \label{fig:calana-xenbee}
+\end{figure}
+
+The picture  in Figure~\ref{fig:calana-xenbee} describes how  a user would
+interact  with  a  system,  that   uses  Calana  for  scheduling  and  the
+\gls{glo:XenBEE} as  its execution environment. The user  first requests a
+resource from  the broker, who in turn  will open up an  auction among the
+agents.   One of  those  agents are  shown  in the  figure,  he creates  a
+reservation on the \emph{xbed} he  is attached to.  The user is eventually
+presented  a unique identifier  for his  reservation which  he can  use to
+submit his task to the \emph{xbed}.
 
 %%% Local Variables: 
 %%% mode: latex

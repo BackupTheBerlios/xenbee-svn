@@ -1,3 +1,7 @@
+\setchapterpreamble[o]{%
+  \dictum[Lao-tzu]{\textit{``A journey of a thousand miles begins with
+      a single step.''}}}
+
 \chapter{Fundamentals}
 \label{cha:fundamentals}
 
@@ -6,15 +10,18 @@ throughout this thesis. For example, the \emph{Extensible Markup Language}
 is used  for all  messages, that  are sent between  the components  of the
 execution  environment. A special  description language,  called \emph{Job
   Description Language}, will  be used for the submission  of tasks to the
-system.
+system.   The  tasks' states  are  represented  using  the extensible  job
+state-model definition of the \emph{Basic Execution Service}.
 
-The  Calana Grid-scheduling approach  will be  discussed in  this chapter,
-too. The here  proposed execution environment is supposed to  be used as a
-possible back-end resource of the Calana system.
+The  Calana Grid-scheduling  approach will  be shortly  discussed  in this
+chapter, too.  The here proposed  execution environment is supposed  to be
+used as a possible back-end resource of the Calana system.
 
-The final parts of this  chapter consider message security. In particular,
-two  available  and widely  used  technologies  --- \emph{Transport  Layer
-  Security} and \emph{Message Layer Security} --- are discussed.
+The  final parts  of this  chapter  consider message  security. At  first,
+public-key  cryptography will  be  discussed and  then  two available  and
+widely used  technologies for  securing communication between  two parties
+are discussed. These two  technologies are \emph{Transport Layer Security}
+and \emph{Message Layer Security}.
 
 \section[Extensible Markup Language]
 {Extensible Markup Language (\gls{glo:XML})}
@@ -25,8 +32,8 @@ plain text based description format. The format represents a subset of the
 variety of ways and even more usages are discovered still. Examples of XML
 can be found in  \emph{XHTML}, \emph{RSS}, \emph{Atom}, \emph{Math-ML} and
 many more.   Due to the  structured semantics of  XML, more and  more file
-formats are  nowadays based on  XML, thus replacing  the old style  INI or
-Unix \texttt{rc}  files --- a very  popular exemplar in this  field is the
+formats are  nowadays based  on XML,  thus replacing the  old INI  or Unix
+\texttt{rc}  files  --- a  very  popular exemplar  in  this  field is  the
 \emph{OASIS Open Document Format for Office Applications}.
 
 An XML-file is  an ordinary plain text file, that  could have been created
@@ -167,6 +174,7 @@ modified to match the new constraint.
 
 \section[Job Submission Description Language]
 {Job Submission Description Language (\gls{glo:JSDL})}
+\label{sec:fundamentals:jsdl}
 
 \gls{glo:JSDL} is a very extensible XML-based description language for the
 submission  of computational jobs.   With \gls{glo:JSDL}  you are  able to
@@ -306,6 +314,7 @@ its own,  one is able  to extend the  elements of the  \gls{glo:JSDL} with
 user-defined elements.
 
 \section[Basic Execution Service]{The Basic Execution Service (BES)}
+\label{sec:fundamentals:bes}
 
 The \emph{Basic Execution Service} \cite{ogsa-bes} is a specification that
 defines  a service (e.g.~a  web service)  which provides  functionality to
@@ -403,7 +412,7 @@ is   aware    of   this   extension,   knows   how    to   interpret   the
 \texttt{ext:Suspended} sub-element.
 
 \section[Message Oriented Middleware]{Message Oriented Middleware (MOM)}
-\label{sec:basic-communcation-architecture}
+\label{sec:fundamentals:mom}
 
 A  typical  way  of connecting  clients  with  some  server  is to  use  a
 \gls{glo:TCP}-connection to the server for each client. This is especially
@@ -614,8 +623,8 @@ integer that is \emph{co-prime}\footnote{two integers $a$ and $b$ are said
   to be co-prime  if they do not  have a common factor other  than $1$ and
   $-1$, i.e.~their greatest common divisor  (gcd) is $1$.} to $(p-1) \cdot
 (q-1)$.\footnote{the term $(p-1)\cdot(q-1)$ is the result of \emph{Euler's
-    Phi  function} ($\phi$) applied  to $n$}  In other  words, $d$  has to
-satisfy:
+    Phi} or  \emph{Euler's totient function}  ($\phi$) applied to  $n$} In
+other words, $d$ has to satisfy:
 \begin{equation*}
   gcd(d, (p-1) \cdot (q-1)) = 1.
 \end{equation*}

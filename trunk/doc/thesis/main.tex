@@ -40,7 +40,8 @@
   % tex-archive/macros/latex/contrib/supported/titlesec/
 
 
-% There's probably loads of packages needed by various people.
+  % There's probably loads of packages needed by various people.
+\usepackage[perpage,symbol*,hang]{footmisc}
 \usepackage{url}
 \usepackage{pdfsync}
 \usepackage[T1]{fontenc}
@@ -116,6 +117,8 @@
 \renewcommand{\textfraction}{0.1}
 \renewcommand{\floatpagefraction}{0.75}
 
+% limit the table of contents to chapters and sections
+\setcounter{tocdepth}{1}
 
 \pagestyle{fancy}
 \fancyhf{}                                %Clears all header and footer fields, in preparation.
