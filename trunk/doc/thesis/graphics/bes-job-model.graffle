@@ -31,7 +31,7 @@
 	<array>
 		<dict>
 			<key>Bounds</key>
-			<string>{{531, 151.386}, {70, 28}}</string>
+			<string>{{545.173, 151.386}, {70, 28}}</string>
 			<key>Class</key>
 			<string>ShapedGraphic</string>
 			<key>FitText</key>
@@ -638,8 +638,8 @@ Starting}</string>
 			<integer>24</integer>
 			<key>Points</key>
 			<array>
-				<string>{188.76, 95.0794}</string>
-				<string>{344.194, 40.1275}</string>
+				<string>{188.76, 95.0793}</string>
+				<string>{344.193, 40.1275}</string>
 			</array>
 			<key>Style</key>
 			<dict>
@@ -947,6 +947,8 @@ Starting}</string>
 		<integer>10</integer>
 		<key>ShowsGrid</key>
 		<string>YES</string>
+		<key>SnapsToGrid</key>
+		<string>YES</string>
 	</dict>
 	<key>GuidesLocked</key>
 	<string>NO</string>
@@ -1060,7 +1062,7 @@ Starting}</string>
 		</dict>
 	</array>
 	<key>ModificationDate</key>
-	<string>2007-03-15 14:46:47 +0100</string>
+	<string>2007-04-10 21:07:37 +0200</string>
 	<key>Modifier</key>
 	<string>Alexander Petry</string>
 	<key>NotesVisible</key>
@@ -1127,13 +1129,13 @@ Starting}</string>
 		<key>FitInWindow</key>
 		<false/>
 		<key>Frame</key>
-		<string>{{27, 0}, {577, 714}}</string>
+		<string>{{-76, 907}, {577, 714}}</string>
 		<key>ShowRuler</key>
 		<true/>
 		<key>ShowStatusBar</key>
 		<true/>
 		<key>VisibleRegion</key>
-		<string>{{0, 0}, {546, 554}}</string>
+		<string>{{70, 0}, {546, 554}}</string>
 		<key>Zoom</key>
 		<string>1</string>
 	</dict>

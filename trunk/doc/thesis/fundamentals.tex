@@ -584,7 +584,7 @@ The mentioned procedures $D$ and $E$ have the following properties:
 \item  The enciphering  of a  previously ciphered  message $M$  results in
   $M$. That is,
   \begin{equation}
-    \label{eq:1}
+    \label{eq:2}
     E(D(M)) = M.
   \end{equation}
   \label{pubkey-cryptosystem-prop-4}
@@ -609,6 +609,7 @@ publicly available.
 of $(e, n)$ and  $(d, n)$. The fist step is to  compute $n$ as the product
 of two very large, ``random'' primes $p$ and $q$:
 \begin{equation*}
+  \label{eq:compute-n}
 n = p \cdot q.
 \end{equation*}
 
@@ -627,12 +628,14 @@ integer that is \emph{co-prime}\footnote{two integers $a$ and $b$ are said
     Phi} or  \emph{Euler's totient function}  ($\phi$) applied to  $n$} In
 other words, $d$ has to satisfy:
 \begin{equation*}
+  \label{eq:compute-d}
   gcd(d, (p-1) \cdot (q-1)) = 1.
 \end{equation*}
 
 Finally,  the integer $e$  is computed  from $p$,  $q$ and  $d$ to  be the
 \emph{multiplicative inverse} of $d$, modulo $\phi(n)$:
 \begin{equation*}
+  \label{eq:compute-e}
   e \cdot d \equiv 1\ \ (mod\ (p-1) \cdot (q-1))
 \end{equation*}
 
@@ -649,6 +652,7 @@ message, she has to  represent it as an integer between $0$  and $n_b - 1$
 fulfills the requirement). Alice then  encrypts the message $M$ by raising
 it to the $e_b$th power modulo $n_b$, the result is the cyphertext $C$:
 \begin{equation*}
+  \label{eq:encrypt-message}
   C \equiv E(M) \equiv M^{e_b}\ \ (mod\ \ n_b).
 \end{equation*}
 
@@ -656,6 +660,7 @@ On reception  of the cyphertext  $C$, Bob raises  it to the  $d_b$th power
 modulo $n_b$. He  is the only person, who knows $d_b$  and therefore he is
 solely able to decrypt $C$:
 \begin{equation*}
+  \label{eq:decrypt-message}
   M \equiv D(C) \equiv C^{d_b}\ \ (mod\ \ n_b).
 \end{equation*}
 
@@ -684,6 +689,7 @@ If   Bob  want  to   send  Alice   a  signed   message,  he   applies  his
 results in the signature $S$:
 
 \begin{equation*}
+  \label{eq:compute-signature}
   S = D_b(M).
 \end{equation*}
 
@@ -700,6 +706,7 @@ presumed sender  of the  message is) makes  perfect sense due  to property
 (\ref{pubkey-cryptosystem-prop-4}):
 
 \begin{equation*}
+  \label{eq:validate-signature}
   M = E_b(S)
 \end{equation*}
 
@@ -850,7 +857,7 @@ initiate a secure communication.
 \section{Calana}
 \label{sec:calana}
 
-\emph{Calana} is  a new  Grid-scheduler approach proposed  by M.~Dalheimer
+\emph{Calana} is  a new Grid  scheduler approach proposed  by M.~Dalheimer
 \cite{dalheimer05agentbased}.  The  scheduler uses \emph{agents}  that are
 responsible for  a single  resource and at  least one  \emph{broker}.  The
 broker initiates an \emph{auction} among  the connected agents to assign a
