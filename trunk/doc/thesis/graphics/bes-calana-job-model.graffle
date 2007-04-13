@@ -298,7 +298,7 @@ request}</string>
 			<integer>48</integer>
 			<key>Points</key>
 			<array>
-				<string>{466.077, 127.866}</string>
+				<string>{466.076, 127.866}</string>
 				<string>{511.5, 127.866}</string>
 			</array>
 			<key>Style</key>
@@ -612,15 +612,15 @@ request}</string>
 				<dict>
 					<key>Color</key>
 					<dict>
+						<key>a</key>
+						<string>0.75</string>
 						<key>b</key>
 						<string>0.961957</string>
 						<key>g</key>
-						<string>0.220209</string>
+						<string>0.624989</string>
 						<key>r</key>
-						<string>0.0912848</string>
+						<string>0.243061</string>
 					</dict>
-					<key>FillType</key>
-					<integer>2</integer>
 					<key>GradientAngle</key>
 					<real>90</real>
 					<key>GradientColor</key>
@@ -887,6 +887,8 @@ request}</string>
 		<integer>10</integer>
 		<key>ShowsGrid</key>
 		<string>YES</string>
+		<key>SnapsToGrid</key>
+		<string>YES</string>
 	</dict>
 	<key>GuidesLocked</key>
 	<string>NO</string>
@@ -1000,7 +1002,7 @@ request}</string>
 		</dict>
 	</array>
 	<key>ModificationDate</key>
-	<string>2007-04-09 00:15:53 +0200</string>
+	<string>2007-04-13 16:33:01 +0200</string>
 	<key>Modifier</key>
 	<string>Alexander Petry</string>
 	<key>NotesVisible</key>

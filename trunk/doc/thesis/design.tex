@@ -109,7 +109,7 @@ based  protocols  that  accomplish  the whole  communication  between  all
 components.   There is currently  a basic  XML protocol  that encapsulates
 single ``messages'', consisting just of header and body, and two protocols
 that  connect up  the \emph{xbe}  and the  \emph{xbeinst}  accordingly.  A
-special  protocol providing  security related  services  (i.e.~privacy and
+special  protocol providing  security  related services  (\ie privacy  and
 validity) can be added as an additional layer.
 
 Anyway, the  details of the \gls{glo:STOMP}  and XML protocols  as well as
@@ -129,7 +129,7 @@ reference to the virtual machine instance used for this task.
 
 A new task gets initialized every  time an user requests a reservation. At
 this time it contains nothing more  than the state machine which is in its
-start-state                               (i.e.~\texttt{Pending:Reserved}).
+start-state                               (\ie \texttt{Pending:Reserved}).
 Section~\ref{sec:xbed:job-model}  discusses   the  implementation  of  the
 job-model that has been used to  represent an activity.
 
@@ -161,74 +161,243 @@ The instance-manager's purpose is  to create, control, monitor and destroy
 active virtual  machine instances.  Again  unique identifiers are  used to
 name the  virtual machines. To start  a virtual machine  several files are
 required:  an   operating  system  installation  residing   in  a  special
-file-system \gls{glo:image} file, a \gls{glo:kernel}
+file-system  \gls{glo:image} file, a  \gls{glo:kernel} and  potentially an
+initial ramdisk  image (initrd),  that contains additional  device drivers
+and setup  routines that  are not directly  included in the  kernel. Those
+files must  be provided by  the user,  since he is  the one who  knows his
+application and how the operating  system has to be configured to actually
+execute the application.
 
-\begin{itemize}
-\item uuid usage in several places
-\item task manager
-\item instance manager
-\item ticket store
-\item back-end (currently only implemented for xen)
-\item networking layer
-\item cache
-\end{itemize}
+Well, by just using these three files, a virtual machine cannot be created
+right away,  it must be  \emph{configured} first.  The configuration  of a
+virtual  machine is manifold,  it contains  descriptions of  the operating
+system  which  shall be  used  (\ie the  mentioned  three files),  memory
+settings (\ie the amount of  virtualized physical memory), them number of
+virtual CPUs and network parameters.
+
+\subparagraph{Instance Configuration and Setup}
+
+The \emph{xbed}  provides the possibility to  use different virtualization
+back-ends,  but  the  current  implementation supports  only  Xen  virtual
+machines. It could, for instance, be possible to implement a back-end that
+uses VMWare's  \cite{vmware} virtual machines, even no  virtual machine at
+all could be thinkable.
+
+The back-end uses  the \texttt{libvirt} \gls{glo:API} to connect
+to  the Xen hypervisor.  This connection  is basically  used to  query the
+current state of  a virtual machine and to shut  a running virtual machine
+down.   Virtual machine creation  is implemented  by using  a call  to the
+\texttt{xm} command line tool provided by the Xen user-space tools.  Prior
+a  new  instance   can  be  created,  a  configuration   file  has  to  be
+generated. This configuration file contains the mentioned parameters.
+
+The  network  configuration   of  a  virtual  machine  is   based  on  the
+\emph{Dynamic Host Configuration  Protocol} (\gls{glo:DHCP}).  That means,
+the guest  \gls{glo:OS} has  to be configured  to use  \gls{glo:DHCP}. The
+administrator of  the host, on which  the \emph{xbed} runs,  can specify a
+list  of  \gls{glo:MAC}  addresses  that  shall be  used  by  the  virtual
+machines.
+
+Virtualized  physical  memory  and  the  number of  virtual  CPUs  can  be
+specified  in the  \gls{glo:JSDL} document  using the  predefined resource
+descriptions.
+
+\subparagraph{Instance Creation}
+
+The next step is the generation  of a configuration file which can be used
+by the back-end --- in this case  Xen --- to set up a new virtual machine.
+The task's  state machine  is triggered  to change its  state to  the next
+sub-state   of  \texttt{Running}:  \texttt{InstanceStarting}.    Once  the
+virtual machine has  been created, the \emph{xbed} awaits  a callback from
+the virtual machine.  This scallback expresses itself in form of a message
+sent  by  the \emph{xbeinstd}  running  within  the  just created  virtual
+machine.  If  this signal does  not get sent  within a given  timeout, the
+virtual  machine instance  is assumed  to  be broken  and is  going to  be
+destroyed, resulting in a failed  execution of the user's task, of course.
+This callback fulfills two important functions --- it makes sure, that the
+virtual machine's  network configuration is correct  and fully functional,
+and  that the  \emph{xbeinstd}  did start  properly  --- thus,  improperly
+configured images are recognized very fast.  Now, that the virtual machine
+is ready to execute the  user's application, the task's description may be
+sent to  the \emph{xbeinstd} and  the task's state machine  may eventually
+change  its state  to  \texttt{Executing}. The  details  of executing  the
+application is going to be discussed in Section~\ref{sec:xbeinstd}.
+
+After  finishing the  execution  of the  user's  application, the  virtual
+machine will  be shut down and the  result can be staged  out according to
+the specified \gls{glo:JSDL} document.
+
+\bigskip
+
+The next sections  describe the implementation of the  used job-model, how
+the staging  of input  and output data  is performed  and how an  user can
+benefit from using the provided data-cache.
 
 \subsection{Job-model Implementation}
 \label{sec:xbed:job-model}
 
-The  task-manager not only  manages and  creates tasks,  but also  holds a
-queue of current activities of each task.
+In     the     sections    \emph{`\nameref{sec:fundamentals:bes}'}     and
+\emph{`\nameref{sec:calana-support}'}               on               pages
+\pageref{sec:fundamentals:bes}       and      \pageref{sec:calana-support}
+respectively, I have already discussed the usage of the job-model that has
+been  proposed  by the  \gls{glo:OGSA}-\gls{glo:BES}  working group.   The
+Calana  architecture   requires  the  model  to   contain  extensions  for
+\emph{reservation} and \emph{data staging}.
 
-
-\begin{itemize}
-\item activity queue (picture)
-\item threads
-\end{itemize}
+To model  the process of starting  a virtual machine, I  have extended the
+model  again  to provide  an  additional state  \texttt{Instance-Starting}
+which  is a  sub-state  of  the basic  state  \texttt{Running}. The  final
+job-model is shown in Figure~\ref{fig:bes-job-model}.
 
 \begin{figure}[ht]
   \centering
   \includegraphics[scale=.55]{bes-job-model}
   \caption{The job-model used in the \gls{glo:XenBEE}}
-  \label{fig:bes-extended-xen}
+  \label{fig:bes-job-model}
 \end{figure}
+
+The  implementation of  this model  builds up  on an  implementation  of a
+\emph{Finite State  Machine} (\gls{glo:FSM}).  The  \texttt{Task} class, I
+mentioned  earlier,  contains  a  reference  to an  instance  of  such  an
+\gls{glo:FSM}. Each time  a state change is desired,  the \gls{glo:FSM} is
+called with  an ``input'' signal. The \gls{glo:FSM}  then calls registered
+functions that  implement the transition's  behavior. If, for  example, an
+user wants to terminate his  activity, the \gls{glo:FSM} is presented with
+a ``terminate-token''. The FSM  calls then specialized functions that deal
+with the termination  request according to the current  state. That means,
+distinct   functions    are   perhaps   called    when   traversing   from
+\texttt{Pending:Reserved}    and    \texttt{Running:Executing}   to    the
+\texttt{Terminated} state, respectively.
+
+Some of the transitions  involve rather complex and time-consuming actions
+(\eg file  transfers).   Those  complex  transitions are  represented  by
+\emph{activity-objects}.    An   activity-object   is  an   object,   that
+encapsulates  some behavior  along  with  a state  ---  commonly known  as
+\emph{Function}-objects or \emph{Functors}.  I named them activity-objects
+on  purpose, because they  are usually  executed by  a separate  thread of
+control  in concurrency  to other  activities within  the  system. Another
+reason for  encapsulating some of  the transitions in  activity-objects is
+the possible intervention by an user.
+
+The BES  model allows an  user to terminate  his activity at any  time. In
+particular that means,  that any action belonging to  that activity, which
+currently takes place  on the server, has to be  stopped or aborted.
+
+Since the task-manager does not only create, but also manage the tasks, he
+is responsible for stopping current activities of a task if he is asked to
+do so.  For that reason, he is  in charge of a per task list that contains
+all current activities  for that task. If the task-manage  is now going to
+handle a request for termination of one of the tasks, he first cancels all
+registered activity-objects before letting the task to change its state to
+\texttt{Terminated}.
 
 \begin{figure}[ht]
   \centering
-  \includegraphics[scale=.55]{act-start-task}
-  \caption[Start Task Activity]{TODO: fill me in}
-  \label{fig:act-start-task}
+  \includegraphics[scale=.55]{activity-queue}
+  \caption{Handling of \emph{activity-objects} with an activity-queue.}
+  \label{fig:activity-queue}
 \end{figure}
+
+The picture in Figure~\ref{fig:activity-queue} shows such an occasion. The
+task (represented by  the blue box) is currently  in the \texttt{Stage-In}
+sub-state  of \texttt{Running}  and is  awaiting the  availability  of its
+required  files.  The  activity  which represents  here  the operation  of
+staging files in is shown as  the encircled lightning bolt.  When the task
+transitions  into  the \texttt{Stage-In}  state,  it  registers the  shown
+activity with  the task-manager. The task-manager  in turn adds  it to his
+queue of current activities (shown as the reddish tube in the right of the
+picture).  When  the activity is  finished (figuratively speaking:  if the
+activity exits through  the bottom of the tube), the  task may advance its
+state to \texttt{Instance-Starting}, \ie it  can be attempted to start an
+instance for this task.
+
+Since  the  retrieval of  files  from  different  locations (specified  by
+\gls{glo:URI}s  in the \gls{glo:JSDL})  may take  some time,  this example
+also motivates  the usage of threads  to decouple other  activities of the
+system  from these  steps. When  terminating  an activity,  the thread  is
+signalled to abort whatever it is doing at the time.
+
+\bigskip
+
+Well,  the  whole cycle  through  which  a task  may  run  is depicted  in
+Figure~\ref{fig:act-execute-task}  as  an   activity  diagram.   The  only
+sub-activity that  cannot be aborted  at all is the  \emph{stop instance}
+operation. That is because the  shutdown process of the underlying virtual
+machine just cannot be cancelled or  reversed. That is also the reason to
+not having an extra sub-state for that operation in the job-model.
+
+The  process starts  with waiting  on  a ``ready-to-go''  signal, that  is
+usually included  directly in the \texttt{Confirm} message  received by an
+user,  but  can  also  be  given  in  a  subsequent  message  on  its  own
+(\texttt{Start\-Activity})\footnote{the  communication  protocol  and  the
+  messages           involved          are           discussed          in
+  Section~\ref{sec:communication-protocol},
+  \emph{\nameref{sec:communication-protocol}}.}.  The  next steps resemble
+the previously discussed job-model. Of course, any of those activities may
+\emph{fail}, which effectively  results in the failing of  the whole task.
+The operations that are involved  when one of the sub-activities fails are
+the  same  as  for  the  abortion of  that  sub-activity.   Actually,  the
+\emph{stop  instance}  operation  cannot  fail  either,  since  it  always
+possible to forcibly shut a virtual machine down.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[scale=.55]{act-execute-task}
+  \caption[Summary of executing a task]{Summary of the steps involved when executing a task.}
+  \label{fig:act-execute-task}
+\end{figure}
+
+The \emph{start  instance} operation differs from the  other operations in
+that two components are involved, the \emph{xbed} and the \emph{xbeinstd}.
+The \emph{xbed}  first attempts  to start a  back-end instance (\eg  a Xen
+virtual machine) and waits for the instance to be started, eventually.
+
+After the instance  has been started, \ie the back-end  did not reject the
+provided  configuration, the  \emph{xbed}, actually  the  thread executing
+this  particular  activity,  waits  for  the \emph{xbeinstd}  to  send  an
+\texttt{Instance\-Available}        message       back        to       the
+\emph{xbed}. Figure~\ref{fig:act-start-instance} shows the details of that
+particular activity.
 
 \begin{figure}[ht]
   \centering
   \includegraphics[scale=.55]{act-start-instance}
-  \caption[Start Instance Activity]{TODO: fill me in}
+  \caption[Start Instance Activity]{The  \emph{xbed} waits for the virtual
+    machine to  be available.   The availability of  a virtual  machine is
+    made sure by waiting on a special message from the \emph{xbeinstd}.}
   \label{fig:act-start-instance}
 \end{figure}
+
+
+As you can see, there are  three different outcomes for this activity. The
+instance can  be flagged as  available, which renders the  task eventually
+executable,  or  the  activity  can  be  aborted  due  to  a  request  for
+termination by the user or the instance can fail to start at all.
 
 
 \subsection{Data Transfer Handling}
 \label{sec:xbed:data-transfer}
 
 \begin{itemize}
-\item uri
+\item uri (http,ftp,etc)
 \item cache references
 \item failure
 \item validation (hashes)
-\item compression
+\item compression (gzip, bzip, tar.*)
 \item user interaction --- terminate
+\item upload
 \end{itemize}
 
 \begin{figure}[ht]
   \centering
-  \includegraphics[scale=.7]{act-retrieve-file}
+  \includegraphics[scale=.55]{act-retrieve-file}
   \caption[File Retrieval Activity]{TODO: fill me in}
   \label{fig:act-retrieve-file}
 \end{figure}
 
 
 \begin{figure}[ht]
-  \includegraphics[scale=.7]{act-stage-in}
+  \includegraphics[scale=.55]{act-stage-in}
   \caption[Stage-In Activity]{TODO: fill me in}
   \label{fig:act-stage-in}
 \end{figure}
@@ -260,13 +429,11 @@ queue of current activities of each task.
 
 \subsubsection{Using cache entries}
 
-\subsection{Instance Configuration}
-
 \section[Xen-based Execution Instance Daemon]{Xen-based Execution Instance Daemon (xbeinstd)}
 \label{sec:xbeinstd}
 
 \begin{itemize}
-\item notifies xbed when instance is up (i.e. network connectivity)
+\item notifies xbed when instance is up (\ie network connectivity)
 \item keep-alive
 \item input files are already available
 \item parses jsdl
@@ -381,7 +548,7 @@ foo bar
 \begin{itemize}
 \item problems with m2crypto on 64bit architecture
 \item both are currently incompatible to each other
-\item both sides (client/server) have to use the same --- eiterh m2 or
+\item both sides (client/server) have to use the same --- either m2 or
   direct openssl
 \end{itemize}
 

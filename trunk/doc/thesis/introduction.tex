@@ -217,7 +217,7 @@ within the emulator. Some examples are:
 \item  \emph{QEMU  \cite{qemu}} ---  this  is  both  an emulator  and  an
   virtualizer, since  it support  two modes of  operation. As  an emulator
   each instruction  gets interpreted  as it is  the case  of \emph{bochs},
-  e.g.~it is possible  to emulate an ARM processor on  your PC. To achieve
+  \eg it is possible  to emulate an ARM processor on  your PC. To achieve
   better  performances a  technique called  \emph{dynamic  translation} is
   used.   Running as  a virtualizer,  QEMU is  able achieve  nearly native
   performance, since most of the instructions are directly executed on the
@@ -249,7 +249,7 @@ Examples include Solaris Containers and FreeBSD jails.
 
 FreeBSD jails are  used to shut a service or  a special server application
 in  its own  environment  --- therefore  prohibiting  an application  from
-\emph{leaving}   (i.e.~accessing  data   outside   its  environment)   the
+\emph{leaving}   (\ie accessing  data   outside   its  environment)   the
 file-system area which an administrator has reserved for it.
 
 \subsection{Para-virtualization}
@@ -282,7 +282,7 @@ The Xen  hypervisor \cite{xen} however,  avoids this problem  by providing
 its  own ``architecture''  to which  a guest  operating system  has  to be
 ported --- they call an operating  system which has been ported to the Xen
 architecture  ``Xen-aware''.   The  proposed  architecture  contains  only
-``small''  modifications  to  the  real hardware  architecture,  i.e.~they
+``small''  modifications  to  the  real hardware  architecture,  \ie they
 mainly modify the non virtualizable instructions.
 
 The term \emph{para-virtualization} has first been used in the description
@@ -344,7 +344,7 @@ to  be successful,  all ``sensitive''  instructions \cite{popek74,popek75}
 must trap into the VMM, so that they can be correctly emulated.
 
 It  has been  analyzed that  all  privileged instructions  of the  Pentium
-instruction  set correctly  trap (i.e.~they  raise a  ``general protection
+instruction  set correctly  trap (\ie they  raise a  ``general protection
 fault'')   and  can   be  handled   by  the   VMM  \cite{robin00analysis}.
 Unfortunately    there    are    seventeen    instructions    which    are
 \textbf{sensitive}  and  \textbf{unprivileged},  so  they  do  \textbf{not
@@ -447,7 +447,7 @@ how virtual machines fit into that \cite{borden89,virtualization-overview}:
   simply  too  high ---  machines  solely  dedicated  for development  are
   required.
 \item \emph{Backup  and recovery} --- server  applications which represent
-  important  components   for  the  daily   work  (e.g.~database  systems,
+  important  components   for  the  daily   work  (\eg database  systems,
   web-servers etc.) must  be available all the time. A  nice thing to have
   in such  a situation  is automatic recovery  from failure ---  to reduce
   down-time two systems can be used: one of them is the productive system,

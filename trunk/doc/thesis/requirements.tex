@@ -35,14 +35,14 @@ it?   I  think the  following  list  gives a  good  idea  about the  basic
 requirements any execution environment should at least fulfill:
 
 \begin{itemize}
-\item \emph{Submit new tasks} --- i.e.~inform the system about a new task,
+\item \emph{Submit new tasks} --- \ie inform the system about a new task,
   that it should execute.
-\item \emph{Query the status of  tasks} --- i.e.~is the task still pending
+\item \emph{Query the status of  tasks} --- \ie is the task still pending
   and  waiting for  its execution,  currently  running or  did it  already
   finish.
-\item \emph{Stop running tasks} --- i.e.~a user must always have the
+\item \emph{Stop running tasks} --- \ie a user must always have the
   possibility to cancel his own tasks.
-\item \emph{Security}  --- i.e.~any user of the  execution environment may
+\item \emph{Security}  --- \ie any user of the  execution environment may
   only gain access to his or her own tasks, additionally the tasks have to
   be prohibited from accessing data that belongs to different tasks.
 \end{itemize}
@@ -115,7 +115,7 @@ a good candidate for the descriptionu  of the additional files. But, as it
 turns out to be, the \texttt{DataStaging} elements may only refer to files
 \textbf{within} the virtual machine. The  files that are used to build the
 virtual  machine files  are, on  the other  hand, \textbf{outside}  of the
-virtual  machine  (i.e.~outside the  file-system  defined  by the  virtual
+virtual  machine  (\ie outside the  file-system  defined  by the  virtual
 machine). That  means that we require  an extension to the  JSDL to define
 those files.
 
@@ -129,7 +129,7 @@ a job requires the detailed specification of which are the \textbf{allowed
 states look like.
 
 To provide  the possibility to connect the  Xen-execution environment with
-other tools,  a common description for job-states  is required, i.e.~both,
+other tools,  a common description for job-states  is required, \ie both,
 user and  execution environment, must  have the same expectations  on what
 the current  state is and  what the next  states could be.
 
@@ -138,11 +138,11 @@ To   the   \emph{Open   Grid   Services   Architecture}   (\gls{glo:OGSA},
 model    for    the   job    execution    in    Grid   or    service-based
 environments\footnote{in     \emph{service-based}    environments,    each
   functionality (an \emph{Execution Service}  for instance) is provided by
-  a single service (e.g.~a web service).}.  The OGSA is an approach to use
+  a single service (\eg a web service).}.  The OGSA is an approach to use
 Web service concepts and technologies in a Grid environment.
 
 The just  mentioned working group  defines a special service  that targets
-the  execution  of   \emph{activities}  (e.g.~jobs)  ---  the  \emph{Basic
+the  execution  of   \emph{activities}  (\eg jobs)  ---  the  \emph{Basic
   Execution Service}  (\gls{glo:BES}, \cite{ogsa-bes}).  The specification
 defines a basic  and very simple state-model that  describes the execution
 of a job (see Section~\ref{sec:fundamentals:bes} and \cite{ogsa-bes} for a
@@ -155,7 +155,7 @@ not satisfy the requirement of data staging, we need to extend it to allow
 the  description  of additional  data-transfer  states.  Fortunately,  the
 \gls{glo:BES} provides such an extended  model in its specification, it is
 shown in  Figure~\ref{fig:bes-extended}. The transfer  of input (stage-in)
-and  output  (stage-out)  data  is  part  of  running  the  job,  i.e.~the
+and  output  (stage-out)  data  is  part  of  running  the  job,  \ie the
 additional states are sub-states of the (basic) \texttt{Running} state.
 
 \begin{figure}
@@ -200,7 +200,7 @@ from a different namespace.
 
 The example  makes use of  the previously defined  specialized state-model
 and  describes an  activity  that is  currently  in the  \texttt{Stage-In}
-sub-state of the \texttt{Running} state --- i.e.~the activity is currently
+sub-state of the \texttt{Running} state --- \ie the activity is currently
 waiting for its  input data to be ready.   The representation allows, that
 any client  which is  not aware of  the \texttt{Stage-In}  sub-state, does
 only ``see''  that the activity is  in the \texttt{Running}  state. On the
@@ -228,8 +228,8 @@ acquired resources.
 There  are  several  issues  related  to  security  when  implementing  an
 execution  environment, especially  when the  execution takes  place  on a
 remote machine. The most crucial  issue is the \emph{limitation of access}
-to the system,  i.e.~how are the users identified that  are allowed to use
-the system.   Another issue  is \emph{privacy of  communication}, i.e.~can
+to the system,  \ie how are the users identified that  are allowed to use
+the system.   Another issue  is \emph{privacy of  communication}, \ie can
 the  communication  between  an  user  and the  execution  environment  be
 overheard  by  some  (potentially  malicious)  entity  (another  user  for
 instance).  Furthermore  the tasks have  to be executed in  a \emph{secure
@@ -237,7 +237,7 @@ instance).  Furthermore  the tasks have  to be executed in  a \emph{secure
 
 A typical  approach in  Grid middlewares such  as Globus  \cite{globus} or
 Unicore    \cite{unicore}   is    to   use    cryptographic   certificates
-(e.g.~\gls{glo:X509}  certificiates) for authentication  and authorization
+(\eg \gls{glo:X509}  certificiates) for authentication  and authorization
 purposes, the \gls{glo:XenBEE} should follow the same principles.
 
 \subsubsection{Authentication and Authorization}
@@ -396,7 +396,7 @@ it just  requires a previously prepared \gls{glo:image}  that contains the
 application and the \emph{xbeinstd}.
 
 On  server-side, the  \emph{xbed}  will associate  the  submission with  a
-previously acquired  reservation ---  i.e.~the user creates  a reservation
+previously acquired  reservation ---  \ie the user creates  a reservation
 first  which results in  some kind  of handle  (a unique  identifier which
 refers to the  reservation) and then the user submits  his task using that
 reservation.
@@ -422,7 +422,7 @@ described.
 
 \paragraph{Accessing the image}
 After the user submitted a  task, the \emph{xbed} has to \emph{access} the
-specified image,  i.e.~the \emph{xbed} will initiate the  retrieval of the
+specified image,  \ie the \emph{xbed} will initiate the  retrieval of the
 image.   The  location  of  the  image  can for  example  be  given  as  a
 \gls{glo:URI}  to   provide  an  uniform  and   extensible  mechanism  for
 describing data locations.
@@ -523,7 +523,7 @@ user can use in his job and staging descriptions.
 \end{figure}
 
 Additionally, a really  nice thing to have in this  situation is some kind
-of a lookup mechanism for cached  entries --- i.e.~a user does not need to
+of a lookup mechanism for cached  entries --- \ie a user does not need to
 remember all the  \gls{glo:URI}s his entries have, but can  use a query to
 the    system   and   thus    figure   out,    which   cache    entry   to
 use. Figure~\ref{fig:uc-cache-lookup} shows you  how a user looks up cache
@@ -561,7 +561,7 @@ task falls within his responsibility.
 
 Since all  data is referred to  by \gls{glo:URI}s, that  may be accessible
 not  only  from  the  \emph{xbed}  itself, but  also  from  other  sources
-(i.e.~probably unknown and  hostile ones), it is desirable  to store those
+(\ie probably unknown and  hostile ones), it is desirable  to store those
 files encrypted. Of  course, if a user stores  an encrypted image-file and
 wants  the \emph{xbed} to  use it  for execution,  the image-file  must be
 decrypted on server-side prior booting a virtual machine with it.

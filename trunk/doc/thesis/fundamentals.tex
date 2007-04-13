@@ -54,7 +54,7 @@ for parsing a document into  an in-memory representation that follows this
 model. The programmer  can then simply add, delete  or modify elements and
 attributes by  using an object-oriented  interface.  Using the  example in
 Figure~\ref{fig:xml-example}, a programmer could for instance iterate over
-all children  of the \texttt{root}-element, that have  a tagname (i.e.~the
+all children  of the \texttt{root}-element, that have  a tagname (\ie the
 name  of the  element) equal  to ``child''  --- in  this case,  that would
 result in just two elements.
 
@@ -81,13 +81,13 @@ result in just two elements.
 \subsection{Namespaces}
 
 XML  documents   may  contain  elements  and   attributes  from  different
-vocabularies (i.e.~different document types). To resolve ambiguity between
+vocabularies (\ie different document types). To resolve ambiguity between
 the  involved   vocabularies,  the  W3C  recommends  the   use  of  unique
 \emph{Namespaces}  that are  assigned  to each  element.   A document  may
 contain a  \emph{default}-namespace to which  all elements belong  that do
 not  have  a  special  namespace  assigned.   Within  a  single  document,
 namespaces are given  a logical name. The logical  name itself is assigned
-the unique  Namespace identifier (e.g.~an  \gls{glo:URI}). Some namespaces
+the unique  Namespace identifier (\eg an  \gls{glo:URI}). Some namespaces
 and  common  ``names''   for  them  are  given  in   the  following  table
 (Table~\ref{tab:namespaces}):
 
@@ -119,7 +119,7 @@ could as well have been assigned the logical name ``bar''.
 
 To specify  that a  given element  belongs to a  namespace other  than the
 default namespace, the  element's name is prefixed by  the logical name of
-the namespace,  e.g.~\texttt{foo:child} means, that  the ``child'' element
+the namespace,  \eg \texttt{foo:child} means, that  the ``child'' element
 belongs to the namespace defined by ``foo''.
 
 \subsection{Validation of XML documents}
@@ -134,7 +134,7 @@ validation,    the    \emph{Document    Type   Definition}    (DTD)    and
 
 A DTD defines for a particular  document what elements are allowed and how
 their attributes look like. The  composition of elements to form container
-(i.e.~parent)   elements  can   be   described  in   a  rudimentary   way.
+(\ie parent)   elements  can   be   described  in   a  rudimentary   way.
 Unfortunately, the  DTD uses  its own syntax,  that has nothing  in common
 with  the syntax of  an XML  document. For  an author  of an  XML document
 type\footnote{for example the configuration file format of an application}
@@ -153,14 +153,14 @@ definition,  the   author  would  set   the  type  of  the   attribute  to
 There are many predefined data types, an author may use to create new data
 type constraints.  An XML-Schema validator complains, if  a document, that
 is  supposed to  conform  to  that schema,  contains  the just  introduced
-attribute with a negative value, e.g.~$-1$.
+attribute with a negative value, \eg $-1$.
 
 \bigskip
 
 The advantages of XML-Schema over a DTD are obvious.  When using DTDs, the
 application  was  responsible to  check  the  validity  of each  used  XML
 document  type  itself. That  means,  the  same  functionality had  to  be
-implemented over and over again, i.e.~each time a new application wants to
+implemented over and over again, \ie each time a new application wants to
 make use of a given XML document type. While using XML-Schema definitions,
 the author of  an XML document type defines  the validity constraints just
 once and any application  may rely on that. To make that  clear, here is a
@@ -254,13 +254,13 @@ The \texttt{JobIdentification}  element is used to  hold information about
 the job, such as a descriptive  name, that is mostly interesting for human
 beings.  Nonetheless it  may hold additional information that  could be of
 interest to  applications processing the document ---  such as annotations
-(e.g.~a  unique task  identification number  could  be stored  in such  an
+(\eg a  unique task  identification number  could  be stored  in such  an
 annotation).
 
 \subsubsection{Application}
 
 With the \texttt{Application} element, a user describes the program itself
----  i.e.~the  real executable,  that  is going  to  be  used.  A  special
+---  \ie the  real executable,  that  is going  to  be  used.  A  special
 extension --- \texttt{POSIXApplication}, also defined in the specification
 \cite{jsdl-spec}   ---   can  be   used   to   describe  executables   for
 \gls{glo:POSIX}-compliant   operating  systems  \cite{posix}.    You  have
@@ -317,7 +317,7 @@ user-defined elements.
 \label{sec:fundamentals:bes}
 
 The \emph{Basic Execution Service} \cite{ogsa-bes} is a specification that
-defines  a service (e.g.~a  web service)  which provides  functionality to
+defines  a service (\eg a  web service)  which provides  functionality to
 control \emph{Activities}.   A user is able  to submit an  activity to the
 execution service and  can later on control and  monitor that activity ---
 using web service calls, for instance.
@@ -417,7 +417,7 @@ is   aware    of   this   extension,   knows   how    to   interpret   the
 A  typical  way  of connecting  clients  with  some  server  is to  use  a
 \gls{glo:TCP}-connection to the server for each client. This is especially
 useful if a continuous connection to  the server has to be maintained. For
-instance, web (i.e.~HTTP) and ftp (i.e.~FTP) servers are usually streaming
+instance, web (\ie HTTP) and ftp (\ie FTP) servers are usually streaming
 a lot of data to the clients.
 
 Communication  in  distributed systems,  however,  can  take place  either
@@ -447,8 +447,8 @@ on one or more \emph{message-queue servers} (\gls{glo:MQS}).
 connections between the clients and the server:
 
 \begin{itemize}
-\item All messages are  sent to \textbf{logical queues} (i.e.~end-points),
-  that  means   that  the  physical  address  (e.g.~IP   address)  of  any
+\item All messages are  sent to \textbf{logical queues} (\ie end-points),
+  that  means   that  the  physical  address  (\eg IP   address)  of  any
   participating  service  (be  it  the  server or  a  client)  may  change
   unnoticeable to the communication partner.
 \item All connections are  \textbf{outbound}, which effectively means that
@@ -468,7 +468,7 @@ connections between the clients and the server:
   \textbf{forwarding and  routing} of  messages destined for  a particular
   queue --- that means independence from the actual network-topology.
 \item A \gls{glo:MQS} can be configured to provide \textbf{authentication}
-  and \textbf{authorization} to limit  access to (i.e.~send to and receive
+  and \textbf{authorization} to limit  access to (\ie send to and receive
   from) particular queues.
 \item   Messages   sent   from   one   component   to   another   can   be
   \textbf{transformed}  while passing  the \gls{glo:MQS}.   That  means in
@@ -493,9 +493,9 @@ from site A through an internet connection. The steps involved in building
 up this communication scheme are:
 \begin{enumerate}
 \item  Each service  connects to  the \gls{glo:MQS}  and \emph{subscribes}
-  itself to a unique queue (e.g.~service.\emph{X}).
+  itself to a unique queue (\eg service.\emph{X}).
 \item    Clients   subscribe    themselves   to    unique    queues,   too
-  (e.g.~client.\emph{Y}).
+  (\eg client.\emph{Y}).
 \end{enumerate}
 
 Now  that each  party is  subscribed to  its own  unique queue,  a two-way
@@ -519,7 +519,7 @@ by any person or system in between any two communication partners.
 A   typical  solution   to  make   the  transfer   secure  is   using  the
 \emph{Transport Layer  Security} protocol --- or  \gls{glo:TLS} for short.
 \gls{glo:TLS} makes sure that  traffic between two endpoints is transfered
-securely --- i.e.~no eavesdropping, modification or message forgery.
+securely --- \ie no eavesdropping, modification or message forgery.
 
 The  \emph{Transport Layer  Security} protocol,  which is  discussed  in a
 moment, and the afterwards examined \emph{Message Layer Security} protocol
@@ -528,7 +528,7 @@ certificates.
 
 The  certificates  are  based  on  public/private  key  pairs,  whereas  a
 certificate consists of a  pair's public-key combined with some additional
-information, e.g.~the owner and issuer of the certificate, used algorithms
+information, \eg the owner and issuer of the certificate, used algorithms
 and  so  on.  Most  importantly  is the  fact,  that  certificates can  be
 \emph{cryptographically    signed}     by    a    certificate    authority
 (\gls{glo:CA}). The  next passage  will shortly describe  how certificates
@@ -559,9 +559,9 @@ In the following  I am going to describe  how the keys are set  up and how
 they are used to encrypt/decrypt or to sign/validate a clear text message.
 
 According  to  \cite{rivest77method},  places  each  user  his  encryption
-procedure $E$  in a publicly accessible file  (e.g.~database).  Using this
+procedure $E$  in a publicly accessible file  (\eg database).  Using this
 public file, any  other user is able to  retrieve the encryption procedure
-of   some  other   user  (i.e.~the   one  he   wants  to   send  encrypted
+of   some  other   user  (\ie the   one  he   wants  to   send  encrypted
 messages). Each user keeps his decryption procedure $D$ secret.
 
 The mentioned procedures $D$ and $E$ have the following properties:
@@ -623,7 +623,7 @@ whole computation takes $4.9 \times 10^{15}$ years.
 The  next step  is to  choose  $d$, therefore  one picks  a large,  random
 integer that is \emph{co-prime}\footnote{two integers $a$ and $b$ are said
   to be co-prime  if they do not  have a common factor other  than $1$ and
-  $-1$, i.e.~their greatest common divisor  (gcd) is $1$.} to $(p-1) \cdot
+  $-1$, \ie their greatest common divisor  (gcd) is $1$.} to $(p-1) \cdot
 (q-1)$.\footnote{the term $(p-1)\cdot(q-1)$ is the result of \emph{Euler's
     Phi} or  \emph{Euler's totient function}  ($\phi$) applied to  $n$} In
 other words, $d$ has to satisfy:
@@ -642,7 +642,7 @@ Finally,  the integer $e$  is computed  from $p$,  $q$ and  $d$ to  be the
 \subsubsection{Encryption and Decryption}
 
 If  two  persons,  Alice  and   Bob,  want  to  send  each  other  private
-(i.e.~encrypted)  messages,  they   both  retrieve  the  other's  publicly
+(\ie encrypted)  messages,  they   both  retrieve  the  other's  publicly
 available encryption  key first ---  Bob retrieves $(e_a, n_a)$  and Alice
 retrieves $(e_b, n_b)$.
 
@@ -666,7 +666,7 @@ solely able to decrypt $C$:
 
 \subsubsection{Signing and Validating}
 
-Electronic  signatures, e.g.~in electronic  mail systems,  especially when
+Electronic  signatures, \eg in electronic  mail systems,  especially when
 used in  business transactions, must  provide provability to  the receiver
 that  the message  originated from  the sender.   This is  more  than just
 provide  mere \emph{authentication},  where the  recipient of  a digitally
@@ -694,7 +694,7 @@ results in the signature $S$:
 \end{equation*}
 
 To   perform  this,   the  cryptosystem   has  to   be   implemented  with
-\emph{trap-door         one-way        permutations},        i.e.~property
+\emph{trap-door         one-way        permutations},        \ie property
 (\ref{pubkey-cryptosystem-prop-4}) must hold.
 
 This signature  can now  be encrypted using  Alice's public key  to ensure
@@ -729,7 +729,7 @@ CA's certificate, if it is valid, the prove has been successful.
 The \gls{glo:CA} is responsible for checking that the public-key contained
 in  the certificate  actually belongs  to the  requesting user,  server or
 other  entity denoted  in the  certificate. This  checking process  is for
-example done by  verifying the credentials of a user  (e.g.~with help of a
+example done by  verifying the credentials of a user  (\eg with help of a
 photo identification or something similar).
 
 Any third-party that trusts a given CA will transparently trust any entity
@@ -747,12 +747,12 @@ that offers a certificate signed by that particular CA.
 Validation is performed by verifying  that the certificate itself has been
 signed  by a  trusted authority  --- the  actual validation  process  is a
 little   bit  more  complex,   since  it   involves  checking   against  a
-\emph{Revocation List} and  a ``best before'' date (i.e.~life  time of the
+\emph{Revocation List} and  a ``best before'' date (\ie life  time of the
 certificate), too.
 
 The  signing  process  uses  the  authority's private  key  to  compute  a
 cryptographic signature. This private-key must of course be kept in a very
-secure  location  (e.g.~on a  physically  from  the Internet  disconnected
+secure  location  (\eg on a  physically  from  the Internet  disconnected
 computer) ---  if it would fall into  the wrong hands, the  whole chain of
 trust is compromised.
 
@@ -767,7 +767,7 @@ steps can be described as follows:
 \item Now,  \emph{Alice} wants to prove  her identity to a  friend of her,
   \emph{Bob},   therefore   \emph{Alice}    sends   her   certificate   to
   \emph{Bob}.  The   proof  may  be   necessary  to  establish   a  secure
-  communication over an insecure channel, e.g.~the Internet.
+  communication over an insecure channel, \eg the Internet.
 \item \emph{Bob}  verifies the received certificate against  the very same
   CA by  which \emph{Alice} had her certificate  signed.  Since \emph{Bob}
   trusts the  CA and the received  certificate states, that  it belongs to
@@ -838,7 +838,7 @@ still protected against eavesdropping, tampering and spoofing.
 
 \gls{glo:MLS} too makes use  of certificates to provide authentication and
 encryption. To  establish a  secure communication between  a client  and a
-server,  the  client  needs  to  \emph{know}  (i.e.~have  access  to)  the
+server,  the  client  needs  to  \emph{know}  (\ie have  access  to)  the
 certificate  of the server.   Since encryption  with a  public/private key
 algorithm   is    rather   slow,    in   most   cases    a   \emph{session
   key}\footnote{typically  random data}  will be  negotiated  first.  This
