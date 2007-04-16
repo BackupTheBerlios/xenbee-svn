@@ -371,63 +371,277 @@ particular activity.
 
 As you can see, there are  three different outcomes for this activity. The
 instance can  be flagged as  available, which renders the  task eventually
-executable,  or  the  activity  can  be  aborted  due  to  a  request  for
-termination by the user or the instance can fail to start at all.
+executable,  the activity  can as  well be  aborted due  to a  request for
+termination by  the user, or  the instance can  fail to start at  all. The
+task's state will be changed according to the outcome of this activity.
 
+After   sending   the   \texttt{Instance\-Alive}   notification   to   the
+\emph{xbed},  the  \emph{xbeinstd}   waits  for  the  task's  description.
+Additionally,  it will send  messages to  the \emph{xbed}  regularly, thus
+making sure, that the virtual machine is still ``alive''.
+
+\bigskip
+
+The  next section deals  with the  staging operations  in more  detail. In
+particular that means, how exactly  the files are retrieved, how files can
+be compressed  to reduce  the required network-bandwidth  and how  one can
+make sure that the file has been transfered correctly.
 
 \subsection{Data Transfer Handling}
 \label{sec:xbed:data-transfer}
 
-\begin{itemize}
-\item uri (http,ftp,etc)
-\item cache references
-\item failure
-\item validation (hashes)
-\item compression (gzip, bzip, tar.*)
-\item user interaction --- terminate
-\item upload
-\end{itemize}
+The  handling  of data  transfer  covers the  staging  of  files into  the
+execution environment and out from the execution environment, in this work
+referred   to  as  ``stage-in''   and  ``stage-out''   respectively.   The
+description  that  is  required  for  each of  the  staging  processes  is
+completely  covered  within  the  \gls{glo:JSDL} document,  that  an  user
+submitted  to the  execution  environment.  However,  some extensions  are
+required,       those       will       be      handled       with       in
+Section~\ref{sec:xen-based-submission}.
+
+The  stage-in process  is  twofold.  The  first  part of  stage-in is  the
+acquirement of files  that are mandatory for the  execution environment to
+create    virtual    machine,    these    are    the    early    mentioned
+\emph{\gls{glo:image}}  and  \emph{\gls{glo:kernel}}  files  (probably  an
+\emph{\gls{glo:initrd}},  as well).   Without these  files, the  next part
+cannot be started.
+
+Well, the second part of the stage-in process handles the input files that
+an  user had  specified for  his  application. These  definitions use  the
+standard    \texttt{DataStaging}    element    of    the    \gls{glo:JSDL}
+specification. These files are directly retrieved into the virtual machine
+image, that  was previously obtained, hence  the two parts  of the staging
+process.
+
+All files, including the virtual machine specific ones, are referred to as
+\emph{Uniform  Resource  Identifier}s  (\gls{glo:URI}s). That  means,  all
+files must be ``somehow'' accessible by the \emph{xbed}.  An user can, for
+instance,  specify files that  are located  on an  \texttt{HTTP} or  on an
+\texttt{FTP} server ---  currently only these two protocols  and a special
+URI to reference to cached  files are supported.  Those \gls{glo:URI}s are
+then retrieved  by the  \emph{xbed} by using  the standard  mechanisms for
+file retrieval based on  these protocols --- the library \texttt{libcurl},
+which  relates to  the UNIX  \texttt{curl}  command is  used to  implement
+download and upload.
+
+\subsubsection{Support for compressed files}
+
+As said before,  all input files related to  the application are retrieved
+into  the virtual  machine image  directly. Consequently,  the  image must
+provide enough  free space  to hold all  input and generated  output data,
+which  can be  quite a  lot. Since  the  image is  an ordinary  file on  a
+file-system, it can  easily consume unpredictable size. This  image has to
+be  transfered  from  the user  (\ie  the  location  he specified  in  the
+\gls{glo:JSDL}) to  the host on  which the \emph{xbed}  runs. Fortunately,
+the image is nearly empty before transmitting it, since it contains only a
+basic operating system installation  along with the user's application and
+its dependencies.
+
+The \emph{xbed} allows an user to submit compressed files. The compression
+is extremely  useful when the file is  mostly ``empty'' as it  is the case
+for the  image files, for  instance --- an  image file that was  $8$~GB in
+size and contained  about $750$~MB data produced a  compressed file (using
+\texttt{bzip2})  that was  about  $500$~MB  in size  only.   The usage  of
+compressed files  reduces the  time needed to  transfer large,  but mostly
+empty images significantly. The user is allowed to tag every file that she
+submits to the execution environment  with the mode of compression and the
+\emph{xbed} will decompress the file after retrieval.
 
 \begin{figure}[ht]
   \centering
   \includegraphics[scale=.55]{act-retrieve-file}
-  \caption[File Retrieval Activity]{TODO: fill me in}
+  \caption[File  Retrieval  Activity]{Steps  involved when  retrieving  an
+    \gls{glo:URI}.}
   \label{fig:act-retrieve-file}
 \end{figure}
 
+\subsubsection{Support for validation of files}
+
+Figure~\ref{fig:act-retrieve-file} shows the involved steps when a file is
+retrieved by the \emph{xbed}. Another feature added to this process is the
+validation of the retrieved data. If  an user wants to make sure, that the
+file had not been modified in some way, she can provide a checksum and the
+used    algorithm   along   with    the   \gls{glo:URI}.     Typically   a
+\emph{cryptographic  hash   function}  is   used  to  compute   a  digital
+fingerprint of the  data. All secure hash algorithms  that are provided by
+the  Python  \texttt{hashlib} module  are  supported  (some examples  are:
+\texttt{SHA1}, \texttt{SHA256}, \texttt{MD5}).
+
+\subsubsection{The whole stage-in process}
+
+The  stage-in   process  is   split  into  several   steps  as   shown  in
+Figure~\ref{fig:act-stage-in}. The process always starts with the creation
+of a \texttt{\gls{glo:chroot}} environment\footnote{The terms \emph{chroot
+    environment}  and \emph{jail  environment} are  used interchangeably.}
+within  the spool  directory that  has been  created for  that  task.  The
+description of the  necessary files for a virtual  machine is contained in
+an extra element within the task's \gls{glo:JSDL} description. An user can
+either specify the required files (image, kernel and initrd) on its own or
+he can specify a  \texttt{bzip2} compressed tar archive (``package'') that
+contains these files.  Additionally, an user has the possibility to define
+several executable scripts that  are uploaded to the execution environment
+and get called at various stages of the stage-in process.
+
+After  the package  or  the  virtual machine  files  have been  retrieved,
+validated and  probably decompressed, the ``pre-setup''  hook is executed.
+This  hook consists  of the  scripts that  were either  in the  package or
+specified  by the user  and tagged  to be  in this  hook. All  scripts are
+executed in the previously created \gls{glo:chrootenv} so that they cannot
+access any file that does not belong to this task. Until now the execution
+environment had  not touched the  image file, so  that one of  the scripts
+could be used to decrypt the file, for instance.
 
 \begin{figure}[ht]
+  \centering
   \includegraphics[scale=.55]{act-stage-in}
-  \caption[Stage-In Activity]{TODO: fill me in}
+  \caption[Stage-In  Activity]{Overview  of  the  parts  of  the  stage-in
+    activity.}
   \label{fig:act-stage-in}
 \end{figure}
 
+Now that all virtual machine specific files are available, the application
+specific data can be retrieved. The \emph{xbed} assumes, that the image is
+mountable by the UNIX \texttt{mount}  command and mounts it to a temporary
+location within the jail environment.
+
+All  JSDL-\texttt{DataStaging} elements that  define a  stage-in operation
+are now handled with the  same retrieval mechanism as described above. The
+paths that are used in the  job description are interpreted to be relative
+to the mount point of the image.
+
+Finally   the   ``setup''-hook  is   executed   using  the   user-supplied
+scripts. These scripts  are given the path to  the image's mount-point and
+can,  for  example,  decrypt  already  staged-in files  or  even  retrieve
+additional input  data. If  everything went well,  the virtual  machine is
+completely set up and can be started.
+
+\subsubsection{Upload of files}
+
+The upload of files from the execution environment to a location specified
+by the user  is also accomplished by using  \gls{glo:URI}s. The process of
+uploading a file is less  complicated than the retrieval process, since it
+currently does  not involve compression or validation  directly.
+
+The first step  after the virtual machine has been shut  down is again the
+mounting of the image to a temporary location within the jail environment.
+To provide  the possibility to  compress the files before  uploading them,
+the ``cleanup'' hook is called before any of the actual staging operations
+is called. The next step  is the handling of the JSDL-\texttt{DataStaging}
+elements that  define a stage-out operation. The  only currently supported
+protocols that can be  used for the upload are FTP and  HTTP. In the final
+step of  the upload process the  ``post-cleanup'' hook is  called; to that
+time,  all specified  staging  operations have  already been  successfully
+performed and the image has been unmounted.
+
+If everything  went well, all  stored data\footnote{this does  not include
+  internal data structures (\eg exit-code).}  that belongs to this task is
+destroyed (\ie  the spool directory will  be deleted) and the  task is put
+into the \texttt{Finished} state.
 
 \subsection{Caching Of Arbitrary Files}
 \label{sec:caching}
 
-\begin{itemize}
-\item addToCache
-\item uri based retrieval
-\item uuid as cache entry id
-\item referencing to entries
-\item description for cached data
-\item data types (image, kernel, initrd, data)
-\item database
-\end{itemize}
+Compression   of  files   can   decrease  the   deployment  time   already
+significantly, but  to avoid  long-distance transfers over  an unspecified
+network connection, the  caching of files on the  server side is required,
+this    follows    strictly    from    the    \emph{locality    principle}
+\cite{locality-principle}.  The \emph{xbed} supports this by providing the
+user with a  simple data-cache incorporated into the  system.  The user is
+able to store  arbitrary data on the server prior submitting  a job to the
+system. This makes the initialization  of a virtual machine for often used
+images a lot faster compared  to always retrieving them over a potentially
+slow network connection.
 
 \subsubsection{Adding data to the cache}
 
+An  user  adds  files  to  the  execution  environment  by  specifying  an
+\gls{glo:URI} that can be retrieved by the \emph{xbed}.  This will usually
+be the same \gls{glo:URI} the user would have given in his job description
+(\eg a location  on some FTP or HTTP server).  The \emph{xbed} attempts to
+retrieve the given \gls{glo:URI} and adds a new entry to a database.
+
+Actually the  complete mechanism  of caching is  implemented in  a special
+component  within  the  \emph{xbed}  on   its  own.   The  cache  uses  an
+\gls{glo:SQL}-database  to store information  about the  cached data  in a
+persistent way. An user can add two different pieces of information to the
+data he wants to have cached.  The first is the \textbf{type} of the data,
+which can  be one  of \texttt{image}, \texttt{kernel},  \texttt{initrd} or
+\texttt{data},  where the  \texttt{data} type  is just  a  placeholder for
+arbitrary data  that does not fit  into one of the  other categories.  The
+second piece of information is a \textbf{description}, that can be used to
+describe the data in more detail,  \eg the version of a specific kernel, a
+list of the applications that are installed within an image or the type of
+compression   if  the   data   had  been   compressed.   Additionally   an
+\texttt{SHA1}  digital fingerprint  of the  data is  computed  and stored,
+along with the provided information, in the database.
+
+The  cache-component assigns  each  entry an  unique  identifier based  on
+\gls{glo:UUID}s, this identifier can later  be used in an \gls{glo:URI} to
+refer to that  entry.  When using the \emph{xbe} command  line tool to add
+data to  the cache, the \gls{glo:URI}  of the newly created  entry will be
+printed on the screen upon success.
+
 \subsubsection{Discovering cache entries}
+
+Well, the first way of ``discovering''  an entry of the cache is simply to
+write  down  the \gls{glo:URI}  one  has  received  upon addition  of  the
+entry. But  that is not always  feasible, since the entry  could be shared
+among several users  who do not know each other  --- say, an administrator
+or provider of a  virtual machine image added it to the  cache, so that it
+can be used by several, to that time unknown, users.
+
+The  discovery of  cached entries  is  implemented in  the \emph{xbed}  by
+simply providing the  user with a list of all  entries. This list contains
+most importantly the \gls{glo:URI} of the  entry, the type of data and the
+description the submitter had given.
 
 \begin{figure}[ht]
   \centering
-  \includegraphics[scale=.75]{msc-list-cache}
+  \includegraphics[scale=.55]{msc-list-cache}
   \caption[MSC List Cache Entries]{TODO: fill me in}
   \label{fig:msc-list-cache}
 \end{figure}
 
+The      \emph{Message     Sequence     Chart}      (\gls{glo:MSC})     in
+Figure~\ref{fig:msc-list-cache} shows  the messages that  are sent between
+the  client and  the server.   The client  requests a  list of  all cached
+entries  by sending  the \texttt{ListCache}  message. Thereupon  makes the
+\emph{xbed} a call to the cache-component  that provides him a list of all
+entries. This list is eventually  transformed into an XML-message and sent
+back to the client.  A sample output of the \texttt{xbe showcache} command
+is shown in the following listing:
+
+\bigskip
+
+\begin{center}
+  \begin{minipage}{.75\textwidth}
+    \begin{lstlisting}[captionpos=b,backgroundcolor=\color{listingcolor},frame=lines,numbers=left,numberstyle=\tiny,caption={\emph{xbe} output of cache entries.},label={lst:xbe-listcache-out}]
+<CacheEntries with 1 entry:
+{'cache://xbe-file-cache/adfd0a99-4761-4816-8902-db8d62c8e482':
+  {'description': 'Ubuntu kernel (2.6)',
+   'hash': '732ca16f330c2c382e83cb997f5e027687a285aa',
+   'type': 'kernel'}}
+>
+    \end{lstlisting}
+  \end{minipage}
+\end{center}
+
 \subsubsection{Using cache entries}
+
+Cache  entries can  be used  rather  easy. The  user is  just required  to
+specify  the  \gls{glo:URI} of  a  cache  entry  instead of  the  original
+\gls{glo:URI}.   The \emph{xbed} will  lookup the  specified \gls{glo:URI}
+during the  stage-in process and  retrieve the data  from the cache,  if a
+valid entry  could be found. The  same retrieval mechanism  applies to the
+cached entries, so that compression  and validation can be used with them,
+too.
+
+
+\subsection[Xen-based Submission Description Language]{Xen-based Submission Description Language (XSDL)}
+\label{sec:xen-based-submission}
+
+an extension to the \gls{glo:JSDL}
+
 
 \section[Xen-based Execution Instance Daemon]{Xen-based Execution Instance Daemon (xbeinstd)}
 \label{sec:xbeinstd}

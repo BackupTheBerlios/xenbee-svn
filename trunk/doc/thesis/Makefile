@@ -66,6 +66,7 @@ view-pdf: $(PDF)
 clean:
 	-rm $(PDF) *.idx *.ilg *.ind *.pdfsync \
                    *.aux *.log *.lof *.loa *.lot *.out \
-                   *.toc *.bbl *.blg *.thm *.rel *~ 2>/dev/null
+                   *.toc *.bbl *.blg *.thm *.rel \
+                   *.glg *.gls *.glo *~ 2>/dev/null
 
 .PHONY: default all clean view view-pdf

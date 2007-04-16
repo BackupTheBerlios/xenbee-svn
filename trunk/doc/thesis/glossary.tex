@@ -3,6 +3,11 @@
   description={\emph{Application Programming Interface}}
 }
 
+\storeglosentry{glo:MSC}{
+  name={MSC},
+  description={\emph{Message Sequence Chart}}
+}
+
 \storeglosentry{glo:DHCP}{
   name={DHCP},
   description={\emph{Dynamic Host Configuration Protocol}}
@@ -58,7 +63,7 @@
   description={
     In multiprogramming systems, the running task keeps running until it
     performs an operation that requires waiting for an external event
-    (e.g. reading from a tape) or until the computer's scheduler forcibly
+    (\eg reading from a tape) or until the computer's scheduler forcibly
     swaps the running task out of the CPU. Multiprogramming systems are
     designed to maximize CPU usage.},
 }
@@ -136,6 +141,15 @@
     the \gls{glo:OS}.}
 }
 
+\storeglosentry{glo:initrd}{
+  name={initrd},
+  description={The  term  \emph{initrd}  refers to an \emph{initial
+      ramdisk}. This disk is loaded into memory, hence the name, during
+    the boot process of a kernel and can contain additional device
+    drivers and setup routines.
+ }
+}
+
 \storeglosentry{glo:JSDL}{
   name={JSDL},
   description={The    \emph{Job     Submission    Description    Language}
@@ -209,7 +223,7 @@
 \storeglosentry{glo:SSH}{
   name={SSH},
   description={The \emph{Secure SHell} can be used to gain access to a
-    remote computer in a secure manner (i.e~encrypted).}
+    remote computer in a secure manner (\ie encrypted).}
 }
 
 \storeglosentry{glo:XenBEE}{
@@ -257,8 +271,37 @@
 
 \storeglosentry{glo:FSM}{
   name={FSM},
-  description={\emph{Finite State Machine}.}
+  description={\emph{Finite State Machine}}
 }
+
+\storeglosentry{glo:SQL}{
+  name={SQL},
+  description={The \emph{Structured Query Language} is a standardized
+    language that is used to interact with relational database
+    systems. The language provides semantics to create, retrieve, update
+    and delete data from such a database system.}
+}
+
+
+\storeglosentry{glo:chroot}{
+  name={chroot},
+  description={The term \emph{chroot} refers to the UNIX system-call
+    \texttt{chroot}, that changes the root of the file system for the
+    process that executed this call. In UNIX systems, the file-system is
+    a hierarchical tree, starting with \texttt{``/''}. If a process
+    changes its root to, say, \texttt{``/tmp''}, it is no more allowed to
+    access files outside of \texttt{``/tmp''}.}
+}
+
+\storeglosentry{glo:chrootenv}{
+  name={chroot environment},
+  description={A \emph{chroot environment} is a file-system directory
+    structure that contains all libraries and programs which a specific
+    application needs to run. The application is then executed after
+    issuing a \texttt{chroot} to that directory.}
+}
+
+
 
 %%% Local Variables: 
 %%% mode: latex
