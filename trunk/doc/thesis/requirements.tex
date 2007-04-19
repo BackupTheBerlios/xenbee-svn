@@ -290,7 +290,7 @@ concrete  concept  for  the  execution  environment  and  its  components.
 
 Handling of requests, that the users make to the execution environment and
 controlling the  virtual machines, requires an  additional component. This
-component will be called  \emph{Xen-based Execution Daemon} or \emph{xbed}
+component will be called  \emph{Xen-Based Execution Daemon} or \emph{xbed}
 for short. If an user wants to interact with the execution environment, he
 does  so  by  communicating  directly  with the  managing  component  (see
 Figure~\ref{fig:concrete-concept}).
@@ -307,7 +307,7 @@ Figure~\ref{fig:concrete-concept}).
 \end{figure}
 
 Another component which  will be required to control  the actual execution
-of a task  within a virtual machine will  be the \emph{Xen-based Execution
+of a task  within a virtual machine will  be the \emph{Xen-Based Execution
   Instance Daemon} or \emph{xbeinstd} for short. There are several reasons
 why this  dedicated component  is required to  be running in  each virtual
 machine. The  most important one is,  that the same  virtual machine image
@@ -373,9 +373,9 @@ architecture are involved in each of them.
 The ``big picture'' is shown in Figure~\ref{fig:system-usecases}, it shows
 a compendium  of several possible  use cases from  a very high  level. The
 involved    actors    are     the    \emph{user},    the    \emph{managing
-  component}\footnote{denoted as \emph{xbed} --- the ``Xen-based Execution
+  component}\footnote{denoted as \emph{xbed} --- the ``Xen-Based Execution
   Daemon''}     mentioned      earlier     and     a      new     managing
-component\footnote{denoted   as   \emph{xbeinstd}   ---  the   ``Xen-based
+component\footnote{denoted   as   \emph{xbeinstd}   ---  the   ``Xen-Based
   Execution Instance Daemon''} which  is running on and solely responsible
 for a single virtual machine.
 
@@ -500,7 +500,7 @@ data are  shown. The user  makes his request  for caching the data  to the
 make  the ``discovery''  of cached  data easier  for the  users,  the user
 should be required to give some descriptive information for the data he is
 going to  cache. As the return of  the request, the user  should receive a
-unique identifier or an \gls{glo:URI} for the created entry in the cache.
+unique identifier or a \gls{glo:URI} for the created entry in the cache.
 
 The details  of how  exactly the caching  works are  highly implementation
 specific, the most important point is  how the cached data can be referred

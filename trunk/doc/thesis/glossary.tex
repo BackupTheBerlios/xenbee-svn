@@ -16,9 +16,9 @@
 \storeglosentry{glo:MAC}{
   name={MAC},
   description={\emph{Media Access Control}. MAC addresses are uniquely
-    assigned identifiers for network interface cards (NICs). No two
+    assigned identifiers () for network interface cards (NICs). No two
     network adapters must have the same MAC when communicating
-    within the same physical network.}
+    within the same physical network. Each manufacturer of NICs }
 }
 
 \storeglosentry{glo:XEN}{
@@ -41,12 +41,23 @@
   description={\emph{Message Layer Security}}
 }
 
+\storeglosentry{glo:FTP}{
+  name={FTP},
+  description={\emph{File Transfer Protocol} (RFC~$959$)}
+}
+
+\storeglosentry{glo:HTTP}{
+  name={HTTP},
+  description={\emph{HyperText Transfer Protocol} (RFC~$2616$)}
+}
+
+
 \storeglosentry{glo:TLS}{
   name={TLS},
   description={\emph{Transport Layer Security}. The protocol allows client/server
     applications to communicate in a way that is designed to prevent
     eavesdropping, tampering, or message forgery (taken from abstract of
-    the RFC 4346).
+    the RFC~$4346$).
   }
 }
 
@@ -189,7 +200,7 @@
     connection-oriented stream-based protocol which guarantees an ordered,
     loss-free and correct (\ie checksummed) transport of packets in
     packet-switched computer networks.
-    For detailed information have a look at RFC 793.
+    For detailed information have a look at RFC~$793$.
   }
 }
 
@@ -208,7 +219,7 @@
 \storeglosentry{glo:NAT}{
   name={NAT},
   description={\emph{Network Address Translation} or \emph{Network Address
-    Translator} (RFC 1631) is used to multiplex one official IP address
+    Translator} (RFC~$1631$) is used to multiplex one official IP address
   to a whole network of private network addresses (contact the site of the
   IANA for a list of IP addresses that are reserved for private use only).}
 }
@@ -217,7 +228,7 @@
   name={URI},
   description={A \emph{Uniform Resource Identifier} is a compact string of
   characters for identifying an abstract or physical resource (taken from
-  RFC 2396).}
+  RFC~$2396$).}
 }
 
 \storeglosentry{glo:SSH}{
@@ -228,7 +239,7 @@
 
 \storeglosentry{glo:XenBEE}{
   name={XenBEE},
-  description={\emph{Xen-based Execution Environment}}
+  description={\emph{Xen-Based Execution Environment}}
 }
 
 \storeglosentry{glo:X509}{
@@ -260,7 +271,7 @@
 
 \storeglosentry{glo:UUID}{
   name={UUID},
-  description={\emph{Universal Unique IDentifier}. Have a look at RFC~4122
+  description={\emph{Universal Unique IDentifier}. Have a look at RFC~$4122$
   for more information.}
 }
 
@@ -301,6 +312,12 @@
     issuing a \texttt{chroot} to that directory.}
 }
 
+\storeglosentry{glo:base64}{
+  name={base64},
+  description={A data encoding scheme that uses a base of $64$. The $64$
+    ``numbers'' can be represented by using printable ASCII characters
+    only. It can often be found as the encoding of email attachments.}
+}
 
 
 %%% Local Variables: 

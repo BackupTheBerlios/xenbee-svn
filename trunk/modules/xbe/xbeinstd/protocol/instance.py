@@ -137,7 +137,7 @@ class XBEInstProtocol(xmlprotocol.XMLProtocol):
             
             # build environment
             env = posix_app.get("Environment")
-            environ = {}
+            environ = { "MQS": "%s://%s:%d" % (xbeinstd.proto, xbeinstd.host, xbeinstd.port) }
             if env is not None:
                 for key, val, fs in env:
                     environ[key] = __resolve((val,fs), known_filesystems)

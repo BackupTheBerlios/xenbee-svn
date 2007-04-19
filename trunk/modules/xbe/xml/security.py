@@ -179,7 +179,7 @@ class X509SecurityLayer:
         return _msg
 
     def encrypt(self, msg):
-        """Signs and encrypts the given messgage.
+        """Encrypts the given messgage.
 
         my_cert needs to hold a X509 certificate *and* a private key.
         other_cert must hold a X509 certificate.
@@ -198,15 +198,21 @@ class X509SecurityLayer:
         The result will look like:
         
         <xbe:Message>
-          <xbe-sec:CipherData>
-            <!-- the following key is encrypted using the public key -->
-            <xbe-sec:CipherKey>base64 encoded encrypted symetric key</xbe-sec:CipherKey>
-            <xbe-sec:CipherIV>base64 encoded initial vector</xbe-sec:CipherIV>
-            <xbe-sec:CipherAlgorithm>the algorithm used to encrypt/decrypt data</xbe-sec:CipherAlgorithm>
-            <xbe-sec:CipherValue>
-              <!-- base64 encoded encryption of real body using CipherKey -->
-            </xbe-sec:CipherValue>
-          </xbe-sec:CipherData>
+          <xbe:MessageHeader>
+            <xbe-sec:CipherInfo>
+              <!-- the following key is encrypted using the public key -->
+              <xbe-sec:CipherKey>base64 encoded encrypted symetric key</xbe-sec:CipherKey>
+              <xbe-sec:CipherIV>base64 encoded initial vector</xbe-sec:CipherIV>
+              <xbe-sec:CipherAlgorithm>the algorithm used to encrypt/decrypt data</xbe-sec:CipherAlgorithm>
+            </xbe-sec:CipherInfo>
+          </xbe:MessageHeader>
+          <xbe:MessageBody>
+            <xbe-sec:CipherData>
+              <xbe-sec:CipherValue>
+                <!-- base64 encoded encryption of real body using CipherKey -->
+              </xbe-sec:CipherValue>
+            </xbe-sec:CipherData>
+           </xbe:MessageBody>
         </xbe:Message>
         """
 
@@ -228,28 +234,35 @@ class X509SecurityLayer:
 
         # create a new message and append necessary information
         _msg = etree.Element(XBE("Message"), nsmap=nsmap)
-        etree.SubElement(_msg, XBE("MessageHeader"))
+        
+        hdr = etree.SubElement(_msg, XBE("MessageHeader"))
+        cipher_info = etree.SubElement(hdr, XBE_SEC("CipherInfo"))
+        etree.SubElement(cipher_info, XBE_SEC("CipherKey")).text = enc_key
+        etree.SubElement(cipher_info, XBE_SEC("CipherIV")).text = enc_iv
+        etree.SubElement(cipher_info, XBE_SEC("CipherAlgorithm")).text = cipher.algorithm()
+
         bod = etree.SubElement(_msg, XBE("MessageBody"))
         cipher_data = etree.SubElement(bod, XBE_SEC("CipherData"))
-        etree.SubElement(cipher_data, XBE_SEC("CipherKey")).text = enc_key
-        etree.SubElement(cipher_data, XBE_SEC("CipherIV")).text = enc_iv
-        etree.SubElement(cipher_data, XBE_SEC("CipherAlgorithm")).text = cipher.algorithm()
         etree.SubElement(cipher_data, XBE_SEC("CipherValue")).text = enc_message
         return _msg
 
     def decrypt(self, msg):
+        cipher_info = msg.find(XBE("MessageHeader")+"/"+XBE_SEC("CipherInfo"))
+        if cipher_info is None:
+            raise SecurityError("could not find CipherInfo")
+        enc_key = cipher_info.findtext(XBE_SEC("CipherKey"))
+        if enc_key is None:
+            raise SecurityError("could not find CipherKey")
+        enc_iv = cipher_info.findtext(XBE_SEC("CipherIV"))
+        if enc_iv is None:
+            raise SecurityError("could not find CipherIV")
+        enc_alg = cipher_info.findtext(XBE_SEC("CipherAlgorithm"))
+        if enc_alg is None:
+            raise SecurityError("could not find CipherAlgorithm")
+        
         cipher_data = msg.find(XBE("MessageBody")+"/"+XBE_SEC("CipherData"))
         if cipher_data is None:
             raise SecurityError("could not find CipherData")
-        enc_key = cipher_data.findtext(XBE_SEC("CipherKey"))
-        if enc_key is None:
-            raise SecurityError("could not find CipherKey")
-        enc_iv = cipher_data.findtext(XBE_SEC("CipherIV"))
-        if enc_iv is None:
-            raise SecurityError("could not find CipherIV")
-        enc_alg = cipher_data.findtext(XBE_SEC("CipherAlgorithm"))
-        if enc_alg is None:
-            raise SecurityError("could not find CipherAlgorithm")
         key = self.__my_cert.msg_decrypt(enc_key)
         IV = self.__my_cert.msg_decrypt(enc_iv)
         # create Cipher algorithm

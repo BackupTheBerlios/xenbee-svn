@@ -5,7 +5,7 @@
 \chapter{Design and Implementation}
 \label{cha:design}
 
-This chapter is about the design and implementation of the \emph{Xen-based
+This chapter is about the design and implementation of the \emph{Xen-Based
   Execution  Environment} (\gls{glo:XenBEE}).   The  execution environment
 incorporates  a total  of three  main  components: the  \emph{xbe} on  the
 user's side, the \emph{xbed} on  the server's side and the \emph{xbeinstd}
@@ -27,14 +27,14 @@ library \cite{pycurl}.
 \label{sec:design:overview}
 
 The picture in Figure~\ref{fig:architecture-overview} shows an overview of
-the three components which, when put together, make up the \emph{Xen-based
+the three components which, when put together, make up the \emph{Xen-Based
   Execution Environment} (\gls{glo:XenBEE}).
 
 \begin{figure}[ht]
   \centering
   \includegraphics[scale=.7]{architecture-overview}
   \caption[Overview of the  \gls{glo:XenBEE} components]{The components of
-    the Xen-based Execution Environment}
+    the Xen-Based Execution Environment}
   \label{fig:architecture-overview}
 \end{figure}
 
@@ -76,11 +76,11 @@ he  thinner links  are either  inner-process connections  (in case  of the
 cache) or  connections between  parent and child  process (in case  of the
 user-application).
 
-\section[Xen-based Execution Daemon]{Xen-based Execution Daemon (xbed)}
+\section[The Xen-Based Execution Daemon]{The Xen-Based Execution Daemon (xbed)}
 \label{sec:xbed}
 
 This  section describes  the  ``heart'' of  the  \gls{glo:XenBEE} ---  the
-\emph{xbed}.  Well, the \emph{xbed}  is itself composed of several smaller
+\emph{xbed}.   The  \emph{xbed}  is  itself composed  of  several  smaller
 components that  are each responsible for  a single detail  of the daemon.
 The    main    components    though    are   the    \texttt{Cache},    the
 \texttt{TaskManager}  and the  \texttt{InstanceManager}. The  former  is a
@@ -168,12 +168,12 @@ files must  be provided by  the user,  since he is  the one who  knows his
 application and how the operating  system has to be configured to actually
 execute the application.
 
-Well, by just using these three files, a virtual machine cannot be created
-right away,  it must be  \emph{configured} first.  The configuration  of a
-virtual  machine is manifold,  it contains  descriptions of  the operating
-system  which  shall be  used  (\ie the  mentioned  three files),  memory
-settings (\ie the amount of  virtualized physical memory), them number of
-virtual CPUs and network parameters.
+By just using these three files, a virtual machine cannot be created right
+away, it must be \emph{configured}  first.  The configuration of a virtual
+machine  is manifold,  it contains  descriptions of  the  operating system
+which shall be used (\ie  the mentioned three files), memory settings (\ie
+the amount  of virtualized physical  memory), them number of  virtual CPUs
+and network parameters.
 
 \subparagraph{Instance Configuration and Setup}
 
@@ -196,7 +196,9 @@ The  network  configuration   of  a  virtual  machine  is   based  on  the
 the guest  \gls{glo:OS} has  to be configured  to use  \gls{glo:DHCP}. The
 administrator of  the host, on which  the \emph{xbed} runs,  can specify a
 list  of  \gls{glo:MAC}  addresses  that  shall be  used  by  the  virtual
-machines.
+machines. In addition to  these \gls{glo:MAC} addresses, the administrator
+can also  specify a \gls{glo:URI}  or an IP  address by which  the virtual
+machine
 
 Virtualized  physical  memory  and  the  number of  virtual  CPUs  can  be
 specified  in the  \gls{glo:JSDL} document  using the  predefined resource
@@ -319,11 +321,11 @@ signalled to abort whatever it is doing at the time.
 
 \bigskip
 
-Well,  the  whole cycle  through  which  a task  may  run  is depicted  in
+The  whole   cycle  through   which  a  task   may  run  is   depicted  in
 Figure~\ref{fig:act-execute-task}  as  an   activity  diagram.   The  only
-sub-activity that  cannot be aborted  at all is the  \emph{stop instance}
+sub-activity that  cannot be  aborted at all  is the  \emph{stop instance}
 operation. That is because the  shutdown process of the underlying virtual
-machine just cannot be cancelled or  reversed. That is also the reason to
+machine just cannot  be cancelled or reversed. That is  also the reason to
 not having an extra sub-state for that operation in the job-model.
 
 The  process starts  with waiting  on  a ``ready-to-go''  signal, that  is
@@ -406,23 +408,22 @@ create    virtual    machine,    these    are    the    early    mentioned
 \emph{\gls{glo:initrd}},  as well).   Without these  files, the  next part
 cannot be started.
 
-Well, the second part of the stage-in process handles the input files that
-an  user had  specified for  his  application. These  definitions use  the
-standard    \texttt{DataStaging}    element    of    the    \gls{glo:JSDL}
-specification. These files are directly retrieved into the virtual machine
-image, that  was previously obtained, hence  the two parts  of the staging
-process.
+The second  part of the stage-in  process handles the input  files that an
+user had specified for his application. These definitions use the standard
+\texttt{DataStaging}  element of  the \gls{glo:JSDL}  specification. These
+files  are directly  retrieved into  the virtual  machine image,  that was
+previously obtained, hence the two parts of the staging process.
 
 All files, including the virtual machine specific ones, are referred to as
 \emph{Uniform  Resource  Identifier}s  (\gls{glo:URI}s). That  means,  all
 files must be ``somehow'' accessible by the \emph{xbed}.  An user can, for
-instance,  specify files that  are located  on an  \texttt{HTTP} or  on an
-\texttt{FTP} server ---  currently only these two protocols  and a special
-URI to reference to cached  files are supported.  Those \gls{glo:URI}s are
-then retrieved  by the  \emph{xbed} by using  the standard  mechanisms for
-file retrieval based on  these protocols --- the library \texttt{libcurl},
-which  relates to  the UNIX  \texttt{curl}  command is  used to  implement
-download and upload.
+instance, specify files that  are located on an \texttt{\gls{glo:HTTP}} or
+on an \texttt{\gls{glo:FTP}} server --- currently only these two protocols
+and  a special  URI to  reference to  cached files  are  supported.  Those
+\gls{glo:URI}s are then retrieved by the \emph{xbed} by using the standard
+mechanisms for  file retrieval  based on these  protocols ---  the library
+\texttt{libcurl}, which relates to the UNIX \texttt{curl} command, is used
+to implement download and upload.
 
 \subsubsection{Support for compressed files}
 
@@ -450,7 +451,7 @@ submits to the execution environment  with the mode of compression and the
 \begin{figure}[ht]
   \centering
   \includegraphics[scale=.55]{act-retrieve-file}
-  \caption[File  Retrieval  Activity]{Steps  involved when  retrieving  an
+  \caption[File  Retrieval  Activity]{Steps  involved when  retrieving  a
     \gls{glo:URI}.}
   \label{fig:act-retrieve-file}
 \end{figure}
@@ -528,10 +529,11 @@ To provide  the possibility to  compress the files before  uploading them,
 the ``cleanup'' hook is called before any of the actual staging operations
 is called. The next step  is the handling of the JSDL-\texttt{DataStaging}
 elements that  define a stage-out operation. The  only currently supported
-protocols that can be  used for the upload are FTP and  HTTP. In the final
-step of  the upload process the  ``post-cleanup'' hook is  called; to that
-time,  all specified  staging  operations have  already been  successfully
-performed and the image has been unmounted.
+protocols that can  be used for the upload  are \texttt{\gls{glo:FTP}} and
+\texttt{\gls{glo:HTTP}}.  In the  final  step of  the  upload process  the
+``post-cleanup''  hook is  called;  to that  time,  all specified  staging
+operations have already been successfully performed and the image has been
+unmounted.
 
 If everything  went well, all  stored data\footnote{this does  not include
   internal data structures (\eg exit-code).}  that belongs to this task is
@@ -554,11 +556,12 @@ slow network connection.
 
 \subsubsection{Adding data to the cache}
 
-An  user  adds  files  to  the  execution  environment  by  specifying  an
+An  user  adds  files  to   the  execution  environment  by  specifying  a
 \gls{glo:URI} that can be retrieved by the \emph{xbed}.  This will usually
 be the same \gls{glo:URI} the user would have given in his job description
-(\eg a location  on some FTP or HTTP server).  The \emph{xbed} attempts to
-retrieve the given \gls{glo:URI} and adds a new entry to a database.
+(\eg a location  on some \texttt{\gls{glo:FTP}} or \texttt{\gls{glo:HTTP}}
+server).  The \emph{xbed} attempts to retrieve the given \gls{glo:URI} and
+adds a new entry to a database.
 
 Actually the  complete mechanism  of caching is  implemented in  a special
 component  within  the  \emph{xbed}  on   its  own.   The  cache  uses  an
@@ -575,20 +578,20 @@ compression   if  the   data   had  been   compressed.   Additionally   an
 \texttt{SHA1}  digital fingerprint  of the  data is  computed  and stored,
 along with the provided information, in the database.
 
-The  cache-component assigns  each  entry an  unique  identifier based  on
-\gls{glo:UUID}s, this identifier can later  be used in an \gls{glo:URI} to
+The  cache-component  assigns each  entry  a  unique  identifier based  on
+\gls{glo:UUID}s, this identifier  can later be used in  a \gls{glo:URI} to
 refer to that  entry.  When using the \emph{xbe} command  line tool to add
 data to  the cache, the \gls{glo:URI}  of the newly created  entry will be
 printed on the screen upon success.
 
 \subsubsection{Discovering cache entries}
 
-Well, the first way of ``discovering''  an entry of the cache is simply to
-write  down  the \gls{glo:URI}  one  has  received  upon addition  of  the
-entry. But  that is not always  feasible, since the entry  could be shared
-among several users  who do not know each other  --- say, an administrator
-or provider of a  virtual machine image added it to the  cache, so that it
-can be used by several, to that time unknown, users.
+The first way of ``discovering'' an  entry of the cache is simply to write
+down the  \gls{glo:URI} one has received  upon addition of  the entry. But
+that is not always feasible, since the entry could be shared among several
+users who do not know each  other --- say, an administrator or provider of
+a virtual machine image  added it to the cache, so that  it can be used by
+several, to that time unknown, users.
 
 The  discovery of  cached entries  is  implemented in  the \emph{xbed}  by
 simply providing the  user with a list of all  entries. This list contains
@@ -637,30 +640,765 @@ cached entries, so that compression  and validation can be used with them,
 too.
 
 
-\subsection[Xen-based Submission Description Language]{Xen-based Submission Description Language (XSDL)}
+\subsection[The Xen-based Submission Description Language]{The Xen-based Submission Description Language (XSDL)}
 \label{sec:xen-based-submission}
 
-an extension to the \gls{glo:JSDL}
+This  section  describes  the   extensions  to  the  \emph{Job  Submission
+  Description  Language} that  were developed.   The extensions  have been
+required,  since   the  \gls{glo:JSDL}  does  not   directly  support  the
+description of virtual machines.
 
+There are actually two  different kinds of extensions: general extensions,
+that  can also  be used  to enhance  some of  the  standard \gls{glo:JSDL}
+elements, as well as an extension  that is purely specific to the proposed
+execution environment.
 
-\section[Xen-based Execution Instance Daemon]{Xen-based Execution Instance Daemon (xbeinstd)}
+\subsubsection{General extension elements}
+
+As  described  above,  the  \gls{glo:XenBEE} supports  the  submission  of
+compressed  files and  the  validation  of those  files  based on  digital
+fingerprints.   To reflect this  behavior along  with the  job submission,
+additional ``decorator''  elements have been  added.  Let me  clarify this
+with  a  simple  example.   The  \gls{glo:JSDL} does  only  support  plain
+\gls{glo:URI}s. If  this \gls{glo:URI} is now  used along with  one of the
+decorators, the \emph{xbed} interprets the URI accordingly:
+
+\bigskip
+
+\begin{center}
+  \begin{minipage}{.75\textwidth}
+    \begin{lstlisting}[captionpos=b,backgroundcolor=\color{listingcolor},frame=lines,numbers=left,numberstyle=\tiny,caption={Example
+        with the general \texttt{Hash} and \texttt{Compression}
+        extensions.},label={lst:xbe-xsdl-example-hash},language=XML]
+<jsdl:Source>
+  <jsdl:URI>
+    ftp://ftp.example.com/pub/input-file
+  </jsdl:URI>
+  <xsdl:Hash algorithm="sha1">
+    a3b180e5dc2359849ffa927b93414ada20807a0c
+  </xsdl:Hash>
+  <xsdl:Compression algorithm="bzip2"/>
+</jsdl:Source>
+    \end{lstlisting}
+  \end{minipage}
+\end{center}
+
+The    example   in   Listing~\ref{lst:xbe-xsdl-example-hash}\footnote{The
+  namespace    prefixes    refer   to    the    namespaces   defined    in
+  \emph{\nameref{sec:fundamentals:xml}},       Table~\ref{tab:namespaces}.}
+could  be  an  excerpt  of  a  JSDL-\texttt{DataStaging}  operation.   The
+\texttt{Source} element contains the URI that refers to the location of an
+input file which shall be staged in.
+
+The \texttt{Hash}  extension stores the digital fingerprint  of the source
+file and the algorithm that has been used to generate it. This fingerprint
+is used by  the \emph{xbed} to verify that the  retrieved file is actually
+the same  as on the  server. The \texttt{Compression} extension  holds the
+algorithm only --- one  of \texttt{bzip2}, \texttt{gzip}, \texttt{tbz} and
+\texttt{tgz} ---  that has been used  to compress the file.  In this case,
+the  file  \texttt{input-file}   is  compressed  with  the  \texttt{bzip2}
+algorithm.
+
+An XML-Schema document is used to validate each one of the extensions. For
+example,  the  compression  algorithm  is  checked  against  the  list  of
+supported  algorithms and  the  content of  the  \texttt{Hash} element  is
+restricted to hexadecimal digits.
+
+\medskip
+
+When the document is parsed a  special class will be instantiated for each
+of    these   elements.    That    are   the    \texttt{Compression}   and
+\texttt{HashValue} classes. Both are initialized with the parameters given
+to the element  and are used to decompress or  validate the retrieved file
+respectively.
+
+\subsubsection{\gls{glo:XenBEE} specific extensions}
+
+The staging operations  that are provided by the  \gls{glo:JSDL} cannot be
+used  to  describe   the  required  files  for  a   virtual  machine  (\ie
+\emph{image}, \emph{kernel} and  \emph{initrd}). Those operations ``work''
+on the file-system hierarchy that  is perceived by the application itself,
+and that is already the file-system of the virtual machine.
+
+However, the virtual machine specific files  have to be staged in as well,
+so there  was a need  to provide an  extension to the  \gls{glo:JSDL}. The
+extension follows  the \gls{glo:JSDL} in the  way it is  structured and is
+added as an additional element to the JSDL-\texttt{Resources} element. The
+extension  defines an  \texttt{InstanceDefinition} element  which contains
+the  actual \texttt{InstanceDescription}.  The  following listing  shows a
+thorough example usage of this extension.
+
+\bigskip
+
+\begin{center}
+  \begin{minipage}{.75\textwidth}
+    \begin{lstlisting}[captionpos=b,backgroundcolor=\color{listingcolor},frame=lines,numbers=left,stepnumber=5,numberfirstline=false,numberstyle=\tiny,caption={Example
+      of an \texttt{InstanceDefinition} element describing the required
+      files of a virtual machine.},label={lst:xbe-xsdl-example},language=XML]
+<xsdl:InstanceDefinition>
+  <xsdl:InstanceDescription>
+    <xsdl:Instance>
+      <xsdl:Image fs-type="ext3">
+        <xsdl:Location>
+          <xsdl:URI>
+            http://www.example.com/base.img
+          </xsdl:URI>
+        </xsdl:Location>
+      </xsdl:Image>
+      <xsdl:Kernel>
+        <xsdl:Location>
+          <xsdl:URI>
+            http://www.example.com/kernel
+          </xsdl:URI>
+        </xsdl:Location>
+      </xsdl:Kernel>
+      <!-- the initrd is optional -->
+      <xsdl:Initrd>
+        <xsdl:Location>
+          <xsdl:URI>
+            http://www.example.com/initrd
+          </xsdl:URI>
+        </xsdl:Location>
+      </xsdl:Initrd>
+    </xsdl:Instance>
+  </xsdl:InstanceDescription>
+</xsdl:InstanceDefinition>
+    \end{lstlisting}
+  \end{minipage}
+\end{center}
+
+Each one of the special files has its own element, \ie the \texttt{Image},
+\texttt{Kernel} and  \texttt{Initrd} element, whereas  the \texttt{Initrd}
+element is optional. The locations of the files are specified by using the
+\texttt{Location}  element  that  contains  a  \gls{glo:URI}.   The  image
+specification can  contain an additional  attribute that defines  the used
+file-system  ---  currently   only  \texttt{ext2}  and  \texttt{ext3}  are
+supported\footnote{Both of  them are standard file-systems  found on Linux
+  systems.}.   The generic extensions  discussed before  can be  used with
+\texttt{Location} elements as well.
+
+The here defined  files are staged directly into  the spool directory that
+has   been  created  exclusively   for  this   single  job,   whereas  the
+JSDL-\texttt{DataStaging} files are retrieved into the image.
+
+\section[The Xen-Based Execution Instance Daemon]{The Xen-Based Execution Instance Daemon (xbeinstd)}
 \label{sec:xbeinstd}
 
-\begin{itemize}
-\item notifies xbed when instance is up (\ie network connectivity)
-\item keep-alive
-\item input files are already available
-\item parses jsdl
-\item sets working directory
-\item redirects standard input/output/error to the files in jsdl (or /dev/null)
-\item starts task when the xbed notifies
-\item passes arguments specified in jsdl
-\item notifies xbed when application has finished (shutdown may be initialized)
-\end{itemize}
-foo bar
+The  \emph{Xen-Based  Execution  Instance   Daemon}  is  a  rather  simple
+component   which  runs   within  a   virtual  machine   created   by  the
+\emph{xbed}. The user  or the person who provides the  image for a virtual
+machine  is  required  to  install  this daemon  inside  the  image  prior
+submission. The daemon  must also be started during  the initialization of
+the operating system (an \texttt{init}-script to start and stop the daemon
+on UNIX-like systems is provided in the source package).
 
-\section{The Communication Protocol}
+When the \emph{xbed} creates a  new virtual machine it adds two parameters
+to the kernel which are eventually exported to the \texttt{init}-script as
+environment variables.  The first parameter contains the unique identifier
+of the instance,  so that a two-way communication  based on message-queues
+can  be established,  whereas  the second  contains  a \gls{glo:URI}.  The
+\gls{glo:URI}\footnote{The   URI   could,    for   example,   look   like:
+  \url{stomp://mqs.example.com/xenbee.daemon.1}}       specifies       the
+message-queue  server and  the queue  that shall  be used  to  contact the
+\emph{xbed}.
+
+\subsubsection{Startup of the xbeinstd}
+
+On  startup,  the \emph{xbeinstd}  uses  the  \gls{glo:URI}  given in  the
+environment variable  \texttt{XBE\_SERVER} or as a  command line parameter
+to  connect  to  the  message-queue  server.  When  the  connection  could
+successfully be  established, the  \emph{xbeinstd} subscribes itself  to a
+unique  queue which  uses  the identifier  of  the virtual  machine it  is
+running on.
+
+Now that  the \emph{xbeinstd}  is completely set  up, it  notifies ``his''
+\emph{xbed}  that  it  is  available  now. Therefore  it  sends  a  simple
+\texttt{InstanceAvailable} message to the  \emph{xbed} and waits for a job
+that   it  can   execute.   Additionally   to  that,   it   sends  regular
+\texttt{InstanceAlive} message to the \emph{xbed}. These messages tell the
+\emph{xbed} that the instance is still functional\footnote{The \emph{xbed}
+  shuts virtual  machines down,  if they do  not send  keep-alive messages
+  regularly.},  they also contain  some informational  values such  as the
+uptime and idle-time of the virtual machine.
+
+\subsubsection{Execution of the user's application}
+
+Once the \emph{xbed}  is aware of the availability  of the virtual machine
+and  the   \emph{xbeinstd},  it  sends  the  job   description  using  the
+\texttt{ExecuteTask} message to  the virtual machine. The \emph{xbeinstd},
+in turn, parses the \gls{glo:JSDL} document contained in this message.
+
+The    JSDL     supports    the    description     of    executables    on
+\gls{glo:POSIX}-compliant  systems  using the  \texttt{POSIX\-Application}
+extension. The individual  steps that lead eventually to  the execution of
+the application can be summarized as follows:
+
+\begin{itemize}
+\item The  \texttt{Executable}, \texttt{Argument} and \texttt{Environment}
+  elements are parsed.  These values are assembled to  the parameters that
+  are eventually passed to the \texttt{execve} system-call.
+\item  The  input,  output  and  error  streams  of  the  application  are
+  redirected  either to the  files specified  in the  JSDL document,  or to
+  \texttt{/dev/null}.
+\item  The working  directory  of the  application  is set  either to  the
+  directory specified in the JSDL document, or to \texttt{``/''}.
+\item  Finally the  application  is executed  as  a child  process of  the
+  \emph{xbeinstd}.
+\end{itemize}
+
+Additionally   to  the   environment  variables   specified  in   the  job
+description, the  \texttt{MQS} environment variable is  set.  Per default,
+this  variable is  set to  the message-queue  server that  is used  by the
+\emph{xbeinstd},  but the  value can  be overridden  by an  user  using an
+\texttt{Environment} element  that defines this  variable.  An application
+that is  distributed over  several virtual machines  can make use  of this
+variable for communication and coordination purposes.
+
+When the application finishes  its execution, the \emph{xbeinstd} notifies
+the   \emph{xbed}   about   that   using   an   \texttt{ExecutionFinished}
+message. The  daemon does  not terminate itself,  it rather waits  for the
+\emph{xbed} to shut the virtual machine down. I decided to implement it in
+that way, to have the option to possibly reuse the virtual machine, \ie in
+the future, it  could be possible to execute more  than one application in
+the same virtual machine.
+
+\subsubsection{On-demand virtual machine deployment}
+
+In the  previous section  I have described  how ordinary  applications are
+executed  with  the  \emph{xbeinstd},  but  those  applications  typically
+terminate after some  time. The on-demand deployment of  a virtual machine
+does not aim at the execution  of an application specified in the JSDL, it
+just aims at the creation of the virtual machine.
+
+To keep the  \emph{xbeinstd} simple, the best way was  to define a special
+extension to  the JSDL.  This  extension aims at  the \texttt{Application}
+element   just  as   the  POSIX   extensions.   The   element   is  called
+\texttt{XBEApplication}.  The  following listing  shows the usage  of this
+extension.  The  only ``executable''  that  is  currently  defined is  the
+\texttt{ContinuousTask}.
+
+\bigskip
+
+\begin{center}
+  \begin{minipage}{.75\textwidth}
+    \begin{lstlisting}[captionpos=b,backgroundcolor=\color{listingcolor},frame=lines,numbers=none,stepnumber=5,numberfirstline=false,numberstyle=\tiny,caption={Example
+        of a \texttt{ContinuousTask} used for on-demand virtual machine deployment.},label={lst:xbe-xbeinstd-continuous-task},language=XML]
+<jsdl:Application>
+  <xbe:XBEApplication>
+    <xbe:ContinuousTask/>
+  </xbe:XBEApplication>
+</jsdl:Application>
+    \end{lstlisting}
+  \end{minipage}
+\end{center}
+
+When  the \emph{xbeinstd}  encounters  this specific  \texttt{Application}
+element, it does  nothing, actually.  The user must log  in to the created
+virtual machine, \eg by using a remote shell such as \gls{glo:SSH}.
+
+\section[The Xen-Based Execution Command Line Client]{The Xen-Based Execution
+  Command Line Client (xbe)}
+\label{sec:command-line-client}
+
+The implemented  command line  client is very  straightforward to  use. It
+provides the user with an  on-line help system, which provides information
+about all supported commands and how they are used. The help system can be
+activated by issuing the \texttt{xbe help} shell command in a terminal.
+
+The  \emph{xbe}  has  an  interface   to  all  aspects  of  the  execution
+environment  that  have been  discussed  so far.   It  allows  an user  to
+\texttt{reserve}, \texttt{confirm} or \texttt{terminate} a reservation and
+it  is   also  possible  to   monitor  the  \texttt{status}  of   a  given
+reservation. The tool too has an interface to the cache and it is able add
+data to  the cache  and list  the current contents  by using  the commands
+\texttt{cache} and \texttt{showcache}, respectively.
+
+Since the protocol assumes a two-step  process for the submission of a new
+job  (\ie creation  and  confirmation of  a  reservation), the  \emph{xbe}
+provides a  convenience command,  that allows an  user to perform  the two
+steps in one  \texttt{submit} command. The \texttt{submit} as  well as the
+\texttt{confirm} commands  require the job definition  as a \gls{glo:JSDL}
+document.   The  creation   of  such  a  document  is   not  part  of  the
+\gls{glo:XenBEE},  but several example  files are  included in  the source
+distribution.
+
+\medskip
+
+The  next  section  is  going  to discuss  the  implemented  message-based
+communication protocol in detail.
+
+\section{The Communication Protocol Stack}
 \label{sec:communication-protocol}
+
+The three components,  that have been discussed in  the previous sections,
+are  using  message-queues  and  one  or  more  message-queue  servers  to
+communicate with each other.
+
+This section  describes the details of the  communication architecture and
+its  individual  layers.  There  are  four  layers, the  \emph{Application
+  Layer},  that  implements  the  behavior  of each  single  message,  the
+\emph{XML Message Layer} that represents  each message as an XML document,
+the  \emph{Security  Layer} which  provides  authenticity  and privacy  as
+described            in            Section~\ref{sec:secure-communication},
+\emph{\nameref{sec:secure-communication}},  and at  the  lowest level  the
+\emph{STOMP  Layer} which  is  used to  communicate  with a  message-queue
+server.  An overview over  the layers  in shown  in the  following diagram
+(Figure~\ref{fig:communication-layers}).
+
+\medskip
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[scale=.7]{protocol-layers}
+  \caption[Protocol  Layers]{The  individual   protocol  layers  that  are
+    involved when sending a message to another component.}
+  \label{fig:communication-layers}
+\end{figure}
+
+In the \emph{Application Layer} a  message is represented by an object, so
+that information contained in the  message can easily be read and written.
+The message  is then  transformed into an  XML-document and passed  to the
+next layer, \ie the \emph{XML Message Layer}. The \emph{Security Layer} is
+actually  an XML-based  layer,  too,  it signs  and  encrypts the  message
+received from  the upper layer in  an XML-message.  The final  step is the
+sending of the message  to the communication partner's message-queue using
+the STOMP protocol.
+
+\medskip
+
+The following sections describe the common format of the XML messages that
+are used in the security layer as well as in the message layer. After that
+each layer of the protocol stack is discussed in detail, starting with the
+STOMP layer.  The application  layer is not  described here, since  it has
+already been covered in the previous sections.
+
+\subsection{XML Messages}
+
+The  XML messages  that  are used  in  the \emph{Security  Layer} and  the
+\emph{XML Message Layer} share a  common structure. The messages are split
+into two parts \emph{MessageHeader}  and \emph{MessageBody} which are both
+children of the top-level \emph{Message} element.
+
+The  header,  for  example,  may  contain  security  related  information,
+currently it is  only used by the security layer.   The body, however, can
+either be empty, too, or  contain another XML document that represents the
+application data.
+
+\medskip
+\begin{center}
+  \begin{minipage}{.75\textwidth}
+    \begin{lstlisting}[captionpos=b,backgroundcolor=\color{listingcolor},frame=lines,numbers=none,stepnumber=5,numberfirstline=false,numberstyle=\tiny,caption={The
+        structure of an XML message.},label={lst:xml-message-example},language=XML]
+<xbe:Message>
+   <xbe:MessageHeader>
+     <!-- security related information -->
+   </xbe:MessageHeader>
+   <xbe:MessageBody>
+     <!-- payload XML document representing
+          application data. For example:
+          an encrypted XML document -->
+   </xbe:MessageBody>
+</xbe:Message>
+    \end{lstlisting}
+  \end{minipage}
+\end{center}
+
+To transfer an XML document, the internal tree representation is converted
+into a textual  representation and then sent to  the communication partner
+through the lower transportation layer.
+
+\subsection{The STOMP Layer}
+\label{sec:protocol:stomp}
+
+The  \emph{Streaming  Text  Oriented Message  Protocol}  (\gls{glo:STOMP})
+\cite{stomp} is the  layer at the lowest level and  is used to communicate
+with  a  message-queue  server.
+
+When  one  of  \gls{glo:XenBEE}'s  components wants  to  communicate  with
+another   component,  it   connects  to   a  message-queue   server  using
+\gls{glo:TCP}.    This   connection   can   now  used   to   establish   a
+Stomp-connection. If  an user wants  to request the  status of one  of his
+submissions,  he  passes an  \gls{glo:URI}  to  the  \emph{xbe}. This  URI
+contains   the  low-level   transport  mechanism,   the  address   of  the
+message-queue server and  the queue that must be  used to communicate with
+the other side.  Consider the following URI:
+\begin{quote}
+  \url{stomp://mqs.example.com:61613/a}
+\end{quote}
+It specifies,  that Stomp should be  used to connect  to the message-queue
+server that is listening at the given address. To reach the service on the
+other  side,  messages  are  sent  to the  queue  \texttt{``a''}  on  this
+message-queue server.
+
+Since the available Stomp clients  for Python did not meet my expectations
+and requirements --- they did not integrate well with the \texttt{twisted}
+framework,  I  implemented  the   client  side  of  the  protocol  myself.
+Therefore, the source distribution  of \gls{glo:XenBEE} includes a generic
+implementation of the  Stomp protocol that can be  used in other projects,
+as well.  Additionally, a  small command line  tool (\texttt{stompclient})
+has  been  implemented, that  can  be used  for  testing  purposes ---  it
+supports  the  subscription to  multiple  message-queues  as  well as  the
+transmission of files to an arbitrary destination queue.
+
+\subsection*{Protocol Description}
+
+The Stomp protocol comes ``from the HTTP school of design'' and the client
+is really easy to implement. The  site at \cite{stomp} states, that even a
+\texttt{telnet} session can be used to communicate with a Stomp server.
+
+The  messages  that  are  sent   between  client  and  server  are  called
+\emph{Frames}  and consist of  three parts:  \emph{Command}, \emph{Header}
+and \emph{Body}.   The \emph{Command} defines  the type of the  frame (\eg
+\texttt{SUBSCRIBE} is used to subscribe  to a message-queue on the server,
+\texttt{SEND} is  used to send an application  message). The \emph{Header}
+consists of key-value pair lines; the  header's end is denoted by an empty
+line. The \emph{Body} contains the payload  of the frame and is ended by a
+\texttt{null} (control-@  in ASCII) byte. This section  does only describe
+those   frames  that   are   relevant  to   the   implementation  of   the
+\gls{glo:XenBEE}.
+
+\subsubsection{Connecting to a Stomp Server}
+
+After  a  client   is  connected  to  a  Stomp-server,   \eg  by  using  a
+TCP-connection, it has to login  before it can actually use the connection
+to  send  and  receive  messages   ---  this  is  achieved  by  sending  a
+\texttt{CONNECT} frame to the server as shown in the following listing:
+
+\medskip
+\begin{center}
+  \begin{minipage}{.75\textwidth}
+    \begin{lstlisting}[captionpos=b,backgroundcolor=\color{listingcolor},frame=lines,numbers=none,stepnumber=5,numberfirstline=false,numberstyle=\tiny,caption={The initial
+      \texttt{CONNECT} message sent by a Stomp client.},label={lst:stomp-connect}]
+CONNECT
+login: <username>
+passcode: <passcode>
+
+^@
+    \end{lstlisting}
+  \end{minipage}
+\end{center}
+
+The \texttt{CONNECT} frame supports two header elements, \texttt{username}
+and  \texttt{passcode} that  can be  used by  the server  administrator to
+restrict  the   access  to  the   server.  The  server  sends   either  an
+\texttt{ERROR}  frame  which   contains  detailed  information  about  the
+occurred error or it sends the \texttt{CONNECTED} frame:
+
+\medskip
+\begin{center}
+  \begin{minipage}{.75\textwidth}
+    \begin{lstlisting}[captionpos=b,backgroundcolor=\color{listingcolor},frame=lines,numbers=none,stepnumber=5,numberfirstline=false,numberstyle=\tiny,caption={The
+        \texttt{CONNECTED} message sent by a Stomp server after a client
+        has successfully logged in.},label={lst:stomp-connected}]
+CONNECTED
+session-id: <session-id>
+
+^@
+    \end{lstlisting}
+  \end{minipage}
+\end{center}
+
+According to  the Stomp protocol specification found  in \cite{stomp}, the
+\texttt{session-id}  header  element  is  a  unique  identifier  for  this
+session, but it is not actually used yet.
+
+\subsubsection{Subscribing to Message-Queues}
+
+A Stomp client may subscribe to as  many queues or topics as it likes. The
+Stomp server takes control of  the subscriptions and forwards all messages
+that  are targeted  at  a  particular queue  or  topic. \emph{Topics}  and
+\emph{queues} differ mainly  in the way messages are  handled. A topic has
+the semantics  of a $m:n$ communication, \ie  a message that is  sent to a
+topic will be received  by \textbf{all} subscribers. \emph{Queues}, on the
+other hand,  have $m:1$ semantics ---  a sent message is  only received by
+\textbf{at most one} client that is subscribed to that queue. If more than
+one client did subscribe to the same queue, the server may randomly select
+one of them to be the receiver.
+
+\medskip
+\begin{center}
+  \begin{minipage}{.75\textwidth}
+    \begin{lstlisting}[captionpos=b,backgroundcolor=\color{listingcolor},frame=lines,numbers=none,stepnumber=5,numberfirstline=false,numberstyle=\tiny,caption={The
+        \texttt{SUBSCRIBE} frame used for queue or topic subscription.},label={lst:stomp-subscribe}]
+SUBSCRIBE
+destination: /queue/foobar
+ack: client
+
+^@
+    \end{lstlisting}
+  \end{minipage}
+\end{center}
+
+The  frame  that  is  shown  above  subscribes the  client  to  the  queue
+\texttt{foobar} and  will receive messages  targeted to that  queue. Stomp
+distinguishes   queues   and   topics   by   special   prefixes   in   the
+\texttt{destination}    header    element,    \ie   \texttt{/queue}    and
+\texttt{/topic}, respectively. The header element \texttt{ack} can take on
+two different  values \texttt{client} and  \texttt{auto}. If it is  set to
+\texttt{client}, the  recipient of the  message must send  an \texttt{ACK}
+frame to acknowledge the reception,  otherwise the frame is not considered
+to  be  delivered  and  will  be  sent  again later.   If  it  is  set  to
+\texttt{auto}, the  frame will be sent  only once\footnote{A message-queue
+  server delivers messages not until  at least one client is subscribed to
+  that queue.}  and is discarded afterwards.
+
+The  components of  the  \gls{glo:XenBEE} use  queues  to establish  their
+communication.   The \emph{xbed}  subscribes to  a queue  that  looks like
+\texttt{xenbee.daemon.<unique-id>},  however, the actual  queue has  to be
+configured by  an administrator  (\ie specify the  unique identification).
+The    \emph{xbeinstd}    subscribes     to    queues    of    the    form
+\texttt{xenbee.instance.<UUID>} ---  the UUID is the  unique identifier of
+the virtual machine  instance. The \emph{xbe} is no  exception to that and
+subscribes to queues of  the form \texttt{xenbee.client.<UUID>}, where the
+UUID is randomly chosen.
+
+To  end   a  previously  made   subscription,  the  client  can   send  an
+\texttt{UNSUBSCRIBE} frame. The following listing cancels the subscription
+to the \texttt{foobar} queue:
+
+\medskip
+\begin{center}
+  \begin{minipage}{.75\textwidth}
+    \begin{lstlisting}[captionpos=b,backgroundcolor=\color{listingcolor},frame=lines,numbers=none,stepnumber=5,numberfirstline=false,numberstyle=\tiny,caption={The
+        \texttt{UNSUBSCRIBE} frame revokes a previously made subscription.},label={lst:stomp-unsubscribe}]
+UNSUBSCRIBE
+destination: /queue/foobar
+
+^@
+    \end{lstlisting}
+  \end{minipage}
+\end{center}
+
+
+\subsubsection{Sending and Receiving Messages}
+
+To  send   application  data  to   another  entity,  the  sender   uses  a
+\texttt{SEND}  frame.    An  example   of  such  a   frame  is   shown  in
+Listing~\ref{lst:stomp-send}. The shown  frame represents the transmission
+of the  message ``Hello  World!'' (without the  quotation marks)  to queue
+\texttt{a}.  The \texttt{reply-to} header  is used  to tell  the receiving
+entity to which queue it has to address its replies.
+
+\medskip
+\begin{center}
+  \begin{minipage}{.75\textwidth}
+    \begin{lstlisting}[captionpos=b,backgroundcolor=\color{listingcolor},frame=lines,numbers=none,stepnumber=5,numberfirstline=false,numberstyle=\tiny,caption={The
+        \texttt{SEND} frame is used to send application data.},label={lst:stomp-send}]
+SEND
+destination: /queue/a
+reply-to: /queue/b
+content-length: 12
+
+Hello World!^@
+    \end{lstlisting}
+  \end{minipage}
+\end{center}
+
+The  \texttt{content-length}  header  defines  the actual  length  of  the
+payload  (the empty  line between  header and  body marks  the end  of the
+header).   The   string  ``Hello   World!''   consists  of   exactly  $12$
+characters.  The Stomp client can  now be sure that the next \texttt{null}
+byte indeed marks the end of this frame.  If no \texttt{content-length} is
+specified,  the Stomp  client assumes  that the  frame ends  at  the first
+occurrence of a  \texttt{null} byte.  Depending on the  payload data, this
+can be  harmful ---  consider, for example,  the transmission of  raw, \ie
+non-ASCII, data, in this type of  data a \texttt{null} byte is very likely
+to occur.
+
+This message is transmitted by the server to one of the consumers that are
+subscribed to  the queue \texttt{``a''}.  The following listing  shows how
+the resulting frame could probably look like:
+
+\medskip
+\begin{center}
+  \begin{minipage}{.75\textwidth}
+    \begin{lstlisting}[captionpos=b,backgroundcolor=\color{listingcolor},frame=lines,numbers=none,stepnumber=5,numberfirstline=false,numberstyle=\tiny,caption={The
+        \texttt{MESSAGE} frame is used by the server to transmit a message
+        to a client.},label={lst:stomp-message}]
+MESSAGE
+destination: /queue/a
+message-id: <message-identifier>
+reply-to: /queue/b
+content-length: 12
+
+Hello World!^@
+    \end{lstlisting}
+  \end{minipage}
+\end{center}
+
+The   header    elements   \texttt{destination},   \texttt{reply-to}   and
+\texttt{content-length} are still  the same. But a new  header element has
+been added  by the server,  too.  The \texttt{message-id}  header uniquely
+identifies  this  message  ---   if  the  queue-subscription  was  set  to
+\texttt{client}-acknowledge mode,  this identifier has  to be used  in the
+subsequent \texttt{ACK} frame.
+
+\medskip
+
+This  concludes  the  basic  transportation  layer that  is  used  in  the
+\gls{glo:XenBEE}. All  messages that are  received by the Stomp  layer are
+forwarded to the upper layer and will be handled by specialized protocols.
+
+\subsection{The Security Layer}
+\label{sec:protocol:security}
+
+This layer  implements the \emph{Message Layer  Security} functionality as
+described in Section~\ref{sec:fundamentals:mls}.  The protocol is based on
+XML  messages that  are  sent  through the  lower  layer.  Currently,  the
+\emph{Security Layer} is only used in the communication between \emph{xbe}
+and \emph{xbed}, \ie between user and server.
+
+The protocol is split into  two phases, an \emph{initialization phase} and
+the actual \emph{communication phase}. During the initialization phase the
+communication partners  exchange their public-key certificates  and set up
+the  encryption  scheme  that  shall  be  used in  the  next  phase.   The
+certificates are then validated  against a Certificate Authority to verify
+the identity  of the  communication partner. The  subsequent communication
+phase uses  the exchanged  information of the  first phase  and transports
+application data in a secure way (\ie digitally signed and encrypted).
+
+\subsubsection{Initialization Phase}
+
+This phase is  entered whenever one of the endpoints wants  to start a new
+communication with another endpoint. That means both sides can establish a
+new connection, but most  of the time it will be the  client side (\eg the
+\emph{xbe}) that initiates the connection. Before the actual communication
+can  be secured,  the public-key  certificates of  both endpoints  must be
+exchanged.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[scale=.55]{msc-establish-mls}
+  \caption[MSC    Message   Layer    Security]{Exchange    of   public-key
+    certificates.}
+  \label{fig:msc-establish-mls}
+\end{figure}
+
+The   \gls{glo:MSC}  in  Figure~\ref{fig:msc-establish-mls}   shows  which
+messages are sent to establish  a secure communication. They start both in
+the \texttt{disconnected}  state and the client  starts the initialization
+process  by sending a  \texttt{EstablishMLS} message  to the  server. This
+message contains the client's certificate  and the signature in the header
+of the message.  The message also says that the client is currently in the
+\texttt{disconnected} state which tells the server to send his certificate
+as well.
+
+The  server  receives  the  message,  verifies  its  signature  using  the
+certificate included in the message and finally validates this certificate
+against a  \gls{glo:CA}. If  the certificate is  valid, the  server checks
+whether the  certificate owner  is authorized to  connect at all.   If the
+certificate could not be validated (\ie the signature did not match or the
+certificate  was not  issued  by the  \gls{glo:CA})  or the  owner of  the
+certificate is disallowed to connect, an \texttt{Error} message indicating
+the reason for failure is sent back. If the user is allowed to connect and
+the   received   message   has    been   valid,   the   server   sends   a
+\texttt{EstablishMLS},  too.  As  requested  by the  client, this  message
+includes the server's certificate, but this time the \texttt{disconnected}
+flag is set to \texttt{false}.
+
+All transmitted messages are digitally signed by the sender. At the end of
+the two-way handshake, both sides  know the other's certificate, so that a
+public-key based, secure communication can be established.
+
+\subsubsection{Communication Phase}
+
+This phase  handles the signing  and encryption of the  actual application
+data  (\emph{payload messages}).  The  signature of  the payload  is added
+directly  to   the  \texttt{MessageHeader}  of  the   payload,  while  the
+encryption  of  a  message  creates  a  new  message,  the  \emph{envelope
+  message}.   The schematic  process of  transmitting a  message  from the
+\emph{xbe} to the \emph{xbed} is shown in Figure~\ref{fig:net-mls}.
+ 
+\begin{figure}[ht]
+  \centering
+  \includegraphics[scale=.55]{message-layer-security}
+  \caption[Message Layer Security]{Secure transmission of an XML document.}
+  \label{fig:net-mls}
+\end{figure}
+
+Before a message  is encrypted, it is signed by  the sender, the procedure
+for generating the signature can be summarized in the following steps:
+
+\begin{itemize}
+\item     Generate     the     canonical     representation     of     the
+  \emph{payload-message's} XML document (see \cite{canonical-xml} for more
+  information on \emph{Canonical XML}).
+\item  Transform this  canonical form  into a  textual  representation and
+  compute its digital fingerprint using a secure hash algorithm.
+\item Sign this digital fingerprint  with the sender's private key and add
+  the resulting signature to the header of the payload message.
+\end{itemize}
+
+To validate such  a message, the recipient must  remove the signature from
+the message's header first. Now  he can compute the digital fingerprint of
+the message in the same way  as the sender.  Finally, to actually validate
+the message, the  signature is validated with the  sender's public-key ---
+if the result is equal to the fingerprint, the message is valid.
+
+The next step is the encryption  of the signed message, therefore the just
+mentioned  envelope message is  created.  The  encryption is  performed by
+using  a   symmetric  encryption  algorithm  with   a  randomly  generated
+key\footnote{The  current  implementation  uses the  \texttt{DES-EDE3-CBC}
+  algorithm.  Detailed information  on this algorithm can be  found in RFC
+  $2420$, \emph{The  PPP Triple-DES  Encryption Protocol}.}.  This  key is
+then itself  encrypted using the  recipient's public-key and added  to the
+header of the envelope message.  The  body of the envelope consists of the
+\texttt{\gls{glo:base64}}   encoded,  encrypted  original   message.   The
+skeleton    of     such    an    envelope    message     is    shown    in
+Listing~\ref{lst:encrypted-message-skeleton}.
+
+\medskip
+\begin{center}
+  \begin{minipage}{.75\textwidth}
+    \begin{lstlisting}[captionpos=b,backgroundcolor=\color{listingcolor},frame=lines,numbers=none,stepnumber=5,numberfirstline=false,numberstyle=\tiny,caption={The
+        skeleton of an encrypted message.},label={lst:encrypted-message-skeleton},language=XML]
+<xbe:Message>
+  <xbe:MessageHeader>
+    <xbe-sec:CipherInfo>
+      <xbe-sec:CipherKey>
+        <!-- base64 encoded encrypted key -->
+      </xbe-sec:CipherKey>
+      <xbe-sec:CipherIV>
+        <!-- base64 encoded Initialization Vector -->
+      </xbe-sec:CipherIV>
+      <xbe-sec:CipherAlgorithm>
+        <!-- the algorithm used to encrypt/decrypt the data -->
+      </xbe-sec:CipherAlgorithm>
+    </xbe-sec:CipherInfo>
+  </xbe:MessageHeader>
+  <xbe:MessageBody>
+    <xbe-sec:CipherData>
+      <xbe-sec:CipherValue>
+        <!-- base64 encoded encrypted message -->
+      </xbe-sec:CipherValue>
+    </xbe-sec:CipherData>
+  </xbe:MessageBody>
+</xbe:Message>
+    \end{lstlisting}
+  \end{minipage}
+\end{center}
+
+
+\subsubsection{Implementation Details}
+
+
+\begin{itemize}
+\item symmetric encryption one-time key
+\item signing of whole message
+\item encryption of body
+\item xml-message-security
+\end{itemize}
+\subsubsection{m2crypto / openssl}
+
+\begin{itemize}
+\item problems with m2crypto on 64bit architecture
+\item both are currently incompatible to each other
+\item both sides (client/server) have to use the same --- either m2 or
+  direct openssl
+\end{itemize}
+
+
+\subsection{MSCs}
 
 \begin{itemize}
 \item make reservation
@@ -673,10 +1411,6 @@ foo bar
 \item stomp
 \end{itemize}
 
-\subsection{STOMP}
-\label{sec:protocol:stomp}
-
-\subsection{MSCs}
 
 \begin{figure}[ht]
   \centering
@@ -731,40 +1465,6 @@ foo bar
   \caption[Network  Topology]{TODO: fill me in}
   \label{fig:net-top}
 \end{figure}
-
-\subsection{Security}
-\label{sec:security}
-
-\begin{itemize}
-\item symmetric encryption one-time key
-\item signing of whole message
-\item encryption of body
-\item xml-message-security
-\end{itemize}
-
-\begin{figure}[ht]
-  \centering
-  \includegraphics[scale=.75]{msc-establish-mls}
-  \caption[MSC Message Layer Security]{TODO: fill me in}
-  \label{fig:msc-establish-mls}
-\end{figure}
-
-
-\begin{figure}[ht]
-  \centering
-  \includegraphics[scale=.75]{message-layer-security}
-  \caption[Message Layer Security]{TODO: fill me in}
-  \label{fig:net-mls}
-\end{figure}
-
-\subsubsection{m2crypto / openssl}
-
-\begin{itemize}
-\item problems with m2crypto on 64bit architecture
-\item both are currently incompatible to each other
-\item both sides (client/server) have to use the same --- either m2 or
-  direct openssl
-\end{itemize}
 
 %%% Local Variables: 
 %%% mode: latex

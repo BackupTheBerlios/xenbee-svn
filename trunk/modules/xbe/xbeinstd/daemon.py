@@ -94,6 +94,7 @@ class XBEInstDaemon(Daemon):
         proto, host, queue, _, _, _ = urlparse(self.opts.server)
         if proto != "stomp":
             raise ValueError("unknown protocol", proto)
+        self.proto = proto
         try:
             self.host, port = host.split(":")
             self.port = int(port)

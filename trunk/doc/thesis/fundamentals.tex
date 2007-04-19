@@ -23,8 +23,9 @@ widely used  technologies for  securing communication between  two parties
 are discussed. These two  technologies are \emph{Transport Layer Security}
 and \emph{Message Layer Security}.
 
-\section[Extensible Markup Language]
-{Extensible Markup Language (\gls{glo:XML})}
+\section[The Extensible Markup Language]
+{The Extensible Markup Language (\gls{glo:XML})}
+\label{sec:fundamentals:xml}
 
 The Extensible Markup Language \cite{xml}  is a simple, yet very flexible,
 plain text based description format. The format represents a subset of the
@@ -81,14 +82,14 @@ result in just two elements.
 \subsection{Namespaces}
 
 XML  documents   may  contain  elements  and   attributes  from  different
-vocabularies (\ie different document types). To resolve ambiguity between
+vocabularies (\ie different document  types). To resolve ambiguity between
 the  involved   vocabularies,  the  W3C  recommends  the   use  of  unique
 \emph{Namespaces}  that are  assigned  to each  element.   A document  may
 contain a  \emph{default}-namespace to which  all elements belong  that do
 not  have  a  special  namespace  assigned.   Within  a  single  document,
 namespaces are given  a logical name. The logical  name itself is assigned
-the unique  Namespace identifier (\eg an  \gls{glo:URI}). Some namespaces
-and  common  ``names''   for  them  are  given  in   the  following  table
+the unique Namespace identifier (\eg a \gls{glo:URI}). Some namespaces and
+common   ``names''   for  them   are   given   in   the  following   table
 (Table~\ref{tab:namespaces}):
 
 \medskip
@@ -172,8 +173,8 @@ constraint  for  that  element is  changed,  so  that  the number  $0$  is
 included, as  well ---  in each application,  the validation code  must be
 modified to match the new constraint.
 
-\section[Job Submission Description Language]
-{Job Submission Description Language (\gls{glo:JSDL})}
+\section[The Job Submission Description Language]
+{The Job Submission Description Language (\gls{glo:JSDL})}
 \label{sec:fundamentals:jsdl}
 
 \gls{glo:JSDL} is a very extensible XML-based description language for the
@@ -313,7 +314,7 @@ computational job  may have. And if it  does not cover a  special topic on
 its own,  one is able  to extend the  elements of the  \gls{glo:JSDL} with
 user-defined elements.
 
-\section[Basic Execution Service]{The Basic Execution Service (BES)}
+\section[The Basic Execution Service]{The Basic Execution Service (BES)}
 \label{sec:fundamentals:bes}
 
 The \emph{Basic Execution Service} \cite{ogsa-bes} is a specification that
@@ -781,6 +782,7 @@ Both  of  the following  protocols  can make  use  of  a \gls{glo:PKI}  to
 authenticate communication partners.
 
 \subsection[Transport Layer Security]{Transport Layer Security (TLS)}
+\label{sec:fundamentals:tls}
 
 The \gls{glo:TLS}  protocol is often  offered by web- or  email-servers to
 make  the  communication   with  a  client  (such  as   a  browser  or  an
@@ -828,6 +830,7 @@ end-points, a  different kind of security  layer has to be  used here: the
 \emph{Message Layer Security} --- or \gls{glo:MLS} for short.
 
 \subsection[Message Layer Security]{Message Layer Security (MLS)}
+\label{sec:fundamentals:mls}
 
 As the name of this protocol  may already suggest, the security focuses on
 the transmitted messages not on  the transportation of the messages.  That
