@@ -28,7 +28,7 @@ library \cite{pycurl}.
 
 The picture in Figure~\ref{fig:architecture-overview} shows an overview of
 the three components which, when put together, make up the \emph{Xen-Based
-  Execution Environment} (\gls{glo:XenBEE}).
+  Execution  Environment} (\gls{glo:XenBEE}).
 
 \begin{figure}[ht]
   \centering
@@ -37,6 +37,13 @@ the three components which, when put together, make up the \emph{Xen-Based
     the Xen-Based Execution Environment}
   \label{fig:architecture-overview}
 \end{figure}
+
+The ``thicker'' connections between  \emph{xbe} and \emph{xbed} as well as
+between \emph{xbed}  and \emph{xbeinstd} are  logical connections realized
+by using message-queues and one or more \gls{glo:MQS} in between.  Whereas
+the ``thinner'' links are either inner-process connections (in case of the
+cache) or  connections between  parent and child  process (in case  of the
+user-application).
 
 On the left hand side of the picture are the users using the \emph{xbe} to
 communicate with the execution  environment. The \emph{xbe} refers in this
@@ -49,13 +56,13 @@ web-portal or some other tool with a graphical user interface, as well.
 
 On the right hand side are the components that are required to execute the
 applications within  virtual machines.  The \emph{xbed} has  to be running
-on a machine, that supports  the Xen hypervisor.  It maintains an internal
-connection to  a local  cache, which can  be used  by any user  to deposit
+on a machine  that supports the Xen hypervisor.   It maintains an internal
+connection  to a local  cache which  can be  used by  any user  to deposit
 arbitrary data on the  server side.  The \emph{xbed} uses \texttt{libvirt}
 to connect to the Xen hypervisor and to manage active virtual machines.
 
-Each virtual machine  must provide the \emph{xbeinstd}, that  means it has
-to be started at some point during the initialization process of the guest
+Each  virtual machine  must  provide  the \emph{xbeinstd}.  It  has to  be
+started  at some  point during  the  initialization process  of the  guest
 operating system. Any image that is submitted to the execution environment
 must therefore  contain this  program. The \emph{xbeinstd}  is responsible
 for two  major issues:  executing the actual  application and  keeping the
@@ -66,15 +73,6 @@ going  to shut  stale virtual  machines down,  unless  the \emph{xbeinstd}
 sends  regular keep-alive  messages  to the  \emph{xbed}.   If the  user's
 application has finished, the \emph{xbeinstd} signals the \emph{xbed} that
 the virtual machine is ready to be shut down.
-
-\medskip
-
-The  thicker connections  between \emph{xbe}  and \emph{xbed}  as  well as
-between \emph{xbed}  and \emph{xbeinstd} are  logical connections realized
-by using message-queues and one  or more \gls{glo:MQS} in between. Whereas
-he  thinner links  are either  inner-process connections  (in case  of the
-cache) or  connections between  parent and child  process (in case  of the
-user-application).
 
 \section[The Xen-Based Execution Daemon]{The Xen-Based Execution Daemon (xbed)}
 \label{sec:xbed}
@@ -101,16 +99,16 @@ has been  defined either in  its configuration file  or as a  command line
 parameter. This process  is realized by the \emph{network  layer}. It uses
 the  \texttt{twisted} framework to  establish a  \gls{glo:TCP} connection.
 When the connection has been successfully established, a special transport
-protocol --- the  STOMP protocol --- is attached  to the connection. STOMP
-is  the \emph{Streaming  Text Oriented  Messaging Protocol}  and basically
-defines a  very simple protocol to  send and receive text  messages over a
-message-queue server.  On top of  this text message based protocol are XML
-based  protocols  that  accomplish  the whole  communication  between  all
-components.   There is currently  a basic  XML protocol  that encapsulates
-single ``messages'', consisting just of header and body, and two protocols
-that  connect up  the \emph{xbe}  and the  \emph{xbeinst}  accordingly.  A
-special  protocol providing  security  related services  (\ie privacy  and
-validity) can be added as an additional layer.
+protocol  --- the  STOMP  protocol  \cite{stomp} ---  is  attached to  the
+connection. STOMP is the \emph{Streaming Text Oriented Messaging Protocol}
+and  basically defines a  very simple  protocol to  send and  receive text
+messages over a  message-queue server.  On top of  this text message based
+protocol are  XML based protocols that accomplish  the whole communication
+between  all components.   There is  currently a  basic XML  protocol that
+encapsulates single ``messages'', consisting  just of header and body, and
+two  protocols  that connect  up  the  \emph{xbe}  and the  \emph{xbeinst}
+accordingly.  A special protocol  providing security related services (\ie
+privacy and validity) can be added as an additional layer.
 
 Anyway, the  details of the \gls{glo:STOMP}  and XML protocols  as well as
 the network layer,  which is to some extent equal  among all components of
@@ -160,13 +158,18 @@ component is used to create a new virtual machine for the task.
 The instance-manager's purpose is  to create, control, monitor and destroy
 active virtual  machine instances.  Again  unique identifiers are  used to
 name the  virtual machines. To start  a virtual machine  several files are
-required:  an   operating  system  installation  residing   in  a  special
-file-system  \gls{glo:image} file, a  \gls{glo:kernel} and  potentially an
-initial ramdisk  image (initrd),  that contains additional  device drivers
-and setup  routines that  are not directly  included in the  kernel. Those
-files must  be provided by  the user,  since he is  the one who  knows his
-application and how the operating  system has to be configured to actually
-execute the application.
+required:
+
+\begin{itemize}
+\item  An  operating  system  installation  which  resides  in  a  special
+  file-system \gls{glo:image} file.
+\item  A  \gls{glo:kernel}  and   potentially  an  initial  ramdisk  image
+  (initrd). The  initrd typically  contains additional device  drivers and
+  setup routines that are not directly included in the kernel.
+\end{itemize}
+
+These files must  be provided by the user, because she  knows best how the
+operating system must be set up to run the specific application.
 
 By just using these three files, a virtual machine cannot be created right
 away, it must be \emph{configured}  first.  The configuration of a virtual
@@ -211,19 +214,24 @@ by the back-end --- in this case  Xen --- to set up a new virtual machine.
 The task's  state machine  is triggered  to change its  state to  the next
 sub-state   of  \texttt{Running}:  \texttt{InstanceStarting}.    Once  the
 virtual machine has  been created, the \emph{xbed} awaits  a callback from
-the virtual machine.  This scallback expresses itself in form of a message
+the virtual machine.  This callback  expresses itself in form of a message
 sent  by  the \emph{xbeinstd}  running  within  the  just created  virtual
 machine.  If  this signal does  not get sent  within a given  timeout, the
-virtual  machine instance  is assumed  to  be broken  and is  going to  be
-destroyed, resulting in a failed  execution of the user's task, of course.
-This callback fulfills two important functions --- it makes sure, that the
-virtual machine's  network configuration is correct  and fully functional,
-and  that the  \emph{xbeinstd}  did start  properly  --- thus,  improperly
-configured images are recognized very fast.  Now, that the virtual machine
-is ready to execute the  user's application, the task's description may be
-sent to  the \emph{xbeinstd} and  the task's state machine  may eventually
-change  its state  to  \texttt{Executing}. The  details  of executing  the
-application is going to be discussed in Section~\ref{sec:xbeinstd}.
+virtual machine  instance is  assumed to be  broken. The  \emph{xbed} will
+therefore shutdown  and destroy  this virtual machine.   Consequently, the
+execution  of the  user's task  has  failed.
+
+The callback  from the  \emph{xbeinstd} fulfills two  important functions.
+Firstly it makes sure that  the virtual machine's network configuration is
+correct  and   fully  functional.   Secondly  it  is   verified  that  the
+\emph{xbeinstd}  is  installed  in  the  image  and  did  start  properly.
+Improperly configured images are thus recognized very fast.
+
+Now, that the virtual machine  is ready to execute the user's application,
+the task's description  may be sent to the  \emph{xbeinstd} and the task's
+state machine  may eventually change its state  to \texttt{Executing}. The
+details  of  executing  the  application  is  going  to  be  discussed  in
+Section~\ref{sec:xbeinstd}.
 
 After  finishing the  execution  of the  user's  application, the  virtual
 machine will  be shut down and the  result can be staged  out according to
@@ -259,17 +267,16 @@ job-model is shown in Figure~\ref{fig:bes-job-model}.
 \end{figure}
 
 The  implementation of  this model  builds up  on an  implementation  of a
-\emph{Finite State  Machine} (\gls{glo:FSM}).  The  \texttt{Task} class, I
-mentioned  earlier,  contains  a  reference  to an  instance  of  such  an
-\gls{glo:FSM}. Each time  a state change is desired,  the \gls{glo:FSM} is
-called with  an ``input'' signal. The \gls{glo:FSM}  then calls registered
-functions that  implement the transition's  behavior. If, for  example, an
-user wants to terminate his  activity, the \gls{glo:FSM} is presented with
-a ``terminate-token''. The FSM  calls then specialized functions that deal
-with the termination  request according to the current  state. That means,
-distinct   functions    are   perhaps   called    when   traversing   from
-\texttt{Pending:Reserved}    and    \texttt{Running:Executing}   to    the
-\texttt{Terminated} state, respectively.
+\emph{Finite  State  Machine}  (\gls{glo:FSM}).  The  \texttt{Task}  class
+contains a reference to an instance  of such an \gls{glo:FSM}. Each time a
+state  change is  desired the  \gls{glo:FSM} is  called with  an ``input''
+signal. The  \gls{glo:FSM} then calls registered  functions that implement
+the transition's behavior. If, for example, an user wants to terminate his
+activity, the  \gls{glo:FSM} is presented with  a ``terminate-token''. The
+FSM  calls  then specialized  functions  that  deal  with the  termination
+request according to the current state. That means, distinct functions are
+perhaps   called  when   traversing  from   \texttt{Pending:Reserved}  and
+\texttt{Running:Executing} to the \texttt{Terminated} state, respectively.
 
 Some of the transitions  involve rather complex and time-consuming actions
 (\eg file  transfers).   Those  complex  transitions are  represented  by
@@ -300,8 +307,8 @@ registered activity-objects before letting the task to change its state to
   \label{fig:activity-queue}
 \end{figure}
 
-The picture in Figure~\ref{fig:activity-queue} shows such an occasion. The
-task (represented by  the blue box) is currently  in the \texttt{Stage-In}
+The picture in Figure~\ref{fig:activity-queue} shows such a case. The task
+(represented  by  the blue  box)  is  currently  in the  \texttt{Stage-In}
 sub-state  of \texttt{Running}  and is  awaiting the  availability  of its
 required  files.  The  activity  which represents  here  the operation  of
 staging files in is shown as  the encircled lightning bolt.  When the task
@@ -310,7 +317,7 @@ activity with  the task-manager. The task-manager  in turn adds  it to his
 queue of current activities (shown as the reddish tube in the right of the
 picture).  When  the activity is  finished (figuratively speaking:  if the
 activity exits through  the bottom of the tube), the  task may advance its
-state to \texttt{Instance-Starting}, \ie it  can be attempted to start an
+state to \texttt{Instance-Starting},  \ie it can be attempted  to start an
 instance for this task.
 
 Since  the  retrieval of  files  from  different  locations (specified  by
@@ -331,7 +338,7 @@ not having an extra sub-state for that operation in the job-model.
 The  process starts  with waiting  on  a ``ready-to-go''  signal, that  is
 usually included  directly in the \texttt{Confirm} message  received by an
 user,  but  can  also  be  given  in  a  subsequent  message  on  its  own
-(\texttt{Start\-Activity})\footnote{the  communication  protocol  and  the
+(\texttt{Start\-Request})\footnote{the  communication   protocol  and  the
   messages           involved          are           discussed          in
   Section~\ref{sec:communication-protocol},
   \emph{\nameref{sec:communication-protocol}}.}.  The  next steps resemble
@@ -396,7 +403,7 @@ The  handling  of data  transfer  covers the  staging  of  files into  the
 execution environment and out from the execution environment, in this work
 referred   to  as  ``stage-in''   and  ``stage-out''   respectively.   The
 description  that  is  required  for  each of  the  staging  processes  is
-completely  covered  within  the  \gls{glo:JSDL} document,  that  an  user
+completely  covered  within  the  \gls{glo:JSDL} document  which  an  user
 submitted  to the  execution  environment.  However,  some extensions  are
 required,       those       will       be      handled       with       in
 Section~\ref{sec:xen-based-submission}.
@@ -658,10 +665,11 @@ execution environment.
 As  described  above,  the  \gls{glo:XenBEE} supports  the  submission  of
 compressed  files and  the  validation  of those  files  based on  digital
 fingerprints.   To reflect this  behavior along  with the  job submission,
-additional ``decorator''  elements have been  added.  Let me  clarify this
-with  a  simple  example.   The  \gls{glo:JSDL} does  only  support  plain
-\gls{glo:URI}s. If  this \gls{glo:URI} is now  used along with  one of the
-decorators, the \emph{xbed} interprets the URI accordingly:
+additional ``decorator'' elements have  been added.  The following example
+(Listing~\ref{lst:xbe-xsdl-example}) shows the  usage of these decorators.
+The  \gls{glo:JSDL}  does  only  support plain  \gls{glo:URI}s.   If  this
+\gls{glo:URI}  is  now  used  along   with  one  of  the  decorators,  the
+\emph{xbed} interprets the URI accordingly:
 
 \bigskip
 
@@ -688,7 +696,7 @@ The    example   in   Listing~\ref{lst:xbe-xsdl-example-hash}\footnote{The
   \emph{\nameref{sec:fundamentals:xml}},       Table~\ref{tab:namespaces}.}
 could  be  an  excerpt  of  a  JSDL-\texttt{DataStaging}  operation.   The
 \texttt{Source} element contains the URI that refers to the location of an
-input file which shall be staged in.
+input file which should be staged in.
 
 The \texttt{Hash}  extension stores the digital fingerprint  of the source
 file and the algorithm that has been used to generate it. This fingerprint
@@ -1472,8 +1480,9 @@ was  out  of  the  scope  of   this  work.
 
 The returned \texttt{ReservationResponse}  message has only one attribute:
 the   \texttt{ticket}   which    uniquely   identifies   the   just   made
-reservation. This ticket  is only known to the client and  must be used in
-any subsequent request that concerns this reservation.
+reservation. This  ticket is only known  to the client and  the server and
+must be  used by the client  in any subsequent request  that concerns this
+reservation.
 
 \begin{figure}[ht]
   \centering
@@ -1493,9 +1502,10 @@ server  first  validates the  contained  JSDL  document  against the  JSDL
 specification,  then  it  is  checked  if  an  \texttt{InstanceDefinition}
 element  is included  and  finally  the validity  of  this description  is
 checked, as well.  If any one  of these checks fails, an \texttt{Error} is
-returned and the  reservation is cancelled. If the  document is completely
-valid,    the   task   is    looked   up    and   the    transition   from
-\texttt{Pending:Reserved}  to \texttt{Pending:Confirmed} is  performed.
+returned and  the user  has the possibility  to modify the  submission and
+resend  the  \texttt{ConfirmReservation}  message.   If  the  document  is
+completely  valid,  the  task  is   looked  up  and  the  transition  from
+\texttt{Pending:Reserved} to \texttt{Pending:Confirmed} is performed.
 % An
 % error   is   also    returned,   when   the   task   was    not   in   the
 % \texttt{Pending:Reserved} state anymore.
@@ -1667,7 +1677,7 @@ system has been idle.
 
 The \texttt{ExecuteTask} message is used  by the \emph{xbed} to send a job
 description to  the virtual machine and  the \texttt{ExecutionFinished} is
-sent  back when  the  job finishes,  it  just contains  exit  code of  the
+sent back  when the job  finishes, it just  contains the exit code  of the
 application. When an user request  the termination of her reservation, the
 \emph{xbed}    sends    a    \texttt{TerminateTask}   message    to    the
 \emph{xbeinstd}. This message leads to a clean and correct shutdown of the

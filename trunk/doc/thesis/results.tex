@@ -19,8 +19,34 @@
 \section{Complex Computation}
 \label{sec:complex-example}
 
+
 \section{The Benefits of Data Caching}
 \label{sec:data-caching}
+
+ \begin{figure}
+   \subfigure[POV-Ray example without cache]{
+     \includegraphics[width=.45\textwidth]{results/povray-nocache}
+   }
+   \subfigure[POV-Ray example with cached image]{
+     \includegraphics[width=.45\textwidth]{results/povray-cache}
+   }
+   \label{fig:pov-cache-comparison}
+   \caption{Comparison of POV-Ray job with and without cache usage.}
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=.45\textwidth]{results/povray-nocache}
+  \caption{POV-Ray example without cache}
+  \label{fig:povray-nocache}
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=.45\textwidth]{results/povray-cache}
+  \caption{POV-Ray example with cache}
+  \label{fig:povray-cache}
+\end{figure}
 
 \section{On-demand Server Deployment}
 \label{sec:on-demand-server-deployment}

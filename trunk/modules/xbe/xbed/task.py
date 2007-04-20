@@ -80,6 +80,7 @@ class Task(TaskFSM):
             pass
         else:
             wait_tuple[0].acquire()
+            self.__timestamps["execution-done"] = time.time()
             try:
                 wait_tuple[1] = result
                 wait_tuple[0].notify()

@@ -58,9 +58,9 @@ class XenBEEClientProtocol(protocol.XMLProtocol):
             parsed_jsdl = jsdl_doc.parse(confirm.jsdl())
         except etree.DocumentInvalid, e:
             log.info("got invalid document: %s" % str(e.error_log))
-            TaskManager.getInstance().removeTask(ticket.task)
-            del ticket.task
-            TicketStore.getInstance().release(ticket)
+#            TaskManager.getInstance().removeTask(ticket.task)
+#            del ticket.task
+#            TicketStore.getInstance().release(ticket)
             return message.Error(errcode.ILLEGAL_REQUEST, "JSDL document is invalid: %s" % (e.error_log,))
 
         try:
@@ -70,9 +70,9 @@ class XenBEEClientProtocol(protocol.XMLProtocol):
                 "JobDefinition/JobDescription/Resources/"+
                 "InstanceDefinition/InstanceDescription")
         except Exception, e:
-            TicketStore.getInstance().release(ticket)
-            TaskManager.getInstance().removeTask(ticket.task)
-            del ticket.task
+#            TicketStore.getInstance().release(ticket)
+#            TaskManager.getInstance().removeTask(ticket.task)
+#            del ticket.task
             msg = message.Error(errcode.NO_INSTANCE_DESCRIPTION, str(e))
         else:
             ticket.task.confirm(confirm.jsdl(), jsdl_doc)
