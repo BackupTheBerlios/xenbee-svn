@@ -80,7 +80,6 @@ class Task(TaskFSM):
             pass
         else:
             wait_tuple[0].acquire()
-            self.__timestamps["execution-done"] = time.time()
             try:
                 wait_tuple[1] = result
                 wait_tuple[0].notify()
@@ -263,7 +262,7 @@ class Task(TaskFSM):
         self.mtx.acquire()
         try:
             self.log.info("executing task")
-            self.__timestamps["execute"] = time.time()
+            self.__timestamps["execution-start"] = time.time()
             self.__execute()
         finally:
             self.mtx.release()
@@ -570,6 +569,7 @@ class Task(TaskFSM):
     def _cb_execution_finished(self, result):
         try:
             self.mtx.acquire()
+            self.__timestamps["execution-done"] = time.time()
             self._cb_store_exitcode(result[0])
             self.__stop_instance()
             self._cb_release_resources()

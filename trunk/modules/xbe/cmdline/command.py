@@ -332,7 +332,9 @@ class Command_help(Command):
             sb.append("available subcommands:")
             sb.append("")
             cmds = CommandFactory.getInstance().getCommands()
-            for cmd, names in cmds.iteritems():
+            cmdnames = cmds.values()
+            cmdnames.sort(lambda a,b: cmp(a[0], b[0]))
+            for names in cmdnames:
                 line = names[0]
                 if len(names) > 1:
                     line += " (" + ", ".join(names[1:]) + ")"
@@ -655,7 +657,7 @@ class Command_status(RemoteCommand, HasTicket):
         self.cancelTimeout()
         print repr(statusList)
         self.done()
-CommandFactory.getInstance().registerCommand(Command_status, "status", "st")
+CommandFactory.getInstance().registerCommand(Command_status, "status", "stat", "st")
 
 class Command_showcache(RemoteCommand):
     """\
