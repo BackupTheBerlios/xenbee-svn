@@ -563,7 +563,7 @@ class TerminateRequest(BaseClientMessage):
         root, hdr, body = MessageBuilder.xml_parts()
         elem = etree.SubElement(body, self.tag)
         elem.attrib["remove-entry"] = self.removeEntry() and "1" or "0"
-        reason = etree.SubElement(elem, XBE("Reason")) = self.reason()
+        etree.SubElement(elem, XBE("Reason")).text = self.reason()
         reservation = etree.SubElement(elem, XBE("Reservation"))
         etree.SubElement(reservation, XBE("Ticket")).text = self.ticket()
         return root
