@@ -449,6 +449,55 @@ class Command_cache(RemoteCommand):
         return False
 CommandFactory.getInstance().registerCommand(Command_cache, "cache")
 
+class Command_remove(RemoteCommand):
+    """\
+    remove: Removes a cache entry on the server.
+    """
+
+    def __init__(self, argv):
+        """initialize the 'cache' command."""
+        RemoteCommand.__init__(self, argv)
+        p = self.parser
+        p.add_option("-u", "--uri", dest="uri", type="string",
+                     help="the uri of the cache entry.")
+        
+    def check_opts_and_args(self, opts, args):
+        if opts.uri is None:
+            if len(args):
+                opts.uri = args.pop(0)
+            else:
+                raise CommandFailed("cache uri required")
+        return True
+    
+    def _execute(self):
+        self.cacheRemove(self.opts.uri)
+        return False
+CommandFactory.getInstance().registerCommand(Command_remove, "remove", "uncache", "rc")
+
+class Command_start(RemoteCommand, HasTicket):
+    """\
+    start: Start a given reservation.
+    """
+
+    def __init__(self, argv):
+        """initialize the 'start' command."""
+        RemoteCommand.__init__(self, argv)
+        HasTicket.__init__(self, self.parser)
+        
+    def check_opts_and_args(self, opts, args):
+        if opts.ticket is None:
+            if len(args):
+                opts.ticket = args.pop(0)
+            else:
+                raise CommandFailed("ticket required")
+        return True
+
+    def _execute(self):
+        ticket = self.get_ticket()
+        self.requestStart(ticket)
+        return False
+CommandFactory.getInstance().registerCommand(Command_start, "start")
+
 class Command_confirm(Command_terminate):
     """\
     confirm: confirm a previously made reservation

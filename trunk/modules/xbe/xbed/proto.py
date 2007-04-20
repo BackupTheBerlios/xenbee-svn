@@ -98,7 +98,7 @@ class XenBEEClientProtocol(protocol.XMLProtocol):
         ticket = TicketStore.getInstance().lookup(msg.ticket())
         if ticket is not None:
             if not ticket.task.is_done():
-                reactor.callInThread(TaskManager.getInstance().terminateTask, ticket.task, "UserCancel")
+                reactor.callInThread(TaskManager.getInstance().terminateTask, ticket.task, msg.reason())
                 return message.Error(errcode.OK, "termination in progress")
         else:
             return message.Error(errcode.TICKET_INVALID, msg.ticket())
@@ -107,7 +107,7 @@ class XenBEEClientProtocol(protocol.XMLProtocol):
         msg = message.MessageBuilder(elem.getroottree())
         ticket = TicketStore.getInstance().lookup(msg.ticket())
         if ticket is not None:
-            reactor.callInThread(ticket.task.start)
+            reactor.callInThread(ticket.task.start())
         else:
             return message.Error(errcode.TICKET_INVALID, msg.ticket())
 
@@ -165,6 +165,18 @@ class XenBEEClientProtocol(protocol.XMLProtocol):
             return message.Error(errcode.OK, uid)
         def _failure(reason):
             return message.Error(errcode.CACHING_FAILED, reason.getErrorMessage())
+        d.addCallback(_success).addErrback(_failure).addCallback(self.sendMessage)
+
+    def do_CacheRemove(self, elem, *a, **kw):
+        msg = message.MessageBuilder.from_xml(elem.getroottree())
+        log.debug("removing cache entry: %s", msg.uri())
+        cached = XBEDaemon.getInstance().cache
+        d = cached.remove(msg.uri())
+
+        def _success(uid):
+            return message.Error(errcode.OK, uid)
+        def _failure(reason):
+            return message.Error(errcode.INTERNAL_SERVER_ERROR, reason.getErrorMessage())
         d.addCallback(_success).addErrback(_failure).addCallback(self.sendMessage)
 	
 class XenBEEInstanceProtocol(protocol.XMLProtocol):

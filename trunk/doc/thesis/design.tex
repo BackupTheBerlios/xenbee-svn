@@ -991,17 +991,61 @@ application data.
         structure of an XML message.},label={lst:xml-message-example},language=XML]
 <xbe:Message>
    <xbe:MessageHeader>
-     <!-- security related information -->
+     <!-- security related information, etc. -->
    </xbe:MessageHeader>
    <xbe:MessageBody>
      <!-- payload XML document representing
           application data. For example:
-          an encrypted XML document -->
+          an encrypted XML document, Error, etc. -->
    </xbe:MessageBody>
 </xbe:Message>
     \end{lstlisting}
   \end{minipage}
 \end{center}
+
+\medskip
+
+The \texttt{Error} message is used in all XML-based protocol layers of the
+\gls{glo:XenBEE} to indicate error or ``status'' conditions.  This message
+may be  sent in reply to  any other message  except another \texttt{Error}
+message.   The  following   table  (Table~\ref{tab:msg:error})  lists  the
+attributes of such an error message.
+
+\begin{table}[ht]
+  \centering
+  \begin{tabular}{@{}lp{.5\textwidth}@{}}\toprule
+    attribute        & \multicolumn{1}{l}{description} \\ \midrule % header
+    code             & The error code \\
+    description      & Generic information about the error \\
+    message          & A descriptive message of the exact error that occurred. \\
+    \bottomrule
+  \end{tabular}
+  \caption{Attributes of the \texttt{Error} message.}
+  \label{tab:msg:error}
+\end{table}
+
+The following  table (Table~\ref{tab:msg:errorcodes} lists  some important
+error codes,  their names and their  description. The error  code $200$ is
+actually not an error in the  common sense, it is a ``no-error'' error (it
+is comparable to the HTTP Status Code $200$).
+
+\medskip
+
+\begin{table}[ht]
+  \centering
+  \begin{tabular}{@{}llp{.5\textwidth}@{}}\toprule
+    code  & name                      & description \\ \midrule % header
+    $200$ & \texttt{OK}               & everything is okay \\ %, \ie ``no error'' \\
+    $300$ & \texttt{SERVER\_BUSY}     & the request could not be handled right now \\
+    $400$ & \texttt{ILLEGAL\_REQUEST} & the received message was invalid, \eg XML validation failed \\
+    $501$ & \texttt{TICKET\_INVALID}  & the client specified an illegal reservation identification (ticket) \\
+    $502$ & \texttt{SECURITY\_ERROR}  & the message-layer security could not be established \\
+    $503$ & \texttt{UNAUTHORIZED}     & the user's certificate is not allowed \\
+    \bottomrule
+  \end{tabular}
+  \caption{Important error codes and their descriptions.}
+  \label{tab:msg:errorcodes}
+\end{table}
 
 To transfer an XML document, the internal tree representation is converted
 into a textual  representation and then sent to  the communication partner
@@ -1062,7 +1106,8 @@ those   frames  that   are   relevant  to   the   implementation  of   the
 After  a  client   is  connected  to  a  Stomp-server,   \eg  by  using  a
 TCP-connection, it has to login  before it can actually use the connection
 to  send  and  receive  messages   ---  this  is  achieved  by  sending  a
-\texttt{CONNECT} frame to the server as shown in the following listing:
+\texttt{CONNECT}  frame   to  the  server   as  shown  in   the  following
+Listing~\ref{lst:stomp-connect}.
 
 \medskip
 \begin{center}
@@ -1080,9 +1125,10 @@ passcode: <passcode>
 
 The \texttt{CONNECT} frame supports two header elements, \texttt{username}
 and  \texttt{passcode} that  can be  used by  the server  administrator to
-restrict  the   access  to  the   server.  The  server  sends   either  an
+restrict  the  access   to  the  server.   The  server   sends  either  an
 \texttt{ERROR}  frame  which   contains  detailed  information  about  the
-occurred error or it sends the \texttt{CONNECTED} frame:
+occurred   error   or  it   sends   the   \texttt{CONNECTED}  frame   (see
+Listing~\ref{lst:stomp-connected}).
 
 \medskip
 \begin{center}
@@ -1104,16 +1150,19 @@ session, but it is not actually used yet.
 
 \subsubsection{Subscribing to Message-Queues}
 
-A Stomp client may subscribe to as  many queues or topics as it likes. The
-Stomp server takes control of  the subscriptions and forwards all messages
-that  are targeted  at  a  particular queue  or  topic. \emph{Topics}  and
-\emph{queues} differ mainly  in the way messages are  handled. A topic has
-the semantics  of a $m:n$ communication, \ie  a message that is  sent to a
-topic will be received  by \textbf{all} subscribers. \emph{Queues}, on the
-other hand,  have $m:1$ semantics ---  a sent message is  only received by
-\textbf{at most one} client that is subscribed to that queue. If more than
-one client did subscribe to the same queue, the server may randomly select
-one of them to be the receiver.
+A  Stomp  client  may  subscribe  to  as many  queues  or  topics  as  the
+application requires (see Listing~\ref{lst:stomp-subscribe} for an example
+frame). The Stomp  server takes control of the  subscriptions and forwards
+all   messages   that   are    targeted   at   a   particular   queue   or
+topic. \emph{Topics}  and \emph{queues} differ mainly in  the way messages
+are    handled.    A    topic    has   the    semantics    of   a    $m:n$
+communication\footnote{$m$ is the number  of clients that send messages to
+  that topic or  queue, $n$ is the number of  subscribers.}, \ie a message
+that   is   sent  to   a   topic   will   be  received   by   \textbf{all}
+subscribers. \emph{Queues}, on the other  hand, have $m:1$ semantics --- a
+sent  message is  only received  by \textbf{at  most one}  client  that is
+subscribed to  that queue.  If more  than one client did  subscribe to the
+same queue, the server may randomly select one of them to be the receiver.
 
 \medskip
 \begin{center}
@@ -1142,19 +1191,9 @@ to  be  delivered  and  will  be  sent  again later.   If  it  is  set  to
   server delivers messages not until  at least one client is subscribed to
   that queue.}  and is discarded afterwards.
 
-The  components of  the  \gls{glo:XenBEE} use  queues  to establish  their
-communication.   The \emph{xbed}  subscribes to  a queue  that  looks like
-\texttt{xenbee.daemon.<unique-id>},  however, the actual  queue has  to be
-configured by  an administrator  (\ie specify the  unique identification).
-The    \emph{xbeinstd}    subscribes     to    queues    of    the    form
-\texttt{xenbee.instance.<UUID>} ---  the UUID is the  unique identifier of
-the virtual machine  instance. The \emph{xbe} is no  exception to that and
-subscribes to queues of  the form \texttt{xenbee.client.<UUID>}, where the
-UUID is randomly chosen.
-
 To  end   a  previously  made   subscription,  the  client  can   send  an
-\texttt{UNSUBSCRIBE} frame. The following listing cancels the subscription
-to the \texttt{foobar} queue:
+\texttt{UNSUBSCRIBE} frame  (see Listing~\ref{lst:stomp-unsubscribe}). The
+following listing cancels the subscription to the \texttt{foobar} queue:
 
 \medskip
 \begin{center}
@@ -1169,6 +1208,18 @@ destination: /queue/foobar
   \end{minipage}
 \end{center}
 
+\medskip
+
+The  components of  the  \gls{glo:XenBEE} use  queues  to establish  their
+communication.   The \emph{xbed}  subscribes to  a queue  that  looks like
+\texttt{xenbee.daemon.<unique-id>},  however, the actual  queue has  to be
+configured by  an administrator  (\ie specify the  unique identification).
+The    \emph{xbeinstd}    subscribes     to    queues    of    the    form
+\texttt{xenbee.instance.<UUID>} ---  the UUID is the  unique identifier of
+the virtual machine  instance. The \emph{xbe} is no  exception to that and
+subscribes to queues of  the form \texttt{xenbee.client.<UUID>}, where the
+UUID is randomly chosen.
+
 
 \subsubsection{Sending and Receiving Messages}
 
@@ -1176,7 +1227,7 @@ To  send   application  data  to   another  entity,  the  sender   uses  a
 \texttt{SEND}  frame.    An  example   of  such  a   frame  is   shown  in
 Listing~\ref{lst:stomp-send}. The shown  frame represents the transmission
 of the  message ``Hello  World!'' (without the  quotation marks)  to queue
-\texttt{a}.  The \texttt{reply-to} header  is used  to tell  the receiving
+\texttt{a}.  The  \texttt{reply-to} header is  used to tell  the receiving
 entity to which queue it has to address its replies.
 
 \medskip
@@ -1206,8 +1257,9 @@ non-ASCII, data, in this type of  data a \texttt{null} byte is very likely
 to occur.
 
 This message is transmitted by the server to one of the consumers that are
-subscribed to  the queue \texttt{``a''}.  The following listing  shows how
-the resulting frame could probably look like:
+subscribed   to   the  queue   \texttt{``a''}.    The  following   listing
+(Listing~\ref{lst:stomp-message})  shows  how  the resulting  frame  could
+probably look like:
 
 \medskip
 \begin{center}
@@ -1309,13 +1361,6 @@ encryption  of  a  message  creates  a  new  message,  the  \emph{envelope
   message}.   The schematic  process of  transmitting a  message  from the
 \emph{xbe} to the \emph{xbed} is shown in Figure~\ref{fig:net-mls}.
  
-\begin{figure}[ht]
-  \centering
-  \includegraphics[scale=.55]{message-layer-security}
-  \caption[Message Layer Security]{Secure transmission of an XML document.}
-  \label{fig:net-mls}
-\end{figure}
-
 Before a message  is encrypted, it is signed by  the sender, the procedure
 for generating the signature can be summarized in the following steps:
 
@@ -1329,6 +1374,13 @@ for generating the signature can be summarized in the following steps:
   the resulting signature to the header of the payload message.
 \end{itemize}
 
+\begin{figure}[ht]
+  \centering
+  \includegraphics[scale=.55]{message-layer-security}
+  \caption[Message Layer Security]{Secure transmission of an XML document.}
+  \label{fig:net-mls}
+\end{figure}
+
 To validate such  a message, the recipient must  remove the signature from
 the message's header first. Now  he can compute the digital fingerprint of
 the message in the same way  as the sender.  Finally, to actually validate
@@ -1340,37 +1392,31 @@ mentioned  envelope message is  created.  The  encryption is  performed by
 using  a   symmetric  encryption  algorithm  with   a  randomly  generated
 key\footnote{The  current  implementation  uses the  \texttt{DES-EDE3-CBC}
   algorithm.  Detailed information  on this algorithm can be  found in RFC
-  $2420$, \emph{The  PPP Triple-DES  Encryption Protocol}.}.  This  key is
-then itself  encrypted using the  recipient's public-key and added  to the
-header of the envelope message.  The  body of the envelope consists of the
-\texttt{\gls{glo:base64}}   encoded,  encrypted  original   message.   The
-skeleton    of     such    an    envelope    message     is    shown    in
-Listing~\ref{lst:encrypted-message-skeleton}.
+  $2420$,   \emph{The   PPP  Triple-DES   Encryption   Protocol}  and   in
+  \cite{schneier95}.}.   This  key  is  then itself  encrypted  using  the
+recipient's public-key  and added to  the header of the  envelope message.
+The  body  of  the  envelope  consists  of  the  encrypted  message  in  a
+\texttt{\gls{glo:base64}}  encoding.   The skeleton  of  such an  envelope
+message is shown in Listing~\ref{lst:encrypted-message-skeleton}.
 
 \medskip
 \begin{center}
-  \begin{minipage}{.75\textwidth}
+  \begin{minipage}{.9\textwidth}
     \begin{lstlisting}[captionpos=b,backgroundcolor=\color{listingcolor},frame=lines,numbers=none,stepnumber=5,numberfirstline=false,numberstyle=\tiny,caption={The
         skeleton of an encrypted message.},label={lst:encrypted-message-skeleton},language=XML]
 <xbe:Message>
   <xbe:MessageHeader>
     <xbe-sec:CipherInfo>
-      <xbe-sec:CipherKey>
-        <!-- base64 encoded encrypted key -->
-      </xbe-sec:CipherKey>
-      <xbe-sec:CipherIV>
-        <!-- base64 encoded Initialization Vector -->
-      </xbe-sec:CipherIV>
+      <xbe-sec:CipherKey>encrypted key</xbe-sec:CipherKey>
+      <xbe-sec:CipherIV>Initialization Vector</xbe-sec:CipherIV>
       <xbe-sec:CipherAlgorithm>
-        <!-- the algorithm used to encrypt/decrypt the data -->
+        encryption/decryption algorithm
       </xbe-sec:CipherAlgorithm>
     </xbe-sec:CipherInfo>
   </xbe:MessageHeader>
   <xbe:MessageBody>
     <xbe-sec:CipherData>
-      <xbe-sec:CipherValue>
-        <!-- base64 encoded encrypted message -->
-      </xbe-sec:CipherValue>
+      <xbe-sec:CipherValue>encrypted message</xbe-sec:CipherValue>
     </xbe-sec:CipherData>
   </xbe:MessageBody>
 </xbe:Message>
@@ -1378,93 +1424,281 @@ Listing~\ref{lst:encrypted-message-skeleton}.
   \end{minipage}
 \end{center}
 
+\medskip
 
-\subsubsection{Implementation Details}
+The first implementation of all security related functions made use of the
+\texttt{M2Crypto}  library  \cite{m2crypto}.   Unfortunately,  during  the
+tests  of the  \gls{glo:XenBEE} on  a $64$-bit  architecture  this library
+failed  to work, even  though it  worked on  a $32$-bit  architecture just
+fine. I decided to drop  this library and implement the same functionality
+using direct  calls to the  \texttt{openssl} executable.  This is  just an
+workaround  until  the problems  with  the  \texttt{M2Crypto} library  are
+solved.
 
+\bigskip
 
-\begin{itemize}
-\item symmetric encryption one-time key
-\item signing of whole message
-\item encryption of body
-\item xml-message-security
-\end{itemize}
-\subsubsection{m2crypto / openssl}
+The  next  sections describe  the  \emph{XML  Message  Layer}.  There  are
+actually  two  different protocols  involved,  one  for the  communication
+between the user (\emph{xbe}) and  the \emph{xbed} and another one for the
+communication  between   a  virtual  machine   (\emph{xbeinstd})  and  the
+\emph{xbed}.
 
-\begin{itemize}
-\item problems with m2crypto on 64bit architecture
-\item both are currently incompatible to each other
-\item both sides (client/server) have to use the same --- either m2 or
-  direct openssl
-\end{itemize}
+\subsection{Communication between xbe and xbed}
 
+This  section  describes the  messages  that  are  sent between  a  client
+application, \ie  the \emph{xbe}, and  the \emph{xbed}. All  messages have
+the    same,    basic    structure,   \ie    \texttt{MessageHeader}    and
+\texttt{MessageBody}, whereas the body  contains the actual content. Prior
+any application  data is exchanged,  the \emph{Message Layer  Security} is
+established and  I assume in  the subsequent sequence diagrams,  that both
+\emph{xbe} and \emph{xbed} are  already in the \texttt{connected} state as
+shown in Figure~\ref{fig:msc-establish-mls}.
 
-\subsection{MSCs}
+\subsubsection{Create a new reservation}
 
-\begin{itemize}
-\item make reservation
-\item confirm reservation (jsdl) +/- start
-\item submit whole job (make res + confirm)
-\item terminate activity
-\item status request
-\item add cache entry
-\item security establishment (certificates, encryption, signing)
-\item stomp
-\end{itemize}
+To  create a  new reservation  with the  \emph{xbed}, the  client  sends a
+\texttt{ReservationRequest} message.  The server  checks, if it can accept
+a  new reservation currently  (current load,  number of  virtual machines,
+etc.)    and  returns   a  \texttt{ReservationResponse}   message   or  an
+\texttt{Error} indicating that the  request failed. If the reservation was
+successful,  the  \texttt{TaskManager}  is  used  to  create  a  new  task
+object. A successful reservation is shown in Figure~\ref{fig:msc-reserve}.
 
+\bigskip
+
+The \texttt{ReservationRequest} contains no  attributes to the time of the
+implementation, since  a special resource managing  and description system
+was  out  of  the  scope  of   this  work.
+
+The returned \texttt{ReservationResponse}  message has only one attribute:
+the   \texttt{ticket}   which    uniquely   identifies   the   just   made
+reservation. This ticket  is only known to the client and  must be used in
+any subsequent request that concerns this reservation.
 
 \begin{figure}[ht]
   \centering
-  \includegraphics[scale=.75]{msc-reserve}
-  \caption[MSC Make Reservation]{TODO: fill me in}
+  \includegraphics[scale=.55]{msc-reserve}
+  \caption[MSC Create  Reservation]{Create   a  new  reservation  with  the
+    \emph{xbed}.}
   \label{fig:msc-reserve}
 \end{figure}
 
-\begin{figure}[ht]
-  \centering
-  \includegraphics[scale=.75]{msc-confirm}
-  \caption[MSC Confirm Reservation]{TODO: fill me in}
-  \label{fig:msc-confirm}
-\end{figure}
+
+\subsubsection{Confirm a reservation}
+
+The next a user may want to do, is to confirm the reservation --- as shown
+in   Figure~\ref{fig:msc-confirm}.    Therefore,   the  client   sends   a
+\texttt{ConfirmReservation}  message. On  reception of  this  message, the
+server  first  validates the  contained  JSDL  document  against the  JSDL
+specification,  then  it  is  checked  if  an  \texttt{InstanceDefinition}
+element  is included  and  finally  the validity  of  this description  is
+checked, as well.  If any one  of these checks fails, an \texttt{Error} is
+returned and the  reservation is cancelled. If the  document is completely
+valid,    the   task   is    looked   up    and   the    transition   from
+\texttt{Pending:Reserved}  to \texttt{Pending:Confirmed} is  performed.
+% An
+% error   is   also    returned,   when   the   task   was    not   in   the
+% \texttt{Pending:Reserved} state anymore.
 
 \begin{figure}[ht]
   \centering
-  \includegraphics[scale=.75]{msc-status-request}
+  \includegraphics[scale=.55]{msc-confirm}
+  \caption[MSC Confirm  Reservation]{The \emph{xbe} confirms  a previously
+    made reservation.}
+  \label{fig:msc-confirm}
+\end{figure}
+
+The \texttt{ConfirmReservation}  message contains the  previously obtained
+ticket, the JSDL  document and a \texttt{start\_flag} (an  overview can be
+found  in Table~\ref{tab:msg:confirm-reservation}). If  this flag  is set,
+the \emph{xbed}  performs the  transition into the  \texttt{Running} state
+automatically  as soon  as possible.   If the  flag is  not set,  the task
+remains in the \texttt{Pending:Confirmed}  state until the client sends an
+explicit \texttt{StartRequest} message.
+
+\bigskip
+
+\begin{table}[ht]
+  \centering
+  \begin{tabular}{@{}lp{.5\textwidth}@{}}\toprule
+    attribute        & \multicolumn{1}{l}{description} \\ \midrule % header
+    ticket           &  the reservation identification number \\
+    jsdl             & the JSDL-document that describes the task \\
+    start\_task      & a flag that indicates whether to start the task immediately  \\
+    \bottomrule
+  \end{tabular}
+  \caption{Attributes of the \texttt{ConfirmReservation} message.}
+  \label{tab:msg:confirm-reservation}
+\end{table}
+
+\subsubsection{Request the status of a task}
+
+To   request   the   status   of    a   task,   the   client   sends   the
+\texttt{StatusRequest}       message        to       the       \emph{xbed}
+(Figure~\ref{fig:msc-status-request}).   This message contains  the ticket
+that is  required to refer  to the reservation.   The server looks  up the
+task  that belongs  to the  given  reservation and  retrieves the  current
+status of the task.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[scale=.5]{msc-status-request}
   \caption[MSC Request Task Status]{TODO: fill me in}
   \label{fig:msc-status-request}
 \end{figure}
 
-\begin{figure}[ht]
+The reply from  the server is a \texttt{StatusList}  message that contains
+the  current   state  (using  the  XML  representation   proposed  by  the
+\gls{glo:BES} specification  \cite{ogsa-bes}) and other  information about
+the task. Table~\ref{tab:msg:status-list} shows  a summary of the included
+attributes.  The  exit code is only  available, if the task  is already in
+the \texttt{Finished} state.
+
+\medskip
+\begin{table}[ht]
   \centering
-  \includegraphics[scale=.75]{msc-terminate}
-  \caption[MSC Terminate Task Request]{TODO: fill me in}
-  \label{fig:msc-terminate}
-\end{figure}
+  \begin{tabular}{@{}lp{.5\textwidth}@{}}\toprule
+    attribute        & \multicolumn{1}{l}{description} \\ \midrule % header
+    entries          & list of \texttt{Status} elements, whereas each
+                       entry represents a single task and contains
+                       the following attributes \\
+    task-id          & the unique identification of the task \\
+    state            & the current state (BES specification format) \\
+    meta             & meta information such as log messages, exit code, various timestamps \\
+    \bottomrule
+  \end{tabular}
+  \caption{Attributes of the \texttt{StatusList} message.}
+  \label{tab:msg:status-list}
+\end{table}
 
-\subsection{Network Topology}
-\label{sec:network-topology}
 
-\begin{itemize}
-\item simple topology: just one mqs (preferably on the xbed-host)
-\item advanced topology: many mqs with configured forwarding
-\item avoids common problems that arise with NAT and firewall policies
-\item xbeinstd and possibly the application use the same mqs as the xbed
-\end{itemize}
+The \texttt{meta} information  included in the \texttt{StatusList} message
+is a dictionary (\ie a list of key-value pairs), that contains information
+that could be useful for a human being or possibly the client.  There are,
+for example,  timestamps that are set  when a transition  is completed. If
+the  virtual  machine  is  already  running,  the  current  IP-address  is
+included, too.
 
-\begin{figure}[ht]
+% \begin{table}[ht]
+%   \centering
+%   \begin{tabular}{@{}lp{.5\textwidth}@{}}\toprule
+%     attribute        & \multicolumn{1}{l}{description} \\ \midrule % header
+%     ticket           & the reservation identification number \\
+%     remove\_entry    & a flag that indicates to remove the entry (only valid if the task is in a final state) \\
+%     \bottomrule
+%   \end{tabular}
+%   \caption{Attributes of the \texttt{StatusRequest} message.}
+%   \label{tab:msg:status-request}
+% \end{table}
+
+\subsubsection{Terminating a reservation}
+
+If a  user wants to terminate  his reservation, the client  simply sends a
+\texttt{TerminateRequest} that contains  the identification number for the
+reservation  along with  a reason  why the  termination is  requested.  In
+addition to  that, the user  can tell the  \emph{xbed} to remove  the data
+structures that would else be kept for later reference.
+
+% \begin{figure}[ht]
+%   \centering
+%   \includegraphics[scale=.55]{msc-terminate}
+%   \caption[MSC Terminate Task Request]{TODO: fill me in}
+%   \label{fig:msc-terminate}
+% \end{figure}
+
+\begin{table}[ht]
   \centering
-  \includegraphics[scale=.75]{simple-network-topology}
-  \caption[Network  Topology   (simple)]{The  simplest  network  topology,
-    consisting of  only one Message  Queue Server and  three communication
-    partners.}
-  \label{fig:simple-net-top}
-\end{figure}
+  \begin{tabular}{@{}lp{.5\textwidth}@{}}\toprule
+    attribute        & \multicolumn{1}{l}{description} \\ \midrule % header
+    ticket           & the reservation identification number \\
+    reason           & the reason why the reservation shall be terminated \\
+    remove\_entry    & a flag that indicates to automatically remove the entry after it is terminated \\
+    \bottomrule
+  \end{tabular}
+  \caption{Attributes of the \texttt{TerminateRequest} message.}
+  \label{tab:msg:terminate-request}
+\end{table}
 
-\begin{figure}[ht]
+The server  replies to this  message with an \texttt{Error}  message which
+either indicates  that the termination is  in progress or  that some error
+occurred.
+
+\subsubsection{Messages related to the Cache}
+
+The  next messages  are those  that currently  provide the  access  to the
+server-side cache. An user  can add a new entry to the  cache by sending a
+\texttt{CacheFile} message that contains the required information, \ie the
+\gls{glo:URI} of the data that shall be cached, a description and the type
+of data.
+
+To request a  list of all currently  cached files, the user has  to send a
+\texttt{ListCache}   message.    The   reply   to  this   message   is   a
+\texttt{CacheEntries} message that contains a description for all entries.
+The attributes of this message are shown in Table~\ref{tab:msg:}
+
+\begin{table}[ht]
   \centering
-  \includegraphics[scale=.75]{network-topology}
-  \caption[Network  Topology]{TODO: fill me in}
-  \label{fig:net-top}
-\end{figure}
+  \begin{tabular}{@{}lp{.5\textwidth}@{}}\toprule
+    attribute        & \multicolumn{1}{l}{description} \\ \midrule % header
+    entries          & list of \texttt{Entry} items with the following attributes \\
+    uri              & the \gls{glo:URI} of this cache entry \\
+    description      & description of the entry \\
+    type             & type of cached data \\
+    hash             & the digital fingerprint of the data \\
+    \bottomrule
+  \end{tabular}
+  \caption{Attributes of the \texttt{CacheEntries} message.}
+  \label{tab:msg:cache-entries}
+\end{table}
+
+To   remove  a   file  from   the   cache,  the   user  has   to  send   a
+\texttt{CacheRemove} message which contains the \gls{glo:URI} of the cache
+entry.
+ 
+\subsection{Communication between xbeinstd and xbed}
+
+The  communication between  the  instance daemon  and  the \emph{xbed}  is
+currently    provided   by    just   five    different    messages.    The
+\texttt{InstanceAvailable} message  is the first  message that is  sent be
+the  \emph{xbeinstd} after  it has  been started.   The  continuously sent
+\texttt{InstanceAlive}  message  contains  runtime information  about  the
+virtual machine, such  as the uptime and the length of  time for which the
+system has been idle.
+
+The \texttt{ExecuteTask} message is used  by the \emph{xbed} to send a job
+description to  the virtual machine and  the \texttt{ExecutionFinished} is
+sent  back when  the  job finishes,  it  just contains  exit  code of  the
+application. When an user request  the termination of her reservation, the
+\emph{xbed}    sends    a    \texttt{TerminateTask}   message    to    the
+\emph{xbeinstd}. This message leads to a clean and correct shutdown of the
+application.
+
+
+% \subsubsection{Network Topology}
+% \label{sec:network-topology}
+
+% \begin{itemize}
+% \item simple topology: just one mqs (preferably on the xbed-host)
+% \item advanced topology: many mqs with configured forwarding
+% \item avoids common problems that arise with NAT and firewall policies
+% \item xbeinstd and possibly the application use the same mqs as the xbed
+% \end{itemize}
+
+% \begin{figure}[ht]
+%   \centering
+%   \includegraphics[scale=.55]{simple-network-topology}
+%   \caption[Network  Topology   (simple)]{The  simplest  network  topology,
+%     consisting of  only one Message  Queue Server and  three communication
+%     partners.}
+%   \label{fig:simple-net-top}
+% \end{figure}
+
+% \begin{figure}[ht]
+%   \centering
+%   \includegraphics[scale=.55]{network-topology}
+%   \caption[Network  Topology]{TODO: fill me in}
+%   \label{fig:net-top}
+% \end{figure}
 
 %%% Local Variables: 
 %%% mode: latex

@@ -93,6 +93,10 @@ class BaseCommandLineProtocol(BaseProtocol):
         msg = message.CacheFile(uri, type, desc)
         self.transport.sendMessage(msg.as_xml())
 
+    def cacheRemove(self, uri):
+        msg = message.CacheRemove(uri)
+        self.transport.sendMessage(msg.as_xml())
+
     def requestTermination(self, ticket, remove_entry=False):
         if remove_entry:
             log.warn("TODO: entry removal not yet implemented upon termination")
@@ -114,6 +118,10 @@ class BaseCommandLineProtocol(BaseProtocol):
 
     def confirmReservation(self, ticket, jsdl, auto_start=True):
         msg = message.ConfirmReservation(ticket, jsdl, auto_start)
+        self.transport.sendMessage(msg.as_xml())
+
+    def requestStart(self, ticket):
+        msg = message.StartRequest(ticket)
         self.transport.sendMessage(msg.as_xml())
 
 class SimpleCommandLineProtocol(BaseCommandLineProtocol):

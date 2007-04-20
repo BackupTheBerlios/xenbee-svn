@@ -365,6 +365,31 @@ class CacheFile(BaseClientMessage):
     from_xml = classmethod(from_xml)
 MessageBuilder.register(CacheFile)
     
+class CacheRemove(BaseClientMessage):
+    """Sends a request for removing a cached file.
+
+    - uri the entry that is to be removed
+    """
+    tag = XBE("CacheRemove")
+    
+    def __init__(self, uri):
+        BaseClientMessage.__init__(self)
+        self.__uri = uri
+
+    def uri(self):
+        return self.__uri
+
+    def as_xml(self):
+        root, hdr, body = MessageBuilder.xml_parts()
+        elem = etree.SubElement(body, self.tag)
+        etree.SubElement(elem, XSDL("URI")).text = self.uri()
+        return root
+    def from_xml(cls, root, hdr, body):
+        elem = body.find(cls.tag)
+        uri = elem.findtext(XSDL("URI"))
+        return cls(uri)
+    from_xml = classmethod(from_xml)
+MessageBuilder.register(CacheRemove)
 
 class ReservationRequest(BaseClientMessage):
     """Sends a request for a reservation.
@@ -517,11 +542,12 @@ class TerminateRequest(BaseClientMessage):
     """Client sends a terminate request."""
     tag = XBE("TerminateRequest")
 
-    def __init__(self, ticket, remove_entry=False):
+    def __init__(self, ticket, reason="UserCancel", remove_entry=False):
         BaseClientMessage.__init__(self)
         if ticket is None:
             raise ValueError("ticket must not be None")
         self.__ticket = str(ticket)
+        self.__reason = str(reason)
         self.__remove_entry = remove_entry
 
     def ticket(self):
@@ -529,13 +555,17 @@ class TerminateRequest(BaseClientMessage):
 
     def removeEntry(self):
         return self.__remove_entry
+
+    def reason(self):
+        return self.__reason
     
     def as_xml(self):
         root, hdr, body = MessageBuilder.xml_parts()
         elem = etree.SubElement(body, self.tag)
         elem.attrib["remove-entry"] = self.removeEntry() and "1" or "0"
+        reason = etree.SubElement(elem, XBE("Reason")) = self.reason()
         reservation = etree.SubElement(elem, XBE("Reservation"))
-        etree.SubElement(reservation, XBE("Ticket")).text = self.__ticket
+        etree.SubElement(reservation, XBE("Ticket")).text = self.ticket()
         return root
 
     def from_xml(cls, root, hdr, body):
@@ -546,7 +576,8 @@ class TerminateRequest(BaseClientMessage):
         ticket = elem.findtext(XBE("Reservation/Ticket"))
         if ticket is None:
             raise MessageParserError("could not find Reservation information")
-        return cls(ticket)
+        reason = elem.findtext(XBE("Reason")) or ""
+        return cls(ticket, reason, remove)
     from_xml = classmethod(from_xml)
 MessageBuilder.register(TerminateRequest)
 
@@ -586,19 +617,18 @@ class StartRequest(BaseClientMessage):
     """Request the start of a task."""
     tag = XBE("StartRequest")
 
-    def __init__(self, task_id):
+    def __init__(self, ticket):
         BaseClientMessage.__init__(self)
-        self.__task_id = task_id
+        self.__ticket = ticket
 
-    def task_id(self):
-        return self.__task_id
+    def ticket(self):
+        return self.__ticket
 
     def as_xml(self):
         root, hdr, body = MessageBuilder.xml_parts()
         elem = etree.SubElement(body, self.tag)
-        elem.attrib["task-id"] = self.task_id()
         reservation = etree.SubElement(elem, XBE("Reservation"))
-        etree.SubElement(reservation, XBE("Ticket")).text = self.__ticket
+        etree.SubElement(reservation, XBE("Ticket")).text = self.ticket()
         return root
 
     def from_xml(cls, root, hdr, body):
@@ -606,8 +636,7 @@ class StartRequest(BaseClientMessage):
         if elem is None:
             raise MessageParserError("could not find 'StartRequest' element")
         ticket = elem.findtext(XBE("Reservation/Ticket"))
-        task_id = elem.attrib["task-id"]
-        return cls(task_id, ticket)
+        return cls(ticket)
     from_xml = classmethod(from_xml)
 MessageBuilder.register(StartRequest)
 
