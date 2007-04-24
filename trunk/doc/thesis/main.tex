@@ -46,9 +46,12 @@
 \usepackage{pdfsync}
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage[short,nodayofweek]{datetime}
 \usepackage{subfigure}
 \usepackage{graphicx}
 \usepackage[pdftex,usenames,dvipsnames]{color}
+\usepackage{capt-of}
 \usepackage[hang, small, bf, margin=20pt, tableposition=top]{caption}
 \setlength{\abovecaptionskip}{0pt}
 \usepackage{fancyhdr}
@@ -170,8 +173,8 @@
 % with \chapter{Things And Widgits}
 
 \include{introduction}
-\include{fundamentals}
 \include{requirements}
+\include{fundamentals}
 \include{design}
 \include{results}
 \include{conclusions}
@@ -179,8 +182,15 @@
 %  A P P E N D I C E S
 \appendix
 %\def\chaptername{Appendix}
-%\include{appendix1}
+\include{appendix}
 %\include{appendix2}
+
+% G L O S S A R Y
+
+% \printindex
+%\renewcommand{\glossarypreamble}{You need not to know everything, you just
+%  need to know where to find it.\par}
+\printglossary
 
 
 %  R E F E R E N C E S
@@ -191,15 +201,10 @@
 \bibliographystyle{plainnat}
 \bibliography{bibliography}
 
-% \printindex
-%\renewcommand{\glossarypreamble}{You need not to know everything, you just
-%  need to know where to find it.\par}
-\printglossary
-
-
 % Supplementary references?
-
-
 % Theses do not have indices.
+
+% include the affidavit
+\include{eid}
 
 \end{document}

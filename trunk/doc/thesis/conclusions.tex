@@ -2,6 +2,84 @@
 \chapter{Conclusions and Future Work}
 \label{cha:conclusions}
 
+This  chapter analyzes  the work  that  has been  done in  respect of  the
+initial goals  that have been claimed.  It also provides  hints for future
+developments.
+
+\section*{Conclusions}
+
+The target of  this work was to design and  implement a complete execution
+environment based  on virtual machines. The  first step in this was  to define the
+execution semantics that have to be supported 
+
+\begin{itemize}
+\item job semantics: batch, server deployment
+\item access to required data: image, kernel, initrd, input files
+\item caching and compression of files
+\item uniform way to access files (URI)
+\item standardized job description
+\item standardized job model
+\item reservations
+\item hooks to modify input and output files (encryption)
+\item secure end-to-end communication xml
+\item task security with chroot environment
+\item user has full control over the vm
+\item results have shown that the implementation is able to execute batch
+  jobs and server deployment
+\item  also: starting/stopping  of  virtual machines  is  fast enough  for
+  on-demand server deployment
+\item 
+\end{itemize}
+
+\section*{Future work}
+
+The current  implementation of the \gls{glo:XenBEE} is  already usable for
+real world  problems as  it has  been shown in  the previous  chapter. But
+there are still many aspects that could be implemented and analyzed in the
+future. The following sections provide a few ideas for future works.
+
+\subsubsection{Integration into Calana}
+
+The most crucial future development step is the actual integration into an
+existing  grid  environment.   The  execution  environment  understands  a
+commonly used language for the  job submission and a formalized job-model.
+The  basic  requirements  for   the  integration  into  Calana  have  been
+implemented,  as well.   But  the glue  between  the \gls{glo:XenBEE}  and
+Calana (or some  other grid middleware) --- the  Calana-agent --- is still
+missing.
+
+\subsubsection{Unattended Updates and Support for Work flows}
+
+Completely out  of the scope  of this work  was the administration  of the
+used virtual  machines images.   It could for  instance be possible  to do
+automated  updates of stored  images.  These  updates should  be performed
+regularly and without interaction.  The  update process would also need to
+verify the updated applications, \ie a test suite must be executed on that
+image.   The execution environment  could therefore  be enhanced  with the
+support of a complete work flow description language.
+
+\subsubsection{Cache hierarchies}
+
+A cluster of machines that are used for the \gls{glo:XenBEE} could use one
+or more shared  caches. If an user wants to execute  a particular job many
+times or  on several machines  at the same  time, he could load  the image
+into  the shared  cache first.   Each involved  execution host  could then
+retrieve the image into its local cache.
+
+\subsubsection{Advanced file system support}
+
+The current implementation  makes the assumption that only  a single image
+file is  involved.  But  it could  also be possible  to compose  a virtual
+machine out of  several images. A basic image  that contains the operating
+system and application installation and a second image that can be used to
+store input and output data.  Actually, the additional image could also be
+a network file system.
+
+\subsubsection{tools}
+\label{sec:tools}
+
+
+
 %%% Local Variables: 
 %%% mode: latex
 %%% TeX-master: "main"

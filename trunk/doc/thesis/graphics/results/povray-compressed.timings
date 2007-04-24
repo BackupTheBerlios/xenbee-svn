@@ -1,0 +1,20 @@
+image: base.img.bz2 (145MB bzip2 compressed)
+command: povray +Q6 +W640 +H480 +Oscene.png cornell.pov
+
+submit          1177118569.47
+confirm         1177118569.87
+stage-in-start  1177118569.87
+instance-start  1177118644.42
+execution-start 1177118659.36
+execution-done  1177118719.04
+stage-out-start 1177118730.33
+finish          1177118733.58
+
+   step            time (s)
+time-until-start    0.40  
+Stage-in           74.55 
+Instance startup   14.94 
+Execution time     59.68 
+Instance shutdown  11.29 
+Stage-out           3.25  
+total             164.11

@@ -1,0 +1,22 @@
+image: big.img.bz2 (499 MB bzip2 -3)
+command: povray +Q6 +W640 +H480 +Oscene.png cornell.pov
+avg. netspeed: 11.37 MByte/s
+
+
+submit          1177124452.8
+confirm         1177124453.3
+stage-in-start  1177124453.3
+instance-start  1177124812.48
+execution-start 1177124830.18
+execution-done  1177124888.69
+stage-out-start 1177124900.1
+finish          1177124903.51
+
+   step            time (s)
+time-until-start    0.50  
+Stage-in          359.18
+Instance startup   17.70 
+Execution time     58.51 
+Instance shutdown  11.41 
+Stage-out           3.41  
+total             450.71

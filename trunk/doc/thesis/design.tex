@@ -14,8 +14,8 @@ implemented     using    the     \emph{Python}     programming    language
 \cite{python-language}. In particular, version  $2.5$ of that language has
 been used.
 
-Some additional  modules and programs, that  are not part  of the standard
-libraries shipped with Python, have been used, though. Among these are for
+Some additional  modules and programs which  are not part  of the standard
+libraries shipped with Python have  been used, though. Among these are for
 instance  the \texttt{twisted}  framework \cite{twisted-python}  which has
 been  used  for  the  network  code,  a  library  called  \texttt{libvirt}
 \cite{libvirt}  that  was used  to  connect  to  the Xen  virtual  machine
@@ -38,7 +38,7 @@ the three components which, when put together, make up the \emph{Xen-Based
   \label{fig:architecture-overview}
 \end{figure}
 
-The ``thicker'' connections between  \emph{xbe} and \emph{xbed} as well as
+The ``thicker'' connections between \emph{xbe} and \emph{xbed}, as well as
 between \emph{xbed}  and \emph{xbeinstd} are  logical connections realized
 by using message-queues and one or more \gls{glo:MQS} in between.  Whereas
 the ``thinner'' links are either inner-process connections (in case of the
@@ -50,7 +50,7 @@ communicate with the execution  environment. The \emph{xbe} refers in this
 case  to the command  line tool  which I  have implemented  as a  proof of
 concept  to interact  with the  \emph{xbed}.  The  interface that  an user
 utilizes to execute his applications  with the \gls{glo:XenBEE} could be a
-web-portal or some other tool with a graphical user interface, as well.
+web-portal or some other tool with a graphical user interface as well.
 
 \medskip
 
@@ -80,10 +80,10 @@ the virtual machine is ready to be shut down.
 This  section describes  the  ``heart'' of  the  \gls{glo:XenBEE} ---  the
 \emph{xbed}.   The  \emph{xbed}  is  itself composed  of  several  smaller
 components that  are each responsible for  a single detail  of the daemon.
-The    main    components    though    are   the    \texttt{Cache},    the
-\texttt{TaskManager}  and the  \texttt{InstanceManager}. The  former  is a
-rather simple implementation of a local data cache, that will be discussed
-in a later section.
+The   main   components   though   are   the   \texttt{TaskManager},   the
+\texttt{InstanceManager} and  the \texttt{Cache}.  The latter  is a rather
+simple implementation of  a local data cache which will  be discussed in a
+later section.
 
 \begin{figure}[ht]
   \centering
@@ -110,8 +110,8 @@ two  protocols  that connect  up  the  \emph{xbe}  and the  \emph{xbeinst}
 accordingly.  A special protocol  providing security related services (\ie
 privacy and validity) can be added as an additional layer.
 
-Anyway, the  details of the \gls{glo:STOMP}  and XML protocols  as well as
-the network layer,  which is to some extent equal  among all components of
+Anyway, the details  of the \gls{glo:STOMP} and XML  protocols, as well as
+the network  layer which is to  some extent equal among  all components of
 the        \gls{glo:XenBEE},       will       be        discussed       in
 Section~\ref{sec:communication-protocol},
 \emph{\nameref{sec:communication-protocol}}.
@@ -139,8 +139,7 @@ available\footnote{a listing  of all current tasks comparable  to the UNIX
   \texttt{ps}  command could be  possible}, the  identifier of  the user's
 reservation is  only known to  that particular user (or  some intermediary
 software such as  a Calana-agent). All requests that an  user makes to the
-system,  that refer  to a  reservation and  hence to  a task,  require the
-reservation's unique identifier.
+system require the reservation's unique identifier.
 
 When an user confirms a reservation,  he also sends the job description as
 a \gls{glo:JSDL}  document along with the confirmation  message.  The task
@@ -173,10 +172,10 @@ operating system must be set up to run the specific application.
 
 By just using these three files, a virtual machine cannot be created right
 away, it must be \emph{configured}  first.  The configuration of a virtual
-machine  is manifold,  it contains  descriptions of  the  operating system
-which shall be used (\ie  the mentioned three files), memory settings (\ie
-the amount  of virtualized physical  memory), them number of  virtual CPUs
-and network parameters.
+machine is manifold, it contains descriptions of the operating system that
+is to  be used (\ie the  mentioned three files), memory  settings (\ie the
+amount of  virtualized physical  memory), the number  of virtual  CPUs and
+network parameters.
 
 \subparagraph{Instance Configuration and Setup}
 
@@ -237,8 +236,6 @@ After  finishing the  execution  of the  user's  application, the  virtual
 machine will  be shut down and the  result can be staged  out according to
 the specified \gls{glo:JSDL} document.
 
-\bigskip
-
 The next sections  describe the implementation of the  used job-model, how
 the staging  of input  and output data  is performed  and how an  user can
 benefit from using the provided data-cache.
@@ -279,8 +276,8 @@ perhaps   called  when   traversing  from   \texttt{Pending:Reserved}  and
 \texttt{Running:Executing} to the \texttt{Terminated} state, respectively.
 
 Some of the transitions  involve rather complex and time-consuming actions
-(\eg file  transfers).   Those  complex  transitions are  represented  by
-\emph{activity-objects}.    An   activity-object   is  an   object,   that
+(\eg  file  transfers).   Those  complex transitions  are  represented  by
+\emph{activity-objects}.    An   activity-object   is  an   object   which
 encapsulates  some behavior  along  with  a state  ---  commonly known  as
 \emph{Function}-objects or \emph{Functors}.  I named them activity-objects
 on  purpose, because they  are usually  executed by  a separate  thread of
@@ -288,17 +285,17 @@ control  in concurrency  to other  activities within  the  system. Another
 reason for  encapsulating some of  the transitions in  activity-objects is
 the possible intervention by an user.
 
-The BES  model allows an  user to terminate  his activity at any  time. In
-particular that means,  that any action belonging to  that activity, which
-currently takes place  on the server, has to be  stopped or aborted.
+The  BES model  allows an  user to  terminate his  task at  any  time.  In
+particular  that means,  that any  action  belonging to  that task,  which
+currently takes place on the server, has to be stopped or aborted.
 
 Since the task-manager does not only create, but also manage the tasks, he
-is responsible for stopping current activities of a task if he is asked to
-do so.  For that reason, he is  in charge of a per task list that contains
-all current activities  for that task. If the task-manage  is now going to
-handle a request for termination of one of the tasks, he first cancels all
-registered activity-objects before letting the task to change its state to
-\texttt{Terminated}.
+is responsible  for stopping current activity-objects  of a task  if he is
+asked to do so.  For that reason, he  is in charge of a per task list that
+contains all  current activity-objects for that task.  If the task-manager
+is now going to  handle a request for termination of one  of the tasks, he
+first cancels  all registered activity-objects before letting  the task to
+change its state to \texttt{Terminated}.
 
 \begin{figure}[ht]
   \centering
@@ -310,44 +307,29 @@ registered activity-objects before letting the task to change its state to
 The picture in Figure~\ref{fig:activity-queue} shows such a case. The task
 (represented  by  the blue  box)  is  currently  in the  \texttt{Stage-In}
 sub-state  of \texttt{Running}  and is  awaiting the  availability  of its
-required  files.  The  activity  which represents  here  the operation  of
-staging files in is shown as  the encircled lightning bolt.  When the task
-transitions  into  the \texttt{Stage-In}  state,  it  registers the  shown
-activity with  the task-manager. The task-manager  in turn adds  it to his
-queue of current activities (shown as the reddish tube in the right of the
-picture).  When  the activity is  finished (figuratively speaking:  if the
-activity exits through  the bottom of the tube), the  task may advance its
-state to \texttt{Instance-Starting},  \ie it can be attempted  to start an
-instance for this task.
+required files.   The activity-object which represents  here the operation
+of staging  files in is shown  as the encircled lightning  bolt.  When the
+task transitions into the  \texttt{Stage-In} state, it registers the shown
+activity-object with the task-manager. The task-manager in turn adds it to
+his queue  of current activity-objects (shown  as the reddish  tube in the
+right of the picture).  When the activity-object is finished (figuratively
+speaking: if the lightning bolt exits through the bottom of the tube), the
+task may  advance its state  to \texttt{Instance-Starting}, \ie it  can be
+attempted to start an instance for this task.
 
 Since  the  retrieval of  files  from  different  locations (specified  by
 \gls{glo:URI}s  in the \gls{glo:JSDL})  may take  some time,  this example
 also motivates  the usage of threads  to decouple other  activities of the
-system  from these  steps. When  terminating  an activity,  the thread  is
-signalled to abort whatever it is doing at the time.
-
-\bigskip
+system from these steps.  When terminating a threaded activity-object, the
+responsible thread is signalled to abort whatever it is doing at the time.
 
 The  whole   cycle  through   which  a  task   may  run  is   depicted  in
-Figure~\ref{fig:act-execute-task}  as  an   activity  diagram.   The  only
-sub-activity that  cannot be  aborted at all  is the  \emph{stop instance}
-operation. That is because the  shutdown process of the underlying virtual
-machine just cannot  be cancelled or reversed. That is  also the reason to
-not having an extra sub-state for that operation in the job-model.
-
-The  process starts  with waiting  on  a ``ready-to-go''  signal, that  is
-usually included  directly in the \texttt{Confirm} message  received by an
-user,  but  can  also  be  given  in  a  subsequent  message  on  its  own
-(\texttt{Start\-Request})\footnote{the  communication   protocol  and  the
-  messages           involved          are           discussed          in
-  Section~\ref{sec:communication-protocol},
-  \emph{\nameref{sec:communication-protocol}}.}.  The  next steps resemble
-the previously discussed job-model. Of course, any of those activities may
-\emph{fail}, which effectively  results in the failing of  the whole task.
-The operations that are involved  when one of the sub-activities fails are
-the  same  as  for  the  abortion of  that  sub-activity.   Actually,  the
-\emph{stop  instance}  operation  cannot  fail  either,  since  it  always
-possible to forcibly shut a virtual machine down.
+Figure~\ref{fig:act-execute-task}  on  page~\pageref{fig:act-execute-task}
+as an activity  diagram.  The only sub-activity that  cannot be aborted at
+all is  the \emph{stop instance}  operation. That is because  the shutdown
+process  of the  underlying virtual  machine just  cannot be  cancelled or
+reversed. That  is also the  reason to not  having an extra  sub-state for
+that operation in the job-model.
 
 \begin{figure}[ht]
   \centering
@@ -356,17 +338,31 @@ possible to forcibly shut a virtual machine down.
   \label{fig:act-execute-task}
 \end{figure}
 
+The  process starts  with waiting  on  a ``ready-to-go''  signal which  is
+usually included  directly in the \texttt{Confirm} message  received by an
+user,  but  can  also  be  given  in  a  subsequent  message  on  its  own
+(\texttt{Start\-Request})\footnote{the  communication   protocol  and  the
+  messages           involved          are           discussed          in
+  Section~\ref{sec:communication-protocol},
+  \emph{\nameref{sec:communication-protocol}}.}.  The  next steps resemble
+the  previously discussed  job-model. Of  course, any  of those  steps may
+\emph{fail}, which effectively  results in the failing of  the whole task.
+The operations that are involved  when one of the sub-activities fails are
+the  same  as  for  the  abortion of  that  sub-activity.   Actually,  the
+\emph{stop instance} operation cannot fail, since it is always possible to
+forcibly shut down a virtual machine.
+
 The \emph{start  instance} operation differs from the  other operations in
 that two components are involved, the \emph{xbed} and the \emph{xbeinstd}.
 The \emph{xbed}  first attempts  to start a  back-end instance (\eg  a Xen
 virtual machine) and waits for the instance to be started, eventually.
 
 After the instance  has been started, \ie the back-end  did not reject the
-provided  configuration, the  \emph{xbed}, actually  the  thread executing
-this  particular  activity,  waits  for  the \emph{xbeinstd}  to  send  an
+provided  configuration, the  \emph{xbed} (actually  the  thread executing
+this particular activity-object) waits  for the \emph{xbeinstd} to send an
 \texttt{Instance\-Available}        message       back        to       the
 \emph{xbed}. Figure~\ref{fig:act-start-instance} shows the details of that
-particular activity.
+particular step.
 
 \begin{figure}[ht]
   \centering
@@ -377,24 +373,21 @@ particular activity.
   \label{fig:act-start-instance}
 \end{figure}
 
-
-As you can see, there are  three different outcomes for this activity. The
-instance can  be flagged as  available, which renders the  task eventually
-executable,  the activity  can as  well be  aborted due  to a  request for
-termination by  the user, or  the instance can  fail to start at  all. The
-task's state will be changed according to the outcome of this activity.
+As you  can see,  there are  three different outcomes  for this  step. The
+instance  can  be  marked  as  being  available  which  renders  the  task
+eventually executable,  the step can as  well be aborted due  to a request
+for termination by the user or the  instance can fail to start at all. The
+task's state will be changed according to the outcome of this step.
 
 After   sending   the   \texttt{Instance\-Alive}   notification   to   the
 \emph{xbed},  the  \emph{xbeinstd}   waits  for  the  task's  description.
 Additionally,  it will send  messages to  the \emph{xbed}  regularly, thus
 making sure, that the virtual machine is still ``alive''.
 
-\bigskip
-
 The  next section deals  with the  staging operations  in more  detail. In
-particular that means, how exactly  the files are retrieved, how files can
+particular this means, how exactly  the files are retrieved, how files can
 be compressed  to reduce  the required network-bandwidth  and how  one can
-make sure that the file has been transfered correctly.
+make sure that the files have been transferred correctly.
 
 \subsection{Data Transfer Handling}
 \label{sec:xbed:data-transfer}
@@ -412,13 +405,13 @@ The  stage-in process  is  twofold.  The  first  part of  stage-in is  the
 acquirement of files  that are mandatory for the  execution environment to
 create    virtual    machine,    these    are    the    early    mentioned
 \emph{\gls{glo:image}}  and  \emph{\gls{glo:kernel}}  files  (probably  an
-\emph{\gls{glo:initrd}},  as well).   Without these  files, the  next part
+\emph{\gls{glo:initrd}}  as well).   Without  these files,  the next  part
 cannot be started.
 
 The second  part of the stage-in  process handles the input  files that an
 user had specified for his application. These definitions use the standard
 \texttt{DataStaging}  element of  the \gls{glo:JSDL}  specification. These
-files  are directly  retrieved into  the virtual  machine image,  that was
+files  are directly  retrieved into  the virtual  machine image  which was
 previously obtained, hence the two parts of the staging process.
 
 All files, including the virtual machine specific ones, are referred to as
@@ -473,22 +466,24 @@ used    algorithm   along   with    the   \gls{glo:URI}.     Typically   a
 \emph{cryptographic  hash   function}  is   used  to  compute   a  digital
 fingerprint of the  data. All secure hash algorithms  that are provided by
 the  Python  \texttt{hashlib} module  are  supported  (some examples  are:
-\texttt{SHA1}, \texttt{SHA256}, \texttt{MD5}).
+\texttt{SHA1}, \texttt{SHA256} or \texttt{MD5}).
 
 \subsubsection{The whole stage-in process}
 
 The  stage-in   process  is   split  into  several   steps  as   shown  in
 Figure~\ref{fig:act-stage-in}. The process always starts with the creation
 of a \texttt{\gls{glo:chroot}} environment\footnote{The terms \emph{chroot
-    environment}  and \emph{jail  environment} are  used interchangeably.}
-within  the spool  directory that  has been  created for  that  task.  The
-description of the  necessary files for a virtual  machine is contained in
-an extra element within the task's \gls{glo:JSDL} description. An user can
-either specify the required files (image, kernel and initrd) on its own or
-he can specify a  \texttt{bzip2} compressed tar archive (``package'') that
-contains these files.  Additionally, an user has the possibility to define
-several executable scripts that  are uploaded to the execution environment
-and get called at various stages of the stage-in process.
+    environment} and \emph{jail  environment} are used interchangeably.  A
+  short description of  a \texttt{chroot} environment can be  found in the
+  glossary.}  within  the spool directory  that has been created  for that
+task.  The  description of  the necessary files  for a virtual  machine is
+contained   in  an   extra  element   within  the   task's  \gls{glo:JSDL}
+description. An user can either  specify the required files (image, kernel
+and initrd) on  its own or he can specify  a \texttt{bzip2} compressed tar
+archive (``package'')  that contains  these files.  Additionally,  an user
+has the possibility to define several executable scripts that are uploaded
+to  the execution  environment and  get called  at various  stages  of the
+stage-in process.
 
 After  the package  or  the  virtual machine  files  have been  retrieved,
 validated and  probably decompressed, the ``pre-setup''  hook is executed.
@@ -578,7 +573,7 @@ data he wants to have cached.  The first is the \textbf{type} of the data,
 which can  be one  of \texttt{image}, \texttt{kernel},  \texttt{initrd} or
 \texttt{data},  where the  \texttt{data} type  is just  a  placeholder for
 arbitrary data  that does not fit  into one of the  other categories.  The
-second piece of information is a \textbf{description}, that can be used to
+second piece of information is  a \textbf{description} that can be used to
 describe the data in more detail,  \eg the version of a specific kernel, a
 list of the applications that are installed within an image or the type of
 compression   if  the   data   had  been   compressed.   Additionally   an
@@ -667,15 +662,14 @@ compressed  files and  the  validation  of those  files  based on  digital
 fingerprints.   To reflect this  behavior along  with the  job submission,
 additional ``decorator'' elements have  been added.  The following example
 (Listing~\ref{lst:xbe-xsdl-example}) shows the  usage of these decorators.
-The  \gls{glo:JSDL}  does  only  support plain  \gls{glo:URI}s.   If  this
-\gls{glo:URI}  is  now  used  along   with  one  of  the  decorators,  the
-\emph{xbed} interprets the URI accordingly:
+The  \gls{glo:JSDL} does only  support plain  \gls{glo:URI}s.  If  such an
+\gls{glo:URI} is now used along with  one or more of these decorators, the
+\emph{xbed} interprets the URI correctly.
 
-\bigskip
-
+\medskip
 \begin{center}
   \begin{minipage}{.75\textwidth}
-    \begin{lstlisting}[captionpos=b,backgroundcolor=\color{listingcolor},frame=lines,numbers=left,numberstyle=\tiny,caption={Example
+    \begin{lstlisting}[captionpos=b,backgroundcolor=\color{listingcolor},frame=lines,numbers=none,numberstyle=\tiny,caption={Example
         with the general \texttt{Hash} and \texttt{Compression}
         extensions.},label={lst:xbe-xsdl-example-hash},language=XML]
 <jsdl:Source>
@@ -712,8 +706,6 @@ example,  the  compression  algorithm  is  checked  against  the  list  of
 supported  algorithms and  the  content of  the  \texttt{Hash} element  is
 restricted to hexadecimal digits.
 
-\medskip
-
 When the document is parsed a  special class will be instantiated for each
 of    these   elements.    That    are   the    \texttt{Compression}   and
 \texttt{HashValue} classes. Both are initialized with the parameters given
@@ -736,11 +728,9 @@ extension  defines an  \texttt{InstanceDefinition} element  which contains
 the  actual \texttt{InstanceDescription}.  The  following listing  shows a
 thorough example usage of this extension.
 
-\bigskip
-
 \begin{center}
-  \begin{minipage}{.75\textwidth}
-    \begin{lstlisting}[captionpos=b,backgroundcolor=\color{listingcolor},frame=lines,numbers=left,stepnumber=5,numberfirstline=false,numberstyle=\tiny,caption={Example
+  \begin{minipage}{.9\textwidth}
+    \begin{lstlisting}[captionpos=b,backgroundcolor=\color{listingcolor},frame=lines,numbers=none,stepnumber=5,numberfirstline=false,numberstyle=\tiny,caption={Example
       of an \texttt{InstanceDefinition} element describing the required
       files of a virtual machine.},label={lst:xbe-xsdl-example},language=XML]
 <xsdl:InstanceDefinition>
@@ -748,24 +738,17 @@ thorough example usage of this extension.
     <xsdl:Instance>
       <xsdl:Image fs-type="ext3">
         <xsdl:Location>
-          <xsdl:URI>
-            http://www.example.com/base.img
-          </xsdl:URI>
+          <xsdl:URI>http://www.example.com/base.img</xsdl:URI>
         </xsdl:Location>
       </xsdl:Image>
       <xsdl:Kernel>
         <xsdl:Location>
-          <xsdl:URI>
-            http://www.example.com/kernel
-          </xsdl:URI>
+          <xsdl:URI>http://www.example.com/kernel</xsdl:URI>
         </xsdl:Location>
       </xsdl:Kernel>
-      <!-- the initrd is optional -->
-      <xsdl:Initrd>
+      <xsdl:Initrd> <!-- the initrd is optional -->
         <xsdl:Location>
-          <xsdl:URI>
-            http://www.example.com/initrd
-          </xsdl:URI>
+          <xsdl:URI>http://www.example.com/initrd</xsdl:URI>
         </xsdl:Location>
       </xsdl:Initrd>
     </xsdl:Instance>
@@ -776,14 +759,14 @@ thorough example usage of this extension.
 \end{center}
 
 Each one of the special files has its own element, \ie the \texttt{Image},
-\texttt{Kernel} and  \texttt{Initrd} element, whereas  the \texttt{Initrd}
-element is optional. The locations of the files are specified by using the
-\texttt{Location}  element  that  contains  a  \gls{glo:URI}.   The  image
-specification can  contain an additional  attribute that defines  the used
-file-system  ---  currently   only  \texttt{ext2}  and  \texttt{ext3}  are
-supported\footnote{Both of  them are standard file-systems  found on Linux
-  systems.}.   The generic extensions  discussed before  can be  used with
-\texttt{Location} elements as well.
+\texttt{Kernel} and \texttt{Initrd}  elements, whereas the \texttt{Initrd}
+element is optional.  The locations  of these files are specified by using
+an   instance   of  the   \texttt{Location}   element   that  contains   a
+\gls{glo:URI}.   The   image  specification  can   contain  an  additional
+attribute   that  defines   the  used   file-system  ---   currently  only
+\texttt{ext2} and  \texttt{ext3} are supported.\footnote{Both  of them are
+  standard file-systems  found on Linux systems.}   The generic extensions
+discussed before can be used with the \texttt{Location} elements as well.
 
 The here defined  files are staged directly into  the spool directory that
 has   been  created  exclusively   for  this   single  job,   whereas  the
@@ -803,12 +786,14 @@ on UNIX-like systems is provided in the source package).
 When the \emph{xbed} creates a  new virtual machine it adds two parameters
 to the kernel which are eventually exported to the \texttt{init}-script as
 environment variables.  The first parameter contains the unique identifier
-of the instance,  so that a two-way communication  based on message-queues
-can  be established,  whereas  the second  contains  a \gls{glo:URI}.  The
-\gls{glo:URI}\footnote{The   URI   could,    for   example,   look   like:
-  \url{stomp://mqs.example.com/xenbee.daemon.1}}       specifies       the
-message-queue  server and  the queue  that shall  be used  to  contact the
-\emph{xbed}.
+of the  instance, so that  a the \emph{xbeinstd}  is aware of  the virtual
+machine identification  allocated by  the \emph{xbed}, whereas  the second
+contains a  \gls{glo:URI}.  The \gls{glo:URI}\footnote{The  URI could, for
+  example,   look   like:   \url{stomp://mqs.example.com/xenbee.daemon.1}}
+specifies the  message-queue server  and the queue  that shall be  used to
+contact the \emph{xbed}. Both parameters  together are used to establish a
+two-way  communication between  \emph{xbed} and  \emph{xbeinstd}  based on
+message-queues.
 
 \subsubsection{Startup of the xbeinstd}
 
@@ -855,12 +840,13 @@ the application can be summarized as follows:
 \end{itemize}
 
 Additionally   to  the   environment  variables   specified  in   the  job
-description, the  \texttt{MQS} environment variable is  set.  Per default,
-this  variable is  set to  the message-queue  server that  is used  by the
-\emph{xbeinstd},  but the  value can  be overridden  by an  user  using an
-\texttt{Environment} element  that defines this  variable.  An application
-that is  distributed over  several virtual machines  can make use  of this
-variable for communication and coordination purposes.
+description,  an  \texttt{``MQS''}   environment  variable  is  set.   Per
+default, this  variable is  set to the  message-queue server that  is also
+used by  the \emph{xbeinstd}, but the  value can be overridden  by an user
+using  an  \texttt{Environment}   element  that  explicitly  defines  this
+variable.   An  application  that  is  distributed  over  several  virtual
+machines can make use of  this variable for communication and coordination
+purposes.
 
 When the application finishes  its execution, the \emph{xbeinstd} notifies
 the   \emph{xbed}   about   that   using   an   \texttt{ExecutionFinished}
@@ -924,7 +910,7 @@ data to  the cache  and list  the current contents  by using  the commands
 Since the protocol assumes a two-step  process for the submission of a new
 job  (\ie creation  and  confirmation of  a  reservation), the  \emph{xbe}
 provides a  convenience command,  that allows an  user to perform  the two
-steps in one  \texttt{submit} command. The \texttt{submit} as  well as the
+steps in one \texttt{submit} command.  The \texttt{submit}, as well as the
 \texttt{confirm} commands  require the job definition  as a \gls{glo:JSDL}
 document.   The  creation   of  such  a  document  is   not  part  of  the
 \gls{glo:XenBEE},  but several example  files are  included in  the source
@@ -938,9 +924,9 @@ communication protocol in detail.
 \section{The Communication Protocol Stack}
 \label{sec:communication-protocol}
 
-The three components,  that have been discussed in  the previous sections,
-are  using  message-queues  and  one  or  more  message-queue  servers  to
-communicate with each other.
+The three components that have been discussed in the previous sections are
+using message-queues and one  or more message-queue servers to communicate
+with each other.
 
 This section  describes the details of the  communication architecture and
 its  individual  layers.  There  are  four  layers, the  \emph{Application
@@ -950,10 +936,9 @@ the  \emph{Security  Layer} which  provides  authenticity  and privacy  as
 described            in            Section~\ref{sec:secure-communication},
 \emph{\nameref{sec:secure-communication}},  and at  the  lowest level  the
 \emph{STOMP  Layer} which  is  used to  communicate  with a  message-queue
-server.  An overview over  the layers  in shown  in the  following diagram
-(Figure~\ref{fig:communication-layers}).
-
-\medskip
+server.     An     overview    over    the    layers     is    shown    in
+Figure~\ref{fig:communication-layers}                                    on
+page~\pageref{fig:communication-layers}.
 
 \begin{figure}[ht]
   \centering
@@ -975,10 +960,10 @@ the STOMP protocol.
 \medskip
 
 The following sections describe the common format of the XML messages that
-are used in the security layer as well as in the message layer. After that
-each layer of the protocol stack is discussed in detail, starting with the
-STOMP layer.  The application  layer is not  described here, since  it has
-already been covered in the previous sections.
+are used  in the security  layer, as well  as in the message  layer. After
+that each  layer of  the protocol stack  is discussed in  detail, starting
+with the STOMP layer.  The  application layer is not described here, since
+it has already been covered in the previous sections.
 
 \subsection{XML Messages}
 
@@ -992,7 +977,7 @@ currently it is  only used by the security layer.   The body, however, can
 either be empty, too, or  contain another XML document that represents the
 application data.
 
-\medskip
+\bigskip
 \begin{center}
   \begin{minipage}{.75\textwidth}
     \begin{lstlisting}[captionpos=b,backgroundcolor=\color{listingcolor},frame=lines,numbers=none,stepnumber=5,numberfirstline=false,numberstyle=\tiny,caption={The
@@ -1010,7 +995,6 @@ application data.
     \end{lstlisting}
   \end{minipage}
 \end{center}
-
 \medskip
 
 The \texttt{Error} message is used in all XML-based protocol layers of the
@@ -1032,13 +1016,16 @@ attributes of such an error message.
   \label{tab:msg:error}
 \end{table}
 
-The following  table (Table~\ref{tab:msg:errorcodes} lists  some important
-error codes,  their names and their  description. The error  code $200$ is
-actually not an error in the  common sense, it is a ``no-error'' error (it
-is comparable to the HTTP Status Code $200$).
+Some important error codes, their names and a short description are listed
+in Table~\ref{tab:msg:errorcodes}. The error code $200$ is actually not an
+error in the common sense, it is a ``no-error'' error (it is comparable to
+the HTTP Status Code $200$).
 
-\medskip
+To transfer an XML document, the internal tree representation is converted
+into a textual  representation and then sent to  the communication partner
+through the lower transportation layer.
 
+\bigskip
 \begin{table}[ht]
   \centering
   \begin{tabular}{@{}llp{.5\textwidth}@{}}\toprule
@@ -1054,10 +1041,6 @@ is comparable to the HTTP Status Code $200$).
   \caption{Important error codes and their descriptions.}
   \label{tab:msg:errorcodes}
 \end{table}
-
-To transfer an XML document, the internal tree representation is converted
-into a textual  representation and then sent to  the communication partner
-through the lower transportation layer.
 
 \subsection{The STOMP Layer}
 \label{sec:protocol:stomp}
@@ -1086,11 +1069,11 @@ Since the available Stomp clients  for Python did not meet my expectations
 and requirements --- they did not integrate well with the \texttt{twisted}
 framework,  I  implemented  the   client  side  of  the  protocol  myself.
 Therefore, the source distribution  of \gls{glo:XenBEE} includes a generic
-implementation of the  Stomp protocol that can be  used in other projects,
-as well.  Additionally, a  small command line  tool (\texttt{stompclient})
-has  been  implemented, that  can  be used  for  testing  purposes ---  it
-supports  the  subscription to  multiple  message-queues  as  well as  the
-transmission of files to an arbitrary destination queue.
+implementation of the Stomp protocol that can be used in other projects as
+well.  Additionally, a small  command line tool (\texttt{stompclient}) has
+been implemented  which can be used  for testing purposes  --- it supports
+the subscription  to multiple message-queues, as well  as the transmission
+of files to an arbitrary destination queue.
 
 \subsection*{Protocol Description}
 
@@ -1443,8 +1426,6 @@ using direct  calls to the  \texttt{openssl} executable.  This is  just an
 workaround  until  the problems  with  the  \texttt{M2Crypto} library  are
 solved.
 
-\bigskip
-
 The  next  sections describe  the  \emph{XML  Message  Layer}.  There  are
 actually  two  different protocols  involved,  one  for the  communication
 between the user (\emph{xbe}) and  the \emph{xbed} and another one for the
@@ -1471,8 +1452,6 @@ etc.)    and  returns   a  \texttt{ReservationResponse}   message   or  an
 \texttt{Error} indicating that the  request failed. If the reservation was
 successful,  the  \texttt{TaskManager}  is  used  to  create  a  new  task
 object. A successful reservation is shown in Figure~\ref{fig:msc-reserve}.
-
-\bigskip
 
 The \texttt{ReservationRequest} contains no  attributes to the time of the
 implementation, since  a special resource managing  and description system
@@ -1501,7 +1480,7 @@ in   Figure~\ref{fig:msc-confirm}.    Therefore,   the  client   sends   a
 server  first  validates the  contained  JSDL  document  against the  JSDL
 specification,  then  it  is  checked  if  an  \texttt{InstanceDefinition}
 element  is included  and  finally  the validity  of  this description  is
-checked, as well.  If any one  of these checks fails, an \texttt{Error} is
+checked as well.   If any one of these checks  fails, an \texttt{Error} is
 returned and  the user  has the possibility  to modify the  submission and
 resend  the  \texttt{ConfirmReservation}  message.   If  the  document  is
 completely  valid,  the  task  is   looked  up  and  the  transition  from

@@ -1,7 +1,17 @@
-submit          1177069958.48
-confirm         1177069958.87
-stage-in-start  1177069958.87
-instance-start  1177069985.78
-execute-start   1177070001.18
-stage-out-start 1177070582.17
-finish          1177070585.47
+submit          1177101572.14
+confirm         1177101572.55
+stage-in-start  1177101572.55
+instance-start  1177101598.79
+execution-start 1177101615.04
+execution-done  1177102183.13  
+stage-out-start 1177102194.52
+finish          1177102197.83
+
+   step            time (s)
+time-until-start  0,41
+Stage-in          26,24
+Instance startup  16,25
+Execution time    568,09
+Instance shutdown 11,39
+Stage-out         3,31
+total             625,69

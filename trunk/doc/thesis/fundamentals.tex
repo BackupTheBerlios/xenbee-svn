@@ -117,7 +117,7 @@ Namespaces  are   specified  in  the  XML  using   the  special  attribute
 \texttt{xmlns="www.example.com"}, sets the  default namespace to the given
 URI, while  \texttt{xmlns:foo="www.example.com"} makes the  same namespace
 known as the logical name  ``foo''. In another document the same namespace
-could as well have been assigned the logical name ``bar''.
+could have been assigned the logical name ``bar'' as well.
 
 To specify  that a  given element  belongs to a  namespace other  than the
 default namespace, the  element's name is prefixed by  the logical name of
@@ -157,8 +157,6 @@ type constraints.  An XML-Schema validator complains, if  a document, that
 is  supposed to  conform  to  that schema,  contains  the just  introduced
 attribute with a negative value, \eg $-1$.
 
-\bigskip
-
 The advantages of XML-Schema over a DTD are obvious.  When using DTDs, the
 application  was  responsible to  check  the  validity  of each  used  XML
 document  type  itself. That  means,  the  same  functionality had  to  be
@@ -171,7 +169,7 @@ small  example:  Suppose there  is  a  definition  for an  element  called
 Since a DTD  does not support constraints on  data types, each application
 must check  for itself if  the value matches  that type. Now  suppose, the
 constraint  for  that  element is  changed,  so  that  the number  $0$  is
-included, as  well ---  in each application,  the validation code  must be
+included as  well ---  in each application,  the validation code  must be
 modified to match the new constraint.
 
 \section[The Job Submission Description Language]
@@ -307,8 +305,6 @@ a file can be given relative  to a previously defined file-system, in this
 case the \texttt{FilesystemName} element must be specified and is required
 to contain the logical name of \texttt{FileSystem} resource.
 
-\bigskip
-
 As  you can  see,  the  \gls{glo:JSDL} is  a  really powerful  description
 language and  it covers many,  if not all,  of the requirements  a typical
 computational job  may have. And if it  does not cover a  special topic on
@@ -432,8 +428,6 @@ components that  comprise an application in a  potentially distributed and
 heterogeneous   environment   are   asynchronously  interconnected   using
 message-passing technologies.
 
-\bigskip
-
 \citet{dad-mom}  state, that  \emph{``Every  DAD (Distributed  Application
   Developer) needs a MOM (Message Oriented Middleware)''}.
 
@@ -537,186 +531,6 @@ and  so  on.  Most  importantly  is the  fact,  that  certificates can  be
 can  be  used  in  a  \emph{Public Key  Infrastructure}  using  public-key
 cryptography.
 
-\subsection{Public-key cryptography}
-\label{sec:fundamentals:public-key}
-
-Public-key  cryptography describes  a form  of cryptography  where  a user
-holds  two  different  keys,  a  \emph{private  key}  and  a  \emph{public
-  key}.  These two  keys are  mathematically  related to  each other,  but
-nobody can practically derive the private key from the public key.
-
-The public key can be made  publicly available without any risk, while the
-private key must  be kept very secret. A widely used  algorithm is the RSA
-algorithm named  after its  creators \citet*{rivest77method}. It  has been
-the first algorithm, that  was suitable for both encryption/decryption and
-signing.  For more background information on public-key cryptosystems, you
-are encouraged to read \cite{rivest77method,diffie76new}.
-
-The RSA algorithm relies on the fact, that the factorization of reasonably
-large numbers is  computationally very hard and no  efficient algorithm is
-publicly known.  Especially  hard to factor are numbers  whose factors are
-two randomly-chosen prime numbers of sufficient length.
-
-In the following  I am going to describe  how the keys are set  up and how
-they are used to encrypt/decrypt or to sign/validate a clear text message.
-
-According  to  \cite{rivest77method},  places  each  user  his  encryption
-procedure $E$  in a publicly accessible file  (\eg database).  Using this
-public file, any  other user is able to  retrieve the encryption procedure
-of   some  other   user  (\ie the   one  he   wants  to   send  encrypted
-messages). Each user keeps his decryption procedure $D$ secret.
-
-The mentioned procedures $D$ and $E$ have the following properties:
-\begin{enumerate}
-\renewcommand{\theenumi}{\alph{enumi}}
-\renewcommand{\labelenumi}{(\theenumi)}
-
-\item Deciphering  the enciphered form of  a message $M$  yields $M$. That
-  is,
-  \begin{equation}
-    \label{eq:1}
-    D(E(M)) = M.
-  \end{equation}
-  \label{pubkey-cryptosystem-prop-1}
-\item Both $D$ and $E$ are easy to compute.
-  \label{pubkey-cryptosystem-prop-2}
-\item The user does not reveal an  easy way to compute $D$ if he makes $E$
-  publicly available.
-  \label{pubkey-cryptosystem-prop-3}
-\item  The enciphering  of a  previously ciphered  message $M$  results in
-  $M$. That is,
-  \begin{equation}
-    \label{eq:2}
-    E(D(M)) = M.
-  \end{equation}
-  \label{pubkey-cryptosystem-prop-4}
-\end{enumerate}
-
-A                  function                 $E$                 satisfying
-(\ref{pubkey-cryptosystem-prop-1})--(\ref{pubkey-cryptosystem-prop-3})   is
-said  to  be  a  \emph{``trap-door  one-way function''}  and  if  it  also
-satisfies  (\ref{pubkey-cryptosystem-prop-4})  it  is a  \emph{``trap-door
-  one-way permutation''} \cite{rivest77method,diffie76new}.
-
-\subsubsection{Key setup}
-
-The \emph{encryption  key} consists  of a pair  of positive  integers $(e,
-n)$,  where $e$  is the  \emph{encryption exponent}  and $n$  is  used for
-modulo  operations.  The \emph{decryption  key}  is  also  a pair  of  two
-integers, where only the exponent differs, thus $(d, n)$ is the decryption
-key and $d$  represents the \emph{decryption exponent}. $(e,  n)$ are made
-publicly available.
-
-\citet*{rivest77method} suggest the  following approach for the generation
-of $(e, n)$ and  $(d, n)$. The fist step is to  compute $n$ as the product
-of two very large, ``random'' primes $p$ and $q$:
-\begin{equation*}
-  \label{eq:compute-n}
-n = p \cdot q.
-\end{equation*}
-
-Although you  publish $n$, nobody is  able to compute the  factors $p$ and
-$q$ in  reasonably time due to  the enormous difficulty  of factoring $n$.
-In \cite{rivest77method}  it is assumed,  that the computation of  $p$ and
-$q$ from a given $n$ takes $1.5 \times 10^{29}$ operations, given that $n$
-has a length  of $300$ digits. If one operation  took one microsecond, the
-whole computation takes $4.9 \times 10^{15}$ years.
-
-The  next step  is to  choose  $d$, therefore  one picks  a large,  random
-integer that is \emph{co-prime}\footnote{two integers $a$ and $b$ are said
-  to be co-prime  if they do not  have a common factor other  than $1$ and
-  $-1$, \ie their greatest common divisor  (gcd) is $1$.} to $(p-1) \cdot
-(q-1)$.\footnote{the term $(p-1)\cdot(q-1)$ is the result of \emph{Euler's
-    Phi} or  \emph{Euler's totient function}  ($\phi$) applied to  $n$} In
-other words, $d$ has to satisfy:
-\begin{equation*}
-  \label{eq:compute-d}
-  gcd(d, (p-1) \cdot (q-1)) = 1.
-\end{equation*}
-
-Finally,  the integer $e$  is computed  from $p$,  $q$ and  $d$ to  be the
-\emph{multiplicative inverse} of $d$, modulo $\phi(n)$:
-\begin{equation*}
-  \label{eq:compute-e}
-  e \cdot d \equiv 1\ \ (mod\ (p-1) \cdot (q-1))
-\end{equation*}
-
-\subsubsection{Encryption and Decryption}
-
-If  two  persons,  Alice  and   Bob,  want  to  send  each  other  private
-(\ie encrypted)  messages,  they   both  retrieve  the  other's  publicly
-available encryption  key first ---  Bob retrieves $(e_a, n_a)$  and Alice
-retrieves $(e_b, n_b)$.
-
-Let's say  Alice wants to send a  private message to Bob.   To encrypt the
-message, she has to  represent it as an integer between $0$  and $n_b - 1$
-(long  messages can  be broken  into smaller  blocks, so  that  each block
-fulfills the requirement). Alice then  encrypts the message $M$ by raising
-it to the $e_b$th power modulo $n_b$, the result is the cyphertext $C$:
-\begin{equation*}
-  \label{eq:encrypt-message}
-  C \equiv E(M) \equiv M^{e_b}\ \ (mod\ \ n_b).
-\end{equation*}
-
-On reception  of the cyphertext  $C$, Bob raises  it to the  $d_b$th power
-modulo $n_b$. He  is the only person, who knows $d_b$  and therefore he is
-solely able to decrypt $C$:
-\begin{equation*}
-  \label{eq:decrypt-message}
-  M \equiv D(C) \equiv C^{d_b}\ \ (mod\ \ n_b).
-\end{equation*}
-
-\subsubsection{Signing and Validating}
-
-Electronic  signatures, \eg in electronic  mail systems,  especially when
-used in  business transactions, must  provide provability to  the receiver
-that  the message  originated from  the sender.   This is  more  than just
-provide  mere \emph{authentication},  where the  recipient of  a digitally
-signed message can  verify that the message came  from the sender. Digital
-signatures must be  able to be used to convince  a ``judge'', that neither
-the recipient did  forge the message, nor the sender  can deny sending the
-message.
-
-That means,  an electronic signature must  be \emph{message}-dependent, as
-well as  \emph{signer}-dependent. If the  signature did not depend  on the
-message itself, a dishonorable recipient  could just change the message or
-attach the signature to a  completely different message before showing the
-message/signature pair  to a judge. If  the signature would  not depend on
-the \emph{signer}, obviously anybody could have signed the message.
-
-\medskip
-
-If   Bob  want  to   send  Alice   a  signed   message,  he   applies  his
-\emph{decryption}  function $D_b$  to the  clear text  message  $M$, which
-results in the signature $S$:
-
-\begin{equation*}
-  \label{eq:compute-signature}
-  S = D_b(M).
-\end{equation*}
-
-To   perform  this,   the  cryptosystem   has  to   be   implemented  with
-\emph{trap-door         one-way        permutations},        \ie property
-(\ref{pubkey-cryptosystem-prop-4}) must hold.
-
-This signature  can now  be encrypted using  Alice's public key  to ensure
-privacy, there  is no need to  send the message along  with the signature,
-since it can  be computed from it. On reception,  Alice first decrypts the
-message which  results in the  plain signature $S$ again.   Applying Bob's
-\emph{encryption} function to the  received signature (Alice knows who the
-presumed sender  of the  message is) makes  perfect sense due  to property
-(\ref{pubkey-cryptosystem-prop-4}):
-
-\begin{equation*}
-  \label{eq:validate-signature}
-  M = E_b(S)
-\end{equation*}
-
-Bob cannot  later on deny that he  sent the message, since  nobody but him
-could  have generated  the signature  $S$.  Alice  is able  to  convince a
-``judge'', that  Bob did send the  message, since $E_b(S) =  M$. But Alice
-cannot modify  $M$ or  provide a different  message $M'$ because  then she
-would also need to compute $S' = D_b(M')$ as well.
 
 \subsection[Public Key Infrastructure]{Public Key Infrastructure (PKI)}
 
@@ -810,8 +624,6 @@ cryptographically  signed by a  \emph{trusted} authority.   A certificate,
 that is signed by such an authority you trust, is automatically assumed to
 actually belong to the server where the certificate came from.
 
-\bigskip
-
 Unfortunately, \gls{glo:TLS}  cannot be used in a  message-queue system to
 secure the traffic  between clients and servers. That  is because there is
 no direct connection between client and server --- both are just connected
@@ -830,8 +642,45 @@ To  secure  the  logical   message-based  communication  between  any  two
 end-points, a  different kind of security  layer has to be  used here: the
 \emph{Message Layer Security} --- or \gls{glo:MLS} for short.
 
+\textbf{TODO}
+
+pros:
+\begin{itemize}
+\item relatively simple (dozens of ssl libraries available), standard technology
+\item well understood
+\item applies to complete payload data
+\end{itemize}
+cons:
+\begin{itemize}
+\item coupled with the transport layer, TCP for example
+\item only point-to-point security, \ie message is automatically decrypted
+  when received
+\item for each intermediate host, a new ssl connection is required. that
+  implies additional computational overhead (message must be
+  encrypted/decrypted $n-1$ times).
+\end{itemize}
+
 \subsection[Message Layer Security]{Message Layer Security (MLS)}
 \label{sec:fundamentals:mls}
+
+\textbf{TODO}
+
+\cite{mls, oasis-wss}
+
+pros:
+\begin{itemize}
+\item security is coupled directly to the message
+\item end-to-end security
+\item parts of the message can be secured
+\item many intermediate hosts
+\item encryption/decryption takes place only once (start and end)
+\item independent from the transport protocol
+\end{itemize}
+cons:
+\begin{itemize}
+\item complex, imposes overhead to the message processing
+\item application support (message format must be understood)
+\end{itemize}
 
 As the name of this protocol  may already suggest, the security focuses on
 the transmitted messages not on  the transportation of the messages.  That
@@ -848,8 +697,6 @@ algorithm   is    rather   slow,    in   most   cases    a   \emph{session
   key}\footnote{typically  random data}  will be  negotiated  first.  This
 session  key is  then used  to perform  \emph{symmetric} ciphering  of the
 messages, which is a lot faster.
-
-\bigskip
 
 The \gls{glo:XenBEE}  must make use  of \gls{glo:MLS} to  provide security
 for  its users.   Additionally, as  it is  common  among Grid-middlewares,

@@ -1,3 +1,8 @@
+\setchapterpreamble[o]{%
+  \dictum[James  Magary]{\textit{``Computers can figure  out all  kinds of
+      problems, except the things in  the world that just don't add up.''}
+  }}
+
 \chapter{Requirements}
 \label{cha:requirements}
 
@@ -315,8 +320,6 @@ could  be used  for more  than just  one application.   Another  reason is
 simply flexibility,  the \gls{glo:JSDL} allows an user  to exactly specify
 how and which application shall be run and this component adheres to that.
 
-\bigskip
-
 Basically  this concept  defines a  client-server architecture,  where the
 client is represented  by the user (or some mediator  such as a web-portal
 or a  command-line client) and the  server is represented  by the managing
@@ -613,8 +616,6 @@ the loss of  that auction or it is won  and eventually \emph{confirmed}.
 % The implementation of  Calana, which is to the time  of this writing still
 % in development,  uses also message  queues to implement  the communication
 % between consumers, brokers and agents.
-
-\bigskip
 
 The picture  in Figure~\ref{fig:calana-xenbee} describes how  a user would
 interact  with  a  system,  that   uses  Calana  for  scheduling  and  the

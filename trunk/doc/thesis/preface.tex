@@ -17,35 +17,34 @@ running on the same host.
 
 % chapter overview
 \begin{description}
-\item[Chapter   \ref{cha:intro}]   The   first   chapter   contains   some
-  introductory material that you should  read if you are not familiar with
-  virtualization  technologies   and  especially  the  \emph{\gls{glo:XEN}
-    hypervisor}.
+\item[Chapter \ref{cha:intro}]  The first  chapter introduces you  to past
+  and current  virtualization technologies.  This chapter  also covers the
+  problem  description  and  the  goals of  the  proposed  \emph{Xen-based
+    Execution Environment}.
+
+\item[Chapter \ref{cha:requirements}] This  chapter outlines and describes
+  the basic  requirements that the  \emph{Xen-based Execution Environment}
+  has to fulfill.
   
-\item[Chapter \ref{cha:requirements}] In  this chapter the requirements of
-  the execution environment are discussed.
+\item[Chapter   \ref{cha:fundamentals}]   The   third  chapter   discusses
+  fundamental technologies that  I have used in this  work.  It covers the
+  \emph{Job  Submission  Description   Language},  the  job-model  of  the
+  \emph{Basic Execution Service} and  the securing of transmitted messages
+  using \emph{Message Layer Security}.
   
-\item[Chapter \ref{cha:design}] This chapter  deals with the design of the
-  \emph{\gls{glo:XEN}-based Execution Environment} and its components.
+\item[Chapter  \ref{cha:design}] This  chapter deals  with the  design and
+  implementation  of the  \emph{Xen-based Execution  Environment}  and its
+  components. It covers the necessary steps and the involved communication
+  protocols to execute a job on a virtual machine.
   
-\item[Chapter  \ref{cha:comm-prot}]  The   fourth  chapter  discusses  the
-  protocols  used for  communication between  the different  parts  of the
-  system.
+\item[Chapter \ref{cha:results}]  In this  chapter the performance  of the
+  \emph{Xen-based Execution Environment} is  analyzed. The impact of using
+  compressed  images and exploitation  of caching  on the  total execution
+  time is analyzed as well.
   
-\item[Chapter  \ref{cha:secur-cons}]  In  this  chapter  security  related
-  topics are discussed, such as  securing the messages sent between client
-  and server  using \emph{Message Layer Security}  (\gls{glo:MLS}) and how
-  the executing  of user-supplied  scripts are secured  using \emph{chroot
-    environment}.
-  
-\item[Chapter \ref{cha:results}] This chapter  shows some results of using
-  the  \emph{\gls{glo:XEN}-based Execution  Environment}  and compares  it
-  against running the same programs on a stand-alone machine.
-  
-\item[Chapter   \ref{cha:conclusions}]  The   final  chapter   draws  some
-  conclusions about  the work  that has been  done and provides  ideas for
-  future development.
-  
+\item[Chapter \ref{cha:conclusions}]  The final chapter  draws conclusions
+  about the  work that has  been done and  provides some ideas  for future
+  development.
 \end{description}
 
 \clearpage
