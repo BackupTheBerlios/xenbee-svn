@@ -45,7 +45,7 @@ class DataStager:
         self.curl = pycurl.Curl()
         self.curl.setopt(pycurl.FOLLOWLOCATION, 1)
 	self.curl.setopt(pycurl.CONNECTTIMEOUT, 30)
-	self.curl.setopt(pycurl.TIMEOUT, 300)
+#	self.curl.setopt(pycurl.TIMEOUT, 300)
 	self.curl.setopt(pycurl.NOSIGNAL, 1)
 	self.curl.setopt(pycurl.VERBOSE, 0)
 
