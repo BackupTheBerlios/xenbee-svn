@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- image submission extension for JSDL -->
+
+<jsdl:JobDefinition xmlns:jsdl="http://schemas.ggf.org/jsdl/2005/11/jsdl"
+		    xmlns:jsdl-posix="http://schemas.ggf.org/jsdl/2005/11/jsdl-posix"
+		    xmlns:xsdl="http://www.example.com/schemas/xbe/2007/01/xsdl">
+ <jsdl:JobDescription>
+    <jsdl:JobIdentification>
+      <jsdl:JobName>Hello World!</jsdl:JobName>
+      <jsdl:Description>A simple Hello World application</jsdl:Description>
+    </jsdl:JobIdentification>
+    <jsdl:Application>
+      <jsdl-posix:POSIXApplication>
+        <jsdl-posix:Executable filesystemName="ROOT">
+          bin/echo
+        </jsdl-posix:Executable>
+        <jsdl-posix:Argument>Hello</jsdl-posix:Argument>
+        <jsdl-posix:Argument>World!</jsdl-posix:Argument>
+        <jsdl-posix:Output filesystemName="SPOOL">hello.out</jsdl-posix:Output>
+      </jsdl-posix:POSIXApplication>
+    </jsdl:Application>
+    <jsdl:Resources>
+      <jsdl:FileSystem name="ROOT">
+	<jsdl:Description>the root filesystem</jsdl:Description>
+	<jsdl:MountPoint>/</jsdl:MountPoint>
+      </jsdl:FileSystem>
+      <jsdl:FileSystem name="SPOOL">
+	<jsdl:Description>a spool directory</jsdl:Description>
+	<jsdl:MountPoint>/spool</jsdl:MountPoint>
+      </jsdl:FileSystem>
+
+      <xsdl:InstanceDefinition>
+	<xsdl:InstanceDescription>
+	  
+	  <xsdl:Instance>
+	    <xsdl:Kernel>
+	      <xsdl:Location>
+		<xsdl:URI>
+		  file:///srv/xen-images/kernel-2.6.19
+		</xsdl:URI>
+	      </xsdl:Location>
+	    </xsdl:Kernel>
+
+	    <!-- the initrd is optional -->
+	    <xsdl:Initrd>
+	      <xsdl:Location>
+		<xsdl:URI>
+		  file:///srv/xen-images/initrd-2.6.19
+		</xsdl:URI>
+	      </xsdl:Location>
+	    </xsdl:Initrd>
+
+	    <!-- the image is mandatory -->
+	    <xsdl:Image fs-type="ext3">
+	      <xsdl:Location>
+		<xsdl:URI>
+		  file:///srv/xen-images/base.img
+		</xsdl:URI>
+	      </xsdl:Location>
+	    </xsdl:Image>
+	  </xsdl:Instance>
+	</xsdl:InstanceDescription>
+
+      </xsdl:InstanceDefinition>
+    </jsdl:Resources>
+    <jsdl:DataStaging>
+      <jsdl:FileName>hello.out</jsdl:FileName>
+      <jsdl:FilesystemName>SPOOL</jsdl:FilesystemName>
+      <jsdl:CreationFlag>overwrite</jsdl:CreationFlag>
+      <jsdl:DeleteOnTermination>true</jsdl:DeleteOnTermination>
+      <jsdl:Target>
+	<jsdl:URI>ftp://xen-o-rama.itwm.fhrg.fraunhofer.de/upload/hello.out</jsdl:URI>
+      </jsdl:Target>
+    </jsdl:DataStaging>
+  </jsdl:JobDescription>
+</jsdl:JobDefinition>
+
+<!--
+    Local Variables: ***
+    mode: nxml ***
+    End: ***
+-->

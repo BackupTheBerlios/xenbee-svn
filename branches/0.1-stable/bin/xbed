@@ -1,0 +1,24 @@
+#!/usr/bin/env python
+"""
+The Xen Based Execution Environment managing daemon
+"""
+
+__version__ = "$Rev: $"
+__author__ = "$Author: $"
+
+import sys, os, os.path
+
+# add some temporary module paths
+sys.path.append(os.path.expanduser(os.path.join(os.environ["XBED_HOME"], "modules")))
+do_profiling = False
+
+from xbe.xbed.daemon import main
+if __name__ == "__main__":
+    if do_profiling:
+        try:
+            import profile
+            profile.run("main(sys.argv)", "/tmp/xbed.profile")
+        except ImportError:
+            main(sys.argv)
+    else:
+        main(sys.argv)

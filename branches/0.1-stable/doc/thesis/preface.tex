@@ -1,0 +1,55 @@
+\setchapterpreamble[o]{%
+  \dictum{\textit{Virtualization  is a  concept that  one cannot  think  away from
+    computer science anymore.}}}
+
+\chapter{Preface}
+\thispagestyle{empty}
+
+This work  is about  the execution of  arbitrary applications on  a remote
+system exploiting virtual machines. It addresses the problem that multiple
+potentially  broken applications  are typically  executed on  remote hosts
+side by  side ---  if one application  behaves ``wrong''  (e.~g.~CPU cycle
+consumption,  memory  leakage, etc.)  it  may  involve other  applications
+running on the same host.
+
+\textbf{Motto:} \emph{Secure execution by separation with virtual machines.}
+\vfill
+
+% chapter overview
+\begin{description}
+\item[Chapter \ref{cha:intro}]  The first  chapter introduces you  to past
+  and current  virtualization technologies.  This chapter  also covers the
+  problem  description  and  the  goals of  the  proposed  \emph{Xen-based
+    Execution Environment}.
+
+\item[Chapter \ref{cha:requirements}] This  chapter outlines and describes
+  the basic  requirements that the  \emph{Xen-based Execution Environment}
+  has to fulfill.
+  
+\item[Chapter   \ref{cha:fundamentals}]   The   third  chapter   discusses
+  fundamental technologies that  I have used in this  work.  It covers the
+  \emph{Job  Submission  Description   Language},  the  job-model  of  the
+  \emph{Basic Execution Service} and  the securing of transmitted messages
+  using \emph{Message Layer Security}.
+  
+\item[Chapter  \ref{cha:design}] This  chapter deals  with the  design and
+  implementation  of the  \emph{Xen-based Execution  Environment}  and its
+  components. It covers the necessary steps and the involved communication
+  protocols to execute a job on a virtual machine.
+  
+\item[Chapter \ref{cha:results}]  In this  chapter the performance  of the
+  \emph{Xen-based Execution Environment} is  analyzed. The impact of using
+  compressed  images and exploitation  of caching  on the  total execution
+  time is analyzed as well.
+  
+\item[Chapter \ref{cha:conclusions}]  The final chapter  draws conclusions
+  about the  work that has  been done and  provides some ideas  for future
+  development.
+\end{description}
+
+\clearpage
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "main"
+%%% End: 

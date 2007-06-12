@@ -1,0 +1,104 @@
+#!/usr/bin/python
+#
+
+"""Build a XBE Package.
+
+
+arguments accepted:
+   -i path to the image file
+   -k path to a kernel file
+   -r path to an optional initrd file
+   -s arbitrary number of setup scripts
+   -c arbitrary number of cleanup scripts
+   -m path to the meta information file
+   -j use bzip2 compression (default)
+   -z use gzip compression instead
+"""
+
+import sys, os, os.path, tempfile, tarfile, hashlib
+from optparse import OptionParser
+
+parser = OptionParser()
+parser.add_option("-i", "--image", dest="image", type="string",
+                  help="path to a file system image file")
+parser.add_option("-k", "--kernel", dest="kernel", type="string",
+                  help="path to a kernel file")
+parser.add_option("-r", "--initrd", dest="initrd", type="string",
+                  help="path to an optional initrd file")
+parser.add_option("-s", "--setup", dest="setup", type="string", action="append",
+                  help="path to a setup script (will be renamed to setup[.x] if necessary)")
+parser.add_option("-c", "--cleanup", dest="cleanup", type="string", action="append",
+                  help="path to a clean script")
+parser.add_option("-m", "--meta-inf", dest="metainf", type="string",
+                  help="path to a META_INF file")
+parser.add_option("-o", "--output-file", dest="outputfile", type="string",
+                  help="where shall the package be generated to")
+parser.add_option("-j", "--bzip2", dest="compression", action="store_const",
+                  const="bz2", help="use bzip2 compression")
+parser.add_option("-z", "--gzip", dest="compression", action="store_const",
+                  const="gz", help="use gzip compression")
+parser.add_option("-H", "--hash", dest="hash", type="string",
+                  help="the hash algorithm to use")
+parser.set_defaults(compression="bz2")
+parser.set_defaults(hash="sha1")
+parser.set_defaults(setup=[])
+parser.set_defaults(cleanup=[])
+
+def main():
+    opts, args = parser.parse_args()
+    files = {}
+    if opts.image is None:
+        raise ValueError("F: image path required")
+    if opts.kernel is None:
+        raise ValueError("F: kernel path required")
+    if opts.outputfile is None:
+        raise ValueError("F: outputfile required")
+
+    tar = tarfile.open(opts.outputfile, "w:%s" % (opts.compression))
+    print >>sys.stderr, "adding", opts.image
+    tar.add(opts.image, "image")
+    print >>sys.stderr, "adding", opts.kernel
+    tar.add(opts.kernel, "kernel")
+    if opts.initrd is not None:
+        print >>sys.stderr, "adding", opts.initrd
+        tar.add(opts.initrd, "initrd")
+    if opts.metainf is not None:
+        print >>sys.stderr, "adding", opts.metainf
+        tar.add(opts.metainf, "META_INF")
+
+    script_dir = tempfile.mkdtemp()
+    copy_scripts(script_dir, "setup", opts.setup)
+    copy_scripts(script_dir, "cleanup", opts.cleanup)
+
+    tar.add(script_dir, "scripts")
+    del tar
+
+    # delete the tempdir
+    map(os.unlink,
+        [os.path.join(script_dir, s) for s in os.listdir(script_dir)])
+    os.rmdir(script_dir)
+
+    # generate a hash value
+    h = hashlib.new(opts.hash)
+    h.update(open(opts.outputfile).read())
+    print "%s:%s %s" % (opts.hash, h.hexdigest(), opts.outputfile)
+    sys.exit(0)
+
+
+def copy_scripts(tmp_dir, prefix, script_list):
+    count = 0
+    for script in script_list:
+        dst_file = prefix
+        if count > 0:
+            dst_file = dst_file+".%d" % (count)
+        # copy the file
+        open(os.path.join(tmp_dir, dst_file), "wb").write(
+            open(script).read())
+        count += 1
+
+if __name__ == "__main__":
+    try:
+        main()
+    except Exception, e:
+        print e
+        sys.exit(1)
