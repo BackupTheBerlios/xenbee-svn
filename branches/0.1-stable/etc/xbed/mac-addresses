@@ -1,9 +1,0 @@
-#
-# MAC addresses available for this XBE server
-#
-00:16:3e:00:00:01 10.199.136.101     # xenhobel-1
-00:16:3e:00:00:02 10.199.136.102     # xenhobel-2
-00:16:3e:00:00:03 10.199.136.103     # xenhobel-3
-00:16:3e:00:00:04 10.199.136.104     # xenhobel-4
-00:16:3e:00:00:05 10.199.136.105     # xenhobel-5
-
