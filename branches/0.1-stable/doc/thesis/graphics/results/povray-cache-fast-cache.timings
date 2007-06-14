@@ -1,0 +1,20 @@
+image: base.img (450MB uncompressed)
+command: povray +Q6 +W640 +H480 +scene.png cornell.pov
+
+submit          1177128004.71
+confirm         1177128005.12
+stage-in-start  1177128005.12
+instance-start  1177128030.8
+execution-start 1177128047.04
+execution-done  1177128105.19
+stage-out-start 1177128116.49
+finish          1177128119.71
+
+   step            time (s)
+time-until-start    0.41  
+Stage-in           25.68 
+Instance startup   16.24 
+Execution time     58.15 
+Instance shutdown  11.30 
+Stage-out           3.22  
+total             115.00

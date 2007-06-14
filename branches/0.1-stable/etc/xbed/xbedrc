@@ -1,0 +1,27 @@
+[DEFAULT]
+etc: /root/xenbee/etc
+
+[global]
+pidfile: /var/run/xbed.pid
+backend: xen
+schema_dir: %(etc)s/xml/schema
+spool: /srv/xenbee
+
+[logging]
+logconf: %(etc)s/xbed/logging.rc
+;logfile: /var/log/xenbee/xbed.log
+
+[stomp]
+uri: stomp://xen-o-matic.itwm.fhrg.fraunhofer.de/xenbee.daemon.1
+user: daemon
+pass: Aefith3s
+
+[security]
+privkey: %(etc)s/xbed/xbed-key.pem
+pubkey: %(etc)s/xbed/xbed.pem
+cacert: %(etc)s/xbed/ca-cert.pem
+userdb: %(etc)s/xbed/allowed-users
+
+[instance]
+macdb: %(etc)s/xbed/mac-addresses
+jailpkg: /srv/xenbee/jail-package.tar.bz2
