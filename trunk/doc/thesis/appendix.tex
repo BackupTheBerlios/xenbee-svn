@@ -25,13 +25,15 @@ publicly known.  Especially  hard to factor are numbers  whose factors are
 two randomly-chosen prime numbers of sufficient length.
 
 In the following  I am going to describe  how the keys are set  up and how
-they are used to encrypt/decrypt or to sign/validate a clear text message.
+they  are  used  to  encrypt/decrypt  or to  sign/validate  a  clear  text
+message.  The provided  material  is  based on  the  information found  in
+\cite{rivest77method} and \cite{diffie76new}.
 
-According  to  \cite{rivest77method},  places  each  user  his  encryption
-procedure $E$  in a publicly accessible file  (\eg database).  Using this
+According  to  \cite{rivest77method}   places  each  user  his  encryption
+procedure $E$  in a publicly  accessible file (\eg database).   Using this
 public file, any  other user is able to  retrieve the encryption procedure
-of   some  other   user  (\ie the   one  he   wants  to   send  encrypted
-messages). Each user keeps his decryption procedure $D$ secret.
+of some other user (\ie the one he wants to send encrypted messages). Each
+user keeps his decryption procedure $D$ secret.
 
 The mentioned procedures $D$ and $E$ have the following properties:
 \begin{enumerate}
@@ -184,6 +186,71 @@ could  have generated  the signature  $S$.  Alice  is able  to  convince a
 ``judge'', that  Bob did send the  message, since $E_b(S) =  M$. But Alice
 cannot modify  $M$ or  provide a different  message $M'$ because  then she
 would also need to compute $S' = D_b(M')$ as well.
+
+\section{Calana}
+\label{app:sec:calana}
+
+\emph{Calana} is  a new Grid  scheduler approach proposed  by M.~Dalheimer
+\cite{dalheimer05agentbased}.   The scheduler  uses  several \emph{agents}
+and at  least one  \emph{broker}.
+
+The  agents are  responsible for  single resource.   That means  they know
+whether the resource is free or  not. They are also capable to acquire new
+or cancel previously made reservations on this resource.
+
+If  a user  wants to  submit a  job to  the grid  environment,  the broker
+initiates an  \emph{auction} among the  connected agents. The job  is then
+assigned to the resource that belongs to the agent that won the auction.
+
+\subsection{Architecture}
+
+An  abstract   view  over   the  architecture  of   Calana  is   shown  in
+Figure~\ref{fig:calana-architecture}.   For a  detailed discussion  of the
+protocol  that  is   used  to  perform  the  auctions,   have  a  look  at
+\cite{dalheimer06calanaprotocol} and \cite{petry06}.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[scale=0.5]{calana-architecture}
+  \caption{Architecture of Calana}
+  \label{fig:calana-architecture}
+\end{figure}
+
+The main steps of such an auction are can be described as follows:
+
+\begin{enumerate}
+\item When a user submits a job to the Calana-broker, the broker will open
+  up an auction and try to \emph{book} a resource for the task.
+\item    For   each   task    an   auction    is   created    by   sending
+  \texttt{BookingReq}-messages to the connected agents.
+\item The agents will make  one or more \emph{reservations} on their local
+  scheduler  and  answer with  a  \texttt{AuctionBid}.   Bids contain  for
+  example  the  cost  of   using  the  resource  and  various  reservation
+  parameters  such  as  the   earliest  start-time  and  duration  of  the
+  reservation.
+\item To make a decision, the  broker judges all received bids and chooses
+  the     best     one      according     to     some     preference-model
+  \cite{dalheimer05agentbased, petry06}.
+\item If  the user  accepts the decision,  the broker  \emph{confirms} the
+  reservation.
+\end{enumerate}
+
+\subsection{Job-state model}
+\label{app:sec:calana-job-model}
+
+To reflect the possibility  to \emph{make}, \emph{confirm}, \emph{use} and
+\emph{cancel} reservations on some resource, the job-state model had to be
+extended. We discussed about a common state-model for the jobs and came to
+the  consensus of  adopting  the  \gls{glo:BES} model  to  our needs  (see
+Figure~\ref{fig:bes-calana-job-model}).
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[scale=.55]{bes-calana-job-model}
+  \caption[Calana Job Model]{The common job model proposed by the Calana
+    Grid scheduler.}
+  \label{fig:bes-calana-job-model}
+\end{figure}
 
 %%% Local Variables: 
 %%% mode: latex

@@ -48,7 +48,7 @@ user-application).
 On the left hand side of the picture are the users using the \emph{xbe} to
 communicate with the execution  environment. The \emph{xbe} refers in this
 case  to the command  line tool  which I  have implemented  as a  proof of
-concept  to interact  with the  \emph{xbed}.  The  interface that  an user
+concept  to interact  with the  \emph{xbed}.  The  interface that  a user
 utilizes to execute his applications  with the \gls{glo:XenBEE} could be a
 web-portal or some other tool with a graphical user interface as well.
 
@@ -118,14 +118,14 @@ Section~\ref{sec:communication-protocol},
 
 \subsubsection{Task-Manager}
 
-When an  user submits,  terminates or  requests the status  of one  of her
+When a  user submits,  terminates or  requests the status  of one  of her
 jobs, the  message is actually handled by  the \texttt{TaskManager}.  This
 component controls all tasks, the system knows of. A ``task'' does in this
-case  not refer  to the  actual application  an user  submitted, but  to a
+case  not refer  to the  actual application  a user  submitted, but  to a
 container that holds the task's  state machine, description and probably a
 reference to the virtual machine instance used for this task.
 
-A new task gets initialized every  time an user requests a reservation. At
+A new task gets initialized every  time a user requests a reservation. At
 this time it contains nothing more  than the state machine which is in its
 start-state                               (\ie \texttt{Pending:Reserved}).
 Section~\ref{sec:xbed:job-model}  discusses   the  implementation  of  the
@@ -138,10 +138,10 @@ implemented     by    using     \emph{Universal     Unique    Identifiers}
 available\footnote{a listing  of all current tasks comparable  to the UNIX
   \texttt{ps}  command could be  possible}, the  identifier of  the user's
 reservation is  only known to  that particular user (or  some intermediary
-software such as  a Calana-agent). All requests that an  user makes to the
+software such as  a Calana-agent). All requests that a  user makes to the
 system require the reservation's unique identifier.
 
-When an user confirms a reservation,  he also sends the job description as
+When a user confirms a reservation,  he also sends the job description as
 a \gls{glo:JSDL}  document along with the confirmation  message.  The task
 is  thus completely  specified and  may  perform the  transition into  the
 \texttt{Executing} state. To this time, the task-manager creates a special
@@ -237,19 +237,20 @@ machine will  be shut down and the  result can be staged  out according to
 the specified \gls{glo:JSDL} document.
 
 The next sections  describe the implementation of the  used job-model, how
-the staging  of input  and output data  is performed  and how an  user can
+the staging  of input  and output data  is performed  and how a  user can
 benefit from using the provided data-cache.
 
 \subsection{Job-model Implementation}
 \label{sec:xbed:job-model}
 
-In     the     sections    \emph{`\nameref{sec:fundamentals:bes}'}     and
-\emph{`\nameref{sec:calana-support}'}               on               pages
-\pageref{sec:fundamentals:bes}       and      \pageref{sec:calana-support}
-respectively, I have already discussed the usage of the job-model that has
-been  proposed  by the  \gls{glo:OGSA}-\gls{glo:BES}  working group.   The
-Calana  architecture   requires  the  model  to   contain  extensions  for
-\emph{reservation} and \emph{data staging}.
+In Section~\ref{sec:fundamentals:bes}  I have already  discussed the usage
+of     the    job-model     that    has     been    proposed     by    the
+\gls{glo:OGSA}-\gls{glo:BES}   working  group.   The   required  batch-job
+execution semantic  of the \gls{glo:XenBEE}  demands the extension  of the
+state-model to  support \emph{data staging} states. To  be integrable into
+existing  grid-environments such  as Calana  the model  must  also contain
+extensions for  \emph{reservations}. Actually  I am using  the state-model
+that is currently defined for the Calana architecture as the basis.
 
 To model  the process of starting  a virtual machine, I  have extended the
 model  again  to provide  an  additional state  \texttt{Instance-Starting}
@@ -268,7 +269,7 @@ The  implementation of  this model  builds up  on an  implementation  of a
 contains a reference to an instance  of such an \gls{glo:FSM}. Each time a
 state  change is  desired the  \gls{glo:FSM} is  called with  an ``input''
 signal. The  \gls{glo:FSM} then calls registered  functions that implement
-the transition's behavior. If, for example, an user wants to terminate his
+the transition's behavior. If, for example, a user wants to terminate his
 activity, the  \gls{glo:FSM} is presented with  a ``terminate-token''. The
 FSM  calls  then specialized  functions  that  deal  with the  termination
 request according to the current state. That means, distinct functions are
@@ -283,9 +284,9 @@ encapsulates  some behavior  along  with  a state  ---  commonly known  as
 on  purpose, because they  are usually  executed by  a separate  thread of
 control  in concurrency  to other  activities within  the  system. Another
 reason for  encapsulating some of  the transitions in  activity-objects is
-the possible intervention by an user.
+the possible intervention by a user.
 
-The  BES model  allows an  user to  terminate his  task at  any  time.  In
+The  BES model  allows a  user to  terminate his  task at  any  time.  In
 particular  that means,  that any  action  belonging to  that task,  which
 currently takes place on the server, has to be stopped or aborted.
 
@@ -396,7 +397,7 @@ The  handling  of data  transfer  covers the  staging  of  files into  the
 execution environment and out from the execution environment, in this work
 referred   to  as  ``stage-in''   and  ``stage-out''   respectively.   The
 description  that  is  required  for  each of  the  staging  processes  is
-completely  covered  within  the  \gls{glo:JSDL} document  which  an  user
+completely  covered  within  the  \gls{glo:JSDL} document  which  a  user
 submitted  to the  execution  environment.  However,  some extensions  are
 required,       those       will       be      handled       with       in
 Section~\ref{sec:xen-based-submission}.
@@ -416,8 +417,8 @@ previously obtained, hence the two parts of the staging process.
 
 All files, including the virtual machine specific ones, are referred to as
 \emph{Uniform  Resource  Identifier}s  (\gls{glo:URI}s). That  means,  all
-files must be ``somehow'' accessible by the \emph{xbed}.  An user can, for
-instance, specify files that  are located on an \texttt{\gls{glo:HTTP}} or
+files must be ``somehow'' accessible by the \emph{xbed}.  A user can, for
+instance, specify files that  are located on a \texttt{\gls{glo:HTTP}} or
 on an \texttt{\gls{glo:FTP}} server --- currently only these two protocols
 and  a special  URI to  reference to  cached files  are  supported.  Those
 \gls{glo:URI}s are then retrieved by the \emph{xbed} by using the standard
@@ -438,7 +439,7 @@ the image is nearly empty before transmitting it, since it contains only a
 basic operating system installation  along with the user's application and
 its dependencies.
 
-The \emph{xbed} allows an user to submit compressed files. The compression
+The \emph{xbed} allows a user to submit compressed files. The compression
 is extremely  useful when the file is  mostly ``empty'' as it  is the case
 for the  image files, for  instance --- an  image file that was  $8$~GB in
 size and contained  about $750$~MB data produced a  compressed file (using
@@ -460,7 +461,7 @@ submits to the execution environment  with the mode of compression and the
 
 Figure~\ref{fig:act-retrieve-file} shows the involved steps when a file is
 retrieved by the \emph{xbed}. Another feature added to this process is the
-validation of the retrieved data. If  an user wants to make sure, that the
+validation of the retrieved data. If  a user wants to make sure, that the
 file had not been modified in some way, she can provide a checksum and the
 used    algorithm   along   with    the   \gls{glo:URI}.     Typically   a
 \emph{cryptographic  hash   function}  is   used  to  compute   a  digital
@@ -478,9 +479,9 @@ of a \texttt{\gls{glo:chroot}} environment\footnote{The terms \emph{chroot
   glossary.}  within  the spool directory  that has been created  for that
 task.  The  description of  the necessary files  for a virtual  machine is
 contained   in  an   extra  element   within  the   task's  \gls{glo:JSDL}
-description. An user can either  specify the required files (image, kernel
+description. A user can either  specify the required files (image, kernel
 and initrd) on  its own or he can specify  a \texttt{bzip2} compressed tar
-archive (``package'')  that contains  these files.  Additionally,  an user
+archive (``package'')  that contains  these files.  Additionally,  a user
 has the possibility to define several executable scripts that are uploaded
 to  the execution  environment and  get called  at various  stages  of the
 stage-in process.
@@ -568,7 +569,7 @@ adds a new entry to a database.
 Actually the  complete mechanism  of caching is  implemented in  a special
 component  within  the  \emph{xbed}  on   its  own.   The  cache  uses  an
 \gls{glo:SQL}-database  to store information  about the  cached data  in a
-persistent way. An user can add two different pieces of information to the
+persistent way. A user can add two different pieces of information to the
 data he wants to have cached.  The first is the \textbf{type} of the data,
 which can  be one  of \texttt{image}, \texttt{kernel},  \texttt{initrd} or
 \texttt{data},  where the  \texttt{data} type  is just  a  placeholder for
@@ -662,7 +663,7 @@ compressed  files and  the  validation  of those  files  based on  digital
 fingerprints.   To reflect this  behavior along  with the  job submission,
 additional ``decorator'' elements have  been added.  The following example
 (Listing~\ref{lst:xbe-xsdl-example}) shows the  usage of these decorators.
-The  \gls{glo:JSDL} does only  support plain  \gls{glo:URI}s.  If  such an
+The  \gls{glo:JSDL} does only  support plain  \gls{glo:URI}s.  If  such a
 \gls{glo:URI} is now used along with  one or more of these decorators, the
 \emph{xbed} interprets the URI correctly.
 
@@ -842,7 +843,7 @@ the application can be summarized as follows:
 Additionally   to  the   environment  variables   specified  in   the  job
 description,  an  \texttt{``MQS''}   environment  variable  is  set.   Per
 default, this  variable is  set to the  message-queue server that  is also
-used by  the \emph{xbeinstd}, but the  value can be overridden  by an user
+used by  the \emph{xbeinstd}, but the  value can be overridden  by a user
 using  an  \texttt{Environment}   element  that  explicitly  defines  this
 variable.   An  application  that  is  distributed  over  several  virtual
 machines can make use of  this variable for communication and coordination
@@ -900,7 +901,7 @@ about all supported commands and how they are used. The help system can be
 activated by issuing the \texttt{xbe help} shell command in a terminal.
 
 The  \emph{xbe}  has  an  interface   to  all  aspects  of  the  execution
-environment  that  have been  discussed  so far.   It  allows  an user  to
+environment  that  have been  discussed  so far.   It  allows  a user  to
 \texttt{reserve}, \texttt{confirm} or \texttt{terminate} a reservation and
 it  is   also  possible  to   monitor  the  \texttt{status}  of   a  given
 reservation. The tool too has an interface to the cache and it is able add
@@ -909,7 +910,7 @@ data to  the cache  and list  the current contents  by using  the commands
 
 Since the protocol assumes a two-step  process for the submission of a new
 job  (\ie creation  and  confirmation of  a  reservation), the  \emph{xbe}
-provides a  convenience command,  that allows an  user to perform  the two
+provides a  convenience command,  that allows a  user to perform  the two
 steps in one \texttt{submit} command.  The \texttt{submit}, as well as the
 \texttt{confirm} commands  require the job definition  as a \gls{glo:JSDL}
 document.   The  creation   of  such  a  document  is   not  part  of  the
@@ -1052,8 +1053,8 @@ with  a  message-queue  server.
 When  one  of  \gls{glo:XenBEE}'s  components wants  to  communicate  with
 another   component,  it   connects  to   a  message-queue   server  using
 \gls{glo:TCP}.    This   connection   can   now  used   to   establish   a
-Stomp-connection. If  an user wants  to request the  status of one  of his
-submissions,  he  passes an  \gls{glo:URI}  to  the  \emph{xbe}. This  URI
+Stomp-connection. If  a user wants  to request the  status of one  of his
+submissions,  he  passes a  \gls{glo:URI}  to  the  \emph{xbe}. This  URI
 contains   the  low-level   transport  mechanism,   the  address   of  the
 message-queue server and  the queue that must be  used to communicate with
 the other side.  Consider the following URI:
@@ -1615,7 +1616,7 @@ occurred.
 \subsubsection{Messages related to the Cache}
 
 The  next messages  are those  that currently  provide the  access  to the
-server-side cache. An user  can add a new entry to the  cache by sending a
+server-side cache. A user  can add a new entry to the  cache by sending a
 \texttt{CacheFile} message that contains the required information, \ie the
 \gls{glo:URI} of the data that shall be cached, a description and the type
 of data.
@@ -1623,7 +1624,8 @@ of data.
 To request a  list of all currently  cached files, the user has  to send a
 \texttt{ListCache}   message.    The   reply   to  this   message   is   a
 \texttt{CacheEntries} message that contains a description for all entries.
-The attributes of this message are shown in Table~\ref{tab:msg:}
+The      attributes     of     this      message     are      shown     in
+Table~\ref{tab:msg:cache-entries}
 
 \begin{table}[ht]
   \centering
@@ -1657,7 +1659,7 @@ system has been idle.
 The \texttt{ExecuteTask} message is used  by the \emph{xbed} to send a job
 description to  the virtual machine and  the \texttt{ExecutionFinished} is
 sent back  when the job  finishes, it just  contains the exit code  of the
-application. When an user request  the termination of her reservation, the
+application. When a user request  the termination of her reservation, the
 \emph{xbed}    sends    a    \texttt{TerminateTask}   message    to    the
 \emph{xbeinstd}. This message leads to a clean and correct shutdown of the
 application.

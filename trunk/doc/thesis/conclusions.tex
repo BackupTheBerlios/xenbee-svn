@@ -3,33 +3,83 @@
 \label{cha:conclusions}
 
 This  chapter analyzes  the work  that  has been  done in  respect of  the
-initial goals  that have been claimed.  It also provides  hints for future
+initial  goals that  have  been set  and  provides some  hints for  future
 developments.
 
 \section*{Conclusions}
 
-The target of  this work was to design and  implement a complete execution
-environment based  on virtual machines. The  first step in this was  to define the
-execution semantics that have to be supported 
+This work designed and implemented  an execution environment that is based
+on  virtual machines.  The  XenBEE  supports two  different  types of  job
+execution:  a  batch-job  semantic  and  an  on-demand  server  deployment
+semantic.
 
-\begin{itemize}
-\item job semantics: batch, server deployment
-\item access to required data: image, kernel, initrd, input files
-\item caching and compression of files
-\item uniform way to access files (URI)
-\item standardized job description
-\item standardized job model
-\item reservations
-\item hooks to modify input and output files (encryption)
-\item secure end-to-end communication xml
-\item task security with chroot environment
-\item user has full control over the vm
-\item results have shown that the implementation is able to execute batch
-  jobs and server deployment
-\item  also: starting/stopping  of  virtual machines  is  fast enough  for
-  on-demand server deployment
-\item 
-\end{itemize}
+In addition to other products such as Amazon EC2 \cite{amazon-ec2} and The
+XenoServer  Open Platform  \cite{kotsovinos05}, this  work  adds batch-job
+execution capabilities to virtual machine environments.
+
+To execute such a batch-job, the user submits a virtual machine image that
+contains the  application he wants to  execute.  The XenBEE  creates a new
+virtual machine that  uses this supplied image and  executes the specified
+application  within the virtual  machine. Along  with the  submission, the
+user can also specify stage-in and stage-out operations that transfer data
+into   the  virtual   machine  or   from  the   virtual  machine   to  the
+user. Currently only  HTTP and FTP are supported  for these operations but
+the XenBEE can easily be extended to support more protocols.
+
+As the results in Chapter~\ref{cha:results} show, the implementation works
+and performs well.
+
+With  the  use  of  virtual  machine  images  a  common  problem  of  grid
+environments  has been  solved: It  is not  always clear  if and  where an
+application is installed on a  given target system.  This problem has been
+avoided   by    letting   the    user   actually   provide    the   target
+environment.  Additionally, a  virtual  machine is  never  shared so  that
+security for the job execution is provided.
+
+\medskip
+
+The other execution semantic is  on-demand server deployment. In this case
+the  user  supplies  a  virtual  machine  image  that  contains  a  server
+application such  as a game server or  a web server. The  XenBEE creates a
+new virtual machine and the server is deployed. Files can be staged-in and
+staged-out as well, \eg to provide initial content for web server.
+
+The results have shown that the  deployment of a web server works and took
+about $60\ s$.
+
+\medskip
+
+The communication  model that is used  in the XenBEE  is message-based and
+supported by  a message-queue  server. The use  of a  message-queue server
+makes  it possible  that  the client  can  be behind  a  NAT gateway  (all
+connections are outbound).
+
+To  provide authentication,  authorization and  secure  communication, the
+XenBEE uses  Public Key Infrastructure  (PKI). That means each  client and
+the server is in possess  of a certificate.  These certificates are signed
+by  a trusted  Certificate Authority  which  means client  and server  can
+verify each other's identity. For  authorization the server uses a list of
+authorized certificates.
+
+To provide a secure communication  between client and server Message Layer
+Security  is  used. This  prevents  eavesdropping,  tampering and  message
+forgery,  \ie confidential  data  can be  transmitted  between client  and
+server.
+
+Security is currently  only assured between client and  server but neither
+for data transfers, nor between the server and a virtual machine. Both can
+be implemented  easily. For the  data transfer, the client  would transfer
+credentials  over the  secured connection  to  the server.   For a  secure
+communication between  the server and  a virtual machine a  pre-shared key
+can be chosen by the server prior virtual machine creation.
+
+\medskip
+
+The   XenBEE   supports   the   use    of   a   local   cache   and   file
+compression/decompression.   This can  be  used to  speed  up the  virtual
+machine  creation, because  the image  need not  to be  transfered  over a
+(slow)  network connection. In  Chapter~\ref{cha:results} the  benefits of
+caching files has been shown.
 
 \section*{Future work}
 
@@ -48,20 +98,37 @@ implemented,  as well.   But  the glue  between  the \gls{glo:XenBEE}  and
 Calana (or some  other grid middleware) --- the  Calana-agent --- is still
 missing.
 
-\subsubsection{Unattended Updates and Support for Work flows}
+\subsubsection{Support for Workflows}
 
-Completely out  of the scope  of this work  was the administration  of the
-used virtual  machines images.   It could for  instance be possible  to do
-automated  updates of stored  images.  These  updates should  be performed
-regularly and without interaction.  The  update process would also need to
-verify the updated applications, \ie a test suite must be executed on that
-image.   The execution environment  could therefore  be enhanced  with the
-support of a complete work flow description language.
+The  current implementation  supports only  a  very basic  workflow,  \ie
+stage-in of input  data, job execution and stage-out  of generated data. A
+sophisticated  work  flow  description  language supports  constructs  for
+looping and conditional branches.
+
+The  support  workflows  could  be   implemented  either  on  top  of  the
+\gls{glo:XenBEE}, or  directly into the  \gls{glo:XenBEE}.  An independent
+``on top'' approach only uses  the execution semantics already provided by
+the \gls{glo:XenBEE}. This means it must always wait for the results of an
+execution to be  staged out before the  next step of the work  flow can be
+submitted. This approach can make use of existing technologies.
+
+An optimized  implementation that is integrated  into the \gls{glo:XenBEE}
+could  prepare the  next virtual  machine while  the current  execution is
+still  running.   The results  of  the  current  execution could  then  be
+directly staged into the new virtual machine.
+
+\subsubsection{Enhanced up-\ and download mechanisms}
+
+The current  implementation of the \gls{glo:XenBEE} does  only support the
+HTTP and  FTP protocols to  perform upload and download  operations. Other
+mechanism such as  SCP, rsync or GridFTP should be  supported as well. The
+access to the different storage  areas could be granted to the \emph{xbed}
+by user-supplied certificates.
 
 \subsubsection{Cache hierarchies}
 
 A cluster of machines that are used for the \gls{glo:XenBEE} could use one
-or more shared  caches. If an user wants to execute  a particular job many
+or more shared  caches. If a user wants to execute  a particular job many
 times or  on several machines  at the same  time, he could load  the image
 into  the shared  cache first.   Each involved  execution host  could then
 retrieve the image into its local cache.
@@ -69,16 +136,31 @@ retrieve the image into its local cache.
 \subsubsection{Advanced file system support}
 
 The current implementation  makes the assumption that only  a single image
-file is  involved.  But  it could  also be possible  to compose  a virtual
-machine out of  several images. A basic image  that contains the operating
-system and application installation and a second image that can be used to
-store input and output data.  Actually, the additional image could also be
-a network file system.
+file is  involved. This  image contains all  required data.  But  it could
+also be possible to provide access  to network file systems such as NFS or
+GridFS and so on.
 
-\subsubsection{tools}
-\label{sec:tools}
+\subsubsection{Generation of virtual machine images}
 
+The images that  were used in the performed  experiments have been created
+by   a  toolchain   that   was  included   in   the  Ubuntu   distribution
+(\texttt{xen-tools}).  These  tools provide  everything that is  needed to
+create  a  virtual  machine  image,  but the  created  images  are  rather
+large. To create  really small images one has to  modify the created image
+by hand afterwards.
 
+\subsubsection{User-friendly front-ends}
+
+The \emph{xbe} command line tool has mainly been implemented as a proof of
+concept and  to be  able to actually  execute example jobs.  Currently the
+\emph{xbe}  does  only support  the  submission  of  already existing  job
+description documents.
+
+A graphical  user interface could  show a list  of available images  to a
+user.  In  the case  of on-demand server  deployment a user  could simply
+double-click on one of the available servers to start it. This can also be
+coupled with the support for work flows, \ie the user models the work flow
+graphically and submits it to the \gls{glo:XenBEE}.
 
 %%% Local Variables: 
 %%% mode: latex

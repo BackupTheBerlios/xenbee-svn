@@ -26,7 +26,7 @@ fashion.  Grid  middle\-wares  such  as Globus  \cite{globus}  or  Unicore
 send their computation to some remote computer.
 
 In current grid environments it is  always a problem of how an application
-is referenced  by an  user.  To  actually run an  application on  a remote
+is referenced  by a  user.  To  actually run an  application on  a remote
 resource,  the  application must  be  exactly  identified  either by  some
 component of the middleware, or by the user itself.
 
@@ -367,7 +367,7 @@ with command processing and information management functions. Each virtual
 machine was ``copy'' of the base hardware architecture, it was possible to
 run OS/360 in  a virtual machine and ``in fact, even  CP/67 itself was run
 "second  level" in a  virtual machine  for the  purposes of  debugging and
-testing \cite{borden89}''.
+testing'' \cite{borden89}.
 
 \subsubsection{Hardware partitioning}
 \label{sec:hardw-part}
@@ -469,7 +469,7 @@ the operating system.
   \centering
   \includegraphics[scale=.75]{architecture-userspace-virtualization}
   \caption[Virtualization  in  the   user-space]{Example  for  the  VMWare
-    virtualization software, which  runs as an application on  top of some
+    virtualization software  which runs as  an application on top  of some
     operating system}
   \label{fig:arch-userspace-virt}
 \end{figure}
@@ -632,7 +632,7 @@ to key-locations within a network.
 
 \subsection{Batch job execution}
 
-Consider  an user  who wants  to  execute the  POV-Ray raytracing  program
+Consider  a user  who wants  to  execute the  POV-Ray raytracing  program
 \cite{POV-Ray}  on some remote  computation resource.   The input  to this
 computation is  the definition of the  scene that should  be rendered. The
 output of the program is a picture that shows the rendered scene.
@@ -743,32 +743,37 @@ middleware in the deployed virtual machines.
 The previous sections have outlined the problem domain of this work. There
 is  currently no  product  available which  provides  batch job  execution
 semantics based on  virtual machine deployment.  One of  the goals of this
-work is  to provide  such a semantic.  This following list  summarizes the
+work is  to provide  such a semantic.   The following list  summarizes the
 goals of the \emph{Xen-Based Execution Environment}.
 
 \begin{itemize}
-\item The  execution environment must provide  \textbf{batch job execution
-    semantics}. That means an user must have the possibility to submit new
-  jobs, as well  as monitor and abort his running  jobs.  The execution of
-  batch jobs requires that arbitrary  input data must be made available to
-  the job, as well as generated  output data must be made available to the
-  user.
+\item  \textbf{Batch job execution  semantics.} The  execution environment
+  must provide support for the execution of batch jobs. That means a user
+  must have  the possibility to  submit new jobs,  as well as  monitor and
+  abort  his running  jobs.  The  execution  of batch  jobs requires  that
+  arbitrary  input data  must be  made available  to the  job, as  well as
+  generated output data must be made available to the user.
 
-\item \gls{glo:XenBEE} must be \textbf{integrable with grid environments}.
-  That  means  standard  technologies  which  are commonly  used  in  grid
-  environments must be supported. This regards the description, the status
-  query and the termination of jobs.
+\item \textbf{On-demand server deployment.} The execution environment must
+  be able to create virtual machine instances that are reachable through a
+  network connection.
 
-\item  Since the  execution environment  could be  used by  many different
-  users  at the  same time,  it must  provide a  \textbf{secured execution
-    context} to the  users. The interaction of an  user with the execution
-  environment must be secured, as well as the execution of a job.
+\item  \textbf{Integrability.}    The  execution  environment   should  be
+  integrable into  existing (grid)  environments.  That means  standard or
+  future  technologies  which  are  used  in  grid  environments  must  be
+  supported.  This  regards the description, status  query and termination
+  of jobs.
 
-\item The  usage of  virtual machines \textbf{should  not impose  too much
-    overhead} on the total execution time of submitted jobs.
+\item \textbf{Security.} Since the  execution environment could be used by
+  many  different  users  at the  same  time,  it  must provide  a  secure
+  execution context to user and provider.  The secure context includes the
+  interaction of  a user with the  execution environment, as  well as the
+  execution  of a  job. From  the provider's  point of  view  the security
+  context includes authentication and  authorization of the users, as well
+  as a secure communication.
 
-\item To provide \textbf{on-demand  server deployment} new virtual machine
-  instances must be reachable through a network connection.
+\item \textbf{Efficiency.} The usage of virtual machines should not impose
+  much overhead  on the total  execution time of submitted  jobs.
 \end{itemize}
 
 \subsection*{Architecture preview}
@@ -799,9 +804,9 @@ chapter, the requirements to the \gls{glo:XenBEE} are analyzed. Subsequent
 to  that some basic  technologies which  have been  used to  implement the
 execution  environment are  presented.  The  fourth chapter  describes the
 design and implementation of the  proposed work.  The results of performed
-experiments are provided in chapter~\ref{cha:results}.  The conclusions of
-this work and some directions for  future developments can be found in the
-very last chapter.
+experiments are  provided in the  fifth chapter.  The conclusions  of this
+work and some directions for future  developments can be found in the very
+last chapter.
 
 %%% Local Variables: 
 %%% TeX-master: "main.tex"
