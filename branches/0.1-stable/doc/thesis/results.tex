@@ -139,21 +139,22 @@ it.
 \label{sec:complex-example}
 
 The  previous example  was rather  a proof  of concept  execution  than an
-actually applicable  execution. An  user would not  want to execute  a job
+actually applicable  execution. A  user would not  want to execute  a job
 that  simple and  short with  the overhead  of a  complete  remote virtual
 machine. The following  example however could be an  imaginable real world
 problem.
 
 In this  case the  user wants  to render various  scenes into  pictures by
-using     the      POV-Ray     \cite{POV-Ray}     application.      Listing
-(Listing~\ref{lst:result:povray-cornell}) shows the important parts of the
-job description.   The first thing  to note is  the usage of  logical file
-system names (the \texttt{SPOOL} for  example).  The first argument to the
-\texttt{povray} executable  is the scene definition and  the last argument
-is  the   name  of  the  output   file.   The  stage-in   step  loads  the
-\texttt{scene.pov}  file  into  the  \texttt{SPOOL}  directory  while  the
-stage-out step  takes the generated \texttt{scene.png}  file and transfers
-it back to the user.
+using the POV-Ray \cite{POV-Ray}  application. This example relates to the
+example       used      in      Section~\ref{sec:req:batch-job-execution},
+\nameref{sec:req:batch-job-execution}. Listing~\ref{lst:result:povray-cornell}
+shows the important parts of the job description.  The first thing to note
+is  the  usage  of  logical  file system  names  (the  \texttt{SPOOL}  for
+example).   The first argument  to the  \texttt{povray} executable  is the
+scene definition  and the last  argument is the  name of the  output file.
+The   stage-in   step  loads   the   \texttt{scene.pov}   file  into   the
+\texttt{SPOOL}  directory while  the  stage-out step  takes the  generated
+\texttt{scene.png} file and transfers it back to the user.
 
 The  resulting   image\footnote{The  command  line  to   produce  it  was:
   \texttt{povray}     \texttt{+Q11}     \texttt{+A0.01}    \texttt{+W1600}
@@ -239,9 +240,11 @@ pure execution of the program is still much faster.
 \label{sec:deployment-of-a-web-server}
 
 This  example shows  how a  small  web server  can be  deployed using  the
-\gls{glo:XenBEE}. The virtual  machine image can be generic,  \ie it needs
-only to  contain the web  server application and  must make sure  that the
-server gets started during the initialization process.
+\gls{glo:XenBEE}    ---   it    relates   to    the   example    used   in
+Section~\ref{sec:req:server-deployment},
+\nameref{sec:req:batch-job-execution}.  The  virtual machine image  can be
+generic, \ie it needs only to  contain the web server application and must
+make sure that the server gets started during the initialization process.
 
 To  make this  example more  generic,  the content  of the  web server  is
 provided as  a stage-in  item as  well.  The content  can for  instance be

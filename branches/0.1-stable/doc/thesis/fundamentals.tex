@@ -5,23 +5,23 @@
 \chapter{Fundamentals}
 \label{cha:fundamentals}
 
-This chapter  describes some basic principles,  that are going  to be used
-throughout this thesis. For example, the \emph{Extensible Markup Language}
-is used  for all  messages, that  are sent between  the components  of the
-execution  environment. A special  description language,  called \emph{Job
-  Description Language}, will  be used for the submission  of tasks to the
-system.   The  tasks' states  are  represented  using  the extensible  job
-state-model definition of the \emph{Basic Execution Service}.
+This chapter  provides you  with the description  of basic  principles and
+concepts  that have  been  used in  this  work. The  chapter is  basically
+separated into two  parts: Concepts that have already  been pointed out in
+the  previous  chapter  and  descriptions  of technologies  that  lead  to
+important design decisions.
 
-The  Calana Grid-scheduling  approach will  be shortly  discussed  in this
-chapter, too.  The here proposed  execution environment is supposed  to be
-used as a possible back-end resource of the Calana system.
+The  first part  starts  with an  introduction  into the  \emph{Extensible
+  Markup Language}. \gls{glo:XML} is the description language that is used
+for  the  \emph{Job  Submission  Description  Language},  the  \emph{Basic
+  Execution Service}  and the messages  which are used in  the implemented
+communication  protocol  (see Section~\ref{sec:communication-protocol}  on
+page \pageref{sec:communication-protocol}).
 
-The  final parts  of this  chapter  consider message  security. At  first,
-public-key  cryptography will  be  discussed and  then  two available  and
-widely used  technologies for  securing communication between  two parties
-are discussed. These two  technologies are \emph{Transport Layer Security}
-and \emph{Message Layer Security}.
+The second and last part of this chapter provides the reasoning which lead
+to  the decision  to base  the \gls{glo:XenBEE}  on  an \emph{asynchronous
+  message-passing  communication  model}.    It  also  discusses  how  the
+communication between the distributed components can be secured.
 
 \section[The Extensible Markup Language]
 {The Extensible Markup Language (\gls{glo:XML})}
@@ -30,12 +30,14 @@ and \emph{Message Layer Security}.
 The Extensible Markup Language \cite{xml}  is a simple, yet very flexible,
 plain text based description format. The format represents a subset of the
 \emph{Standard  Generalized Markup Language}  (SGML).  It  can be  used in
-variety of ways and even more usages are discovered still. Examples of XML
+variety of ways  and even more usages are discovered  still. Usages of XML
 can be found in  \emph{XHTML}, \emph{RSS}, \emph{Atom}, \emph{Math-ML} and
 many more.   Due to the  structured semantics of  XML, more and  more file
 formats are  nowadays based  on XML,  thus replacing the  old INI  or Unix
-\texttt{rc}  files  --- a  very  popular exemplar  in  this  field is  the
-\emph{OASIS Open Document Format for Office Applications}.
+\texttt{rc}  files  ---  a very  popular  example  in  this field  is  the
+\emph{OASIS  Open Document  Format for  Office Applications}\footnote{More
+  information   about  the   Open  Document   Format  can   be   found  on
+  \url{http://www.oasis-open.org/committees/tc_home.php?wg_abbrev=office}}.
 
 An XML-file is  an ordinary plain text file, that  could have been created
 by any text  editor.  The most important building  blocks of XML-files are
@@ -158,39 +160,44 @@ is  supposed to  conform  to  that schema,  contains  the just  introduced
 attribute with a negative value, \eg $-1$.
 
 The advantages of XML-Schema over a DTD are obvious.  When using DTDs, the
-application  was  responsible to  check  the  validity  of each  used  XML
-document  type  itself. That  means,  the  same  functionality had  to  be
-implemented over and over again, \ie each time a new application wants to
+application  itself was  responsible to  check  the validity  of each  XML
+document  that it  used.  That  means, the  same functionality  had  to be
+implemented over and over again, \ie  each time a new application wants to
 make use of a given XML document type. While using XML-Schema definitions,
 the author of  an XML document type defines  the validity constraints just
-once and any application  may rely on that. To make that  clear, here is a
-small  example:  Suppose there  is  a  definition  for an  element  called
-``\texttt{entry-id}'',  which may  only take  on positive  integer values.
-Since a DTD  does not support constraints on  data types, each application
-must check  for itself if  the value matches  that type. Now  suppose, the
-constraint  for  that  element is  changed,  so  that  the number  $0$  is
-included as  well ---  in each application,  the validation code  must be
-modified to match the new constraint.
+once and any application  may rely on that.
+
+To make that clear, here is a short example: Suppose there is a definition
+for  an  element  called  ``\texttt{entry-id}''  which may  only  take  on
+positive integer values.  Since a DTD does not support constraints on data
+types, each  application must check for  itself if the  value matches that
+type.  Now suppose the constraint for  that element is changed so that the
+number $0$  is included  as well ---  in each application,  the validation
+code must be modified to match the new constraint.
 
 \section[The Job Submission Description Language]
 {The Job Submission Description Language (\gls{glo:JSDL})}
 \label{sec:fundamentals:jsdl}
 
 \gls{glo:JSDL} is a very extensible XML-based description language for the
-submission  of computational jobs.   With \gls{glo:JSDL}  you are  able to
-describe  all requirements  that  a  computational job  may  need for  the
-submission to  a remote resource  --- mainly the  \gls{glo:JSDL} addresses
-grid resources but it is not limited the latter.
+submission  of computational  jobs \cite{jsdl-spec}.   With \gls{glo:JSDL}
+you are  able to  describe all requirements  that a computational  job may
+need for the submission to a remote resource --- mainly the \gls{glo:JSDL}
+addresses grid resources but it is not limited to that.
 
 Nearly  every  element of  the  \gls{glo:JSDL}  specification may  contain
 arbitrary  many  user-defined  elements  from  other  XML  specifications.
-Therefore is the  JSDL fully adoptable to any  upcoming user requirements.
-If  the  target  system,  for  instance, requires  a  previously  acquired
-reservation ---  represented by an  identification number for  example ---
-the  \gls{glo:JSDL} would include  an additional  element which  holds all
-information regarding the reservation.  Such extension elements are purely
-optional and  systems that are  unaware of a particular  extension element
-may just neglect it.
+Therefore  is  the JSDL  adoptable  to  upcoming  user requirements.   The
+\gls{glo:JSDL} has been  extended in this work to  support the description
+of   virtual  machines   (see   Section~\ref{sec:xen-based-submission}  on
+page~\pageref{sec:xen-based-submission}).
+
+To explain  this, consider the  following example. To  execute a job  on a
+resource  a previously  acquired  reservation is  required.   To add  this
+information  to the job  submission, the  \gls{glo:JSDL} would  include an
+additional   element   which   holds   all   information   regarding   the
+reservation. Such extension elements  are purely optional and systems that
+are unaware of a particular extension element may just neglect it.
 
 The following section roughly describes the most important components that
 are needed to form a useful submission description.
@@ -203,12 +210,12 @@ all required information about the job.
 
 Let's assume a user wants to execute a small program on a remote resource.
 The  program  will  indeed be  very  simple,  it  just prints  the  string
-``\texttt{Hello World}'' to the  screen. The execution of this application
-on the local computer of our user could be similar to:
+``\texttt{Hello World}'' to its  standard output stream.  The execution of
+this application on the user's local computer could be similar to:
 
 \begin{minipage}{0.75\textwidth}
   \begin{lstlisting}[language=ksh]
-    $ echo Hello World
+    $ echo "Hello World"
     Hello World
     $
   \end{lstlisting}
@@ -217,36 +224,48 @@ on the local computer of our user could be similar to:
 This  excerpt  represents  the   execution  in  a  standard  UNIX  command
 shell. Note that the \texttt{echo}  program does nothing more than writing
 the parameters passed to it to its \texttt{stdout} stream. Now suppose the
-user  desires  to execute  the  same program  on  a  remote resource,  the
-\gls{glo:JSDL}  document, he  would  write, will  look  somewhat like  the
-document shown in Listing~\ref{lst:jsdl-example}.
+user  desires  to execute  the  same program  on  a  remote resource.  The
+\gls{glo:JSDL}  document will  look somewhat  like the  document  shown in
+Listing~\ref{lst:jsdl-example}.
 
-\bigskip
-
+\medskip
 \begin{center}
-  \begin{minipage}{.75\textwidth}
-    \lstinputlisting[captionpos=b,backgroundcolor=\color{listingcolor},frame=lines,numbers=left,numberstyle=\tiny,caption={A
+%  \begin{minipage}{.75\textwidth}
+    \begin{lstlisting}[captionpos=b,float=t,backgroundcolor=\color{listingcolor},frame=lines,numbers=none,stepnumber=5,numberfirstline=false,numberstyle=\tiny,caption={A
       small ``Hello World''-example written in
-      \gls{glo:JSDL}},label={lst:jsdl-example},language=XML]{examples/jsdl-example.jsdl}
-  \end{minipage}
+      \gls{glo:JSDL}},label={lst:jsdl-example},language=XML]
+<jsdl:JobDefinition>
+ <jsdl:JobDescription>
+    <jsdl:Application>
+      <jsdl-posix:POSIXApplication>
+        <jsdl-posix:Executable>
+          /bin/echo
+        </jsdl-posix:Executable>
+        <jsdl-posix:Argument>Hello World</jsdl-posix:Argument>
+      </jsdl-posix:POSIXApplication>
+    </jsdl:Application>
+  </jsdl:JobDescription>
+</jsdl:JobDefinition>
+     \end{lstlisting}
+%   \end{minipage}
 \end{center}
 
 Note, that  the shown \gls{glo:JSDL}  document describes exactly  the same
 execution  the  user  had  previously  performed  locally.   The  executed
 \texttt{echo} program  again writes  its arguments to  its \texttt{stdout}
 stream.   Different from the  local execution  is in  this case,  that the
-output will  be lost, since the  user did not  specify what is to  be done
-with generated output. If the user was interested in the program's output,
-he had to specify the redirection of  the output stream to some file and a
-staging operation, that transfers the created file to some location he has
-access to.
+output will  be lost, since the user  did not specify what  should be done
+with the  generated output.  If the  user was interested  in the program's
+output, he  had to specify  the redirection of  the output stream  to some
+file  and a  staging operation  that transfers  the created  file  to some
+location he has access to.
 
 \subsection{Important elements}
 
 A typical \gls{glo:JSDL} document consists  of the following parts --- job
 identification,  application description,  resource descriptions  and data
-staging elements. Only the first two of them have been used in the example
-shown in Listing~\ref{lst:jsdl-example} to keep the example simple.
+staging elements. To keep the example simple, only the second one has been
+used in the example  in Listing~\ref{lst:jsdl-example}.
 
 \subsubsection{Job identification}
 
@@ -305,18 +324,28 @@ a file can be given relative  to a previously defined file-system, in this
 case the \texttt{FilesystemName} element must be specified and is required
 to contain the logical name of \texttt{FileSystem} resource.
 
-As  you can  see,  the  \gls{glo:JSDL} is  a  really powerful  description
-language and  it covers many,  if not all,  of the requirements  a typical
-computational job  may have. And if it  does not cover a  special topic on
-its own,  one is able  to extend the  elements of the  \gls{glo:JSDL} with
-user-defined elements.
+\subsubsection{Conclusions}
+
+The \gls{glo:JSDL}  is a  powerful description language  for computational
+jobs. It aims  to cover the description of the  job submission for typical
+computational  jobs. The \gls{glo:XenBEE}  is such  an example,  since the
+\gls{glo:JSDL}  does not  know anything  about executing  jobs  on virtual
+machines.  The extensions  to the \gls{glo:JSDL} that I  have designed and
+implemented  are   covered  in  Section~\ref{sec:xen-based-submission}  on
+page~\pageref{sec:xen-based-submission}.
+
+The  next  section  deals  with  the  \emph{Basic  Execution  Service},  a
+specification that  provides a common execution  semantic of computational
+jobs. This semantic is backed  up by an extensible state-model to describe
+the job execution.
 
 \section[The Basic Execution Service]{The Basic Execution Service (BES)}
 \label{sec:fundamentals:bes}
 
 The \emph{Basic Execution Service} \cite{ogsa-bes} is a specification that
-defines  a service (\eg a  web service)  which provides  functionality to
-control \emph{Activities}.   A user is able  to submit an  activity to the
+defines  a service  (\eg a  web service)  which provides  functionality to
+control \emph{Activities}.  An \emph{activity}  can be seen as an abstract
+view on a computational job. A user  is able to submit an activity to the
 execution service and  can later on control and  monitor that activity ---
 using web service calls, for instance.
 
@@ -325,14 +354,15 @@ Control  of  the  activity  is   basically  limited  to  a  request  which
 returning the activity's current state.
 
 The state  of an activity is  modeled using a finite  state automaton. The
-specification of the \gls{glo:BES}  incorporates a rather simple, but very
+specification  of  the  \gls{glo:BES}  incorporates  a  simple,  but  very
 extensible, state  machine for  activities. It comprises  a total  of just
 five  states  an  activity  can  be  in  at  any  time:  \texttt{Pending},
 \texttt{Running},       \texttt{Finished},       \texttt{Failed}       and
-\texttt{Terminated}.
+\texttt{Terminated}. 
 
-States of the \gls{glo:BES} are represented using a XML specification. The
-element  which  represents the  current  state  of  an activity  is  named
+To be extensible and integrable  into existing environments, the states of
+the \gls{glo:BES}  are represented using a XML  specification. The element
+which   represents   the  current   state   of   an   activity  is   named
 \texttt{ActivityStatus} and belongs to  the \emph{bes} namespace as it has
 been  defined  in Table~\ref{tab:namespaces},  the  state  itself is  then
 specified using the \texttt{state} attribute:
@@ -341,10 +371,10 @@ specified using the \texttt{state} attribute:
   <bes:ActivityStatus state="Running"/>
 \end{lstlisting}
 
-The     state     machine,     or     state-model,     is     shown     in
+The    basic    state   machine,    or    state-model,    is   shown    in
 Figure~\ref{fig:bes-basic}. To  reflect the request for  termination of an
-activity,  each state,  except the  final  states of  course, provides  an
-outgoing transition to the \texttt{Terminated} state.
+activity, each  non-terminal state provides an outgoing  transition to the
+\texttt{Terminated} state.
 
 \begin{figure}[h]
   \centering
@@ -354,7 +384,7 @@ outgoing transition to the \texttt{Terminated} state.
   \label{fig:bes-basic}
 \end{figure}
 
-This very basic state-model represents everything a possible client of the
+This  basic state-model  represents everything  a possible  client  of the
 execution service needs  to know. An actual execution  service may require
 to  use  additional  states.   It  can  define both  new  states  and  new
 transitions,  as  long  as  it  conforms  to a  rather  simple  rule:  the
@@ -367,126 +397,195 @@ client  simply  does   not  expect  that  the  activity   is  suddenly  in
 
 \subsection{Extending the state-model}
 
-New states, for  instance, can be added by simply splitting  up one of the
-``basic'' states.   Among these sub-states  any number of  new transitions
-may be introduced.
+New  states can  be added  by  splitting up  either one  of the  ``basic''
+states, or  a state that is  an extension itself.   Among these sub-states
+any number  of new transitions  may be introduced.  The  following example
+for  an extension  has  been taken  from  the \gls{glo:BES}  specification
+\cite{ogsa-bes}.
 
 Suppose the execution service provides  a way to suspend a given activity.
 This  requires  not only  additional  user  requests  --- one  to  request
 \emph{suspension} and  one to request  \emph{resumption} --- but  also two
 new states. These states are modeled as sub-states of the \texttt{Running}
 state, since an  activity may only be suspended  while it already running.
-Thus,   the  \texttt{Running}   state   is  now   internally  split   into
-\texttt{Executing} and  \texttt{Suspended}. The extended  state machine is
+The  \texttt{Running} state is  now internally  split into  the sub-states
+\texttt{Executing} and \texttt{Suspended}.   The extended state machine is
 shown in Figure~\ref{fig:bes-suspend-model}
 
 \begin{figure}[h]
   \centering
   \includegraphics[scale=.6]{bes-suspend-job-model}
   \caption[Extended  BES Job-State-Model]{The  basic state-model  has been
-    extended to support suspension.}
+    extended  to  support suspension  (taken  from  the BES  specification
+    \cite{ogsa-bes}).}
   \label{fig:bes-suspend-model}
 \end{figure}
 
-The nice  thing about the extensibility  of this state-model  is, that any
-client  that  \emph{understands}  the  basic model,  will  understand  any
-extended model  as well, that  is because the \emph{visual  behavior} does
-not change  and therefore will never ``anything  unexpected'' happen. This
-visual  behavior is  directly reflected  in the  XML specification  of the
-current state.   Any additional  states are represented  by user-definable
-elements attached to  the \texttt{ActivityStatus} element as sub-elements.
-Let's  assume   the  extension  modeled   above  defines  its   own  state
-representation  using its  own  namespace,  then the  current  state of  a
-suspended activity could be written as:
+The nice  thing about  the extensibility of  this state-model is  that any
+client that ``understands'' the  basic model, will understand any extended
+model as well. That is  because the \emph{visual behavior} does not change
+and  therefore  will never  ``anything  unexpected''  happen. This  visual
+behavior is  directly reflected  in the XML  specification of  the current
+state.  Any  additional states are represented  by user-definable elements
+added  to  the  \texttt{ActivityStatus}  element as  sub-elements.   Let's
+assume  the just modeled  extension defines  its own  state representation
+using its own namespace.  The  current state of a suspended activity could
+then be written as:
 
-\begin{lstlisting}[language=XML]
+\begin{lstlisting}[float={h!},language=XML]
   <bes:ActivityStatus state="Running">
      <ext:Suspended/>
   </bes:ActivityStatus>
 \end{lstlisting}
 
-As you can see, the state  is still \texttt{Running}, but any client, that
-is   aware    of   this   extension,   knows   how    to   interpret   the
-\texttt{ext:Suspended} sub-element.
+The state is still \texttt{Running}, but  any client that is aware of this
+extension   will  know   how  to   interpret   the  \texttt{ext:Suspended}
+sub-element, \ie it could provide  a user with the possibility to resume
+the action.
 
-\section[Message Oriented Middleware]{Message Oriented Middleware (MOM)}
+The state-model  that is  used by the  \gls{glo:XenBEE} extends  the basic
+model  with  support  for  staging operations,  reservations  and  virtual
+machines,  it   can  be  found   on  page~\pageref{sec:xbed:job-model}  in
+Section~\ref{sec:xbed:job-model}.
+
+This section closes the description of the technologies that were required
+for  the \gls{glo:XenBEE}  to provide  batch job  execution  semantics and
+integrability into grid-environments.  The following sections motivate the
+applied communication model and how  this model can be enhanced to provide
+secure communication.
+
+\section{Communication Model}
+\label{sec:fundamental:communication-model}
+
+Communication in distributed systems  can be either \emph{synchronous}, or
+\emph{asynchronous}  \cite{MeCa:2005:Taxonomy}.   This section  summarizes
+these two models and results  in the definition of the communication model
+used by the \gls{glo:XenBEE}.
+
+\subsection{Programming Models}
+
+The programming model of  synchronous communication is called \emph{Remote
+  Procedure Calls}  (RPC, \cite{rpc}). It provides the  same function call
+semantics as a local function call, \ie the program waits until the result
+is   computed  and  returned   by  the   remote  system.    Commonly  used
+implementations of  this model are the \emph{Common  Object Request Broker
+  Architecture} (CORBA, \cite{corba}), the \emph{Remote Method Invocation}
+(RMI, \cite{rmi}) or the  \emph{Distributed Component Object Model} (DCOM,
+\cite{dcom}).
+
+Asynchronous   communication  follows   the  emerging   paradigm   of  the
+\emph{event-based   communication  model}   \cite{MeCa:2005:Taxonomy}.   A
+request  that is  sent  to a  remote  system does  not  have an  immediate
+result. The  result, if any, is  received by the  caller asynchronously to
+his current computation. The  distributed components that use asynchronous
+communication  are interconnected  by  using message-passing  technologies
+such as the \emph{Message Passing Interface} (MPI, \cite{mpi}).
+
+The  \gls{glo:XenBEE}  can be  implemented  using  either  of two  models.
+Consider for  example the request for  the termination of  a submitted job
+using a single-threaded client application. The client could make a remote
+procedure call  and wait until the  termination has been  performed on the
+remote site.   Or the client just sends  the request to the  server and is
+able to accept further input from the user.
+
+The   \gls{glo:XenBEE}  will   be   designed  to   use  the   asynchronous
+communication  model.    This  implies   the  use  of   a  message-passing
+technology.
+
+\citet{dad-mom}  state, that:
+\begin{quotation}
+  \emph{``Every  DAD  (Distributed  Application  Developer)  needs  a  MOM
+    (Message Oriented Middleware)''}.
+\end{quotation}
+
+
+\subsection[Message Oriented Middleware]{Message Oriented Middleware (MOM)}
 \label{sec:fundamentals:mom}
 
-A  typical  way  of connecting  clients  with  some  server  is to  use  a
-\gls{glo:TCP}-connection to the server for each client. This is especially
-useful if a continuous connection to  the server has to be maintained. For
-instance, web (\ie HTTP) and ftp (\ie FTP) servers are usually streaming
-a lot of data to the clients.
+Message-passing in  distributed systems need  not be based on  direct (\eg
+\gls{glo:TCP}) connections between each component. The messages can easily
+be transmitted to an intermediate system which forwards the message to the
+target  system.   This section  describes  a  middleware component  called
+\emph{Message-Queue Server} (\gls{glo:MQS}) which can be used in this kind
+of distributed systems to improve communication quality.
 
-Communication  in  distributed systems,  however,  can  take place  either
-\emph{synchronously}, or  \emph{asynchronously}. The programming  model of
-synchronous communication  is called \emph{Remote  Procedure Calls} (RPC),
-widespread  implementations  of  this  model  are  CORBA,  RMI  and  DCOM.
-Asynchronous   communication  follows   the  emerging   paradigm   of  the
-\emph{event-based  communication  model}  \cite{MeCa:2005:Taxonomy}.   The
-components that  comprise an application in a  potentially distributed and
-heterogeneous   environment   are   asynchronously  interconnected   using
-message-passing technologies.
+The abstraction  from direct connections  between each component  leads to
+the definition  of \emph{logical connections}.  A logical  connection is a
+connection between distributed components that pass messages to each other
+while not being directly connected to each other.
 
-\citet{dad-mom}  state, that  \emph{``Every  DAD (Distributed  Application
-  Developer) needs a MOM (Message Oriented Middleware)''}.
+To send a message to some component using logical connections, the message
+is addressed to  a logical destination and sent  to an intermediate server
+that hopefully  knows the  actual target. To  receive messages  from other
+components, a component registers itself with the intermediate server.
 
-Since the communication, which takes  place in the here proposed execution
-environment and in  the later discussed Calana Grid  scheduler, is loosely
-coupled  and message-oriented,  we  can abstract  from direct  connections
-between each party to logical connections.
+Such   an   intermediate   server   is   a   \emph{Message-Queue   Server}
+(\gls{glo:MQS}). The  protocol layers  that are involved  when application
+data is  to be transmitted from  one component to another  are depicted in
+Figure~\ref{fig:mqs-layers}.
 
-These logical  connections can be established using  a \gls{glo:MOM} based
-on one or more \emph{message-queue servers} (\gls{glo:MQS}).
+\begin{figure}[ht]
+  \centering
+  \includegraphics[scale=0.7]{mqs-layers}
+  \caption{Protocol layers in an \gls{glo:MQS}-based communication.}
+  \label{fig:mqs-layers}
+\end{figure}
 
-\gls{glo:MQS}   have  several  very   important  advantages   over  direct
-connections between the clients and the server:
+The  usage of  such an  intermediate \gls{glo:MQS}  has  several important
+advantages over direct connections between the distributed components:
 
 \begin{itemize}
-\item All messages are  sent to \textbf{logical queues} (\ie end-points),
-  that  means   that  the  physical  address  (\eg IP   address)  of  any
-  participating  service  (be  it  the  server or  a  client)  may  change
-  unnoticeable to the communication partner.
-\item All connections are  \textbf{outbound}, which effectively means that
-  the server may also reside behind a firewall or a \gls{glo:NAT}-gateway.
-  This not only increases the security  of the server (in means of allowed
-  inbound  connections),  but  also  targets the  problems  which  typical
-  network-policies and  resulting network-layouts of  grid-environments or
-  companies impose.
+\item All  messages are sent to \textbf{logical  queues} (\ie end-points).
+  This means that  the details of the connection of  a remote component is
+  hidden to other components.  For  example, the IP address of a component
+  may  change between  two subsequent  messages sent  to it  without being
+  noticed by the sender.
+\item All  connections are \textbf{outbound} which  effectively means that
+  all  components  may  reside   behind  a  (restrictive)  firewall  or  a
+  \gls{glo:NAT}-gateway.   This not  only  increases the  security of  the
+  \emph{xbed},   but    also   targets   the    problems   which   typical
+  network-policies     and    hence    resulting     network-layouts    of
+  grid-environments or companies impose.
 \item The  \gls{glo:MQS} need not  to be on  a single machine, but  can be
   distributed  over  many computers  to  implement \textbf{fail-over}  and
   \textbf{load-balancing}.
-\item  Messages  are kept  in  a  \textbf{consistent  storage} within  the
-  \gls{glo:MQS}, if they cannot be  delivered right now.  That may happen,
+\item Messages  can be  kept in a  \textbf{consistent storage}  within the
+  \gls{glo:MQS} if they  cannot be delivered right now.   That may happen,
   if the communication partner is temporarily disconnected --- all pending
   messages will be delivered as soon as the end-point connects again.
 \item    Multiple   \gls{glo:MQS}   can    be   configured    to   provide
   \textbf{forwarding and  routing} of  messages destined for  a particular
   queue --- that means independence from the actual network-topology.
 \item A \gls{glo:MQS} can be configured to provide \textbf{authentication}
-  and \textbf{authorization} to limit  access to (\ie send to and receive
-  from) particular queues.
+  and \textbf{authorization} to limit access to particular queues.
 \item   Messages   sent   from   one   component   to   another   can   be
   \textbf{transformed}  while passing  the \gls{glo:MQS}.   That  means in
   particular,  that each  component may  send messages  in its  own native
   format and the \gls{glo:MQS}  intelligently transforms the messages into
-  the native format of each receiver.
+  the native format of the receiver.
 \end{itemize}
 
-
+The drawbacks  of the  usage of \gls{glo:MQS}  are: An increased  delay in
+message  transmission,  because all  messages  must  be  processed by  the
+\gls{glo:MQS}  before they  can be  delivered.  And  that the  secure (\ie
+encrypted)  transmission  of  messages   has  to  be  implemented  by  the
+applications themselves.  The latter issue is discussed in more detail and
+with        regard         to        the        \gls{glo:XenBEE}        in
+Section~\ref{sec:secure-communication}.
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[scale=.5]{mqs-topology}
-  \caption[Example MQS topology]{A simple message-oriented system which is
+  \includegraphics[scale=.75]{mqs-topology}
+  \caption[Example  MQS topology]{A simple  message-based system  which is
     using a \gls{glo:MQS}.}
   \label{fig:mqs-topology}
 \end{figure}
 
-As you can see in  Figure~\ref{fig:mqs-topology}, site B has some services
-connected to  a \gls{glo:MQS}.  These services can  be reached  by clients
-from site A through an internet connection. The steps involved in building
-up this communication scheme are:
+An example for a distributed system  that uses a \gls{glo:MQS} is shown in
+Figure~\ref{fig:mqs-topology}.  Site~$B$ has  some services connected to a
+\gls{glo:MQS}.   These services can  be reached  by clients  from site~$A$
+through an  internet connection.  The  steps involved in building  up this
+communication scheme are:
 \begin{enumerate}
 \item  Each service  connects to  the \gls{glo:MQS}  and \emph{subscribes}
   itself to a unique queue (\eg service.\emph{X}).
@@ -505,60 +604,64 @@ communication is possible:
   specified in the reply-to field of received messages.
 \end{enumerate}
 
+The same  communication scheme  will be used  in the  \gls{glo:XenBEE}, as
+well.  Each  component subscribes  itself to a  unique queue,  whereas the
+queue of the \emph{xbed} will be configurable by an administrator.
+
+The  next section  describes how  the message-based  communication  can be
+secured, \ie  eavesdropping, modification and forgery of  messages must be
+prevented.
+
 \section{Secure Communication}
 \label{sec:secure-communication}
 
-The proposed system  will use message queues to  transfer messages between
-clients and the server, that means  all messages that are sent can be read
-by any person or system in between any two communication partners. 
+Since the proposed system uses message queues to transfer messages between
+clients  and  the   server,  all  transmitted  messages  are   sent  to  a
+message-queue server  first. If  this intermediate server  is compromised,
+all messages that pass through it can also be read by the intruder.
 
-A   typical  solution   to  make   the  transfer   secure  is   using  the
-\emph{Transport Layer  Security} protocol --- or  \gls{glo:TLS} for short.
-\gls{glo:TLS} makes sure that  traffic between two endpoints is transfered
-securely --- \ie no eavesdropping, modification or message forgery.
+There are  two different  approaches to ensure  a secure transport  of the
+messages from a  client to a server and  vice versa: \emph{Transport Layer
+  Security} (TLS, \cite{rfc2246})  and \emph{Message Layer Security} (MLS,
+\cite{mls, oasis-wss}). 
 
-The  \emph{Transport Layer  Security} protocol,  which is  discussed  in a
-moment, and the afterwards examined \emph{Message Layer Security} protocol
-are  both using cryptographic  certificates such  as \emph{\gls{glo:X509}}
-certificates.
+Both of them use public-key certificates, \eg \gls{glo:X509} certificates.
+A public-key certificate is a data  structure that binds a public-key to a
+subject (person  or system)  \cite{rfc2459}. If a  communication is  to be
+secured by the use of public-key certificates, the ``users of a public-key
+must be confident that the associated private-key is actually owned by the
+correct  remote subject''  \cite{rfc2459}.   This can  be accomplished  by
+having a trusted authority  digitally sign the involved certificates. Such
+an infrastructure  is a called  a \emph{Public Key  Infrastructure} (PKI).
+More   information  about   public-key  cryptography   can  be   found  in
+Appendix~\ref{app:sec:public-key-cryptography}                           on
+page~\pageref{app:sec:public-key-cryptography}.
 
-The  certificates  are  based  on  public/private  key  pairs,  whereas  a
-certificate consists of a  pair's public-key combined with some additional
-information, \eg the owner and issuer of the certificate, used algorithms
-and  so  on.  Most  importantly  is the  fact,  that  certificates can  be
-\emph{cryptographically    signed}     by    a    certificate    authority
-(\gls{glo:CA}). The  next passage  will shortly describe  how certificates
-can  be  used  in  a  \emph{Public Key  Infrastructure}  using  public-key
-cryptography.
-
+The following  section describes  the \emph{Public Key  Infrastructure} in
+detail.  After that the  \emph{Transport Layer Security} and \emph{Message
+  Layer  Security} protocols  are discussed  and analyzed.   Subsequent to
+that the implications for the \gls{glo:XenBEE} are discussed.
 
 \subsection[Public Key Infrastructure]{Public Key Infrastructure (PKI)}
 
 A  \emph{Public Key  Infrastructure} provides  the authentication  of user
-identities using certificates.  The main  aspect is that there are special
-\textbf{trusted    third     parties}    (\emph{Certificate    Authority},
-\gls{glo:CA}), that are permitted  to \textbf{sign} other certificates. If
-a  user\footnote{or some  server, etc.}   wants to  prove his  identity to
-another entity,  his certificate is  validated by that entity  against the
-CA's certificate, if it is valid, the prove has been successful.
+identities using  public-key certificates.  The main aspect  is that there
+are special \textbf{trusted  third parties} (\emph{Certificate Authority},
+\gls{glo:CA})  that   are  permitted  to   \textbf{digitally  sign}  other
+certificates. If a user\footnote{or some server, etc.}  wants to prove his
+identity to  another entity, his  certificate is validated by  that entity
+against the CA's certificate.  If the validity could be verified, the user
+successfully proved that he is  in possess of the private-key that belongs
+to this public-key \cite{rfc2459}.
 
 The \gls{glo:CA} is responsible for checking that the public-key contained
 in  the certificate  actually belongs  to the  requesting user,  server or
-other  entity denoted  in the  certificate. This  checking process  is for
-example done by  verifying the credentials of a user  (\eg with help of a
-photo identification or something similar).
+other  entity denoted  in the  certificate.  This  process is  for example
+performed by verifying the credentials of a user (\eg with help of a photo
+identification).
 
 Any third-party that trusts a given CA will transparently trust any entity
 that offers a certificate signed by that particular CA.
-
-\begin{figure}[h]
-  \centering
-  \includegraphics[scale=.75]{pki}
-  \caption[Public  Key Infrastructure]{Alice  proofs her  identity  to Bob
-    using a certificate  that is signed by a CA that  both, Alice and Bob,
-    trust.}
-  \label{fig:pki}
-\end{figure}
 
 Validation is performed by verifying  that the certificate itself has been
 signed  by a  trusted authority  --- the  actual validation  process  is a
@@ -571,6 +674,15 @@ cryptographic signature. This private-key must of course be kept in a very
 secure  location  (\eg on a  physically  from  the Internet  disconnected
 computer) ---  if it would fall into  the wrong hands, the  whole chain of
 trust is compromised.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[scale=.55]{pki}
+  \caption[Public  Key Infrastructure]{Alice  proofs her  identity  to Bob
+    using a certificate  that is signed by a CA that  both, Alice and Bob,
+    trust.}
+  \label{fig:pki}
+\end{figure}
 
 An  example verification  process  is shown  in Figure~\ref{fig:pki},  the
 steps can be described as follows:
@@ -591,157 +703,142 @@ steps can be described as follows:
   \emph{Alice}.
 \end{enumerate}
 
-\bigskip
-
 Both  of  the following  protocols  can make  use  of  a \gls{glo:PKI}  to
-authenticate communication partners.
+authenticate  communication partners.  Once  the communication  partner is
+authenticated a public-key based secure communication can be set up by the
+protocols.
 
 \subsection[Transport Layer Security]{Transport Layer Security (TLS)}
 \label{sec:fundamentals:tls}
 
-The \gls{glo:TLS}  protocol is often  offered by web- or  email-servers to
-make  the  communication   with  a  client  (such  as   a  browser  or  an
-email-client) secure.
+The \gls{glo:TLS} protocol (RFC~4346, \cite{rfc4346}) can use certificates
+on  both sides,  \ie  client  and server  side.  For websites  server-side
+certificates are used so that  clients can validate that they are actually
+communicating  with  the correct  server.  The  server's certificate  must
+therefore  be  signed   by  an  authority  that  the   user  trusts.   For
+authentication to  the server client-side certificates are  used.  In this
+case the  client's certificate  must be signed  by an authority  which the
+server trusts.
 
-On-line   banking,   for   instance,   typically   requires   a   Personal
-Identification Number  (PIN) to make sure  that it is actually  you who is
-trying to access your accounts.  Using unencrypted transfer of the PIN and
-other data would mean, that any  system, which is in between your computer
-and the  one of your  bank, is  able to read  your PIN and  probably other
-information about you. It is also possible that a \emph{man-in-the-middle}
-spoofs or modifies  transactions to withdraw money from  your account. Two
-things are  very important in  this case: The  first and most  obvious is,
-that the information you and  your bank exchange are encrypted. The second
-requirement is,  that you  are able  to verify that  the receiver  of your
-messages is actually a computer belonging  to your bank and not to someone
-else.
+The  protocol is  split  into three  phases  \cite{rfc4346}.  Firstly  the
+communication partners negotiate  the cryptographic algorithms that should
+be used.  Secondly certificate-based authentication and a public-key based
+key exchange  are performed.  The  last phase is the  actual communication
+phase. In  this phase the transmitted  data is encrypted  with a symmetric
+encryption algorithm.  The shared key that  is used had  been exchanged in
+the second phase.
 
-\gls{glo:TLS} uses  certificates on the  server-side, so that  clients can
-validate  that  they  are  actually  communicating with  the  server  they
-intended to  communicate with.  In  the case of  a bank or  any well-known
-service  provider   in  the  Internet,  the  certificates   in  place  are
-cryptographically  signed by a  \emph{trusted} authority.   A certificate,
-that is signed by such an authority you trust, is automatically assumed to
-actually belong to the server where the certificate came from.
+Since the \gls{glo:TLS} aims to secure the transport layer (\eg TCP), only
+direct  connections  between two  systems  are  secured.   When sending  a
+message  over such  a connection,  the  whole message  is encrypted  prior
+transmitting it.  On receiving a message, it is automatically decrypted.
 
-Unfortunately, \gls{glo:TLS}  cannot be used in a  message-queue system to
-secure the traffic  between clients and servers. That  is because there is
-no direct connection between client and server --- both are just connected
-to their message-queue server. \gls{glo:TLS} can in this case only be used
-to secure  the communication between  any end-point and  the message-queue
-server it  is connected to.
+Figure~\ref{fig:tls-communication}  shows   the  communication  between  a
+client and a  server with an intermediate host. The  client and the server
+do  not have  a  direct connection  to  each other  which  means that  all
+messages  have to  be transmitted  to  the intermediate  host first.   The
+individual  connections   to  the  intermediate  host   are  secured  with
+\gls{glo:TLS}.
 
-After transmitting a message over a with \gls{glo:TLS} secured connection,
-the  message is  stored in  clear text  on the  message-queue  server. The
-message   will  then   again  be   transmitted  securely   to   the  final
-destination. But  any person  or system with  access to  the message-queue
-server can read, modify or even spoof transmitted messages --- without the
-knowledge of either sender or receiver.
+\begin{figure}[ht]
+  \centering
+  \includegraphics[scale=0.75]{tls-communication}
+  \caption[Secure   communication  with  TLS]{Secure   communication  with
+    Transport Layer Security (derived from \cite{mls}).}
+  \label{fig:tls-communication}
+\end{figure}
 
-To  secure  the  logical   message-based  communication  between  any  two
-end-points, a  different kind of security  layer has to be  used here: the
-\emph{Message Layer Security} --- or \gls{glo:MLS} for short.
+The  actual  communication between  the  client  and  the server  is  only
+partially  secured. All  transmitted  messages can  be  accessed in  their
+unencrypted version on the intermediate host.
 
-\textbf{TODO}
-
-pros:
-\begin{itemize}
-\item relatively simple (dozens of ssl libraries available), standard technology
-\item well understood
-\item applies to complete payload data
-\end{itemize}
-cons:
-\begin{itemize}
-\item coupled with the transport layer, TCP for example
-\item only point-to-point security, \ie message is automatically decrypted
-  when received
-\item for each intermediate host, a new ssl connection is required. that
-  implies additional computational overhead (message must be
-  encrypted/decrypted $n-1$ times).
-\end{itemize}
+In message-queue based  systems there is always at  least one intermediate
+server --- the message-queue server.  This means that \gls{glo:TLS} cannot
+be  used   to  provide  end-to-end  communication   security  between  the
+distributed components.  But it can still be used to secure the individual
+connections from each component to the message-queue server.
 
 \subsection[Message Layer Security]{Message Layer Security (MLS)}
 \label{sec:fundamentals:mls}
 
-\textbf{TODO}
+In  contrast   to  the   \emph{Transport  Layer  Security}   protocol  the
+\emph{Message Layer Security} protocol  aims directly at the messages that
+are sent between two systems (\cite{oasis-wss, mls}, MLS).
 
-\cite{mls, oasis-wss}
+\gls{glo:MLS}  is  an  approach  that encapsulates  all  security  related
+information within the transmitted message itself \cite{mls}. Securing the
+message  instead  of the  transport  layer  has  several advantages.   The
+following  list  is  based  on  the  information  that  can  be  found  in
+\cite{mls}:
 
-pros:
 \begin{itemize}
-\item security is coupled directly to the message
-\item end-to-end security
-\item parts of the message can be secured
-\item many intermediate hosts
-\item encryption/decryption takes place only once (start and end)
-\item independent from the transport protocol
+\item \textbf{Increased  flexibility}. It  is possible to  secure selected
+  parts of  a message  only \cite{mls}.  An  \gls{glo:MQS} has  to inspect
+  received   messages   in   order   to   forward  it   to   the   correct
+  destination. This part of the  message can be left unencrypted while the
+  remaining part of the message is encrypted.
+\item  \textbf{Extensibility}.  Intermediate systems  or services  can add
+  their  own (signed) headers  to the  message without  breaking unrelated
+  (\eg  encrypted) parts  of the  message. An  example that  is  listed in
+  \cite{mls} is \emph{audit logging}.
+\item \textbf{Support  for multiple protocols}. \gls{glo:MLS}  can be used
+  to send messages securely over a  variety of protocols such as SMTP, FTP
+  or  TCP  without relying  on  the  security  of the  transport  protocol
+  \cite{mls}.
 \end{itemize}
-cons:
-\begin{itemize}
-\item complex, imposes overhead to the message processing
-\item application support (message format must be understood)
-\end{itemize}
 
-As the name of this protocol  may already suggest, the security focuses on
-the transmitted messages not on  the transportation of the messages.  That
-means, the transport layer over which  messages are sent is not altered or
-secured in any way  --- it can be as insecure as  before.  But even though
-the messages are transmitted over a potentially insecure channel, they are
-still protected against eavesdropping, tampering and spoofing.
+The  major strength of  \gls{glo:MLS} is  also its  greatest disadvantage.
+Since the security information is integrated into the messages, the layout
+of the  messages must  be known  to the security  layer. That  means, each
+different message layout requires  an own implementation of \gls{glo:MLS}.
+Another disadvantage is the complexity of this protocol which imposes some
+overhead to the message processing step.
 
-\gls{glo:MLS} too makes use  of certificates to provide authentication and
-encryption. To  establish a  secure communication between  a client  and a
-server,  the  client  needs  to  \emph{know}  (\ie have  access  to)  the
-certificate  of the server.   Since encryption  with a  public/private key
-algorithm   is    rather   slow,    in   most   cases    a   \emph{session
-  key}\footnote{typically  random data}  will be  negotiated  first.  This
-session  key is  then used  to perform  \emph{symmetric} ciphering  of the
-messages, which is a lot faster.
+In  \cite{oasis-wss}  a  specification  for securing  \emph{Simple  Object
+  Access  Protocol}  (SOAP)  messages  with \gls{glo:MLS}  can  be  found.
+Figure~\ref{fig:mls-communication} depicts  the same communication problem
+as Figure~\ref{fig:tls-communication},  \ie the communication  between two
+systems with the usage of an intermediate host.
 
-The \gls{glo:XenBEE}  must make use  of \gls{glo:MLS} to  provide security
-for  its users.   Additionally, as  it is  common  among Grid-middlewares,
-\gls{glo:X509}  certificates  are   used  to  authenticate  and  authorize
-users. The  server is going  to use a  user's certificate to  validate his
-identity and  possibly to send messages  the user --- thus  both sides may
-initiate a secure communication.
-
-\section{Calana}
-\label{sec:calana}
-
-\emph{Calana} is  a new Grid  scheduler approach proposed  by M.~Dalheimer
-\cite{dalheimer05agentbased}.  The  scheduler uses \emph{agents}  that are
-responsible for  a single  resource and at  least one  \emph{broker}.  The
-broker initiates an \emph{auction} among  the connected agents to assign a
-task to some resource.
-
-\begin{figure}[htbp]
+\begin{figure}[ht]
   \centering
-  \includegraphics[scale=0.5]{calana-architecture}
-  \caption{Architecture of Calana}
-  \label{fig:calana-architecture}
+  \includegraphics[scale=0.75]{mls-communication}
+  \caption[Secure   communication  with  MLS]{Secure   communication  with
+    Message Layer Security (based on the picture found in \cite{mls}).}
+  \label{fig:mls-communication}
 \end{figure}
 
-An  abstract   view  over   the  architecture  of   Calana  is   shown  in
-Figure~\ref{fig:calana-architecture}.   For a  detailed discussion  of the
-Calana-protocol  that  is used  to  perform an  auction,  have  a look  at
-\cite{dalheimer06calanaprotocol,petry06}, but  the  main steps  involved
-are:
-\begin{enumerate}
-\item When a user submits a job to the Calana-broker, the broker will open
-  up an auction and try to \emph{book} a resource for the task.
-\item    For   each   task    an   auction    is   created    by   sending
-  \texttt{BookingReq}-messages to the connected agents.
-\item The agents will make  one or more \emph{reservations} on their local
-  scheduler  and  answer with  a  \texttt{AuctionBid}.   Bids contain  for
-  example  the  cost  of   using  the  resource  and  various  reservation
-  parameters  such  as  the   earliest  start-time  and  duration  of  the
-  reservation.
-\item To make a decision, the  broker judges all received bids and chooses
-  the     best     one      according     to     some     preference-model
-  \cite{dalheimer05agentbased, petry06}.
-\item If  the user  accepts the decision,  the broker  \emph{confirms} the
-  reservation.
-\end{enumerate}
+The message is encrypted by the application running on the client host. In
+contrast  to the  \gls{glo:TLS}, this  step is  performed only  once.  The
+encrypted message is  sent to the intermediate host  and then forwarded to
+its  final  destination.   Since  strong  cryptography  is  involved,  the
+intermediate  host cannot  access (\ie  read) the  encrypted parts  of the
+message.
+
+Consequently  can \gls{glo:MLS}  be used  to provide  a  secure end-to-end
+communication for distributed applications that use message-passing.
+
+
+\subsection{Implications for the \gls{glo:XenBEE}}
+
+The  previous sections  have shown  that only  the  \gls{glo:MLS} provides
+secure  end-to-end  communication for  systems  that  use an  intermediate
+message-queue server.   Authentication, as well as  strong cryptography is
+in both protocols provided by a \emph{Public-Key Infrastructure}.
+
+To  ensure   a  secure  communication   between  \emph{\gls{glo:xbe}}  and
+\emph{\gls{glo:xbed}}  \emph{Message Layer  Security} has  to be  used. To
+actually  make sure that  a client  ``talks'' to  correct server  and vice
+versa, authentication  must be provided  in both directions.  This implies
+that   the   \gls{glo:XenBEE}   uses   public-key   certificates   and   a
+\gls{glo:PKI}.
+
+% \section{Summary}
+
+% This  section  summarize  the  technologies  that  will  be  used  in  the
+% \gls{glo:XenBEE}.
+
+% The \gls{glo:XenBEE} will use a message
 
 %%% Local Variables: 
 %%% mode: latex
