@@ -5,6 +5,7 @@ PDF=$(NAME).pdf
 IDX=$(NAME).idx
 LOG=$(NAME).log
 GLS=$(NAME).gls
+STY=datetime.sty fmtcount.sty
 
 latex = pdflatex -halt-on-error
 bibtex = bibtex
@@ -31,7 +32,7 @@ BIB = $(wildcard *.bib)
 default: all
 all: $(PDF)
 
-$(PDF): $(SRC) $(GLS) $(GRAPHICS) $(TEX) $(BIB)
+$(PDF): $(STY) $(SRC) $(GLS) $(GRAPHICS) $(TEX) $(BIB)
 	@echo "Running $(latex)..."
 	$(latex) $(SRC)
 	@echo "Running $(bibtex).."
@@ -50,6 +51,12 @@ $(PDF): $(SRC) $(GLS) $(GRAPHICS) $(TEX) $(BIB)
 	if egrep -is 'overful \\hbox' $(LOG); then \
 		echo "WARNING: There where overful hboxes:"; \
 	fi
+
+datetime.sty: datetime.ins datetime.dtx
+	$(latex) datetime.ins
+
+fmtcount.sty: fmtcount.ins fmtcount.dtx
+	$(latex) fmtcount.ins
 
 main.glo: main.tex
 	$(latex) $<
