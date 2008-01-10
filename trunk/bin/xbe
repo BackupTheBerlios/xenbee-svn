@@ -35,5 +35,5 @@ import sys
 
 if __name__ == "__main__":
     from xbe.cmdline.command import CommandLineClient
-    client = CommandLineClient()
+    client = CommandLineClient()#err=open("/tmp/xbe.err", "wb"))
     sys.exit(client.main(sys.argv))

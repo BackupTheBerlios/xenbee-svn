@@ -246,12 +246,12 @@ class RemoteCommand(Command, SimpleCommandLineProtocol):
             from twisted.internet import reactor
             if timeout is None:
                 timeout = self.opts.timeout
-            self.__timeoutCall = reactor.callLater(self.opts.timeout,
-                                                   self.timeout, *args, **kw)
+            self.__timeoutCall = reactor.callLater(timeout,
+                                                   self.timedout, *args, **kw)
         finally:
             self.mtx.release()
 
-    def timeout(self, name=None):
+    def timedout(self, name=None):
         self.mtx.acquire()
         try:
             del self.__timeoutCall
@@ -703,8 +703,13 @@ class Command_showcache(RemoteCommand):
 CommandFactory.getInstance().registerCommand(Command_showcache, "showcache", "sc")
 
 class CommandLineClient:
-    def __init__(self):
-        pass
+    def __init__(self,out=sys.stdout,err=sys.stderr):
+        self.__old_out, sys.stdout = sys.stdout, out
+        self.__old_err, sys.stderr = sys.stderr, err
+
+    def __del__(self):
+        sys.stdout = self.__old_out
+        sys.stderr = self.__old_err
 
     def setup_logging(self, verbose=False):
         # log to stderr
