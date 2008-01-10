@@ -21,27 +21,21 @@
 	  <xsdl:Instance>
 	    <xsdl:Kernel>
 	      <xsdl:Location>
-		<xsdl:URI>
-                  file:///srv/xen-images/kernel-2.6.19
-		</xsdl:URI>
+                <xsdl:URI>ftp://xen-o-rama.itwm.fhrg.fraunhofer.de/kernel-2.6.19</xsdl:URI>
 	      </xsdl:Location>
 	    </xsdl:Kernel>
 
 	    <!-- the initrd is optional -->
 	    <xsdl:Initrd>
 	      <xsdl:Location>
-		<xsdl:URI>
-                  file:///srv/xen-images/initrd-2.6.19
-                </xsdl:URI>
+                <xsdl:URI>ftp://xen-o-rama.itwm.fhrg.fraunhofer.de/initrd-2.6.19</xsdl:URI>
 	      </xsdl:Location>
 	    </xsdl:Initrd>
 
 	    <!-- the image is mandatory -->
 	    <xsdl:Image fs-type="ext3">
 	      <xsdl:Location>
-		<xsdl:URI>
-		  file:///srv/xen-images/base.img
-		</xsdl:URI>
+                <xsdl:URI>ftp://xen-o-rama.itwm.fhrg.fraunhofer.de/test.img</xsdl:URI>
 	      </xsdl:Location>
 	    </xsdl:Image>
 	  </xsdl:Instance>

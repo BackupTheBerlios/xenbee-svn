@@ -64,8 +64,8 @@
 	    <!-- the image is mandatory -->
 	    <xsdl:Image fs-type="ext3">
 	      <xsdl:Location>
-	         <xsdl:URI>ftp://xen-o-rama.itwm.fhrg.fraunhofer.de/base.img.bz2</xsdl:URI>
-		 <xsdl:Compression algorithm="bzip2"/>
+                <xsdl:URI>ftp://xen-o-rama.itwm.fhrg.fraunhofer.de/base.img</xsdl:URI>
+<!--	         <xsdl:URI>cache://xbe-file-cache/1953fd7b-7061-4948-adb2-358d9a44187b</xsdl:URI> -->
 	      </xsdl:Location>
 	    </xsdl:Image>
 	  </xsdl:Instance>

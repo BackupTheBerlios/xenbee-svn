@@ -37,7 +37,7 @@
 	    <xsdl:Kernel>
 	      <xsdl:Location>
 		<xsdl:URI>
-		  file:///srv/xen-images/kernel-2.6.19
+		  ftp://xen-o-rama.itwm.fhrg.fraunhofer.de/kernel-2.6.19
 		</xsdl:URI>
 	      </xsdl:Location>
 	    </xsdl:Kernel>
@@ -46,7 +46,7 @@
 	    <xsdl:Initrd>
 	      <xsdl:Location>
 		<xsdl:URI>
-		  file:///srv/xen-images/initrd-2.6.19
+		  ftp://xen-o-rama.itwm.fhrg.fraunhofer.de/initrd-2.6.19
 		</xsdl:URI>
 	      </xsdl:Location>
 	    </xsdl:Initrd>
@@ -55,7 +55,7 @@
 	    <xsdl:Image fs-type="ext3">
 	      <xsdl:Location>
 		<xsdl:URI>
-		  file:///srv/xen-images/base.img
+		  ftp://xen-o-rama.itwm.fhrg.fraunhofer.de/base.img
 		</xsdl:URI>
 	      </xsdl:Location>
 	    </xsdl:Image>
