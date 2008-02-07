@@ -1,0 +1,4 @@
+#!/bin/sh
+export XBED_HOME="$HOME"/xenbee
+export PYTHON_PATH="$PYTHON_PATH:$XBED_HOME/modules"
+export PATH="$PATH:$XBED_HOME/bin"
