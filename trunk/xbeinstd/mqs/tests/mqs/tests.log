@@ -1,0 +1,24 @@
+DEBUG 2008-03-26 15:45:22,701 [Channel.cpp:168] (mqs.channel)  - adding incoming queue: mqs.test?type=queue
+DEBUG 2008-03-26 15:45:22,705 [Channel.cpp:416] (mqs.channel)  - waiting for new messages
+DEBUG 2008-03-26 15:45:22,758 [Channel.cpp:422] (mqs.channel)  - message waiting timed out
+DEBUG 2008-03-26 15:45:22,775 [Channel.cpp:366] (mqs.channel)  - got new message: e6bdf6d6-6173-4b19-ab6d-9a2468c08b9e:0:0:0
+DEBUG 2008-03-26 15:45:22,775 [Channel.cpp:403] (mqs.channel)  - enqueueing message
+DEBUG 2008-03-26 15:45:22,776 [Channel.cpp:239] (mqs.channel)  - sent message id:e6bdf6d6-6173-4b19-ab6d-9a2468c08b9e:0:0:0 mode:persistent prio:4 ttl:0 corr: type:
+DEBUG 2008-03-26 15:45:22,778 [Channel.cpp:366] (mqs.channel)  - got new message: e6bdf6d6-6173-4b19-ab6d-9a2468c08b9e:0:0:1
+DEBUG 2008-03-26 15:45:22,778 [Channel.cpp:403] (mqs.channel)  - enqueueing message
+DEBUG 2008-03-26 15:45:22,779 [Channel.cpp:239] (mqs.channel)  - sent message id:e6bdf6d6-6173-4b19-ab6d-9a2468c08b9e:0:0:1 mode:persistent prio:4 ttl:0 corr: type:
+DEBUG 2008-03-26 15:45:22,779 [Channel.cpp:427] (mqs.channel)  - received message: e6bdf6d6-6173-4b19-ab6d-9a2468c08b9e:0:0:0
+DEBUG 2008-03-26 15:45:22,791 [Channel.cpp:168] (mqs.channel)  - adding incoming queue: mqs.test?type=queue
+DEBUG 2008-03-26 15:45:22,796 [Channel.cpp:416] (mqs.channel)  - waiting for new messages
+DEBUG 2008-03-26 15:45:22,842 [Channel.cpp:422] (mqs.channel)  - message waiting timed out
+DEBUG 2008-03-26 15:45:22,842 [Channel.cpp:286] (mqs.channel)  - sending async request to mqs.test
+DEBUG 2008-03-26 15:45:22,863 [Channel.cpp:366] (mqs.channel)  - got new message: d0caa07a-74e9-417d-9ff1-3774831ad55d:0:0:0
+DEBUG 2008-03-26 15:45:22,863 [Channel.cpp:239] (mqs.channel)  - sent message id:d0caa07a-74e9-417d-9ff1-3774831ad55d:0:0:0 mode:persistent prio:4 ttl:0 corr: type:
+DEBUG 2008-03-26 15:45:22,863 [Channel.cpp:416] (mqs.channel)  - waiting for new messages
+DEBUG 2008-03-26 15:45:22,863 [Channel.cpp:403] (mqs.channel)  - enqueueing message
+DEBUG 2008-03-26 15:45:22,864 [Channel.cpp:427] (mqs.channel)  - received message: d0caa07a-74e9-417d-9ff1-3774831ad55d:0:0:0
+DEBUG 2008-03-26 15:45:22,864 [Channel.cpp:271] (mqs.channel)  - replying to msg: d0caa07a-74e9-417d-9ff1-3774831ad55d:0:0:0
+DEBUG 2008-03-26 15:45:22,865 [Channel.cpp:366] (mqs.channel)  - got new message: d0caa07a-74e9-417d-9ff1-3774831ad55d:0:0:1
+DEBUG 2008-03-26 15:45:22,865 [Channel.cpp:373] (mqs.channel)  - message correlates to: d0caa07a-74e9-417d-9ff1-3774831ad55d:0:0:0
+DEBUG 2008-03-26 15:45:22,866 [Channel.cpp:239] (mqs.channel)  - sent message id:d0caa07a-74e9-417d-9ff1-3774831ad55d:0:0:1 mode:persistent prio:4 ttl:0 corr:d0caa07a-74e9-417d-9ff1-3774831ad55d:0:0:0 type:
+DEBUG 2008-03-26 15:45:22,866 [Channel.cpp:299] (mqs.channel)  - waiting for reply to: d0caa07a-74e9-417d-9ff1-3774831ad55d:0:0:0

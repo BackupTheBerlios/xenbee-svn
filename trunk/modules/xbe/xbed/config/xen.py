@@ -53,6 +53,9 @@ class InstanceConfig:
         self.name = name
         self.diskImages = []
         self.mac = None
+        self.ip = ""
+        self.netmask = ""
+        self.gateway = ""
         self.memory = 128 * 1024**2
         self.kernel = None
         self.initrd = None
@@ -127,6 +130,21 @@ class InstanceConfig:
         self.mac = mac
     def getMac(self):
         return self.mac
+
+    def setIP(self, ip):
+        self.ip = ip
+    def getIP(self):
+        return self.ip
+
+    def setNetmask(self, nm):
+        self.netmask = nm 
+    def getNetmask(self):
+        return self.netmask
+
+    def setGateway(self, gw):
+        self.gateway = gw
+    def getGateway(self):
+        return self.gateway
 
     def setMemory(self, mem):
         """Sets the memory to be used.
@@ -233,12 +251,18 @@ class XenConfigGenerator:
     def write_networking(self):
         print >>self.out, "# Networking configuration"
         if self.config.getMac():
-            vif = [ "mac=%s" % self.config.getMac() ]
+            vif = [ "mac=%s, bridge=xenbr0" % self.config.getMac() ]
         else:
-            vif = [ '' ]
+            vif = [ 'bridge=xenbr0' ]
         self._write_helper("vif", vif)
-        # use dhcp
-        self._write_helper("dhcp", "dhcp")
+        if self.ip != None:
+           self._write_helper("ip", self.ip)
+           self._write_helper("gateway", self.gateway)
+           self._write_helper("netmask", self.netmask)
+           self._write_helper("dhcp", "off")
+        else:
+           # use dhcp
+           self._write_helper("dhcp", "dhcp")
 
     def write_behavior(self):
         print >>self.out, "# Behavior"
