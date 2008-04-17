@@ -4,7 +4,7 @@
 project(libmqs)
 
 # have the full monty in makefiles
-#set(CMAKE_VERBOSE_MAKEFILE true)
+set(CMAKE_VERBOSE_MAKEFILE true)
 
 set(V_MAJOR 0)
 set(V_MINOR 1)
@@ -20,6 +20,12 @@ set(CMAKE_ADDITIONAL_PATH $ENV{CMAKE_ADDITIONAL_PATH})
 OPTION(ENABLE_LOGGING
   "Build the project with logging enabled"
   YES)
+
+OPTION(ENABLE_UNIT_TESTS
+  "Build and perform unit tests"
+  YES)
+
+set(TEST_BROKER_URI "tcp://localhost:61616" CACHE STRING "The ActiveMQ broker to use for unit tests")
 
 cmake_minimum_required(VERSION "2.6" FATAL_ERROR)
 # Where are the additional libraries installed? Note: provide includes
@@ -49,7 +55,7 @@ if ( PKG_CONFIG_FOUND )
    pkg_check_modules(AMQ REQUIRED activemq-cpp>=2.1.3)
    message(STATUS "ActiveMQ: -I${AMQ_INCLUDE_DIRS} -L${AMQ_LIBRARY_DIRS} -l${AMQ_LIBRARIES}")
 else  ( PKG_CONFIG_FOUND )
-  message(FATAL "No PKGCONFIG found - hoping for the best.")
+  message(FATAL_ERROR "No PKGCONFIG found - hoping for the best.")
 endif ( PKG_CONFIG_FOUND )
 
 ## check for threads
@@ -77,7 +83,9 @@ endif(ENABLE_LOGGING)
 # enable unit testing
 enable_testing()
 
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config.h)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in    ${CMAKE_CURRENT_BINARY_DIR}/config.h)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/libmqs.spec.in ${CMAKE_CURRENT_BINARY_DIR}/libmqs.spec)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/libmqs.pc.in   ${CMAKE_CURRENT_BINARY_DIR}/libmqs.pc)
 
 ADD_DEFINITIONS( -DHAVE_CONFIG_H )
 
@@ -85,21 +93,23 @@ ADD_DEFINITIONS( -DHAVE_CONFIG_H )
 include_directories(${CMAKE_CURRENT_BINARY_DIR} ${LOG4CPP_STATIC_LIBRARY_DIRS})
 include_directories(${CMAKE_INCLUDE_PATH})
 include_directories(${libmqs_SOURCE_DIR})
-include_directories(${CPPUNIT_INCLUDE_DIRS})
 include_directories(${AMQ_INCLUDE_DIRS})
 link_directories(${CMAKE_LIBRARY_PATH} ${LOG4CPP_STATIC_LIBRARY_DIRS})
 link_directories(${libmqs_BINARY_DIR})
-link_directories(${CPPUNIT_LIBRARY_DIRS})
 link_directories(${AMQ_LIBRARY_DIRS})
 link_libraries(-lcrypto -lpthread)
-link_libraries(common)
+link_libraries(${AMQ_STATIC_LIBRARIES})
 if(ENABLE_LOGGING)
   link_libraries(${LOG4CPP_STATIC_LIBRARIES})
 endif(ENABLE_LOGGING)
 
 # Reflect the package structure
 add_subdirectory(mqs)
-add_subdirectory(tests)
+
+if (ENABLE_UNIT_TESTS)
+  enable_testing()
+  add_subdirectory(tests)
+endif (ENABLE_UNIT_TESTS)
 
 # add some files to the installation target
 INSTALL(FILES README COPYING ChangeLog News DESTINATION
