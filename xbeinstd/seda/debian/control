@@ -1,0 +1,26 @@
+Source: xbeinstd
+Priority: extra
+Maintainer: Alexander Petry <petry@itwm.fhg.de>
+Build-Depends: debhelper (>= 5), autotools-dev
+Standards-Version: 3.7.2
+Section: libs
+
+Package: libmqs
+Section: libs
+Architecture: any
+#Depends: activemq-cpp
+Description: A messaging wrapper around the ActiveMQ Cpp library
+
+Package: libmqs-dev
+Section: libdevel
+Depends: libmqs (>= 0.0.1)
+Architecture: any
+Description: A messaging wrapper around the ActiveMQ Cpp library
+
+Package: xbeinstd
+Section: binary
+Architecture: any
+Depends: libmqs (>= 0.0.1)
+Description: The daemon watching an applicaton running within a virtual
+ machine. Part of the XenBEE environment (http://www.xenbee.net)
+
