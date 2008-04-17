@@ -1,3 +1,6 @@
+#
+# -*- mode: cmake; -*-
+#
 project(libmqs)
 
 # have the full monty in makefiles
@@ -16,7 +19,7 @@ set(CMAKE_ADDITIONAL_PATH $ENV{CMAKE_ADDITIONAL_PATH})
 
 OPTION(ENABLE_LOGGING
   "Build the project with logging enabled"
-  ON)
+  YES)
 
 cmake_minimum_required(VERSION "2.6" FATAL_ERROR)
 # Where are the additional libraries installed? Note: provide includes
@@ -35,38 +38,59 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Wno-non-virtual-dtor")
 ## PkgConfig is helpful
 include(FindPkgConfig)
 if ( PKG_CONFIG_FOUND )
-   pkg_check_modules (CPPUNIT REQUIRED cppunit>=1.12)
+   pkg_check_modules (CPPUNIT cppunit>=1.12)
    message(STATUS "CPPUnit: -I${CPPUNIT_INCLUDE_DIRS} -L${CPPUNIT_LIBRARY_DIRS} -l${CPPUNIT_LIBRARIES}")
-   pkg_check_modules (LOG4CPP REQUIRED log4cpp>=1.0)
+   pkg_check_modules (LOG4CPP log4cpp>=1.0)
    # The log4cpp package config is broken, doesn't set static library -
    # therefore do it manually here.
    set(LOG4CPP_STATIC_LIBRARIES log4cpp.a)
    message(STATUS "LOG4CPP: -I${LOG4CPP_STATIC_INCLUDE_DIRS} -L${LOG4CPP_STATIC_LIBRARY_DIRS} -l${LOG4CPP_STATIC_LIBRARIES}")
+
+   pkg_check_modules(AMQ REQUIRED activemq-cpp>=2.1.3)
+   message(STATUS "ActiveMQ: -I${AMQ_INCLUDE_DIRS} -L${AMQ_LIBRARY_DIRS} -l${AMQ_LIBRARIES}")
 else  ( PKG_CONFIG_FOUND )
   message(FATAL "No PKGCONFIG found - hoping for the best.")
 endif ( PKG_CONFIG_FOUND )
 
+## check for threads
+Include(FindThreads)
+
+if (CMAKE_USE_PTHREADS_INIT)
+  set (HAVE_PTHREAD_H 1)
+endif (CMAKE_USE_PTHREADS_INIT)
+
 # Deal with logging
 if(ENABLE_LOGGING)
+  set(ENABLE_LOGGING 1)
   if (LOG4CPP_FOUND)
+    set(HAVE_LOG4CPP 1)
     message(STATUS "Building with logging enabled.")
   else (LOG4CPP_FOUND)
+    set(HAVE_LOG4CPP)
     message(STATUS "Failed to find log4cpp. Deactivating logging.")
-    set(ENABLE_LOGGING false)
   endif (LOG4CPP_FOUND)
 else(ENABLE_LOGGING)
   message("Disabled logging by request.")
+  set(ENABLE_LOGGING)
 endif(ENABLE_LOGGING)
 
 # enable unit testing
 enable_testing()
 
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config.h)
+
+ADD_DEFINITIONS( -DHAVE_CONFIG_H )
+
 # Make sure all subdirectories include correctly
 include_directories(${CMAKE_CURRENT_BINARY_DIR} ${LOG4CPP_STATIC_LIBRARY_DIRS})
 include_directories(${CMAKE_INCLUDE_PATH})
 include_directories(${libmqs_SOURCE_DIR})
+include_directories(${CPPUNIT_INCLUDE_DIRS})
+include_directories(${AMQ_INCLUDE_DIRS})
 link_directories(${CMAKE_LIBRARY_PATH} ${LOG4CPP_STATIC_LIBRARY_DIRS})
 link_directories(${libmqs_BINARY_DIR})
+link_directories(${CPPUNIT_LIBRARY_DIRS})
+link_directories(${AMQ_LIBRARY_DIRS})
 link_libraries(-lcrypto -lpthread)
 link_libraries(common)
 if(ENABLE_LOGGING)
@@ -78,8 +102,8 @@ add_subdirectory(mqs)
 add_subdirectory(tests)
 
 # add some files to the installation target
-INSTALL(FILES README COPYRIGHT DESTINATION
-  share/doc/gridlicense-${V_MAJOR}-${V_MINOR}
+INSTALL(FILES README COPYING ChangeLog News DESTINATION
+  share/doc/libmqs-${V_MAJOR}-${V_MINOR}
 )
 
 # CPACK packaging

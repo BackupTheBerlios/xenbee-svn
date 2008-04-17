@@ -1,7 +1,6 @@
 #include <iostream>
 #include <sstream>
 
-#include <mqs/error.h>
 #include <mqs/Channel.hpp>
 #include <mqs/Response.hpp>
 
@@ -382,7 +381,7 @@ Channel::onMessage(const cms::Message* msg) {
       }
 
       // got a response to some message, but no thread is waiting for one!!!
-      mqs_warning("got response to some message but noone is waiting!");
+      LOG_WARN("got response to some message but noone is waiting!");
       return; // discard the message
     }
   }
