@@ -3,7 +3,7 @@
 
 using namespace xbe;
 
-XMLMessageEvent::XMLMessageEvent(const xbexsd::message_t& xbemsg)
+XMLMessageEvent::XMLMessageEvent(const xbemsg::message_t& xbemsg)
   : _msg(xbemsg) {}
 
 std::string XMLMessageEvent::str() const {

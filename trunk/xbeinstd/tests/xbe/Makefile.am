@@ -2,7 +2,7 @@
 
 EXTRA_DIST = log4j.xml
 
-AM_CPPFLAGS = -I$(top_builddir) -I$(top_srcdir) -I$(top_srcdir)/seda -I$(top_srcdir)/xbe\
+AM_CPPFLAGS = -I$(top_builddir) -I$(top_srcdir) -I$(top_srcdir)/seda -I$(top_srcdir)/xbe -I$(top_srcdir)/mqs \
               $(ACTIVEMQ_CFLAGS) $(CPPUNIT_CFLAGS)\
               $(XERCES_CFLAGS) $(XML_SECURITY_CFLAGS)
 

@@ -1,16 +1,13 @@
+<!-- -*- mode: nxml; -*- -->
 <xs:schema
-   xmlns:xs="http://www.w3.org/2001/XMLSchema"
-   xmlns:xbe="http://www.xenbee.net/schema/2008/02/xbe"
-   xmlns:ds="http://www.w3.org/2000/09/xmldsig#"
-   xmlns:xenc="http://www.w3.org/2001/04/xmlenc#"
-   targetNamespace="http://www.xenbee.net/schema/2008/02/xbe"
-   elementFormDefault="qualified">
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns:xbe="http://www.xenbee.net/schema/2008/02/xbe"
+    xmlns:ds="http://www.w3.org/2000/09/xmldsig#"
+    xmlns:xenc="http://www.w3.org/2001/04/xmlenc#"
+    targetNamespace="http://www.xenbee.net/schema/2008/02/xbe"
+    elementFormDefault="qualified">
 
-  <!--
-
-     import external schema definitions
-
-  -->
+  <!-- Import external schema definitions -->
 
   <!-- JSDL -->
   <xs:import namespace="http://schemas.ggf.org/jsdl/2005/11/jsdl" schemaLocation="http://schemas.ggf.org/jsdl/2005/11/jsdl"/>
@@ -22,122 +19,142 @@
   <xs:import namespace="http://www.w3.org/2001/04/xmlenc#" schemaLocation="http://www.w3.org/TR/2002/REC-xmlenc-core-20021210/xenc-schema.xsd"/>
 
   <xs:simpleType name="ErrorCode">
-   <xs:restriction base="xs:string">
-    <xs:enumeration value="ENOERROR"/>
-    <xs:enumeration value="EBADR"/>
-    <xs:enumeration value="EPERM"/>
-    <xs:enumeration value="EENTITY"/>
-    <xs:enumeration value="EPROTO"/>
-   </xs:restriction>
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="ENOERROR"/>
+      <xs:enumeration value="EBADR"/>
+      <xs:enumeration value="EPERM"/>
+      <xs:enumeration value="EENTITY"/>
+      <xs:enumeration value="EPROTO"/>
+    </xs:restriction>
   </xs:simpleType>
 
   <xs:simpleType name="CompressionAlgorithm">
-   <xs:restriction base="xs:string">
-    <xs:enumeration value="bzip"/>
-    <xs:enumeration value="gzip"/>
-    <xs:enumeration value="tgz"/>
-   </xs:restriction>
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="bzip"/>
+      <xs:enumeration value="gzip"/>
+      <xs:enumeration value="tgz"/>
+    </xs:restriction>
   </xs:simpleType>
 
   <!-- Message and content types -->
   <xs:complexType name="message_t">
-   <xs:sequence>
-    <xs:element name="header" type="xbe:header_t"/>
-    <xs:element name="body" type="xbe:body_t"/>
-   </xs:sequence>
-   <xs:attribute name="protocol-version" fixed="1" type="xs:int"/>
+    <xs:sequence>
+      <xs:element name="header" type="xbe:header_t"/>
+      <xs:element name="body" type="xbe:body_t"/>
+    </xs:sequence>
+    <xs:attribute name="protocol-version" fixed="1" type="xs:int"/>
   </xs:complexType>
 
   <xs:complexType name="header_t">
-   <xs:sequence>
-    <xs:element name="from" type="xs:string"/>
-    <xs:element name="to"   type="xs:string"/>
-    <xs:element ref="ds:Signature" minOccurs="0"/>
-   </xs:sequence>
+    <xs:sequence>
+      <xs:element name="from" type="xs:string"/>
+      <xs:element name="to"   type="xs:string"/>
+      <xs:element ref="ds:Signature" minOccurs="0"/>
+    </xs:sequence>
   </xs:complexType>
 
   <xs:complexType name="body_t">
-   <xs:choice>
-    <xs:element ref="xenc:EncryptedData"/>
-    <xs:element name="error" type="xbe:error_t"/>
-    <xs:element name="certificate-req" type="xbe:certificate_req_msg"/>
-   </xs:choice>
+    <xs:choice>
+      <xs:element name="error" type="xbe:error_t"/>
+      <xs:element name="status_req" type="xbe:status_req_t"/>
+      <xs:element name="status" type="xbe:status_t"/>
+      
+      <xs:element ref="xenc:EncryptedData"/>
+      <xs:element name="certificate-req" type="xbe:certificate_req_msg"/>
+    </xs:choice>
   </xs:complexType>
 
+  <!-- message body elements -->
   <xs:complexType name="error_t">
-   <xs:sequence>
-    <xs:element name="error-code"  type="xbe:ErrorCode"/>
-    <xs:element name="description" type="xs:string" minOccurs="0"/>
-   </xs:sequence>
+    <xs:sequence>
+      <xs:element name="error-code"  type="xbe:ErrorCode"/>
+      <xs:element name="description" type="xs:string" minOccurs="0"/>
+    </xs:sequence>
   </xs:complexType>
 
+  <!-- Server =====> XBEinstd protocol -->
+  <xs:complexType name="status_req_t"/>
+  <xs:complexType name="terminate_req_t"/>
+  <xs:complexType name="execute_req_t">
+    <xs:sequence>
+      <xs:element ref="jsdl:JobDefinition"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- XBEinstd ===> Server protocol -->
+  <xs:complexType name="status_t">
+  </xs:complexType>
+
+
+
+  
   <xs:complexType name="certificate_req_msg"/>
   
   <xs:complexType name="application_t">
-   <xs:all>
-    <xs:element name="name" type="xs:string"/>
-    <xs:element name="version" type="xs:string"/>
-   </xs:all>
+    <xs:all>
+      <xs:element name="name" type="xs:string"/>
+      <xs:element name="version" type="xs:string"/>
+    </xs:all>
   </xs:complexType>
 
   <xs:complexType name="compression">
-   <xs:sequence>
-    <xs:element name="algorithm" type="xbe:CompressionAlgorithm"/> 
-   </xs:sequence>
+    <xs:sequence>
+      <xs:element name="algorithm" type="xbe:CompressionAlgorithm"/> 
+    </xs:sequence>
   </xs:complexType>
 
   <xs:complexType name="cache-entry-info">
-   <xs:all>
-    <xs:element name="uri" type="xs:anyURI"/>
-    <xs:element name="hash" type="xs:hexBinary"/>
-    <xs:element name="operating-system" type="xs:string"/>
-    <xs:element name="distribution" type="xs:string"/>
-    <xs:element name="size" type="xs:int"/>
-    <xs:element name="compression" type="xbe:compression" minOccurs="0"/>
-    <xs:element name="application" type="xbe:application_t"/>
-   </xs:all>
+    <xs:all>
+      <xs:element name="uri" type="xs:anyURI"/>
+      <xs:element name="hash" type="xs:hexBinary"/>
+      <xs:element name="operating-system" type="xs:string"/>
+      <xs:element name="distribution" type="xs:string"/>
+      <xs:element name="size" type="xs:int"/>
+      <xs:element name="compression" type="xbe:compression" minOccurs="0"/>
+      <xs:element name="application" type="xbe:application_t"/>
+    </xs:all>
   </xs:complexType>
 
   <xs:complexType name="cache-entry">
-   <xs:all>
-    <xs:element name="uri" type="xs:anyURI"/>
-    <xs:element name="id" type="xs:string"/>
-    <xs:element name="info" type="xbe:cache-entry-info"/>
-   </xs:all>
+    <xs:all>
+      <xs:element name="uri" type="xs:anyURI"/>
+      <xs:element name="id" type="xs:string"/>
+      <xs:element name="info" type="xbe:cache-entry-info"/>
+    </xs:all>
   </xs:complexType>
 
   <!-- Client =====> Server protocol -->
   <xs:complexType name="list_cache_msg"/>
 
   <xs:complexType name="add-to-cache">
-   <xs:sequence>
-    <xs:element name="entry" type="xbe:cache-entry" maxOccurs="unbounded"/>
-   </xs:sequence>
+    <xs:sequence>
+      <xs:element name="entry" type="xbe:cache-entry" maxOccurs="unbounded"/>
+    </xs:sequence>
   </xs:complexType>
 
   <xs:complexType name="remove-from-cache">
   </xs:complexType>
 
   <xs:complexType name="reservation-request">
-   <xs:sequence>
-<!-- Resource description reference required -->
-    <xs:element name="start" type="xs:date" minOccurs="0"/>
-    <xs:element name="end">
-     <xs:simpleType>
-      <xs:union>
-       <xs:simpleType>
-        <xs:restriction base="xs:date"/>
-       </xs:simpleType>
-       <xs:simpleType>
-        <xs:restriction base="xs:string">
-         <xs:enumeration value="unbounded"/>
-        </xs:restriction>
-       </xs:simpleType>
-      </xs:union>
-     </xs:simpleType>
-    </xs:element>
-    <xs:element name="file-space" type="xs:int" />
-   </xs:sequence>
+    <xs:sequence>
+      <!-- Resource description reference required -->
+      <xs:element name="start" type="xs:date" minOccurs="0"/>
+      <xs:element name="end">
+        <xs:simpleType>
+          <xs:union>
+            <xs:simpleType>
+              <xs:restriction base="xs:date"/>
+            </xs:simpleType>
+            <xs:simpleType>
+              <xs:restriction base="xs:string">
+                <xs:enumeration value="unbounded"/>
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:union>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name="file-space" type="xs:int" />
+    </xs:sequence>
   </xs:complexType>
 
   <xs:complexType name="reservation-confirm"/>
@@ -149,29 +166,25 @@
 
   <!-- Server =====> Client protocol -->
   <xs:complexType name="cache-entries">
-   <xs:sequence>
-    <xs:element name="entry" type="xbe:cache-entry" maxOccurs="unbounded"/>
-   </xs:sequence>
+    <xs:sequence>
+      <xs:element name="entry" type="xbe:cache-entry" maxOccurs="unbounded"/>
+    </xs:sequence>
   </xs:complexType>
 
   <xs:complexType name="reservation-response">
-   <xs:sequence>
-    <xs:element name="status">
-     <xs:simpleType>
-      <xs:restriction base="xs:string">
-       <xs:enumeration value="granted"/>
-       <xs:enumeration value="denied"/>
-      </xs:restriction>
-     </xs:simpleType>
-    </xs:element>
-    <xs:element name="ticket" type="xs:string"/>
-   </xs:sequence>
+    <xs:sequence>
+      <xs:element name="status">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="granted"/>
+            <xs:enumeration value="denied"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name="ticket" type="xs:string"/>
+    </xs:sequence>
   </xs:complexType>
 
-
-  <!-- XBEinstd ===> Server protocol -->
-
-  <!-- Server =====> XBEinstd protocol -->
 
 
   <!-- valid root elements -->

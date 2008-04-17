@@ -2,7 +2,7 @@
 #define XBE_XBELIBUTILS_HPP 1
 
 #include <xbe/XbeException.hpp>
-#include <xbe/xbe-schema.hpp>
+#include <xbe/xbe-msg.hpp>
 
 namespace xbe {
   class XbeLibUtils {

@@ -17,9 +17,6 @@ endif
 
 SUBDIRS = replace mqs seda xbe src $(MAYBE_TESTS)
 
-pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = mqs.pc
-
 # build debian packages
 deb:
 	dpkg-buildpackage -rfakeroot

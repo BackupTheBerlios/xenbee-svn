@@ -10,7 +10,7 @@ void XMLSerializeStrategy::perform(const seda::IEvent::Ptr& e) const {
   const XMLMessageEvent* xmlEvent(dynamic_cast<const XMLMessageEvent*>(e.get()));
   if (xmlEvent) {
     std::ostringstream oss;
-    xbexsd::message(oss, xmlEvent->message(), XbeLibUtils::namespace_infomap());
+    xbemsg::message(oss, xmlEvent->message(), XbeLibUtils::namespace_infomap());
     seda::IEvent::Ptr msgEvent(new MessageEvent(oss.str()));
     
     seda::StrategyDecorator::perform(msgEvent);

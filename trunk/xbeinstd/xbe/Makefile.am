@@ -16,7 +16,7 @@ libxbe_la_SOURCES    = jsdl-schema.hpp jsdl-schema.cpp\
                        jsdl-posix-schema.hpp jsdl-posix-schema.cpp\
                        dsig-schema.hpp dsig-schema.cpp\
                        xenc-schema.hpp xenc-schema.cpp\
-                       xbe-schema.hpp xbe-schema.cpp\
+                       xbe-msg.hpp xbe-msg.cpp\
                        Task.hpp Task_sm.h Task_sm.cpp\
                        XbeLibUtils.hpp XbeLibUtils.cpp\
                        XbeException.hpp\
@@ -27,7 +27,7 @@ libxbe_la_SOURCES    = jsdl-schema.hpp jsdl-schema.cpp\
                        XMLMessageEvent.hpp XMLMessageEvent.cpp\
                        XMLSerializeStrategy.hpp XMLSerializeStrategy.cpp\
                        XMLDeserializeStrategy.hpp XMLDeserializeStrategy.cpp\
-                       XMLMessageDispatcher.hpp
+                       XMLMessageDispatcher.hpp XMLMessageDispatcher.cpp
 
 #libxbe_configdir     = $(libdir)/libxbe-@VERSION@/include
 #libxbe_config_DATA   = $(top_srcdir)/config.h
@@ -37,7 +37,7 @@ libxbe_include_HEADERS = jsdl-schema.hpp\
                          jsdl-posix-schema.hpp\
                          dsig-schema.hpp\
                          xenc-schema.hpp\
-                         xbe-schema.hpp\
+                         xbe-msg.hpp\
                          Task.hpp Task_sm.h\
                          XbeLibUtils.hpp\
                          XbeException.hpp\
@@ -45,7 +45,8 @@ libxbe_include_HEADERS = jsdl-schema.hpp\
                          EventFactory.hpp\
                          MessageEvent.hpp ErrorEvent.hpp\
                          XMLMessageEvent.hpp\
-                         XMLSerializeStrategy.hpp XMLDeserializeStrategy.hpp
+                         XMLSerializeStrategy.hpp XMLDeserializeStrategy.hpp\
+                         XMLMessageDispatcher.hpp
 
 # remove auto generated files
 maintainer-clean-local: remove-schema-bindings remove-fsm-files
@@ -63,11 +64,10 @@ remove-fsm-files:
 if HAVE_XSD_COMPILER
 
 # provide schema to C++ generation support
-
-xbe-schema.hpp xbe-schema.cpp: $(top_srcdir)/etc/xbe/schema/xbe-schema.xsd
+xbe-msg.hpp xbe-msg.cpp: $(top_srcdir)/etc/xbe/schema/xbe-msg.xsd
 	@$(XSD) cxx-tree --generate-serialization --hxx-suffix .hpp --cxx-suffix .cpp\
                 --reserved-name "LINUX=LINUX_OS"\
-                --namespace-map "http://www.xenbee.net/schema/2008/02/xbe=xbexsd"\
+                --namespace-map "http://www.xenbee.net/schema/2008/02/xbe-msg=xbemsg"\
                 --namespace-map "http://schemas.ggf.org/jsdl/2005/11/jsdl-posix=jsdlPosix"\
                 --namespace-map "http://www.w3.org/2000/09/xmldsig#=dsig"\
                 --namespace-map "http://www.w3.org/2001/04/xmlenc#=xenc"\
