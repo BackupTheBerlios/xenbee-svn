@@ -1,6 +1,8 @@
-SET(mqs_src common.h common.cpp logging.hpp
-  Response.hpp DestinationProperties.hpp DestinationProperties.cpp
-  Destination.hpp Destination.cpp
-  Channel.hpp Channel.cpp BrokerURI.hpp)
+file(GLOB hdrs "${CMAKE_CURRENT_SOURCE_DIR}/*.hpp")
+file(GLOB srcs "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
 
-ADD_LIBRARY(mqs ${mqs_src})
+ADD_LIBRARY(mqs ${hdrs} ${srcs})
+
+install(FILES ${hdrs} DESTINATION include/mqs)
+install(TARGETS mqs
+	ARCHIVE DESTINATION lib)

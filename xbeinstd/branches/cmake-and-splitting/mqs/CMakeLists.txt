@@ -5,6 +5,7 @@ project(libmqs)
 
 # have the full monty in makefiles
 set(CMAKE_VERBOSE_MAKEFILE true)
+set(CMAKE_INSTALL_PREFIX "/usr/local")
 
 set(V_MAJOR 0)
 set(V_MINOR 1)
@@ -84,7 +85,6 @@ endif(ENABLE_LOGGING)
 enable_testing()
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in    ${CMAKE_CURRENT_BINARY_DIR}/config.h)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/libmqs.spec.in ${CMAKE_CURRENT_BINARY_DIR}/libmqs.spec)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/libmqs.pc.in   ${CMAKE_CURRENT_BINARY_DIR}/libmqs.pc)
 
 ADD_DEFINITIONS( -DHAVE_CONFIG_H )
@@ -120,12 +120,26 @@ INSTALL(FILES INSTALL README COPYING ChangeLog NEWS DESTINATION
 INCLUDE(InstallRequiredSystemLibraries)
 SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "MessageQueueService abstraction layer library")
 SET(CPACK_PACKAGE_VENDOR "Fraunhofer ITWM")
+SET(CPACK_PACKAGE_CONTACT "petry@itwm.fhg.de")
 SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README")
 SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/COPYING")
 SET(CPACK_PACKAGE_VERSION_MAJOR ${V_MAJOR})
 SET(CPACK_PACKAGE_VERSION_MINOR ${V_MINOR})
 SET(CPACK_PACKAGE_VERSION_PATCH ${V_PATCH})
 SET(CPACK_PACKAGE_INSTALL_DIRECTORY "CMake ${CMake_VERSION_MAJOR}.${CMake_VERSION_MINOR}")
+
+set(CPACK_DEB         ON)
+set(CPACK_NSIS        OFF)
+set(CPACK_RPM         ON)
+set(CPACK_SOURCE_TBZ2 ON)
+set(CPACK_SOURCE_TGZ  ON)
+set(CPACK_SOURCE_TZ   OFF)
+set(CPACK_SOURCE_ZIP  OFF)
+set(CPACK_STGZ        ON)
+set(CPACK_TBZ2        ON)
+set(CPACK_TGZ         ON)
+set(CPACK_TZ          OFF)
+
 IF(WIN32 AND NOT UNIX)
   # There is a bug in NSI that does not handle full unix paths properly. Make
   # sure there is at least one set of four (4) backlasshes.

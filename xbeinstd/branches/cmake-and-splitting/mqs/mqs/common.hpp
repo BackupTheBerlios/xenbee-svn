@@ -2,8 +2,8 @@
  * this identifier the same as the file gets installed, i.e. if the header file
  * gets installed into /usr/include/mylib/myheader.h, name it MYLIB_MYHEADER_H
  */
-#ifndef MQS_COMMON_H
-#define MQS_COMMON_H 1
+#ifndef MQS_COMMON_HPP
+#define MQS_COMMON_HPP 1
 
 /*
  * Purpose of this file:
@@ -68,4 +68,4 @@ extern unsigned long INFINITE_WAITTIME;
 #include <mqs/logging.hpp>
 
 
-#endif /* !MQS_COMMON_H */
+#endif /* !MQS_COMMON_HPP */

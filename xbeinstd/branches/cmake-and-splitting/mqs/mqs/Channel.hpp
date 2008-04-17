@@ -1,7 +1,7 @@
 #ifndef MQS_CHANNEL_HPP
 #define MQS_CHANNEL_HPP
 
-#include <mqs/common.h>
+#include <mqs/common.hpp>
 
 #include <vector>
 #include <list>
