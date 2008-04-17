@@ -1,7 +1,0 @@
-#! /bin/sh
-# 
-# Bootstrap the project from a clean checkout (no configure available).
-#
-# -i install missing files
-#ACLOCAL="aclocal -I /usr/share/autoconf-archive -I config" autoreconf -i -v -f
-autoreconf --install --force
