@@ -1,0 +1,10 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: MQS Convenience Library
+Description: Message Queue Services library.
+Version: @VERSION@
+Libs: -L${libdir} -lmqs-@VERSION@
+Cflags: -I${includedir} -I${libdir}/libmqs-@VERSION@/include
