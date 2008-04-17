@@ -11,7 +11,7 @@ set(V_MINOR 1)
 set(V_PATCH 0)
 
 # add a path where some libraries might be stored
-set(CMAKE_ADDITIONAL_PATH $ENV{CMAKE_ADDITIONAL_PATH})
+set(CMAKE_ADDITIONAL_PATH $ENV{CMAKE_ADDITIONAL_PATH} CACHE PATH "Path where many locally installed libraries can be found")
 
 ###################################################################################################
 # No user settings below
@@ -92,10 +92,10 @@ ADD_DEFINITIONS( -DHAVE_CONFIG_H )
 # Make sure all subdirectories include correctly
 include_directories(${CMAKE_CURRENT_BINARY_DIR} ${LOG4CPP_STATIC_LIBRARY_DIRS})
 include_directories(${CMAKE_INCLUDE_PATH})
-include_directories(${libmqs_SOURCE_DIR})
+include_directories(${${PROJECT_NAME}_SOURCE_DIR})
 include_directories(${AMQ_INCLUDE_DIRS})
 link_directories(${CMAKE_LIBRARY_PATH} ${LOG4CPP_STATIC_LIBRARY_DIRS})
-link_directories(${libmqs_BINARY_DIR})
+link_directories(${${PROJECT_NAME}_BINARY_DIR}})
 link_directories(${AMQ_LIBRARY_DIRS})
 link_libraries(-lcrypto -lpthread)
 link_libraries(${AMQ_STATIC_LIBRARIES})
@@ -112,8 +112,8 @@ if (ENABLE_UNIT_TESTS)
 endif (ENABLE_UNIT_TESTS)
 
 # add some files to the installation target
-INSTALL(FILES README COPYING ChangeLog News DESTINATION
-  share/doc/libmqs-${V_MAJOR}-${V_MINOR}
+INSTALL(FILES INSTALL README COPYING ChangeLog NEWS DESTINATION
+  share/doc/${PROJECT_NAME}-${V_MAJOR}.${V_MINOR}
 )
 
 # CPACK packaging
