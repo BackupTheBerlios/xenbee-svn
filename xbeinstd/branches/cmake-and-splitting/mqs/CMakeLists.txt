@@ -81,9 +81,6 @@ else(ENABLE_LOGGING)
   set(ENABLE_LOGGING)
 endif(ENABLE_LOGGING)
 
-# enable unit testing
-enable_testing()
-
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in    ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/libmqs.pc.in   ${CMAKE_CURRENT_BINARY_DIR}/libmqs.pc)
 
