@@ -1,4 +1,5 @@
 BUILD_DIR=build
+srcdir=${CURDIR}
 
 default: compile
 $(BUILD_DIR):
@@ -7,8 +8,8 @@ $(BUILD_DIR):
 compile: config
 	make -C $(BUILD_DIR)
 
-config: $(BUILD_DIR)
-	cd $(BUILD_DIR) && cmake ..
+config: $(BUILD_DIR) CMakeLists.txt
+	cd $(BUILD_DIR) && cmake $(srcdir)
 
 distclean:
 	@-rm -r $(BUILD_DIR) 2>/dev/null
