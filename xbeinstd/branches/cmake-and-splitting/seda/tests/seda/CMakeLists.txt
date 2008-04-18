@@ -1,7 +1,10 @@
 # -*- mode: cmake; -*-
 
 set(sedatest_src main.cpp
+   EventQueueTest.cpp EventQueueTest.hpp
+   SedaStageTest.cpp  SedaStageTest.hpp
 )
+
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 configure_file(${CMAKE_SOURCE_DIR}/etc/log4j.properties ${CMAKE_CURRENT_BINARY_DIR}/log4j.properties COPYONLY)
