@@ -1,7 +1,7 @@
 #ifndef SEDA_STAGE_WORKER_HPP
 #define SEDA_STAGE_WORKER_HPP
 
-#include <seda/logging.hpp>
+#include <seda/common.hpp>
 #include <activemq/concurrent/Thread.h>
 
 namespace seda {

@@ -5,7 +5,7 @@
 #include <list>
 #include <tr1/memory>
 
-#include <seda/logging.hpp>
+#include <seda/common.hpp>
 #include <seda/constants.hpp>
 #include <seda/SedaException.hpp>
 #include <seda/IEvent.hpp>

@@ -2,7 +2,7 @@
 #define SEDA_STRATEGY_HPP 1
 
 #include <tr1/memory>
-#include <seda/logging.hpp>
+#include <seda/common.hpp>
 
 #include <seda/IEvent.hpp>
 
