@@ -5,7 +5,7 @@ project(libmqs)
 
 # have the full monty in makefiles
 set(CMAKE_VERBOSE_MAKEFILE true)
-set(CMAKE_INSTALL_PREFIX "/usr/local")
+#set(CMAKE_INSTALL_PREFIX "/usr/local")
 
 set(V_MAJOR 0)
 set(V_MINOR 1)
@@ -112,6 +112,12 @@ endif (ENABLE_UNIT_TESTS)
 INSTALL(FILES INSTALL README COPYING ChangeLog NEWS DESTINATION
   share/doc/${PROJECT_NAME}-${V_MAJOR}.${V_MINOR}
 )
+
+#pkgconfig file
+INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/libmqs.pc
+  DESTINATION lib/pkgconfig
+)
+
 
 # CPACK packaging
 INCLUDE(InstallRequiredSystemLibraries)
