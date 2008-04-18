@@ -1,11 +1,11 @@
 # -*- mode: cmake; -*-
-project(libmqs)
+project(libitwm-common)
 
 # have the full monty in makefiles
 set(CMAKE_VERBOSE_MAKEFILE true)
 
-set(V_MAJOR 0)
-set(V_MINOR 1)
+set(V_MAJOR 1)
+set(V_MINOR 0)
 set(V_PATCH 0)
 
 # add a path where some libraries might be stored
@@ -23,8 +23,6 @@ OPTION(ENABLE_UNIT_TESTS
   "Build and perform unit tests"
   YES)
 
-set(TEST_BROKER_URI "tcp://localhost:61616" CACHE STRING "The ActiveMQ broker to use for unit tests")
-
 cmake_minimum_required(VERSION "2.6" FATAL_ERROR)
 # Where are the additional libraries installed? Note: provide includes
 # path here, subsequent checks will resolve everything else
@@ -35,7 +33,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/modules")
 # Definitions for different compilations.
 # Debug is the default development mode. Warn as much as possible, but
 # CPPUnit raises some errors about virtual functions - suppress them.
-set(CMAKE_CXX_FLAGS_DEBUG "-Wall -Wno-non-virtual-dtor")
+set(CMAKE_CXX_FLAGS_DEBUG "-Wall -Wno-non-virtual-dtor -g")
 # Releases are made with the release build. Optimize code.
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Wno-non-virtual-dtor")
 
@@ -44,14 +42,12 @@ include(FindPkgConfig)
 if ( PKG_CONFIG_FOUND )
    pkg_check_modules (CPPUNIT cppunit>=1.12)
    message(STATUS "CPPUnit: -I${CPPUNIT_INCLUDE_DIRS} -L${CPPUNIT_LIBRARY_DIRS} -l${CPPUNIT_LIBRARIES}")
+
    pkg_check_modules (LOG4CPP log4cpp>=1.0)
    # The log4cpp package config is broken, doesn't set static library -
    # therefore do it manually here.
    set(LOG4CPP_STATIC_LIBRARIES log4cpp.a)
    message(STATUS "LOG4CPP: -I${LOG4CPP_STATIC_INCLUDE_DIRS} -L${LOG4CPP_STATIC_LIBRARY_DIRS} -l${LOG4CPP_STATIC_LIBRARIES}")
-
-   pkg_check_modules(AMQ REQUIRED activemq-cpp>=2.1.3)
-   message(STATUS "ActiveMQ: -I${AMQ_INCLUDE_DIRS} -L${AMQ_LIBRARY_DIRS} -l${AMQ_LIBRARIES}")
 else  ( PKG_CONFIG_FOUND )
   message(FATAL_ERROR "No PKGCONFIG found - hoping for the best.")
 endif ( PKG_CONFIG_FOUND )
@@ -79,7 +75,7 @@ else(ENABLE_LOGGING)
 endif(ENABLE_LOGGING)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in    ${CMAKE_CURRENT_BINARY_DIR}/config.h)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/libmqs.pc.in   ${CMAKE_CURRENT_BINARY_DIR}/libmqs.pc)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/libitwm-common.pc.in   ${CMAKE_CURRENT_BINARY_DIR}/libitwm-common.pc)
 
 ADD_DEFINITIONS( -DHAVE_CONFIG_H )
 
@@ -87,18 +83,14 @@ ADD_DEFINITIONS( -DHAVE_CONFIG_H )
 include_directories(${CMAKE_CURRENT_BINARY_DIR} ${LOG4CPP_STATIC_INCLUDE_DIRS})
 include_directories(${CMAKE_INCLUDE_PATH})
 include_directories(${${PROJECT_NAME}_SOURCE_DIR})
-include_directories(${AMQ_INCLUDE_DIRS})
 link_directories(${CMAKE_LIBRARY_PATH} ${LOG4CPP_STATIC_LIBRARY_DIRS})
 link_directories(${${PROJECT_NAME}_BINARY_DIR}})
-link_directories(${AMQ_LIBRARY_DIRS})
-link_libraries(-lcrypto -lpthread)
-link_libraries(${AMQ_STATIC_LIBRARIES})
 if(ENABLE_LOGGING)
   link_libraries(${LOG4CPP_STATIC_LIBRARIES})
 endif(ENABLE_LOGGING)
 
 # Reflect the package structure
-add_subdirectory(mqs)
+add_subdirectory(itwm-common)
 
 if (ENABLE_UNIT_TESTS)
   enable_testing()
@@ -117,7 +109,7 @@ INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/libmqs.pc
 
 # CPACK packaging
 INCLUDE(InstallRequiredSystemLibraries)
-SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "MessageQueueService abstraction layer library")
+SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Common ITWM/HPC C++ library")
 SET(CPACK_PACKAGE_VENDOR "Fraunhofer ITWM")
 SET(CPACK_PACKAGE_CONTACT "petry@itwm.fhg.de")
 SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README")
@@ -134,7 +126,7 @@ IF(WIN32 AND NOT UNIX)
   # sure there is at least one set of four (4) backlasshes.
   SET(CPACK_PACKAGE_ICON "${CMake_SOURCE_DIR}/Utilities/Release\\\\InstallIcon.bmp")
   SET(CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\MyExecutable.exe")
-  SET(CPACK_NSIS_DISPLAY_NAME "${CPACK_PACKAGE_INSTALL_DIRECTORY} MessageQueueService abstraction layer library")
+  SET(CPACK_NSIS_DISPLAY_NAME "${CPACK_PACKAGE_INSTALL_DIRECTORY} Common ITWM/HPC C++ library")
   SET(CPACK_NSIS_HELP_LINK "http:\\\\\\\\www.xenbee.net")
   SET(CPACK_NSIS_URL_INFO_ABOUT "http:\\\\\\\\www.xenbee.net")
   SET(CPACK_NSIS_CONTACT "petry@itwm.fhg.de")
@@ -146,24 +138,28 @@ INCLUDE(CPack)
 
 ### print some output for the user
 message("")
-message("        ***** Configuration parameters *****")
-message("             prefix: ${CMAKE_INSTALL_PREFIX}")
-message("             broker: ${TEST_BROKER_URI}")
+message("************************************")
+message("***** Configuration parameters *****")
+message("************************************")
+message("")
+message("  prefix: ${CMAKE_INSTALL_PREFIX}")
+message("")
 if (ENABLE_LOGGING)
-message("            logging: yes")
-message("            LOG4CPP: -I${LOG4CPP_STATIC_INCLUDE_DIRS} -L${LOG4CPP_STATIC_LIBRARY_DIRS} -l${LOG4CPP_STATIC_LIBRARIES}")
+message("  logging: yes")
+message("    LOG4CPP: -I${LOG4CPP_STATIC_INCLUDE_DIRS} -L${LOG4CPP_STATIC_LIBRARY_DIRS} -l${LOG4CPP_STATIC_LIBRARIES}")
 else (ENABLE_LOGGING)
-message("            logging: no")
+message("  logging: no")
 endif (ENABLE_LOGGING)
 if (ENABLE_UNIT_TESTS)
-message("         unit tests: yes")
-message("            CPPUnit: -I${CPPUNIT_INCLUDE_DIRS} -L${CPPUNIT_LIBRARY_DIRS} -l${CPPUNIT_LIBRARIES}")
+message("  unit tests: yes")
+message("    CPPUnit: -I${CPPUNIT_INCLUDE_DIRS} -L${CPPUNIT_LIBRARY_DIRS} -l${CPPUNIT_LIBRARIES}")
 else (ENABLE_UNIT_TESTS)
-message("         unit tests: no")
+message("  unit tests: no")
 endif (ENABLE_UNIT_TESTS)
 message("")
-message("         Additional libraries:")
-message("                AMQ: -I${AMQ_INCLUDE_DIRS} -L${AMQ_LIBRARY_DIRS} -l${AMQ_LIBRARIES}")
-message("        ************************************")
+message("Additional libraries")
+message("--------------------")
 message("")
-
+message("Additional tools")
+message("----------------")
+message("")

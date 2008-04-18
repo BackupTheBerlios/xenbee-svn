@@ -1,22 +1,33 @@
+#include <iostream>
+
 #include <cppunit/extensions/TestFactoryRegistry.h>
 #include <cppunit/ui/text/TestRunner.h>
 #include <cppunit/CompilerOutputter.h>
+#include <xbe/common.hpp>
+
+#if ENABLE_LOGGING
+#include <log4cpp/BasicConfigurator.hh>
+#include <iostream>
+#endif
 
 int
 main(int argc, char **argv) {
-  CppUnit::TextUi::TestRunner runner;
-  CppUnit::TestFactoryRegistry &registry = CppUnit::TestFactoryRegistry::getRegistry();
-  runner.addTest( registry.makeTest() );
-  CppUnit::CompilerOutputter *outputter =
-    new CppUnit::CompilerOutputter(&runner.result(), std::cout);
-  outputter->setLocationFormat("%p(%l) : ");
-  //outputter->setWrapColumn(19);
-  outputter->setNoWrap();
-  runner.setOutputter(outputter);
-  bool wasSuccessful = runner.run("",
-				  false, // doWait
-				  true,  // doPrintResult
-				  true   // doPrintProgress
-				  );
-  return !wasSuccessful;  
+#if ENABLE_LOGGING
+    ::log4cpp::BasicConfigurator::configure();
+#endif
+    CppUnit::TextUi::TestRunner runner;
+    CppUnit::TestFactoryRegistry &registry = CppUnit::TestFactoryRegistry::getRegistry();
+    runner.addTest( registry.makeTest() );
+    CppUnit::CompilerOutputter *outputter =
+        new CppUnit::CompilerOutputter(&runner.result(), std::cout);
+    outputter->setLocationFormat("%p(%l) : ");
+    //outputter->setWrapColumn(19);
+    outputter->setNoWrap();
+    runner.setOutputter(outputter);
+    bool wasSuccessful = runner.run("",
+                                    false, // doWait
+                                    true,  // doPrintResult
+                                    true   // doPrintProgress
+                                    );
+    return !wasSuccessful;  
 }

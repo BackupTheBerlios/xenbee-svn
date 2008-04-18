@@ -1,11 +1,8 @@
-#
 # -*- mode: cmake; -*-
-#
 project(libxbe)
 
 # have the full monty in makefiles
 set(CMAKE_VERBOSE_MAKEFILE true)
-set(CMAKE_INSTALL_PREFIX "/usr/local")
 
 set(V_MAJOR 0)
 set(V_MINOR 1)
@@ -113,9 +110,14 @@ INSTALL(FILES INSTALL README COPYING ChangeLog NEWS DESTINATION
   share/doc/${PROJECT_NAME}-${V_MAJOR}.${V_MINOR}
 )
 
+#pkgconfig file
+INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/libmqs.pc
+  DESTINATION lib/pkgconfig
+)
+
 # CPACK packaging
 INCLUDE(InstallRequiredSystemLibraries)
-SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "XenBEE library")
+SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "XenBEE C++ library")
 SET(CPACK_PACKAGE_VENDOR "Fraunhofer ITWM")
 SET(CPACK_PACKAGE_CONTACT "petry@itwm.fhg.de")
 SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README")
@@ -132,7 +134,7 @@ IF(WIN32 AND NOT UNIX)
   # sure there is at least one set of four (4) backlasshes.
   SET(CPACK_PACKAGE_ICON "${CMake_SOURCE_DIR}/Utilities/Release\\\\InstallIcon.bmp")
   SET(CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\MyExecutable.exe")
-  SET(CPACK_NSIS_DISPLAY_NAME "${CPACK_PACKAGE_INSTALL_DIRECTORY} XenBEE library")
+  SET(CPACK_NSIS_DISPLAY_NAME "${CPACK_PACKAGE_INSTALL_DIRECTORY} XenBEE C++ library")
   SET(CPACK_NSIS_HELP_LINK "http:\\\\\\\\www.xenbee.net")
   SET(CPACK_NSIS_URL_INFO_ABOUT "http:\\\\\\\\www.xenbee.net")
   SET(CPACK_NSIS_CONTACT "petry@itwm.fhg.de")
@@ -142,3 +144,38 @@ ELSE(WIN32 AND NOT UNIX)
 ENDIF(WIN32 AND NOT UNIX)
 INCLUDE(CPack)
 
+### print some output for the user
+message("")
+message("************************************")
+message("***** Configuration parameters *****")
+message("************************************")
+message("")
+message("  prefix: ${CMAKE_INSTALL_PREFIX}")
+message("  broker: ${TEST_BROKER_URI}")
+message("")
+if (ENABLE_LOGGING)
+message("  logging: yes")
+message("    LOG4CPP: -I${LOG4CPP_STATIC_INCLUDE_DIRS} -L${LOG4CPP_STATIC_LIBRARY_DIRS} -l${LOG4CPP_STATIC_LIBRARIES}")
+else (ENABLE_LOGGING)
+message("  logging: no")
+endif (ENABLE_LOGGING)
+if (ENABLE_UNIT_TESTS)
+message("  unit tests: yes")
+message("    CPPUnit: -I${CPPUNIT_INCLUDE_DIRS} -L${CPPUNIT_LIBRARY_DIRS} -l${CPPUNIT_LIBRARIES}")
+else (ENABLE_UNIT_TESTS)
+message("  unit tests: no")
+endif (ENABLE_UNIT_TESTS)
+message("")
+message("Additional libraries")
+message("--------------------")
+message("")
+message("  AMQ: -I${AMQ_INCLUDE_DIRS} -L${AMQ_LIBRARY_DIRS} -l${AMQ_LIBRARIES}")
+message("  Xerces-C: ")
+message("  XML-Security-C: ")
+message("")
+message("Additional tools")
+message("----------------")
+message("")
+message("  smc: ")
+message("  xsd: ")
+message("")

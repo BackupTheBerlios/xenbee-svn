@@ -27,6 +27,7 @@ void XbeLibUtils::initialise() throw (xbe::XbeException) {
   // initalize namespace map
   xml_schema::namespace_infomap& map = const_cast<xml_schema::namespace_infomap&>(namespace_infomap());
   map["xbe"].name = "http://www.xenbee.net/schema/2008/02/xbe";
+  map["xbemsg"].name = "http://www.xenbee.net/schema/2008/02/xbe-msg";
   map["jsdl"].name = "http://schemas.ggf.org/jsdl/2005/11/jsdl";
   map["jsdl-posix"].name = "http://schemas.ggf.org/jsdl/2005/11/jsdl-posix";
   map["dsig"].name = "http://www.w3.org/2000/09/xmldsig#";
@@ -51,7 +52,7 @@ void XbeLibUtils::terminate() throw () {
   }
 }
 
-const xml_schema::namespace_infomap& XbeLibUtils::namespace_infomap() {
+xml_schema::namespace_infomap& XbeLibUtils::namespace_infomap() {
   static xml_schema::namespace_infomap map;
   return map;
 }

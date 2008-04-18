@@ -2,8 +2,8 @@
  * this identifier the same as the file gets installed, i.e. if the header file
  * gets installed into /usr/include/mylib/myheader.h, name it MYLIB_MYHEADER_H
  */
-#ifndef XBE_COMMON_HPP
-#define XBE_COMMON_HPP 1
+#ifndef ITWM_HPC_COMMON_HPP
+#define ITWM_HPC_COMMON_HPP 1
 
 /*
  * Purpose of this file:
@@ -63,9 +63,6 @@ extern int errno;
 #  define EXIT_FAILURE 1
 #endif
 
-extern unsigned long INFINITE_WAITTIME;
+#include <itwm-common/logging.hpp>
 
-#include <xbe/logging.hpp>
-
-
-#endif /* !XBE_COMMON_HPP */
+#endif /* !ITWM_HPC_COMMON_HPP */

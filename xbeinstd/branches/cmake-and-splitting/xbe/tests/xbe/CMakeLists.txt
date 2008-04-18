@@ -3,7 +3,7 @@
 set(xbetest_src main.cpp
    ChannelEventQueueAdapterTest.hpp ChannelEventQueueAdapterTest.cpp
    XMLEncodeDecodeTest.hpp XMLEncodeDecodeTest.cpp
-   XMLSecurityLibraryTest.hpp XMLSecurityLibraryTest.cpp
+#   XMLSecurityLibraryTest.hpp XMLSecurityLibraryTest.cpp
 #   XMLSecurityTest.hpp XMLSecurityTest.cpp
 )
 include_directories(${CMAKE_CURRENT_BINARY_DIR})

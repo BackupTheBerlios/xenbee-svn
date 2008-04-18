@@ -1,5 +1,5 @@
-#ifndef XBE_LOGGING_HPP
-#define XBE_LOGGING_HPP 1
+#ifndef ITWM_HPC_LOGGING_HPP
+#define ITWM_HPC_LOGGING_HPP 1
 
 /* Logging */
 #if ENABLE_LOGGING
@@ -75,4 +75,4 @@
 
 #endif
 
-#endif // !XBE_LOGGING_HPP
+#endif // !ITWM_HPC_LOGGING_HPP

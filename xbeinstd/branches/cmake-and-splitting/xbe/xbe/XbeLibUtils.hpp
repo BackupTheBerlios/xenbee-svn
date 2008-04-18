@@ -12,7 +12,7 @@ namespace xbe {
     static void initialise() throw(xbe::XbeException);
     static void terminate() throw();
 
-    static const xml_schema::namespace_infomap& namespace_infomap();
+    static xml_schema::namespace_infomap& namespace_infomap();
     
   private:
     XbeLibUtils() {}
