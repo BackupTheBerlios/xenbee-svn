@@ -127,7 +127,7 @@ if test "$HAVE_SMC" = "yes" ; then
 fi
 AC_SUBST([DISTCHECK_CONFIGURE_FLAGS])
 
-AC_CONFIG_SUBDIRS(mqs)
+#AC_CONFIG_SUBDIRS(mqs)
 AC_CONFIG_SUBDIRS(seda)
 
 # output the generated files
