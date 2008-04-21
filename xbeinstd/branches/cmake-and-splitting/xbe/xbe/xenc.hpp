@@ -31,8 +31,8 @@
 // in the accompanying FLOSSE file.
 //
 
-#ifndef CXX___ETC_XBE_SCHEMA_XENC_SCHEMA_HPP
-#define CXX___ETC_XBE_SCHEMA_XENC_SCHEMA_HPP
+#ifndef CXX_HOME_ALEX_TMP_XENBEE_XBEINSTD_BRANCHES_CMAKE_AND_SPLITTING_XBE_ETC_XBE_SCHEMA_XENC_HPP
+#define CXX_HOME_ALEX_TMP_XENBEE_XBEINSTD_BRANCHES_CMAKE_AND_SPLITTING_XBE_ETC_XBE_SCHEMA_XENC_HPP
 
 // Begin prologue.
 //
@@ -272,7 +272,7 @@ namespace xenc
 
 #include <xsd/cxx/xml/dom/parsing-header.hxx>
 
-#include "dsig-schema.hpp"
+#include "dsig.hpp"
 
 namespace xenc
 {
@@ -2669,4 +2669,4 @@ namespace xenc
 //
 // End epilogue.
 
-#endif // CXX___ETC_XBE_SCHEMA_XENC_SCHEMA_HPP
+#endif // CXX_HOME_ALEX_TMP_XENBEE_XBEINSTD_BRANCHES_CMAKE_AND_SPLITTING_XBE_ETC_XBE_SCHEMA_XENC_HPP

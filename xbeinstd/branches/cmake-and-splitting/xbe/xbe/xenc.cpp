@@ -38,7 +38,7 @@
 
 #include <xsd/cxx/pre.hxx>
 
-#include "xenc-schema.hpp"
+#include "xenc.hpp"
 
 namespace xenc
 {

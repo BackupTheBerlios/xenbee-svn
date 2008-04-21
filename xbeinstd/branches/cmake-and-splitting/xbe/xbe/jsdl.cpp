@@ -38,7 +38,7 @@
 
 #include <xsd/cxx/pre.hxx>
 
-#include "jsdl-schema.hpp"
+#include "jsdl.hpp"
 
 namespace jsdl
 {

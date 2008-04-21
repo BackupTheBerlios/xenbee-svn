@@ -17,11 +17,11 @@ set(CMAKE_ADDITIONAL_PATH $ENV{CMAKE_ADDITIONAL_PATH} CACHE PATH "Path where man
 
 OPTION(ENABLE_LOGGING
   "Build the project with logging enabled"
-  YES)
+  ON)
 
 OPTION(ENABLE_UNIT_TESTS
   "Build and perform unit tests"
-  YES)
+  ON)
 
 set(TEST_BROKER_URI "tcp://localhost:61616" CACHE STRING "The ActiveMQ broker to use for unit tests")
 
@@ -59,6 +59,24 @@ endif ( PKG_CONFIG_FOUND )
 ## check for threads
 Include(FindThreads)
 
+## find xsd and xerces-c
+Include(FindXsd)
+Include(XsdMacros)
+Include(FindXercesC)
+Include(FindXMLSecurityC)
+
+if (XERCESC_FOUND)
+  message(STATUS "Xerces-C: -I${XERCESC_INCLUDE_DIR} ${XERCESC_LIBRARIES}")
+else(XERCESC_FOUND )
+  message(FATAL_ERROR "Xerces-C could not be found!")
+endif(XERCESC_FOUND )
+
+if (XMLSecurityC_FOUND)
+  message(STATUS "XML-Security-C: -I${XMLSecurityC_INCLUDE_DIR} ${XMLSecurityC_LIBRARIES}")
+else(XMLSecurityC_FOUND )
+  message(FATAL_ERROR "XML-Security-C could not be found!")
+endif(XMLSecurityC_FOUND )
+
 if (CMAKE_USE_PTHREADS_INIT)
   set (HAVE_PTHREAD_H 1)
 endif (CMAKE_USE_PTHREADS_INIT)
@@ -87,12 +105,21 @@ ADD_DEFINITIONS( -DHAVE_CONFIG_H )
 include_directories(${CMAKE_CURRENT_BINARY_DIR} ${LOG4CPP_STATIC_INCLUDE_DIRS})
 include_directories(${CMAKE_INCLUDE_PATH})
 include_directories(${${PROJECT_NAME}_SOURCE_DIR})
+include_directories(${XERCESC_INCLUDE_DIR})
+include_directories(${XMLSecurityC_INCLUDE_DIR})
 include_directories(${AMQ_INCLUDE_DIRS})
 link_directories(${CMAKE_LIBRARY_PATH} ${LOG4CPP_STATIC_LIBRARY_DIRS})
-link_directories(${${PROJECT_NAME}_BINARY_DIR}})
+link_directories(${${PROJECT_NAME}_BINARY_DIR})
 link_directories(${AMQ_LIBRARY_DIRS})
-link_libraries(-lcrypto -lpthread -lxerces-c -lxml-security-c -lmqs -lseda)
-link_libraries(${AMQ_STATIC_LIBRARIES})
+link_libraries(-lcrypto -lpthread -lmqs -lseda)
+link_libraries(-Wl,-Bstatic ${AMQ_STATIC_LIBRARIES})
+link_libraries(-Wl,-Bdynamic ${XERCESC_LIBRARIES})
+link_libraries(${XMLSecurityC_LIBRARIES})
+
+if(XSD_FOUND)
+  include_directories(${XSD_INCLUDE_DIR})
+endif(XSD_FOUND)
+
 if(ENABLE_LOGGING)
   link_libraries(${LOG4CPP_STATIC_LIBRARIES})
 endif(ENABLE_LOGGING)
@@ -170,12 +197,12 @@ message("Additional libraries")
 message("--------------------")
 message("")
 message("  AMQ: -I${AMQ_INCLUDE_DIRS} -L${AMQ_LIBRARY_DIRS} -l${AMQ_LIBRARIES}")
-message("  Xerces-C: ")
-message("  XML-Security-C: ")
+message("  Xerces-C: -I${XERCESC_INCLUDE_DIR} -l${XERCESC_LIBRARIES}")
+message("  XML-Security-C: -I${XMLSecurityC_INCLUDE_DIR} -l${XMLSecurityC_LIBRARIES}")
 message("")
 message("Additional tools")
 message("----------------")
 message("")
 message("  smc: ")
-message("  xsd: ")
+message("  xsd: ${XSD_EXECUTABLE} -I${XSD_INCLUDE_DIR}")
 message("")

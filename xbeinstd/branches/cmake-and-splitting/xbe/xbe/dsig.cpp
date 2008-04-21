@@ -38,7 +38,7 @@
 
 #include <xsd/cxx/pre.hxx>
 
-#include "dsig-schema.hpp"
+#include "dsig.hpp"
 
 namespace dsig
 {

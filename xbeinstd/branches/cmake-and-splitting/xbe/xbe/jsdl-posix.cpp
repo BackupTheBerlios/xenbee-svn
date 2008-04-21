@@ -38,7 +38,7 @@
 
 #include <xsd/cxx/pre.hxx>
 
-#include "jsdl-posix-schema.hpp"
+#include "jsdl-posix.hpp"
 
 namespace jsdlPosix
 {
