@@ -18,6 +18,23 @@ list(APPEND hdrs "${CMAKE_CURRENT_SOURCE_DIR}/dsig.hpp")
 list(APPEND srcs "${CMAKE_CURRENT_SOURCE_DIR}/xenc.cpp")
 list(APPEND hdrs "${CMAKE_CURRENT_SOURCE_DIR}/xenc.hpp")
 
+if (SMC_FOUND)
+  add_custom_command(OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/Task_sm.cpp ${CMAKE_CURRENT_SOURCE_DIR}/Task_sm.h
+    COMMAND ${JAVA_RUNTIME} -jar ${SMC_JAR} -c++ ${CMAKE_CURRENT_SOURCE_DIR}/Task.sm
+    COMMAND ${CMAKE_COMMAND} -E touch_nocreate ${CMAKE_CURRENT_SOURCE_DIR}/Task_sm.cpp
+    COMMAND ${CMAKE_COMMAND} -E touch_nocreate ${CMAKE_CURRENT_SOURCE_DIR}/Task_sm.h
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    MAIN_DEPENDENCY ${CMAKE_CURRENT_SOURCE_DIR}/Task.sm
+    COMMENT "Compiling StateMachine for the Task state machine")
+else(SMC_FOUND)
+  if ("${CMAKE_CURRENT_SOURCE_DIR}/Task.sm" IS_NEWER_THAN "${CMAKE_CURRENT_SOURCE_DIR}/Task_sm.cpp")
+    message(FATAL_ERROR "The Task StateMachine needs to be updated but the StateMachineCompiler (SMC) could not be found!")
+  endif ("${CMAKE_CURRENT_SOURCE_DIR}/Task.sm" IS_NEWER_THAN "${CMAKE_CURRENT_SOURCE_DIR}/Task_sm.cpp")
+endif(SMC_FOUND)
+
+list(APPEND srcs "${CMAKE_CURRENT_SOURCE_DIR}/Task_sm.cpp")
+list(APPEND hdrs "${CMAKE_CURRENT_SOURCE_DIR}/Task_sm.h")
+
 list(REMOVE_DUPLICATES hdrs)
 list(REMOVE_DUPLICATES srcs)
 
