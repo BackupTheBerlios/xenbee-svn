@@ -1,3 +1,4 @@
+# -*- mode: cmake; -*-
 # Locate Xerces-C include paths and libraries
 # Xerces-C can be found at http://xml.apache.org/xerces-c/
 # Written by Frederic Heem, frederic.heem _at_ telsey.it

@@ -22,7 +22,7 @@ macro(add_xsd_schema BASE_NAME PATH_TO_SCHEMA)
       COMMAND ${CMAKE_COMMAND} -E touch_nocreate ${CMAKE_CURRENT_SOURCE_DIR}/${BASE_NAME}.hpp
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       MAIN_DEPENDENCY ${PATH_TO_SCHEMA}
-      COMMENT "Generating XML data binding for the ${BASE_NAME} schema")
+      COMMENT "Generating '${BASE_NAME}' schema data binding...")
   else(XSD_FOUND)
     if ("${PATH_TO_SCHEMA}" IS_NEWER_THAN "${CMAKE_CURRENT_SOURCE_DIR}/${BASE_NAME}.cpp")
       message(FATAL_ERROR "Data binding for the ${BASE_NAME} schema needs to be updated but XSD could not be found!")
