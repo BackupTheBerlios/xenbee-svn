@@ -2,10 +2,10 @@
 #define SEDA_STRING_EVENT_HPP 1
 
 #include <string>
-#include <seda/IEvent.hpp>
+#include <seda/UserEvent.hpp>
 
 namespace seda {
-  class StringEvent : public IEvent {
+  class StringEvent : public UserEvent {
   public:
     explicit
     StringEvent(const std::string& text="")

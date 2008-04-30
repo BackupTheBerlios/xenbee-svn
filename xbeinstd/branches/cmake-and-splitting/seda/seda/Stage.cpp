@@ -12,7 +12,8 @@ namespace seda {
           _name(name),
           _maxPoolSize(maxPoolSize),
           _timeout(SEDA_DEFAULT_TIMEOUT)
-    {}
+    {
+    }
 
     Stage::Stage(const std::string& name, IEventQueue::Ptr queue, Strategy::Ptr strategy, std::size_t maxPoolSize)
         : INIT_LOGGER("seda.stage."+name),
@@ -21,7 +22,8 @@ namespace seda {
           _name(name),
           _maxPoolSize(maxPoolSize),
           _timeout(SEDA_DEFAULT_TIMEOUT)
-    {}
+    {
+    }
   
     Stage::~Stage() {
         try {

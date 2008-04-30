@@ -13,9 +13,15 @@ StageRegistry& StageRegistry::instance() {
 void StageRegistry::insert(const std::string& name, const Stage::Ptr& stage) {
     _stages.insert(std::make_pair(name, stage));
 }
+void StageRegistry::insert(const std::string& name, Stage* stage) {
+    _stages.insert(std::make_pair(name, Stage::Ptr(stage)));
+}
 
 void StageRegistry::insert(const Stage::Ptr& stage) {
     insert(stage->name(), stage);
+}
+void StageRegistry::insert(Stage* stage) {
+    insert(stage->name(), Stage::Ptr(stage));
 }
 
 const Stage::Ptr StageRegistry::lookup(const std::string& name) const throw (StageNotFound) {
