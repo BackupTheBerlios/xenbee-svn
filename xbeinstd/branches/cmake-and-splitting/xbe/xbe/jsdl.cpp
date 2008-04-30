@@ -253,6 +253,36 @@ namespace jsdl
     this->exclusiveBound_ = x;
   }
 
+  const Boundary_Type::any_attribute_set& Boundary_Type::
+  any_attribute () const
+  {
+    return this->any_attribute_;
+  }
+
+  Boundary_Type::any_attribute_set& Boundary_Type::
+  any_attribute ()
+  {
+    return this->any_attribute_;
+  }
+
+  void Boundary_Type::
+  any_attribute (const any_attribute_set& s)
+  {
+    this->any_attribute_ = s;
+  }
+
+  const ::xercesc::DOMDocument& Boundary_Type::
+  dom_document () const
+  {
+    return *dom_document_;
+  }
+
+  ::xercesc::DOMDocument& Boundary_Type::
+  dom_document ()
+  {
+    return *dom_document_;
+  }
+
 
   // Exact_Type
   // 
@@ -279,6 +309,36 @@ namespace jsdl
   epsilon (const epsilon_optional& x)
   {
     this->epsilon_ = x;
+  }
+
+  const Exact_Type::any_attribute_set& Exact_Type::
+  any_attribute () const
+  {
+    return this->any_attribute_;
+  }
+
+  Exact_Type::any_attribute_set& Exact_Type::
+  any_attribute ()
+  {
+    return this->any_attribute_;
+  }
+
+  void Exact_Type::
+  any_attribute (const any_attribute_set& s)
+  {
+    this->any_attribute_ = s;
+  }
+
+  const ::xercesc::DOMDocument& Exact_Type::
+  dom_document () const
+  {
+    return *dom_document_;
+  }
+
+  ::xercesc::DOMDocument& Exact_Type::
+  dom_document ()
+  {
+    return *dom_document_;
   }
 
 
@@ -331,6 +391,36 @@ namespace jsdl
   UpperBound (::std::auto_ptr< UpperBound_type > x)
   {
     this->UpperBound_.set (x);
+  }
+
+  const Range_Type::any_attribute_set& Range_Type::
+  any_attribute () const
+  {
+    return this->any_attribute_;
+  }
+
+  Range_Type::any_attribute_set& Range_Type::
+  any_attribute ()
+  {
+    return this->any_attribute_;
+  }
+
+  void Range_Type::
+  any_attribute (const any_attribute_set& s)
+  {
+    this->any_attribute_ = s;
+  }
+
+  const ::xercesc::DOMDocument& Range_Type::
+  dom_document () const
+  {
+    return *dom_document_;
+  }
+
+  ::xercesc::DOMDocument& Range_Type::
+  dom_document ()
+  {
+    return *dom_document_;
   }
 
 
@@ -433,6 +523,36 @@ namespace jsdl
     this->Range_ = s;
   }
 
+  const RangeValue_Type::any_attribute_set& RangeValue_Type::
+  any_attribute () const
+  {
+    return this->any_attribute_;
+  }
+
+  RangeValue_Type::any_attribute_set& RangeValue_Type::
+  any_attribute ()
+  {
+    return this->any_attribute_;
+  }
+
+  void RangeValue_Type::
+  any_attribute (const any_attribute_set& s)
+  {
+    this->any_attribute_ = s;
+  }
+
+  const ::xercesc::DOMDocument& RangeValue_Type::
+  dom_document () const
+  {
+    return *dom_document_;
+  }
+
+  ::xercesc::DOMDocument& RangeValue_Type::
+  dom_document ()
+  {
+    return *dom_document_;
+  }
+
 
   // JobDefinition_Type
   // 
@@ -459,6 +579,24 @@ namespace jsdl
   JobDescription (::std::auto_ptr< JobDescription_type > x)
   {
     this->JobDescription_.set (x);
+  }
+
+  const JobDefinition_Type::any_sequence& JobDefinition_Type::
+  any () const
+  {
+    return this->any_;
+  }
+
+  JobDefinition_Type::any_sequence& JobDefinition_Type::
+  any ()
+  {
+    return this->any_;
+  }
+
+  void JobDefinition_Type::
+  any (const any_sequence& s)
+  {
+    this->any_ = s;
   }
 
   const JobDefinition_Type::id_optional& JobDefinition_Type::
@@ -489,6 +627,36 @@ namespace jsdl
   id (::std::auto_ptr< id_type > x)
   {
     this->id_.set (x);
+  }
+
+  const JobDefinition_Type::any_attribute_set& JobDefinition_Type::
+  any_attribute () const
+  {
+    return this->any_attribute_;
+  }
+
+  JobDefinition_Type::any_attribute_set& JobDefinition_Type::
+  any_attribute ()
+  {
+    return this->any_attribute_;
+  }
+
+  void JobDefinition_Type::
+  any_attribute (const any_attribute_set& s)
+  {
+    this->any_attribute_ = s;
+  }
+
+  const ::xercesc::DOMDocument& JobDefinition_Type::
+  dom_document () const
+  {
+    return *dom_document_;
+  }
+
+  ::xercesc::DOMDocument& JobDefinition_Type::
+  dom_document ()
+  {
+    return *dom_document_;
   }
 
 
@@ -603,6 +771,54 @@ namespace jsdl
     this->DataStaging_ = s;
   }
 
+  const JobDescription_Type::any_sequence& JobDescription_Type::
+  any () const
+  {
+    return this->any_;
+  }
+
+  JobDescription_Type::any_sequence& JobDescription_Type::
+  any ()
+  {
+    return this->any_;
+  }
+
+  void JobDescription_Type::
+  any (const any_sequence& s)
+  {
+    this->any_ = s;
+  }
+
+  const JobDescription_Type::any_attribute_set& JobDescription_Type::
+  any_attribute () const
+  {
+    return this->any_attribute_;
+  }
+
+  JobDescription_Type::any_attribute_set& JobDescription_Type::
+  any_attribute ()
+  {
+    return this->any_attribute_;
+  }
+
+  void JobDescription_Type::
+  any_attribute (const any_attribute_set& s)
+  {
+    this->any_attribute_ = s;
+  }
+
+  const ::xercesc::DOMDocument& JobDescription_Type::
+  dom_document () const
+  {
+    return *dom_document_;
+  }
+
+  ::xercesc::DOMDocument& JobDescription_Type::
+  dom_document ()
+  {
+    return *dom_document_;
+  }
+
 
   // JobIdentification_Type
   // 
@@ -703,6 +919,54 @@ namespace jsdl
     this->JobProject_ = s;
   }
 
+  const JobIdentification_Type::any_sequence& JobIdentification_Type::
+  any () const
+  {
+    return this->any_;
+  }
+
+  JobIdentification_Type::any_sequence& JobIdentification_Type::
+  any ()
+  {
+    return this->any_;
+  }
+
+  void JobIdentification_Type::
+  any (const any_sequence& s)
+  {
+    this->any_ = s;
+  }
+
+  const JobIdentification_Type::any_attribute_set& JobIdentification_Type::
+  any_attribute () const
+  {
+    return this->any_attribute_;
+  }
+
+  JobIdentification_Type::any_attribute_set& JobIdentification_Type::
+  any_attribute ()
+  {
+    return this->any_attribute_;
+  }
+
+  void JobIdentification_Type::
+  any_attribute (const any_attribute_set& s)
+  {
+    this->any_attribute_ = s;
+  }
+
+  const ::xercesc::DOMDocument& JobIdentification_Type::
+  dom_document () const
+  {
+    return *dom_document_;
+  }
+
+  ::xercesc::DOMDocument& JobIdentification_Type::
+  dom_document ()
+  {
+    return *dom_document_;
+  }
+
 
   // Application_Type
   // 
@@ -795,6 +1059,54 @@ namespace jsdl
   Description (::std::auto_ptr< Description_type > x)
   {
     this->Description_.set (x);
+  }
+
+  const Application_Type::any_sequence& Application_Type::
+  any () const
+  {
+    return this->any_;
+  }
+
+  Application_Type::any_sequence& Application_Type::
+  any ()
+  {
+    return this->any_;
+  }
+
+  void Application_Type::
+  any (const any_sequence& s)
+  {
+    this->any_ = s;
+  }
+
+  const Application_Type::any_attribute_set& Application_Type::
+  any_attribute () const
+  {
+    return this->any_attribute_;
+  }
+
+  Application_Type::any_attribute_set& Application_Type::
+  any_attribute ()
+  {
+    return this->any_attribute_;
+  }
+
+  void Application_Type::
+  any_attribute (const any_attribute_set& s)
+  {
+    this->any_attribute_ = s;
+  }
+
+  const ::xercesc::DOMDocument& Application_Type::
+  dom_document () const
+  {
+    return *dom_document_;
+  }
+
+  ::xercesc::DOMDocument& Application_Type::
+  dom_document ()
+  {
+    return *dom_document_;
   }
 
 
@@ -1323,6 +1635,54 @@ namespace jsdl
     this->TotalResourceCount_.set (x);
   }
 
+  const Resources_Type::any_sequence& Resources_Type::
+  any () const
+  {
+    return this->any_;
+  }
+
+  Resources_Type::any_sequence& Resources_Type::
+  any ()
+  {
+    return this->any_;
+  }
+
+  void Resources_Type::
+  any (const any_sequence& s)
+  {
+    this->any_ = s;
+  }
+
+  const Resources_Type::any_attribute_set& Resources_Type::
+  any_attribute () const
+  {
+    return this->any_attribute_;
+  }
+
+  Resources_Type::any_attribute_set& Resources_Type::
+  any_attribute ()
+  {
+    return this->any_attribute_;
+  }
+
+  void Resources_Type::
+  any_attribute (const any_attribute_set& s)
+  {
+    this->any_attribute_ = s;
+  }
+
+  const ::xercesc::DOMDocument& Resources_Type::
+  dom_document () const
+  {
+    return *dom_document_;
+  }
+
+  ::xercesc::DOMDocument& Resources_Type::
+  dom_document ()
+  {
+    return *dom_document_;
+  }
+
 
   // CandidateHosts_Type
   // 
@@ -1371,6 +1731,54 @@ namespace jsdl
   CPUArchitectureName (::std::auto_ptr< CPUArchitectureName_type > x)
   {
     this->CPUArchitectureName_.set (x);
+  }
+
+  const CPUArchitecture_Type::any_sequence& CPUArchitecture_Type::
+  any () const
+  {
+    return this->any_;
+  }
+
+  CPUArchitecture_Type::any_sequence& CPUArchitecture_Type::
+  any ()
+  {
+    return this->any_;
+  }
+
+  void CPUArchitecture_Type::
+  any (const any_sequence& s)
+  {
+    this->any_ = s;
+  }
+
+  const CPUArchitecture_Type::any_attribute_set& CPUArchitecture_Type::
+  any_attribute () const
+  {
+    return this->any_attribute_;
+  }
+
+  CPUArchitecture_Type::any_attribute_set& CPUArchitecture_Type::
+  any_attribute ()
+  {
+    return this->any_attribute_;
+  }
+
+  void CPUArchitecture_Type::
+  any_attribute (const any_attribute_set& s)
+  {
+    this->any_attribute_ = s;
+  }
+
+  const ::xercesc::DOMDocument& CPUArchitecture_Type::
+  dom_document () const
+  {
+    return *dom_document_;
+  }
+
+  ::xercesc::DOMDocument& CPUArchitecture_Type::
+  dom_document ()
+  {
+    return *dom_document_;
   }
 
 
@@ -1497,6 +1905,24 @@ namespace jsdl
     this->DiskSpace_.set (x);
   }
 
+  const FileSystem_Type::any_sequence& FileSystem_Type::
+  any () const
+  {
+    return this->any_;
+  }
+
+  FileSystem_Type::any_sequence& FileSystem_Type::
+  any ()
+  {
+    return this->any_;
+  }
+
+  void FileSystem_Type::
+  any (const any_sequence& s)
+  {
+    this->any_ = s;
+  }
+
   const FileSystem_Type::name_type& FileSystem_Type::
   name () const
   {
@@ -1519,6 +1945,36 @@ namespace jsdl
   name (::std::auto_ptr< name_type > x)
   {
     this->name_.set (x);
+  }
+
+  const FileSystem_Type::any_attribute_set& FileSystem_Type::
+  any_attribute () const
+  {
+    return this->any_attribute_;
+  }
+
+  FileSystem_Type::any_attribute_set& FileSystem_Type::
+  any_attribute ()
+  {
+    return this->any_attribute_;
+  }
+
+  void FileSystem_Type::
+  any_attribute (const any_attribute_set& s)
+  {
+    this->any_attribute_ = s;
+  }
+
+  const ::xercesc::DOMDocument& FileSystem_Type::
+  dom_document () const
+  {
+    return *dom_document_;
+  }
+
+  ::xercesc::DOMDocument& FileSystem_Type::
+  dom_document ()
+  {
+    return *dom_document_;
   }
 
 
@@ -1615,6 +2071,54 @@ namespace jsdl
     this->Description_.set (x);
   }
 
+  const OperatingSystem_Type::any_sequence& OperatingSystem_Type::
+  any () const
+  {
+    return this->any_;
+  }
+
+  OperatingSystem_Type::any_sequence& OperatingSystem_Type::
+  any ()
+  {
+    return this->any_;
+  }
+
+  void OperatingSystem_Type::
+  any (const any_sequence& s)
+  {
+    this->any_ = s;
+  }
+
+  const OperatingSystem_Type::any_attribute_set& OperatingSystem_Type::
+  any_attribute () const
+  {
+    return this->any_attribute_;
+  }
+
+  OperatingSystem_Type::any_attribute_set& OperatingSystem_Type::
+  any_attribute ()
+  {
+    return this->any_attribute_;
+  }
+
+  void OperatingSystem_Type::
+  any_attribute (const any_attribute_set& s)
+  {
+    this->any_attribute_ = s;
+  }
+
+  const ::xercesc::DOMDocument& OperatingSystem_Type::
+  dom_document () const
+  {
+    return *dom_document_;
+  }
+
+  ::xercesc::DOMDocument& OperatingSystem_Type::
+  dom_document ()
+  {
+    return *dom_document_;
+  }
+
 
   // OperatingSystemType_Type
   // 
@@ -1641,6 +2145,54 @@ namespace jsdl
   OperatingSystemName (::std::auto_ptr< OperatingSystemName_type > x)
   {
     this->OperatingSystemName_.set (x);
+  }
+
+  const OperatingSystemType_Type::any_sequence& OperatingSystemType_Type::
+  any () const
+  {
+    return this->any_;
+  }
+
+  OperatingSystemType_Type::any_sequence& OperatingSystemType_Type::
+  any ()
+  {
+    return this->any_;
+  }
+
+  void OperatingSystemType_Type::
+  any (const any_sequence& s)
+  {
+    this->any_ = s;
+  }
+
+  const OperatingSystemType_Type::any_attribute_set& OperatingSystemType_Type::
+  any_attribute () const
+  {
+    return this->any_attribute_;
+  }
+
+  OperatingSystemType_Type::any_attribute_set& OperatingSystemType_Type::
+  any_attribute ()
+  {
+    return this->any_attribute_;
+  }
+
+  void OperatingSystemType_Type::
+  any_attribute (const any_attribute_set& s)
+  {
+    this->any_attribute_ = s;
+  }
+
+  const ::xercesc::DOMDocument& OperatingSystemType_Type::
+  dom_document () const
+  {
+    return *dom_document_;
+  }
+
+  ::xercesc::DOMDocument& OperatingSystemType_Type::
+  dom_document ()
+  {
+    return *dom_document_;
   }
 
 
@@ -1809,6 +2361,24 @@ namespace jsdl
     this->Target_.set (x);
   }
 
+  const DataStaging_Type::any_sequence& DataStaging_Type::
+  any () const
+  {
+    return this->any_;
+  }
+
+  DataStaging_Type::any_sequence& DataStaging_Type::
+  any ()
+  {
+    return this->any_;
+  }
+
+  void DataStaging_Type::
+  any (const any_sequence& s)
+  {
+    this->any_ = s;
+  }
+
   const DataStaging_Type::name_optional& DataStaging_Type::
   name () const
   {
@@ -1837,6 +2407,36 @@ namespace jsdl
   name (::std::auto_ptr< name_type > x)
   {
     this->name_.set (x);
+  }
+
+  const DataStaging_Type::any_attribute_set& DataStaging_Type::
+  any_attribute () const
+  {
+    return this->any_attribute_;
+  }
+
+  DataStaging_Type::any_attribute_set& DataStaging_Type::
+  any_attribute ()
+  {
+    return this->any_attribute_;
+  }
+
+  void DataStaging_Type::
+  any_attribute (const any_attribute_set& s)
+  {
+    this->any_attribute_ = s;
+  }
+
+  const ::xercesc::DOMDocument& DataStaging_Type::
+  dom_document () const
+  {
+    return *dom_document_;
+  }
+
+  ::xercesc::DOMDocument& DataStaging_Type::
+  dom_document ()
+  {
+    return *dom_document_;
   }
 
 
@@ -1872,7 +2472,57 @@ namespace jsdl
   {
     this->URI_.set (x);
   }
+
+  const SourceTarget_Type::any_sequence& SourceTarget_Type::
+  any () const
+  {
+    return this->any_;
+  }
+
+  SourceTarget_Type::any_sequence& SourceTarget_Type::
+  any ()
+  {
+    return this->any_;
+  }
+
+  void SourceTarget_Type::
+  any (const any_sequence& s)
+  {
+    this->any_ = s;
+  }
+
+  const SourceTarget_Type::any_attribute_set& SourceTarget_Type::
+  any_attribute () const
+  {
+    return this->any_attribute_;
+  }
+
+  SourceTarget_Type::any_attribute_set& SourceTarget_Type::
+  any_attribute ()
+  {
+    return this->any_attribute_;
+  }
+
+  void SourceTarget_Type::
+  any_attribute (const any_attribute_set& s)
+  {
+    this->any_attribute_ = s;
+  }
+
+  const ::xercesc::DOMDocument& SourceTarget_Type::
+  dom_document () const
+  {
+    return *dom_document_;
+  }
+
+  ::xercesc::DOMDocument& SourceTarget_Type::
+  dom_document ()
+  {
+    return *dom_document_;
+  }
 }
+
+#include <xsd/cxx/xml/dom/wildcard-source.hxx>
 
 #include <xsd/cxx/xml/dom/parsing-source.hxx>
 
@@ -2392,7 +3042,9 @@ namespace jsdl
   Boundary_Type::
   Boundary_Type (const ::xml_schema::double_& double_)
   : ::xsd::cxx::tree::fundamental_base< ::xml_schema::double_, char, ::xml_schema::simple_type > (double_),
-    exclusiveBound_ (::xml_schema::flags (), this)
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    exclusiveBound_ (::xml_schema::flags (), this),
+    any_attribute_ (this->dom_document ())
   {
   }
 
@@ -2401,7 +3053,9 @@ namespace jsdl
                  ::xml_schema::flags f,
                  ::xml_schema::container* c)
   : ::xsd::cxx::tree::fundamental_base< ::xml_schema::double_, char, ::xml_schema::simple_type > (x, f, c),
-    exclusiveBound_ (x.exclusiveBound_, f, this)
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    exclusiveBound_ (x.exclusiveBound_, f, this),
+    any_attribute_ (x.any_attribute_, this->dom_document ())
   {
   }
 
@@ -2410,7 +3064,9 @@ namespace jsdl
                  ::xml_schema::flags f,
                  ::xml_schema::container* c)
   : ::xsd::cxx::tree::fundamental_base< ::xml_schema::double_, char, ::xml_schema::simple_type > (e, f | ::xml_schema::flags::base, c),
-    exclusiveBound_ (f, this)
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    exclusiveBound_ (f, this),
+    any_attribute_ (this->dom_document ())
   {
     if ((f & ::xml_schema::flags::base) == 0)
     {
@@ -2434,6 +3090,21 @@ namespace jsdl
         this->exclusiveBound (exclusiveBound_traits::create (i, f, this));
         continue;
       }
+
+      // any_attribute
+      //
+      if ((!n.namespace_ ().empty () &&
+           n.namespace_ () != "http://schemas.ggf.org/jsdl/2005/11/jsdl" &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xmlns_namespace< char > () &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xsi_namespace< char > ()))
+      {
+        ::xercesc::DOMAttr* r (
+          static_cast< ::xercesc::DOMAttr* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMAttr* > (&i), true)));
+        this->any_attribute ().insert (r);
+        continue;
+      }
     }
   }
 
@@ -2455,7 +3126,9 @@ namespace jsdl
   Exact_Type::
   Exact_Type (const ::xml_schema::double_& double_)
   : ::xsd::cxx::tree::fundamental_base< ::xml_schema::double_, char, ::xml_schema::simple_type > (double_),
-    epsilon_ (::xml_schema::flags (), this)
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    epsilon_ (::xml_schema::flags (), this),
+    any_attribute_ (this->dom_document ())
   {
   }
 
@@ -2464,7 +3137,9 @@ namespace jsdl
               ::xml_schema::flags f,
               ::xml_schema::container* c)
   : ::xsd::cxx::tree::fundamental_base< ::xml_schema::double_, char, ::xml_schema::simple_type > (x, f, c),
-    epsilon_ (x.epsilon_, f, this)
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    epsilon_ (x.epsilon_, f, this),
+    any_attribute_ (x.any_attribute_, this->dom_document ())
   {
   }
 
@@ -2473,7 +3148,9 @@ namespace jsdl
               ::xml_schema::flags f,
               ::xml_schema::container* c)
   : ::xsd::cxx::tree::fundamental_base< ::xml_schema::double_, char, ::xml_schema::simple_type > (e, f | ::xml_schema::flags::base, c),
-    epsilon_ (f, this)
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    epsilon_ (f, this),
+    any_attribute_ (this->dom_document ())
   {
     if ((f & ::xml_schema::flags::base) == 0)
     {
@@ -2495,6 +3172,21 @@ namespace jsdl
       if (n.name () == "epsilon" && n.namespace_ ().empty ())
       {
         this->epsilon (epsilon_traits::create (i, f, this));
+        continue;
+      }
+
+      // any_attribute
+      //
+      if ((!n.namespace_ ().empty () &&
+           n.namespace_ () != "http://schemas.ggf.org/jsdl/2005/11/jsdl" &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xmlns_namespace< char > () &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xsi_namespace< char > ()))
+      {
+        ::xercesc::DOMAttr* r (
+          static_cast< ::xercesc::DOMAttr* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMAttr* > (&i), true)));
+        this->any_attribute ().insert (r);
         continue;
       }
     }
@@ -2519,8 +3211,10 @@ namespace jsdl
   Range_Type (const LowerBound_type& LowerBound,
               const UpperBound_type& UpperBound)
   : ::xml_schema::type (),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     LowerBound_ (LowerBound, ::xml_schema::flags (), this),
-    UpperBound_ (UpperBound, ::xml_schema::flags (), this)
+    UpperBound_ (UpperBound, ::xml_schema::flags (), this),
+    any_attribute_ (this->dom_document ())
   {
   }
 
@@ -2529,8 +3223,10 @@ namespace jsdl
               ::xml_schema::flags f,
               ::xml_schema::container* c)
   : ::xml_schema::type (x, f, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     LowerBound_ (x.LowerBound_, f, this),
-    UpperBound_ (x.UpperBound_, f, this)
+    UpperBound_ (x.UpperBound_, f, this),
+    any_attribute_ (x.any_attribute_, this->dom_document ())
   {
   }
 
@@ -2539,8 +3235,10 @@ namespace jsdl
               ::xml_schema::flags f,
               ::xml_schema::container* c)
   : ::xml_schema::type (e, f | ::xml_schema::flags::base, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     LowerBound_ (f, this),
-    UpperBound_ (f, this)
+    UpperBound_ (f, this),
+    any_attribute_ (this->dom_document ())
   {
     if ((f & ::xml_schema::flags::base) == 0)
     {
@@ -2603,6 +3301,28 @@ namespace jsdl
         "UpperBound",
         "http://schemas.ggf.org/jsdl/2005/11/jsdl");
     }
+
+    while (p.more_attributes ())
+    {
+      const ::xercesc::DOMAttr& i (p.next_attribute ());
+      const ::xsd::cxx::xml::qualified_name< char > n (
+        ::xsd::cxx::xml::dom::name< char > (i));
+
+      // any_attribute
+      //
+      if ((!n.namespace_ ().empty () &&
+           n.namespace_ () != "http://schemas.ggf.org/jsdl/2005/11/jsdl" &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xmlns_namespace< char > () &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xsi_namespace< char > ()))
+      {
+        ::xercesc::DOMAttr* r (
+          static_cast< ::xercesc::DOMAttr* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMAttr* > (&i), true)));
+        this->any_attribute ().insert (r);
+        continue;
+      }
+    }
   }
 
   Range_Type* Range_Type::
@@ -2623,10 +3343,12 @@ namespace jsdl
   RangeValue_Type::
   RangeValue_Type ()
   : ::xml_schema::type (),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     UpperBoundedRange_ (::xml_schema::flags (), this),
     LowerBoundedRange_ (::xml_schema::flags (), this),
     Exact_ (::xml_schema::flags (), this),
-    Range_ (::xml_schema::flags (), this)
+    Range_ (::xml_schema::flags (), this),
+    any_attribute_ (this->dom_document ())
   {
   }
 
@@ -2635,10 +3357,12 @@ namespace jsdl
                    ::xml_schema::flags f,
                    ::xml_schema::container* c)
   : ::xml_schema::type (x, f, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     UpperBoundedRange_ (x.UpperBoundedRange_, f, this),
     LowerBoundedRange_ (x.LowerBoundedRange_, f, this),
     Exact_ (x.Exact_, f, this),
-    Range_ (x.Range_, f, this)
+    Range_ (x.Range_, f, this),
+    any_attribute_ (x.any_attribute_, this->dom_document ())
   {
   }
 
@@ -2647,10 +3371,12 @@ namespace jsdl
                    ::xml_schema::flags f,
                    ::xml_schema::container* c)
   : ::xml_schema::type (e, f | ::xml_schema::flags::base, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     UpperBoundedRange_ (f, this),
     LowerBoundedRange_ (f, this),
     Exact_ (f, this),
-    Range_ (f, this)
+    Range_ (f, this),
+    any_attribute_ (this->dom_document ())
   {
     if ((f & ::xml_schema::flags::base) == 0)
     {
@@ -2721,6 +3447,28 @@ namespace jsdl
 
       break;
     }
+
+    while (p.more_attributes ())
+    {
+      const ::xercesc::DOMAttr& i (p.next_attribute ());
+      const ::xsd::cxx::xml::qualified_name< char > n (
+        ::xsd::cxx::xml::dom::name< char > (i));
+
+      // any_attribute
+      //
+      if ((!n.namespace_ ().empty () &&
+           n.namespace_ () != "http://schemas.ggf.org/jsdl/2005/11/jsdl" &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xmlns_namespace< char > () &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xsi_namespace< char > ()))
+      {
+        ::xercesc::DOMAttr* r (
+          static_cast< ::xercesc::DOMAttr* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMAttr* > (&i), true)));
+        this->any_attribute ().insert (r);
+        continue;
+      }
+    }
   }
 
   RangeValue_Type* RangeValue_Type::
@@ -2741,8 +3489,11 @@ namespace jsdl
   JobDefinition_Type::
   JobDefinition_Type (const JobDescription_type& JobDescription)
   : ::xml_schema::type (),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     JobDescription_ (JobDescription, ::xml_schema::flags (), this),
-    id_ (::xml_schema::flags (), this)
+    any_ (this->dom_document ()),
+    id_ (::xml_schema::flags (), this),
+    any_attribute_ (this->dom_document ())
   {
   }
 
@@ -2751,8 +3502,11 @@ namespace jsdl
                       ::xml_schema::flags f,
                       ::xml_schema::container* c)
   : ::xml_schema::type (x, f, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     JobDescription_ (x.JobDescription_, f, this),
-    id_ (x.id_, f, this)
+    any_ (x.any_, this->dom_document ()),
+    id_ (x.id_, f, this),
+    any_attribute_ (x.any_attribute_, this->dom_document ())
   {
   }
 
@@ -2761,8 +3515,11 @@ namespace jsdl
                       ::xml_schema::flags f,
                       ::xml_schema::container* c)
   : ::xml_schema::type (e, f | ::xml_schema::flags::base, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     JobDescription_ (f, this),
-    id_ (f, this)
+    any_ (this->dom_document ()),
+    id_ (f, this),
+    any_attribute_ (this->dom_document ())
   {
     if ((f & ::xml_schema::flags::base) == 0)
     {
@@ -2795,6 +3552,18 @@ namespace jsdl
         }
       }
 
+      // any
+      //
+      if ((!n.namespace_ ().empty () && n.namespace_ () != "http://schemas.ggf.org/jsdl/2005/11/jsdl"))
+      {
+        ::xercesc::DOMElement* r (
+          static_cast< ::xercesc::DOMElement* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMElement* > (&i), true)));
+        this->any ().push_back (r);
+        continue;
+      }
+
       break;
     }
 
@@ -2819,6 +3588,21 @@ namespace jsdl
         this->id (r);
         continue;
       }
+
+      // any_attribute
+      //
+      if ((!n.namespace_ ().empty () &&
+           n.namespace_ () != "http://schemas.ggf.org/jsdl/2005/11/jsdl" &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xmlns_namespace< char > () &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xsi_namespace< char > ()))
+      {
+        ::xercesc::DOMAttr* r (
+          static_cast< ::xercesc::DOMAttr* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMAttr* > (&i), true)));
+        this->any_attribute ().insert (r);
+        continue;
+      }
     }
   }
 
@@ -2840,10 +3624,13 @@ namespace jsdl
   JobDescription_Type::
   JobDescription_Type ()
   : ::xml_schema::type (),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     JobIdentification_ (::xml_schema::flags (), this),
     Application_ (::xml_schema::flags (), this),
     Resources_ (::xml_schema::flags (), this),
-    DataStaging_ (::xml_schema::flags (), this)
+    DataStaging_ (::xml_schema::flags (), this),
+    any_ (this->dom_document ()),
+    any_attribute_ (this->dom_document ())
   {
   }
 
@@ -2852,10 +3639,13 @@ namespace jsdl
                        ::xml_schema::flags f,
                        ::xml_schema::container* c)
   : ::xml_schema::type (x, f, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     JobIdentification_ (x.JobIdentification_, f, this),
     Application_ (x.Application_, f, this),
     Resources_ (x.Resources_, f, this),
-    DataStaging_ (x.DataStaging_, f, this)
+    DataStaging_ (x.DataStaging_, f, this),
+    any_ (x.any_, this->dom_document ()),
+    any_attribute_ (x.any_attribute_, this->dom_document ())
   {
   }
 
@@ -2864,10 +3654,13 @@ namespace jsdl
                        ::xml_schema::flags f,
                        ::xml_schema::container* c)
   : ::xml_schema::type (e, f | ::xml_schema::flags::base, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     JobIdentification_ (f, this),
     Application_ (f, this),
     Resources_ (f, this),
-    DataStaging_ (f, this)
+    DataStaging_ (f, this),
+    any_ (this->dom_document ()),
+    any_attribute_ (this->dom_document ())
   {
     if ((f & ::xml_schema::flags::base) == 0)
     {
@@ -2939,7 +3732,41 @@ namespace jsdl
         continue;
       }
 
+      // any
+      //
+      if ((!n.namespace_ ().empty () && n.namespace_ () != "http://schemas.ggf.org/jsdl/2005/11/jsdl"))
+      {
+        ::xercesc::DOMElement* r (
+          static_cast< ::xercesc::DOMElement* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMElement* > (&i), true)));
+        this->any ().push_back (r);
+        continue;
+      }
+
       break;
+    }
+
+    while (p.more_attributes ())
+    {
+      const ::xercesc::DOMAttr& i (p.next_attribute ());
+      const ::xsd::cxx::xml::qualified_name< char > n (
+        ::xsd::cxx::xml::dom::name< char > (i));
+
+      // any_attribute
+      //
+      if ((!n.namespace_ ().empty () &&
+           n.namespace_ () != "http://schemas.ggf.org/jsdl/2005/11/jsdl" &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xmlns_namespace< char > () &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xsi_namespace< char > ()))
+      {
+        ::xercesc::DOMAttr* r (
+          static_cast< ::xercesc::DOMAttr* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMAttr* > (&i), true)));
+        this->any_attribute ().insert (r);
+        continue;
+      }
     }
   }
 
@@ -2961,10 +3788,13 @@ namespace jsdl
   JobIdentification_Type::
   JobIdentification_Type ()
   : ::xml_schema::type (),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     JobName_ (::xml_schema::flags (), this),
     Description_ (::xml_schema::flags (), this),
     JobAnnotation_ (::xml_schema::flags (), this),
-    JobProject_ (::xml_schema::flags (), this)
+    JobProject_ (::xml_schema::flags (), this),
+    any_ (this->dom_document ()),
+    any_attribute_ (this->dom_document ())
   {
   }
 
@@ -2973,10 +3803,13 @@ namespace jsdl
                           ::xml_schema::flags f,
                           ::xml_schema::container* c)
   : ::xml_schema::type (x, f, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     JobName_ (x.JobName_, f, this),
     Description_ (x.Description_, f, this),
     JobAnnotation_ (x.JobAnnotation_, f, this),
-    JobProject_ (x.JobProject_, f, this)
+    JobProject_ (x.JobProject_, f, this),
+    any_ (x.any_, this->dom_document ()),
+    any_attribute_ (x.any_attribute_, this->dom_document ())
   {
   }
 
@@ -2985,10 +3818,13 @@ namespace jsdl
                           ::xml_schema::flags f,
                           ::xml_schema::container* c)
   : ::xml_schema::type (e, f | ::xml_schema::flags::base, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     JobName_ (f, this),
     Description_ (f, this),
     JobAnnotation_ (f, this),
-    JobProject_ (f, this)
+    JobProject_ (f, this),
+    any_ (this->dom_document ()),
+    any_attribute_ (this->dom_document ())
   {
     if ((f & ::xml_schema::flags::base) == 0)
     {
@@ -3057,7 +3893,41 @@ namespace jsdl
         continue;
       }
 
+      // any
+      //
+      if ((!n.namespace_ ().empty () && n.namespace_ () != "http://schemas.ggf.org/jsdl/2005/11/jsdl"))
+      {
+        ::xercesc::DOMElement* r (
+          static_cast< ::xercesc::DOMElement* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMElement* > (&i), true)));
+        this->any ().push_back (r);
+        continue;
+      }
+
       break;
+    }
+
+    while (p.more_attributes ())
+    {
+      const ::xercesc::DOMAttr& i (p.next_attribute ());
+      const ::xsd::cxx::xml::qualified_name< char > n (
+        ::xsd::cxx::xml::dom::name< char > (i));
+
+      // any_attribute
+      //
+      if ((!n.namespace_ ().empty () &&
+           n.namespace_ () != "http://schemas.ggf.org/jsdl/2005/11/jsdl" &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xmlns_namespace< char > () &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xsi_namespace< char > ()))
+      {
+        ::xercesc::DOMAttr* r (
+          static_cast< ::xercesc::DOMAttr* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMAttr* > (&i), true)));
+        this->any_attribute ().insert (r);
+        continue;
+      }
     }
   }
 
@@ -3079,9 +3949,12 @@ namespace jsdl
   Application_Type::
   Application_Type ()
   : ::xml_schema::type (),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     ApplicationName_ (::xml_schema::flags (), this),
     ApplicationVersion_ (::xml_schema::flags (), this),
-    Description_ (::xml_schema::flags (), this)
+    Description_ (::xml_schema::flags (), this),
+    any_ (this->dom_document ()),
+    any_attribute_ (this->dom_document ())
   {
   }
 
@@ -3090,9 +3963,12 @@ namespace jsdl
                     ::xml_schema::flags f,
                     ::xml_schema::container* c)
   : ::xml_schema::type (x, f, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     ApplicationName_ (x.ApplicationName_, f, this),
     ApplicationVersion_ (x.ApplicationVersion_, f, this),
-    Description_ (x.Description_, f, this)
+    Description_ (x.Description_, f, this),
+    any_ (x.any_, this->dom_document ()),
+    any_attribute_ (x.any_attribute_, this->dom_document ())
   {
   }
 
@@ -3101,9 +3977,12 @@ namespace jsdl
                     ::xml_schema::flags f,
                     ::xml_schema::container* c)
   : ::xml_schema::type (e, f | ::xml_schema::flags::base, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     ApplicationName_ (f, this),
     ApplicationVersion_ (f, this),
-    Description_ (f, this)
+    Description_ (f, this),
+    any_ (this->dom_document ()),
+    any_attribute_ (this->dom_document ())
   {
     if ((f & ::xml_schema::flags::base) == 0)
     {
@@ -3164,7 +4043,41 @@ namespace jsdl
         }
       }
 
+      // any
+      //
+      if ((!n.namespace_ ().empty () && n.namespace_ () != "http://schemas.ggf.org/jsdl/2005/11/jsdl"))
+      {
+        ::xercesc::DOMElement* r (
+          static_cast< ::xercesc::DOMElement* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMElement* > (&i), true)));
+        this->any ().push_back (r);
+        continue;
+      }
+
       break;
+    }
+
+    while (p.more_attributes ())
+    {
+      const ::xercesc::DOMAttr& i (p.next_attribute ());
+      const ::xsd::cxx::xml::qualified_name< char > n (
+        ::xsd::cxx::xml::dom::name< char > (i));
+
+      // any_attribute
+      //
+      if ((!n.namespace_ ().empty () &&
+           n.namespace_ () != "http://schemas.ggf.org/jsdl/2005/11/jsdl" &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xmlns_namespace< char > () &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xsi_namespace< char > ()))
+      {
+        ::xercesc::DOMAttr* r (
+          static_cast< ::xercesc::DOMAttr* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMAttr* > (&i), true)));
+        this->any_attribute ().insert (r);
+        continue;
+      }
     }
   }
 
@@ -3186,6 +4099,7 @@ namespace jsdl
   Resources_Type::
   Resources_Type ()
   : ::xml_schema::type (),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     CandidateHosts_ (::xml_schema::flags (), this),
     FileSystem_ (::xml_schema::flags (), this),
     ExclusiveExecution_ (::xml_schema::flags (), this),
@@ -3203,7 +4117,9 @@ namespace jsdl
     TotalPhysicalMemory_ (::xml_schema::flags (), this),
     TotalVirtualMemory_ (::xml_schema::flags (), this),
     TotalDiskSpace_ (::xml_schema::flags (), this),
-    TotalResourceCount_ (::xml_schema::flags (), this)
+    TotalResourceCount_ (::xml_schema::flags (), this),
+    any_ (this->dom_document ()),
+    any_attribute_ (this->dom_document ())
   {
   }
 
@@ -3212,6 +4128,7 @@ namespace jsdl
                   ::xml_schema::flags f,
                   ::xml_schema::container* c)
   : ::xml_schema::type (x, f, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     CandidateHosts_ (x.CandidateHosts_, f, this),
     FileSystem_ (x.FileSystem_, f, this),
     ExclusiveExecution_ (x.ExclusiveExecution_, f, this),
@@ -3229,7 +4146,9 @@ namespace jsdl
     TotalPhysicalMemory_ (x.TotalPhysicalMemory_, f, this),
     TotalVirtualMemory_ (x.TotalVirtualMemory_, f, this),
     TotalDiskSpace_ (x.TotalDiskSpace_, f, this),
-    TotalResourceCount_ (x.TotalResourceCount_, f, this)
+    TotalResourceCount_ (x.TotalResourceCount_, f, this),
+    any_ (x.any_, this->dom_document ()),
+    any_attribute_ (x.any_attribute_, this->dom_document ())
   {
   }
 
@@ -3238,6 +4157,7 @@ namespace jsdl
                   ::xml_schema::flags f,
                   ::xml_schema::container* c)
   : ::xml_schema::type (e, f | ::xml_schema::flags::base, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     CandidateHosts_ (f, this),
     FileSystem_ (f, this),
     ExclusiveExecution_ (f, this),
@@ -3255,7 +4175,9 @@ namespace jsdl
     TotalPhysicalMemory_ (f, this),
     TotalVirtualMemory_ (f, this),
     TotalDiskSpace_ (f, this),
-    TotalResourceCount_ (f, this)
+    TotalResourceCount_ (f, this),
+    any_ (this->dom_document ()),
+    any_attribute_ (this->dom_document ())
   {
     if ((f & ::xml_schema::flags::base) == 0)
     {
@@ -3520,7 +4442,41 @@ namespace jsdl
         }
       }
 
+      // any
+      //
+      if ((!n.namespace_ ().empty () && n.namespace_ () != "http://schemas.ggf.org/jsdl/2005/11/jsdl"))
+      {
+        ::xercesc::DOMElement* r (
+          static_cast< ::xercesc::DOMElement* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMElement* > (&i), true)));
+        this->any ().push_back (r);
+        continue;
+      }
+
       break;
+    }
+
+    while (p.more_attributes ())
+    {
+      const ::xercesc::DOMAttr& i (p.next_attribute ());
+      const ::xsd::cxx::xml::qualified_name< char > n (
+        ::xsd::cxx::xml::dom::name< char > (i));
+
+      // any_attribute
+      //
+      if ((!n.namespace_ ().empty () &&
+           n.namespace_ () != "http://schemas.ggf.org/jsdl/2005/11/jsdl" &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xmlns_namespace< char > () &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xsi_namespace< char > ()))
+      {
+        ::xercesc::DOMAttr* r (
+          static_cast< ::xercesc::DOMAttr* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMAttr* > (&i), true)));
+        this->any_attribute ().insert (r);
+        continue;
+      }
     }
   }
 
@@ -3612,7 +4568,10 @@ namespace jsdl
   CPUArchitecture_Type::
   CPUArchitecture_Type (const CPUArchitectureName_type& CPUArchitectureName)
   : ::xml_schema::type (),
-    CPUArchitectureName_ (CPUArchitectureName, ::xml_schema::flags (), this)
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    CPUArchitectureName_ (CPUArchitectureName, ::xml_schema::flags (), this),
+    any_ (this->dom_document ()),
+    any_attribute_ (this->dom_document ())
   {
   }
 
@@ -3621,7 +4580,10 @@ namespace jsdl
                         ::xml_schema::flags f,
                         ::xml_schema::container* c)
   : ::xml_schema::type (x, f, c),
-    CPUArchitectureName_ (x.CPUArchitectureName_, f, this)
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    CPUArchitectureName_ (x.CPUArchitectureName_, f, this),
+    any_ (x.any_, this->dom_document ()),
+    any_attribute_ (x.any_attribute_, this->dom_document ())
   {
   }
 
@@ -3630,7 +4592,10 @@ namespace jsdl
                         ::xml_schema::flags f,
                         ::xml_schema::container* c)
   : ::xml_schema::type (e, f | ::xml_schema::flags::base, c),
-    CPUArchitectureName_ (f, this)
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    CPUArchitectureName_ (f, this),
+    any_ (this->dom_document ()),
+    any_attribute_ (this->dom_document ())
   {
     if ((f & ::xml_schema::flags::base) == 0)
     {
@@ -3663,6 +4628,18 @@ namespace jsdl
         }
       }
 
+      // any
+      //
+      if ((!n.namespace_ ().empty () && n.namespace_ () != "http://schemas.ggf.org/jsdl/2005/11/jsdl"))
+      {
+        ::xercesc::DOMElement* r (
+          static_cast< ::xercesc::DOMElement* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMElement* > (&i), true)));
+        this->any ().push_back (r);
+        continue;
+      }
+
       break;
     }
 
@@ -3671,6 +4648,28 @@ namespace jsdl
       throw ::xsd::cxx::tree::expected_element< char > (
         "CPUArchitectureName",
         "http://schemas.ggf.org/jsdl/2005/11/jsdl");
+    }
+
+    while (p.more_attributes ())
+    {
+      const ::xercesc::DOMAttr& i (p.next_attribute ());
+      const ::xsd::cxx::xml::qualified_name< char > n (
+        ::xsd::cxx::xml::dom::name< char > (i));
+
+      // any_attribute
+      //
+      if ((!n.namespace_ ().empty () &&
+           n.namespace_ () != "http://schemas.ggf.org/jsdl/2005/11/jsdl" &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xmlns_namespace< char > () &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xsi_namespace< char > ()))
+      {
+        ::xercesc::DOMAttr* r (
+          static_cast< ::xercesc::DOMAttr* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMAttr* > (&i), true)));
+        this->any_attribute ().insert (r);
+        continue;
+      }
     }
   }
 
@@ -3692,11 +4691,14 @@ namespace jsdl
   FileSystem_Type::
   FileSystem_Type (const name_type& name)
   : ::xml_schema::type (),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     FileSystemType_ (::xml_schema::flags (), this),
     Description_ (::xml_schema::flags (), this),
     MountPoint_ (::xml_schema::flags (), this),
     DiskSpace_ (::xml_schema::flags (), this),
-    name_ (name, ::xml_schema::flags (), this)
+    any_ (this->dom_document ()),
+    name_ (name, ::xml_schema::flags (), this),
+    any_attribute_ (this->dom_document ())
   {
   }
 
@@ -3705,11 +4707,14 @@ namespace jsdl
                    ::xml_schema::flags f,
                    ::xml_schema::container* c)
   : ::xml_schema::type (x, f, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     FileSystemType_ (x.FileSystemType_, f, this),
     Description_ (x.Description_, f, this),
     MountPoint_ (x.MountPoint_, f, this),
     DiskSpace_ (x.DiskSpace_, f, this),
-    name_ (x.name_, f, this)
+    any_ (x.any_, this->dom_document ()),
+    name_ (x.name_, f, this),
+    any_attribute_ (x.any_attribute_, this->dom_document ())
   {
   }
 
@@ -3718,11 +4723,14 @@ namespace jsdl
                    ::xml_schema::flags f,
                    ::xml_schema::container* c)
   : ::xml_schema::type (e, f | ::xml_schema::flags::base, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     FileSystemType_ (f, this),
     Description_ (f, this),
     MountPoint_ (f, this),
     DiskSpace_ (f, this),
-    name_ (f, this)
+    any_ (this->dom_document ()),
+    name_ (f, this),
+    any_attribute_ (this->dom_document ())
   {
     if ((f & ::xml_schema::flags::base) == 0)
     {
@@ -3797,6 +4805,18 @@ namespace jsdl
         }
       }
 
+      // any
+      //
+      if ((!n.namespace_ ().empty () && n.namespace_ () != "http://schemas.ggf.org/jsdl/2005/11/jsdl"))
+      {
+        ::xercesc::DOMElement* r (
+          static_cast< ::xercesc::DOMElement* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMElement* > (&i), true)));
+        this->any ().push_back (r);
+        continue;
+      }
+
       break;
     }
 
@@ -3812,6 +4832,21 @@ namespace jsdl
           name_traits::create (i, f, this));
 
         this->name (r);
+        continue;
+      }
+
+      // any_attribute
+      //
+      if ((!n.namespace_ ().empty () &&
+           n.namespace_ () != "http://schemas.ggf.org/jsdl/2005/11/jsdl" &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xmlns_namespace< char > () &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xsi_namespace< char > ()))
+      {
+        ::xercesc::DOMAttr* r (
+          static_cast< ::xercesc::DOMAttr* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMAttr* > (&i), true)));
+        this->any_attribute ().insert (r);
         continue;
       }
     }
@@ -3842,9 +4877,12 @@ namespace jsdl
   OperatingSystem_Type::
   OperatingSystem_Type ()
   : ::xml_schema::type (),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     OperatingSystemType_ (::xml_schema::flags (), this),
     OperatingSystemVersion_ (::xml_schema::flags (), this),
-    Description_ (::xml_schema::flags (), this)
+    Description_ (::xml_schema::flags (), this),
+    any_ (this->dom_document ()),
+    any_attribute_ (this->dom_document ())
   {
   }
 
@@ -3853,9 +4891,12 @@ namespace jsdl
                         ::xml_schema::flags f,
                         ::xml_schema::container* c)
   : ::xml_schema::type (x, f, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     OperatingSystemType_ (x.OperatingSystemType_, f, this),
     OperatingSystemVersion_ (x.OperatingSystemVersion_, f, this),
-    Description_ (x.Description_, f, this)
+    Description_ (x.Description_, f, this),
+    any_ (x.any_, this->dom_document ()),
+    any_attribute_ (x.any_attribute_, this->dom_document ())
   {
   }
 
@@ -3864,9 +4905,12 @@ namespace jsdl
                         ::xml_schema::flags f,
                         ::xml_schema::container* c)
   : ::xml_schema::type (e, f | ::xml_schema::flags::base, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     OperatingSystemType_ (f, this),
     OperatingSystemVersion_ (f, this),
-    Description_ (f, this)
+    Description_ (f, this),
+    any_ (this->dom_document ()),
+    any_attribute_ (this->dom_document ())
   {
     if ((f & ::xml_schema::flags::base) == 0)
     {
@@ -3927,7 +4971,41 @@ namespace jsdl
         }
       }
 
+      // any
+      //
+      if ((!n.namespace_ ().empty () && n.namespace_ () != "http://schemas.ggf.org/jsdl/2005/11/jsdl"))
+      {
+        ::xercesc::DOMElement* r (
+          static_cast< ::xercesc::DOMElement* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMElement* > (&i), true)));
+        this->any ().push_back (r);
+        continue;
+      }
+
       break;
+    }
+
+    while (p.more_attributes ())
+    {
+      const ::xercesc::DOMAttr& i (p.next_attribute ());
+      const ::xsd::cxx::xml::qualified_name< char > n (
+        ::xsd::cxx::xml::dom::name< char > (i));
+
+      // any_attribute
+      //
+      if ((!n.namespace_ ().empty () &&
+           n.namespace_ () != "http://schemas.ggf.org/jsdl/2005/11/jsdl" &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xmlns_namespace< char > () &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xsi_namespace< char > ()))
+      {
+        ::xercesc::DOMAttr* r (
+          static_cast< ::xercesc::DOMAttr* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMAttr* > (&i), true)));
+        this->any_attribute ().insert (r);
+        continue;
+      }
     }
   }
 
@@ -3949,7 +5027,10 @@ namespace jsdl
   OperatingSystemType_Type::
   OperatingSystemType_Type (const OperatingSystemName_type& OperatingSystemName)
   : ::xml_schema::type (),
-    OperatingSystemName_ (OperatingSystemName, ::xml_schema::flags (), this)
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    OperatingSystemName_ (OperatingSystemName, ::xml_schema::flags (), this),
+    any_ (this->dom_document ()),
+    any_attribute_ (this->dom_document ())
   {
   }
 
@@ -3958,7 +5039,10 @@ namespace jsdl
                             ::xml_schema::flags f,
                             ::xml_schema::container* c)
   : ::xml_schema::type (x, f, c),
-    OperatingSystemName_ (x.OperatingSystemName_, f, this)
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    OperatingSystemName_ (x.OperatingSystemName_, f, this),
+    any_ (x.any_, this->dom_document ()),
+    any_attribute_ (x.any_attribute_, this->dom_document ())
   {
   }
 
@@ -3967,7 +5051,10 @@ namespace jsdl
                             ::xml_schema::flags f,
                             ::xml_schema::container* c)
   : ::xml_schema::type (e, f | ::xml_schema::flags::base, c),
-    OperatingSystemName_ (f, this)
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    OperatingSystemName_ (f, this),
+    any_ (this->dom_document ()),
+    any_attribute_ (this->dom_document ())
   {
     if ((f & ::xml_schema::flags::base) == 0)
     {
@@ -4000,6 +5087,18 @@ namespace jsdl
         }
       }
 
+      // any
+      //
+      if ((!n.namespace_ ().empty () && n.namespace_ () != "http://schemas.ggf.org/jsdl/2005/11/jsdl"))
+      {
+        ::xercesc::DOMElement* r (
+          static_cast< ::xercesc::DOMElement* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMElement* > (&i), true)));
+        this->any ().push_back (r);
+        continue;
+      }
+
       break;
     }
 
@@ -4008,6 +5107,28 @@ namespace jsdl
       throw ::xsd::cxx::tree::expected_element< char > (
         "OperatingSystemName",
         "http://schemas.ggf.org/jsdl/2005/11/jsdl");
+    }
+
+    while (p.more_attributes ())
+    {
+      const ::xercesc::DOMAttr& i (p.next_attribute ());
+      const ::xsd::cxx::xml::qualified_name< char > n (
+        ::xsd::cxx::xml::dom::name< char > (i));
+
+      // any_attribute
+      //
+      if ((!n.namespace_ ().empty () &&
+           n.namespace_ () != "http://schemas.ggf.org/jsdl/2005/11/jsdl" &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xmlns_namespace< char > () &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xsi_namespace< char > ()))
+      {
+        ::xercesc::DOMAttr* r (
+          static_cast< ::xercesc::DOMAttr* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMAttr* > (&i), true)));
+        this->any_attribute ().insert (r);
+        continue;
+      }
     }
   }
 
@@ -4030,13 +5151,16 @@ namespace jsdl
   DataStaging_Type (const FileName_type& FileName,
                     const CreationFlag_type& CreationFlag)
   : ::xml_schema::type (),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     FileName_ (FileName, ::xml_schema::flags (), this),
     FilesystemName_ (::xml_schema::flags (), this),
     CreationFlag_ (CreationFlag, ::xml_schema::flags (), this),
     DeleteOnTermination_ (::xml_schema::flags (), this),
     Source_ (::xml_schema::flags (), this),
     Target_ (::xml_schema::flags (), this),
-    name_ (::xml_schema::flags (), this)
+    any_ (this->dom_document ()),
+    name_ (::xml_schema::flags (), this),
+    any_attribute_ (this->dom_document ())
   {
   }
 
@@ -4045,13 +5169,16 @@ namespace jsdl
                     ::xml_schema::flags f,
                     ::xml_schema::container* c)
   : ::xml_schema::type (x, f, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     FileName_ (x.FileName_, f, this),
     FilesystemName_ (x.FilesystemName_, f, this),
     CreationFlag_ (x.CreationFlag_, f, this),
     DeleteOnTermination_ (x.DeleteOnTermination_, f, this),
     Source_ (x.Source_, f, this),
     Target_ (x.Target_, f, this),
-    name_ (x.name_, f, this)
+    any_ (x.any_, this->dom_document ()),
+    name_ (x.name_, f, this),
+    any_attribute_ (x.any_attribute_, this->dom_document ())
   {
   }
 
@@ -4060,13 +5187,16 @@ namespace jsdl
                     ::xml_schema::flags f,
                     ::xml_schema::container* c)
   : ::xml_schema::type (e, f | ::xml_schema::flags::base, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     FileName_ (f, this),
     FilesystemName_ (f, this),
     CreationFlag_ (f, this),
     DeleteOnTermination_ (f, this),
     Source_ (f, this),
     Target_ (f, this),
-    name_ (f, this)
+    any_ (this->dom_document ()),
+    name_ (f, this),
+    any_attribute_ (this->dom_document ())
   {
     if ((f & ::xml_schema::flags::base) == 0)
     {
@@ -4166,6 +5296,18 @@ namespace jsdl
         }
       }
 
+      // any
+      //
+      if ((!n.namespace_ ().empty () && n.namespace_ () != "http://schemas.ggf.org/jsdl/2005/11/jsdl"))
+      {
+        ::xercesc::DOMElement* r (
+          static_cast< ::xercesc::DOMElement* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMElement* > (&i), true)));
+        this->any ().push_back (r);
+        continue;
+      }
+
       break;
     }
 
@@ -4197,6 +5339,21 @@ namespace jsdl
         this->name (r);
         continue;
       }
+
+      // any_attribute
+      //
+      if ((!n.namespace_ ().empty () &&
+           n.namespace_ () != "http://schemas.ggf.org/jsdl/2005/11/jsdl" &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xmlns_namespace< char > () &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xsi_namespace< char > ()))
+      {
+        ::xercesc::DOMAttr* r (
+          static_cast< ::xercesc::DOMAttr* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMAttr* > (&i), true)));
+        this->any_attribute ().insert (r);
+        continue;
+      }
     }
   }
 
@@ -4218,7 +5375,10 @@ namespace jsdl
   SourceTarget_Type::
   SourceTarget_Type ()
   : ::xml_schema::type (),
-    URI_ (::xml_schema::flags (), this)
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    URI_ (::xml_schema::flags (), this),
+    any_ (this->dom_document ()),
+    any_attribute_ (this->dom_document ())
   {
   }
 
@@ -4227,7 +5387,10 @@ namespace jsdl
                      ::xml_schema::flags f,
                      ::xml_schema::container* c)
   : ::xml_schema::type (x, f, c),
-    URI_ (x.URI_, f, this)
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    URI_ (x.URI_, f, this),
+    any_ (x.any_, this->dom_document ()),
+    any_attribute_ (x.any_attribute_, this->dom_document ())
   {
   }
 
@@ -4236,7 +5399,10 @@ namespace jsdl
                      ::xml_schema::flags f,
                      ::xml_schema::container* c)
   : ::xml_schema::type (e, f | ::xml_schema::flags::base, c),
-    URI_ (f, this)
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    URI_ (f, this),
+    any_ (this->dom_document ()),
+    any_attribute_ (this->dom_document ())
   {
     if ((f & ::xml_schema::flags::base) == 0)
     {
@@ -4269,7 +5435,41 @@ namespace jsdl
         }
       }
 
+      // any
+      //
+      if ((!n.namespace_ ().empty () && n.namespace_ () != "http://schemas.ggf.org/jsdl/2005/11/jsdl"))
+      {
+        ::xercesc::DOMElement* r (
+          static_cast< ::xercesc::DOMElement* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMElement* > (&i), true)));
+        this->any ().push_back (r);
+        continue;
+      }
+
       break;
+    }
+
+    while (p.more_attributes ())
+    {
+      const ::xercesc::DOMAttr& i (p.next_attribute ());
+      const ::xsd::cxx::xml::qualified_name< char > n (
+        ::xsd::cxx::xml::dom::name< char > (i));
+
+      // any_attribute
+      //
+      if ((!n.namespace_ ().empty () &&
+           n.namespace_ () != "http://schemas.ggf.org/jsdl/2005/11/jsdl" &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xmlns_namespace< char > () &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xsi_namespace< char > ()))
+      {
+        ::xercesc::DOMAttr* r (
+          static_cast< ::xercesc::DOMAttr* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMAttr* > (&i), true)));
+        this->any_attribute ().insert (r);
+        continue;
+      }
     }
   }
 
@@ -16733,6 +17933,23 @@ namespace jsdl
   {
     e << static_cast< const ::xsd::cxx::tree::fundamental_base< ::xml_schema::double_, char, ::xml_schema::simple_type >& > (i);
 
+    // any_attribute
+    //
+    for (Boundary_Type::any_attribute_const_iterator
+         b (i.any_attribute ().begin ()), n (i.any_attribute ().end ());
+         b != n; ++b)
+    {
+      ::xercesc::DOMAttr* a (
+        static_cast< ::xercesc::DOMAttr* > (
+          e.getOwnerDocument ()->importNode (
+            const_cast< ::xercesc::DOMAttr* > (&(*b)), true)));
+
+      if (a->getLocalName () == 0)
+        e.setAttributeNode (a);
+      else
+        e.setAttributeNodeNS (a);
+    }
+
     // exclusiveBound
     //
     if (i.exclusiveBound ())
@@ -16751,6 +17968,23 @@ namespace jsdl
   {
     e << static_cast< const ::xsd::cxx::tree::fundamental_base< ::xml_schema::double_, char, ::xml_schema::simple_type >& > (i);
 
+    // any_attribute
+    //
+    for (Exact_Type::any_attribute_const_iterator
+         b (i.any_attribute ().begin ()), n (i.any_attribute ().end ());
+         b != n; ++b)
+    {
+      ::xercesc::DOMAttr* a (
+        static_cast< ::xercesc::DOMAttr* > (
+          e.getOwnerDocument ()->importNode (
+            const_cast< ::xercesc::DOMAttr* > (&(*b)), true)));
+
+      if (a->getLocalName () == 0)
+        e.setAttributeNode (a);
+      else
+        e.setAttributeNodeNS (a);
+    }
+
     // epsilon
     //
     if (i.epsilon ())
@@ -16768,6 +18002,23 @@ namespace jsdl
   operator<< (::xercesc::DOMElement& e, const Range_Type& i)
   {
     e << static_cast< const ::xml_schema::type& > (i);
+
+    // any_attribute
+    //
+    for (Range_Type::any_attribute_const_iterator
+         b (i.any_attribute ().begin ()), n (i.any_attribute ().end ());
+         b != n; ++b)
+    {
+      ::xercesc::DOMAttr* a (
+        static_cast< ::xercesc::DOMAttr* > (
+          e.getOwnerDocument ()->importNode (
+            const_cast< ::xercesc::DOMAttr* > (&(*b)), true)));
+
+      if (a->getLocalName () == 0)
+        e.setAttributeNode (a);
+      else
+        e.setAttributeNodeNS (a);
+    }
 
     // LowerBound
     //
@@ -16798,6 +18049,23 @@ namespace jsdl
   operator<< (::xercesc::DOMElement& e, const RangeValue_Type& i)
   {
     e << static_cast< const ::xml_schema::type& > (i);
+
+    // any_attribute
+    //
+    for (RangeValue_Type::any_attribute_const_iterator
+         b (i.any_attribute ().begin ()), n (i.any_attribute ().end ());
+         b != n; ++b)
+    {
+      ::xercesc::DOMAttr* a (
+        static_cast< ::xercesc::DOMAttr* > (
+          e.getOwnerDocument ()->importNode (
+            const_cast< ::xercesc::DOMAttr* > (&(*b)), true)));
+
+      if (a->getLocalName () == 0)
+        e.setAttributeNode (a);
+      else
+        e.setAttributeNodeNS (a);
+    }
 
     // UpperBoundedRange
     //
@@ -16861,6 +18129,23 @@ namespace jsdl
   {
     e << static_cast< const ::xml_schema::type& > (i);
 
+    // any_attribute
+    //
+    for (JobDefinition_Type::any_attribute_const_iterator
+         b (i.any_attribute ().begin ()), n (i.any_attribute ().end ());
+         b != n; ++b)
+    {
+      ::xercesc::DOMAttr* a (
+        static_cast< ::xercesc::DOMAttr* > (
+          e.getOwnerDocument ()->importNode (
+            const_cast< ::xercesc::DOMAttr* > (&(*b)), true)));
+
+      if (a->getLocalName () == 0)
+        e.setAttributeNode (a);
+      else
+        e.setAttributeNodeNS (a);
+    }
+
     // JobDescription
     //
     {
@@ -16871,6 +18156,17 @@ namespace jsdl
           e));
 
       s << i.JobDescription ();
+    }
+
+    // any
+    //
+    for (JobDefinition_Type::any_const_iterator
+         b (i.any ().begin ()), n (i.any ().end ());
+         b != n; ++b)
+    {
+      e.appendChild (
+        e.getOwnerDocument ()->importNode (
+          const_cast< ::xercesc::DOMElement* > (&(*b)), true));
     }
 
     // id
@@ -16890,6 +18186,23 @@ namespace jsdl
   operator<< (::xercesc::DOMElement& e, const JobDescription_Type& i)
   {
     e << static_cast< const ::xml_schema::type& > (i);
+
+    // any_attribute
+    //
+    for (JobDescription_Type::any_attribute_const_iterator
+         b (i.any_attribute ().begin ()), n (i.any_attribute ().end ());
+         b != n; ++b)
+    {
+      ::xercesc::DOMAttr* a (
+        static_cast< ::xercesc::DOMAttr* > (
+          e.getOwnerDocument ()->importNode (
+            const_cast< ::xercesc::DOMAttr* > (&(*b)), true)));
+
+      if (a->getLocalName () == 0)
+        e.setAttributeNode (a);
+      else
+        e.setAttributeNodeNS (a);
+    }
 
     // JobIdentification
     //
@@ -16944,12 +18257,40 @@ namespace jsdl
 
       s << *b;
     }
+
+    // any
+    //
+    for (JobDescription_Type::any_const_iterator
+         b (i.any ().begin ()), n (i.any ().end ());
+         b != n; ++b)
+    {
+      e.appendChild (
+        e.getOwnerDocument ()->importNode (
+          const_cast< ::xercesc::DOMElement* > (&(*b)), true));
+    }
   }
 
   void
   operator<< (::xercesc::DOMElement& e, const JobIdentification_Type& i)
   {
     e << static_cast< const ::xml_schema::type& > (i);
+
+    // any_attribute
+    //
+    for (JobIdentification_Type::any_attribute_const_iterator
+         b (i.any_attribute ().begin ()), n (i.any_attribute ().end ());
+         b != n; ++b)
+    {
+      ::xercesc::DOMAttr* a (
+        static_cast< ::xercesc::DOMAttr* > (
+          e.getOwnerDocument ()->importNode (
+            const_cast< ::xercesc::DOMAttr* > (&(*b)), true)));
+
+      if (a->getLocalName () == 0)
+        e.setAttributeNode (a);
+      else
+        e.setAttributeNodeNS (a);
+    }
 
     // JobName
     //
@@ -17006,12 +18347,40 @@ namespace jsdl
 
       s << *b;
     }
+
+    // any
+    //
+    for (JobIdentification_Type::any_const_iterator
+         b (i.any ().begin ()), n (i.any ().end ());
+         b != n; ++b)
+    {
+      e.appendChild (
+        e.getOwnerDocument ()->importNode (
+          const_cast< ::xercesc::DOMElement* > (&(*b)), true));
+    }
   }
 
   void
   operator<< (::xercesc::DOMElement& e, const Application_Type& i)
   {
     e << static_cast< const ::xml_schema::type& > (i);
+
+    // any_attribute
+    //
+    for (Application_Type::any_attribute_const_iterator
+         b (i.any_attribute ().begin ()), n (i.any_attribute ().end ());
+         b != n; ++b)
+    {
+      ::xercesc::DOMAttr* a (
+        static_cast< ::xercesc::DOMAttr* > (
+          e.getOwnerDocument ()->importNode (
+            const_cast< ::xercesc::DOMAttr* > (&(*b)), true)));
+
+      if (a->getLocalName () == 0)
+        e.setAttributeNode (a);
+      else
+        e.setAttributeNodeNS (a);
+    }
 
     // ApplicationName
     //
@@ -17051,12 +18420,40 @@ namespace jsdl
 
       s << *i.Description ();
     }
+
+    // any
+    //
+    for (Application_Type::any_const_iterator
+         b (i.any ().begin ()), n (i.any ().end ());
+         b != n; ++b)
+    {
+      e.appendChild (
+        e.getOwnerDocument ()->importNode (
+          const_cast< ::xercesc::DOMElement* > (&(*b)), true));
+    }
   }
 
   void
   operator<< (::xercesc::DOMElement& e, const Resources_Type& i)
   {
     e << static_cast< const ::xml_schema::type& > (i);
+
+    // any_attribute
+    //
+    for (Resources_Type::any_attribute_const_iterator
+         b (i.any_attribute ().begin ()), n (i.any_attribute ().end ());
+         b != n; ++b)
+    {
+      ::xercesc::DOMAttr* a (
+        static_cast< ::xercesc::DOMAttr* > (
+          e.getOwnerDocument ()->importNode (
+            const_cast< ::xercesc::DOMAttr* > (&(*b)), true)));
+
+      if (a->getLocalName () == 0)
+        e.setAttributeNode (a);
+      else
+        e.setAttributeNodeNS (a);
+    }
 
     // CandidateHosts
     //
@@ -17293,6 +18690,17 @@ namespace jsdl
 
       s << *i.TotalResourceCount ();
     }
+
+    // any
+    //
+    for (Resources_Type::any_const_iterator
+         b (i.any ().begin ()), n (i.any ().end ());
+         b != n; ++b)
+    {
+      e.appendChild (
+        e.getOwnerDocument ()->importNode (
+          const_cast< ::xercesc::DOMElement* > (&(*b)), true));
+    }
   }
 
   void
@@ -17321,6 +18729,23 @@ namespace jsdl
   {
     e << static_cast< const ::xml_schema::type& > (i);
 
+    // any_attribute
+    //
+    for (CPUArchitecture_Type::any_attribute_const_iterator
+         b (i.any_attribute ().begin ()), n (i.any_attribute ().end ());
+         b != n; ++b)
+    {
+      ::xercesc::DOMAttr* a (
+        static_cast< ::xercesc::DOMAttr* > (
+          e.getOwnerDocument ()->importNode (
+            const_cast< ::xercesc::DOMAttr* > (&(*b)), true)));
+
+      if (a->getLocalName () == 0)
+        e.setAttributeNode (a);
+      else
+        e.setAttributeNodeNS (a);
+    }
+
     // CPUArchitectureName
     //
     {
@@ -17332,12 +18757,40 @@ namespace jsdl
 
       s << i.CPUArchitectureName ();
     }
+
+    // any
+    //
+    for (CPUArchitecture_Type::any_const_iterator
+         b (i.any ().begin ()), n (i.any ().end ());
+         b != n; ++b)
+    {
+      e.appendChild (
+        e.getOwnerDocument ()->importNode (
+          const_cast< ::xercesc::DOMElement* > (&(*b)), true));
+    }
   }
 
   void
   operator<< (::xercesc::DOMElement& e, const FileSystem_Type& i)
   {
     e << static_cast< const ::xml_schema::type& > (i);
+
+    // any_attribute
+    //
+    for (FileSystem_Type::any_attribute_const_iterator
+         b (i.any_attribute ().begin ()), n (i.any_attribute ().end ());
+         b != n; ++b)
+    {
+      ::xercesc::DOMAttr* a (
+        static_cast< ::xercesc::DOMAttr* > (
+          e.getOwnerDocument ()->importNode (
+            const_cast< ::xercesc::DOMAttr* > (&(*b)), true)));
+
+      if (a->getLocalName () == 0)
+        e.setAttributeNode (a);
+      else
+        e.setAttributeNodeNS (a);
+    }
 
     // FileSystemType
     //
@@ -17391,6 +18844,17 @@ namespace jsdl
       s << *i.DiskSpace ();
     }
 
+    // any
+    //
+    for (FileSystem_Type::any_const_iterator
+         b (i.any ().begin ()), n (i.any ().end ());
+         b != n; ++b)
+    {
+      e.appendChild (
+        e.getOwnerDocument ()->importNode (
+          const_cast< ::xercesc::DOMElement* > (&(*b)), true));
+    }
+
     // name
     //
     {
@@ -17407,6 +18871,23 @@ namespace jsdl
   operator<< (::xercesc::DOMElement& e, const OperatingSystem_Type& i)
   {
     e << static_cast< const ::xml_schema::type& > (i);
+
+    // any_attribute
+    //
+    for (OperatingSystem_Type::any_attribute_const_iterator
+         b (i.any_attribute ().begin ()), n (i.any_attribute ().end ());
+         b != n; ++b)
+    {
+      ::xercesc::DOMAttr* a (
+        static_cast< ::xercesc::DOMAttr* > (
+          e.getOwnerDocument ()->importNode (
+            const_cast< ::xercesc::DOMAttr* > (&(*b)), true)));
+
+      if (a->getLocalName () == 0)
+        e.setAttributeNode (a);
+      else
+        e.setAttributeNodeNS (a);
+    }
 
     // OperatingSystemType
     //
@@ -17446,12 +18927,40 @@ namespace jsdl
 
       s << *i.Description ();
     }
+
+    // any
+    //
+    for (OperatingSystem_Type::any_const_iterator
+         b (i.any ().begin ()), n (i.any ().end ());
+         b != n; ++b)
+    {
+      e.appendChild (
+        e.getOwnerDocument ()->importNode (
+          const_cast< ::xercesc::DOMElement* > (&(*b)), true));
+    }
   }
 
   void
   operator<< (::xercesc::DOMElement& e, const OperatingSystemType_Type& i)
   {
     e << static_cast< const ::xml_schema::type& > (i);
+
+    // any_attribute
+    //
+    for (OperatingSystemType_Type::any_attribute_const_iterator
+         b (i.any_attribute ().begin ()), n (i.any_attribute ().end ());
+         b != n; ++b)
+    {
+      ::xercesc::DOMAttr* a (
+        static_cast< ::xercesc::DOMAttr* > (
+          e.getOwnerDocument ()->importNode (
+            const_cast< ::xercesc::DOMAttr* > (&(*b)), true)));
+
+      if (a->getLocalName () == 0)
+        e.setAttributeNode (a);
+      else
+        e.setAttributeNodeNS (a);
+    }
 
     // OperatingSystemName
     //
@@ -17464,12 +18973,40 @@ namespace jsdl
 
       s << i.OperatingSystemName ();
     }
+
+    // any
+    //
+    for (OperatingSystemType_Type::any_const_iterator
+         b (i.any ().begin ()), n (i.any ().end ());
+         b != n; ++b)
+    {
+      e.appendChild (
+        e.getOwnerDocument ()->importNode (
+          const_cast< ::xercesc::DOMElement* > (&(*b)), true));
+    }
   }
 
   void
   operator<< (::xercesc::DOMElement& e, const DataStaging_Type& i)
   {
     e << static_cast< const ::xml_schema::type& > (i);
+
+    // any_attribute
+    //
+    for (DataStaging_Type::any_attribute_const_iterator
+         b (i.any_attribute ().begin ()), n (i.any_attribute ().end ());
+         b != n; ++b)
+    {
+      ::xercesc::DOMAttr* a (
+        static_cast< ::xercesc::DOMAttr* > (
+          e.getOwnerDocument ()->importNode (
+            const_cast< ::xercesc::DOMAttr* > (&(*b)), true)));
+
+      if (a->getLocalName () == 0)
+        e.setAttributeNode (a);
+      else
+        e.setAttributeNodeNS (a);
+    }
 
     // FileName
     //
@@ -17547,6 +19084,17 @@ namespace jsdl
       s << *i.Target ();
     }
 
+    // any
+    //
+    for (DataStaging_Type::any_const_iterator
+         b (i.any ().begin ()), n (i.any ().end ());
+         b != n; ++b)
+    {
+      e.appendChild (
+        e.getOwnerDocument ()->importNode (
+          const_cast< ::xercesc::DOMElement* > (&(*b)), true));
+    }
+
     // name
     //
     if (i.name ())
@@ -17565,6 +19113,23 @@ namespace jsdl
   {
     e << static_cast< const ::xml_schema::type& > (i);
 
+    // any_attribute
+    //
+    for (SourceTarget_Type::any_attribute_const_iterator
+         b (i.any_attribute ().begin ()), n (i.any_attribute ().end ());
+         b != n; ++b)
+    {
+      ::xercesc::DOMAttr* a (
+        static_cast< ::xercesc::DOMAttr* > (
+          e.getOwnerDocument ()->importNode (
+            const_cast< ::xercesc::DOMAttr* > (&(*b)), true)));
+
+      if (a->getLocalName () == 0)
+        e.setAttributeNode (a);
+      else
+        e.setAttributeNodeNS (a);
+    }
+
     // URI
     //
     if (i.URI ())
@@ -17576,6 +19141,17 @@ namespace jsdl
           e));
 
       s << *i.URI ();
+    }
+
+    // any
+    //
+    for (SourceTarget_Type::any_const_iterator
+         b (i.any ().begin ()), n (i.any ().end ());
+         b != n; ++b)
+    {
+      e.appendChild (
+        e.getOwnerDocument ()->importNode (
+          const_cast< ::xercesc::DOMElement* > (&(*b)), true));
     }
   }
 

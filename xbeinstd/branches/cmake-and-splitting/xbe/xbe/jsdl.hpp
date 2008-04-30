@@ -280,6 +280,8 @@ namespace jsdl
 
 #include <xsd/cxx/xml/dom/parsing-header.hxx>
 
+#include <xsd/cxx/tree/containers-wildcard.hxx>
+
 namespace jsdl
 {
   class ProcessorArchitectureEnumeration: public ::xml_schema::string
@@ -643,6 +645,29 @@ namespace jsdl
     void
     exclusiveBound (const exclusiveBound_optional& x);
 
+    // any_attribute
+    // 
+    typedef ::xsd::cxx::tree::attribute_set< char > any_attribute_set;
+    typedef any_attribute_set::iterator any_attribute_iterator;
+    typedef any_attribute_set::const_iterator any_attribute_const_iterator;
+
+    const any_attribute_set&
+    any_attribute () const;
+
+    any_attribute_set&
+    any_attribute ();
+
+    void
+    any_attribute (const any_attribute_set& s);
+
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
+
     // Constructors.
     //
     Boundary_Type (const ::xml_schema::double_&);
@@ -670,7 +695,10 @@ namespace jsdl
            ::xml_schema::flags);
 
     protected:
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
     exclusiveBound_optional exclusiveBound_;
+    any_attribute_set any_attribute_;
   };
 
   class Exact_Type: public ::xsd::cxx::tree::fundamental_base< ::xml_schema::double_, char, ::xml_schema::simple_type >
@@ -693,6 +721,29 @@ namespace jsdl
 
     void
     epsilon (const epsilon_optional& x);
+
+    // any_attribute
+    // 
+    typedef ::xsd::cxx::tree::attribute_set< char > any_attribute_set;
+    typedef any_attribute_set::iterator any_attribute_iterator;
+    typedef any_attribute_set::const_iterator any_attribute_const_iterator;
+
+    const any_attribute_set&
+    any_attribute () const;
+
+    any_attribute_set&
+    any_attribute ();
+
+    void
+    any_attribute (const any_attribute_set& s);
+
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
 
     // Constructors.
     //
@@ -721,7 +772,10 @@ namespace jsdl
            ::xml_schema::flags);
 
     protected:
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
     epsilon_optional epsilon_;
+    any_attribute_set any_attribute_;
   };
 
   class Range_Type: public ::xml_schema::type
@@ -761,6 +815,29 @@ namespace jsdl
     void
     UpperBound (::std::auto_ptr< UpperBound_type > p);
 
+    // any_attribute
+    // 
+    typedef ::xsd::cxx::tree::attribute_set< char > any_attribute_set;
+    typedef any_attribute_set::iterator any_attribute_iterator;
+    typedef any_attribute_set::const_iterator any_attribute_const_iterator;
+
+    const any_attribute_set&
+    any_attribute () const;
+
+    any_attribute_set&
+    any_attribute ();
+
+    void
+    any_attribute (const any_attribute_set& s);
+
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
+
     // Constructors.
     //
     Range_Type (const LowerBound_type&,
@@ -789,8 +866,11 @@ namespace jsdl
            ::xml_schema::flags);
 
     protected:
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
     ::xsd::cxx::tree::one< LowerBound_type > LowerBound_;
     ::xsd::cxx::tree::one< UpperBound_type > UpperBound_;
+    any_attribute_set any_attribute_;
   };
 
   class RangeValue_Type: public ::xml_schema::type
@@ -872,6 +952,29 @@ namespace jsdl
     void
     Range (const Range_sequence& s);
 
+    // any_attribute
+    // 
+    typedef ::xsd::cxx::tree::attribute_set< char > any_attribute_set;
+    typedef any_attribute_set::iterator any_attribute_iterator;
+    typedef any_attribute_set::const_iterator any_attribute_const_iterator;
+
+    const any_attribute_set&
+    any_attribute () const;
+
+    any_attribute_set&
+    any_attribute ();
+
+    void
+    any_attribute (const any_attribute_set& s);
+
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
+
     // Constructors.
     //
     RangeValue_Type ();
@@ -899,10 +1002,13 @@ namespace jsdl
            ::xml_schema::flags);
 
     protected:
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
     UpperBoundedRange_optional UpperBoundedRange_;
     LowerBoundedRange_optional LowerBoundedRange_;
     Exact_sequence Exact_;
     Range_sequence Range_;
+    any_attribute_set any_attribute_;
   };
 
   class JobDefinition_Type: public ::xml_schema::type
@@ -925,6 +1031,21 @@ namespace jsdl
     void
     JobDescription (::std::auto_ptr< JobDescription_type > p);
 
+    // any
+    // 
+    typedef ::xsd::cxx::tree::element_sequence any_sequence;
+    typedef any_sequence::iterator any_iterator;
+    typedef any_sequence::const_iterator any_const_iterator;
+
+    const any_sequence&
+    any () const;
+
+    any_sequence&
+    any ();
+
+    void
+    any (const any_sequence& s);
+
     // id
     // 
     typedef ::xml_schema::id id_type;
@@ -945,6 +1066,29 @@ namespace jsdl
 
     void
     id (::std::auto_ptr< id_type > p);
+
+    // any_attribute
+    // 
+    typedef ::xsd::cxx::tree::attribute_set< char > any_attribute_set;
+    typedef any_attribute_set::iterator any_attribute_iterator;
+    typedef any_attribute_set::const_iterator any_attribute_const_iterator;
+
+    const any_attribute_set&
+    any_attribute () const;
+
+    any_attribute_set&
+    any_attribute ();
+
+    void
+    any_attribute (const any_attribute_set& s);
+
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
 
     // Constructors.
     //
@@ -973,8 +1117,12 @@ namespace jsdl
            ::xml_schema::flags);
 
     protected:
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
     ::xsd::cxx::tree::one< JobDescription_type > JobDescription_;
+    any_sequence any_;
     id_optional id_;
+    any_attribute_set any_attribute_;
   };
 
   class JobDescription_Type: public ::xml_schema::type
@@ -1060,6 +1208,44 @@ namespace jsdl
     void
     DataStaging (const DataStaging_sequence& s);
 
+    // any
+    // 
+    typedef ::xsd::cxx::tree::element_sequence any_sequence;
+    typedef any_sequence::iterator any_iterator;
+    typedef any_sequence::const_iterator any_const_iterator;
+
+    const any_sequence&
+    any () const;
+
+    any_sequence&
+    any ();
+
+    void
+    any (const any_sequence& s);
+
+    // any_attribute
+    // 
+    typedef ::xsd::cxx::tree::attribute_set< char > any_attribute_set;
+    typedef any_attribute_set::iterator any_attribute_iterator;
+    typedef any_attribute_set::const_iterator any_attribute_const_iterator;
+
+    const any_attribute_set&
+    any_attribute () const;
+
+    any_attribute_set&
+    any_attribute ();
+
+    void
+    any_attribute (const any_attribute_set& s);
+
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
+
     // Constructors.
     //
     JobDescription_Type ();
@@ -1087,10 +1273,14 @@ namespace jsdl
            ::xml_schema::flags);
 
     protected:
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
     JobIdentification_optional JobIdentification_;
     Application_optional Application_;
     Resources_optional Resources_;
     DataStaging_sequence DataStaging_;
+    any_sequence any_;
+    any_attribute_set any_attribute_;
   };
 
   class JobIdentification_Type: public ::xml_schema::type
@@ -1172,6 +1362,44 @@ namespace jsdl
     void
     JobProject (const JobProject_sequence& s);
 
+    // any
+    // 
+    typedef ::xsd::cxx::tree::element_sequence any_sequence;
+    typedef any_sequence::iterator any_iterator;
+    typedef any_sequence::const_iterator any_const_iterator;
+
+    const any_sequence&
+    any () const;
+
+    any_sequence&
+    any ();
+
+    void
+    any (const any_sequence& s);
+
+    // any_attribute
+    // 
+    typedef ::xsd::cxx::tree::attribute_set< char > any_attribute_set;
+    typedef any_attribute_set::iterator any_attribute_iterator;
+    typedef any_attribute_set::const_iterator any_attribute_const_iterator;
+
+    const any_attribute_set&
+    any_attribute () const;
+
+    any_attribute_set&
+    any_attribute ();
+
+    void
+    any_attribute (const any_attribute_set& s);
+
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
+
     // Constructors.
     //
     JobIdentification_Type ();
@@ -1199,10 +1427,14 @@ namespace jsdl
            ::xml_schema::flags);
 
     protected:
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
     JobName_optional JobName_;
     Description_optional Description_;
     JobAnnotation_sequence JobAnnotation_;
     JobProject_sequence JobProject_;
+    any_sequence any_;
+    any_attribute_set any_attribute_;
   };
 
   class Application_Type: public ::xml_schema::type
@@ -1271,6 +1503,44 @@ namespace jsdl
     void
     Description (::std::auto_ptr< Description_type > p);
 
+    // any
+    // 
+    typedef ::xsd::cxx::tree::element_sequence any_sequence;
+    typedef any_sequence::iterator any_iterator;
+    typedef any_sequence::const_iterator any_const_iterator;
+
+    const any_sequence&
+    any () const;
+
+    any_sequence&
+    any ();
+
+    void
+    any (const any_sequence& s);
+
+    // any_attribute
+    // 
+    typedef ::xsd::cxx::tree::attribute_set< char > any_attribute_set;
+    typedef any_attribute_set::iterator any_attribute_iterator;
+    typedef any_attribute_set::const_iterator any_attribute_const_iterator;
+
+    const any_attribute_set&
+    any_attribute () const;
+
+    any_attribute_set&
+    any_attribute ();
+
+    void
+    any_attribute (const any_attribute_set& s);
+
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
+
     // Constructors.
     //
     Application_Type ();
@@ -1298,9 +1568,13 @@ namespace jsdl
            ::xml_schema::flags);
 
     protected:
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
     ApplicationName_optional ApplicationName_;
     ApplicationVersion_optional ApplicationVersion_;
     Description_optional Description_;
+    any_sequence any_;
+    any_attribute_set any_attribute_;
   };
 
   class Resources_Type: public ::xml_schema::type
@@ -1677,6 +1951,44 @@ namespace jsdl
     void
     TotalResourceCount (::std::auto_ptr< TotalResourceCount_type > p);
 
+    // any
+    // 
+    typedef ::xsd::cxx::tree::element_sequence any_sequence;
+    typedef any_sequence::iterator any_iterator;
+    typedef any_sequence::const_iterator any_const_iterator;
+
+    const any_sequence&
+    any () const;
+
+    any_sequence&
+    any ();
+
+    void
+    any (const any_sequence& s);
+
+    // any_attribute
+    // 
+    typedef ::xsd::cxx::tree::attribute_set< char > any_attribute_set;
+    typedef any_attribute_set::iterator any_attribute_iterator;
+    typedef any_attribute_set::const_iterator any_attribute_const_iterator;
+
+    const any_attribute_set&
+    any_attribute () const;
+
+    any_attribute_set&
+    any_attribute ();
+
+    void
+    any_attribute (const any_attribute_set& s);
+
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
+
     // Constructors.
     //
     Resources_Type ();
@@ -1704,6 +2016,8 @@ namespace jsdl
            ::xml_schema::flags);
 
     protected:
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
     CandidateHosts_optional CandidateHosts_;
     FileSystem_sequence FileSystem_;
     ExclusiveExecution_optional ExclusiveExecution_;
@@ -1722,6 +2036,8 @@ namespace jsdl
     TotalVirtualMemory_optional TotalVirtualMemory_;
     TotalDiskSpace_optional TotalDiskSpace_;
     TotalResourceCount_optional TotalResourceCount_;
+    any_sequence any_;
+    any_attribute_set any_attribute_;
   };
 
   class CandidateHosts_Type: public ::xml_schema::type
@@ -1794,6 +2110,44 @@ namespace jsdl
     void
     CPUArchitectureName (::std::auto_ptr< CPUArchitectureName_type > p);
 
+    // any
+    // 
+    typedef ::xsd::cxx::tree::element_sequence any_sequence;
+    typedef any_sequence::iterator any_iterator;
+    typedef any_sequence::const_iterator any_const_iterator;
+
+    const any_sequence&
+    any () const;
+
+    any_sequence&
+    any ();
+
+    void
+    any (const any_sequence& s);
+
+    // any_attribute
+    // 
+    typedef ::xsd::cxx::tree::attribute_set< char > any_attribute_set;
+    typedef any_attribute_set::iterator any_attribute_iterator;
+    typedef any_attribute_set::const_iterator any_attribute_const_iterator;
+
+    const any_attribute_set&
+    any_attribute () const;
+
+    any_attribute_set&
+    any_attribute ();
+
+    void
+    any_attribute (const any_attribute_set& s);
+
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
+
     // Constructors.
     //
     CPUArchitecture_Type (const CPUArchitectureName_type&);
@@ -1821,7 +2175,11 @@ namespace jsdl
            ::xml_schema::flags);
 
     protected:
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
     ::xsd::cxx::tree::one< CPUArchitectureName_type > CPUArchitectureName_;
+    any_sequence any_;
+    any_attribute_set any_attribute_;
   };
 
   class FileSystem_Type: public ::xml_schema::type
@@ -1911,6 +2269,21 @@ namespace jsdl
     void
     DiskSpace (::std::auto_ptr< DiskSpace_type > p);
 
+    // any
+    // 
+    typedef ::xsd::cxx::tree::element_sequence any_sequence;
+    typedef any_sequence::iterator any_iterator;
+    typedef any_sequence::const_iterator any_const_iterator;
+
+    const any_sequence&
+    any () const;
+
+    any_sequence&
+    any ();
+
+    void
+    any (const any_sequence& s);
+
     // name
     // 
     typedef ::xml_schema::ncname name_type;
@@ -1927,6 +2300,29 @@ namespace jsdl
 
     void
     name (::std::auto_ptr< name_type > p);
+
+    // any_attribute
+    // 
+    typedef ::xsd::cxx::tree::attribute_set< char > any_attribute_set;
+    typedef any_attribute_set::iterator any_attribute_iterator;
+    typedef any_attribute_set::const_iterator any_attribute_const_iterator;
+
+    const any_attribute_set&
+    any_attribute () const;
+
+    any_attribute_set&
+    any_attribute ();
+
+    void
+    any_attribute (const any_attribute_set& s);
+
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
 
     // Constructors.
     //
@@ -1955,11 +2351,15 @@ namespace jsdl
            ::xml_schema::flags);
 
     protected:
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
     FileSystemType_optional FileSystemType_;
     Description_optional Description_;
     MountPoint_optional MountPoint_;
     DiskSpace_optional DiskSpace_;
+    any_sequence any_;
     ::xsd::cxx::tree::one< name_type > name_;
+    any_attribute_set any_attribute_;
   };
 
   class OperatingSystem_Type: public ::xml_schema::type
@@ -2028,6 +2428,44 @@ namespace jsdl
     void
     Description (::std::auto_ptr< Description_type > p);
 
+    // any
+    // 
+    typedef ::xsd::cxx::tree::element_sequence any_sequence;
+    typedef any_sequence::iterator any_iterator;
+    typedef any_sequence::const_iterator any_const_iterator;
+
+    const any_sequence&
+    any () const;
+
+    any_sequence&
+    any ();
+
+    void
+    any (const any_sequence& s);
+
+    // any_attribute
+    // 
+    typedef ::xsd::cxx::tree::attribute_set< char > any_attribute_set;
+    typedef any_attribute_set::iterator any_attribute_iterator;
+    typedef any_attribute_set::const_iterator any_attribute_const_iterator;
+
+    const any_attribute_set&
+    any_attribute () const;
+
+    any_attribute_set&
+    any_attribute ();
+
+    void
+    any_attribute (const any_attribute_set& s);
+
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
+
     // Constructors.
     //
     OperatingSystem_Type ();
@@ -2055,9 +2493,13 @@ namespace jsdl
            ::xml_schema::flags);
 
     protected:
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
     OperatingSystemType_optional OperatingSystemType_;
     OperatingSystemVersion_optional OperatingSystemVersion_;
     Description_optional Description_;
+    any_sequence any_;
+    any_attribute_set any_attribute_;
   };
 
   class OperatingSystemType_Type: public ::xml_schema::type
@@ -2079,6 +2521,44 @@ namespace jsdl
 
     void
     OperatingSystemName (::std::auto_ptr< OperatingSystemName_type > p);
+
+    // any
+    // 
+    typedef ::xsd::cxx::tree::element_sequence any_sequence;
+    typedef any_sequence::iterator any_iterator;
+    typedef any_sequence::const_iterator any_const_iterator;
+
+    const any_sequence&
+    any () const;
+
+    any_sequence&
+    any ();
+
+    void
+    any (const any_sequence& s);
+
+    // any_attribute
+    // 
+    typedef ::xsd::cxx::tree::attribute_set< char > any_attribute_set;
+    typedef any_attribute_set::iterator any_attribute_iterator;
+    typedef any_attribute_set::const_iterator any_attribute_const_iterator;
+
+    const any_attribute_set&
+    any_attribute () const;
+
+    any_attribute_set&
+    any_attribute ();
+
+    void
+    any_attribute (const any_attribute_set& s);
+
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
 
     // Constructors.
     //
@@ -2107,7 +2587,11 @@ namespace jsdl
            ::xml_schema::flags);
 
     protected:
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
     ::xsd::cxx::tree::one< OperatingSystemName_type > OperatingSystemName_;
+    any_sequence any_;
+    any_attribute_set any_attribute_;
   };
 
   class DataStaging_Type: public ::xml_schema::type
@@ -2228,6 +2712,21 @@ namespace jsdl
     void
     Target (::std::auto_ptr< Target_type > p);
 
+    // any
+    // 
+    typedef ::xsd::cxx::tree::element_sequence any_sequence;
+    typedef any_sequence::iterator any_iterator;
+    typedef any_sequence::const_iterator any_const_iterator;
+
+    const any_sequence&
+    any () const;
+
+    any_sequence&
+    any ();
+
+    void
+    any (const any_sequence& s);
+
     // name
     // 
     typedef ::xml_schema::ncname name_type;
@@ -2248,6 +2747,29 @@ namespace jsdl
 
     void
     name (::std::auto_ptr< name_type > p);
+
+    // any_attribute
+    // 
+    typedef ::xsd::cxx::tree::attribute_set< char > any_attribute_set;
+    typedef any_attribute_set::iterator any_attribute_iterator;
+    typedef any_attribute_set::const_iterator any_attribute_const_iterator;
+
+    const any_attribute_set&
+    any_attribute () const;
+
+    any_attribute_set&
+    any_attribute ();
+
+    void
+    any_attribute (const any_attribute_set& s);
+
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
 
     // Constructors.
     //
@@ -2277,13 +2799,17 @@ namespace jsdl
            ::xml_schema::flags);
 
     protected:
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
     ::xsd::cxx::tree::one< FileName_type > FileName_;
     FilesystemName_optional FilesystemName_;
     ::xsd::cxx::tree::one< CreationFlag_type > CreationFlag_;
     DeleteOnTermination_optional DeleteOnTermination_;
     Source_optional Source_;
     Target_optional Target_;
+    any_sequence any_;
     name_optional name_;
+    any_attribute_set any_attribute_;
   };
 
   class SourceTarget_Type: public ::xml_schema::type
@@ -2309,6 +2835,44 @@ namespace jsdl
 
     void
     URI (::std::auto_ptr< URI_type > p);
+
+    // any
+    // 
+    typedef ::xsd::cxx::tree::element_sequence any_sequence;
+    typedef any_sequence::iterator any_iterator;
+    typedef any_sequence::const_iterator any_const_iterator;
+
+    const any_sequence&
+    any () const;
+
+    any_sequence&
+    any ();
+
+    void
+    any (const any_sequence& s);
+
+    // any_attribute
+    // 
+    typedef ::xsd::cxx::tree::attribute_set< char > any_attribute_set;
+    typedef any_attribute_set::iterator any_attribute_iterator;
+    typedef any_attribute_set::const_iterator any_attribute_const_iterator;
+
+    const any_attribute_set&
+    any_attribute () const;
+
+    any_attribute_set&
+    any_attribute ();
+
+    void
+    any_attribute (const any_attribute_set& s);
+
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
 
     // Constructors.
     //
@@ -2337,7 +2901,11 @@ namespace jsdl
            ::xml_schema::flags);
 
     protected:
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
     URI_optional URI_;
+    any_sequence any_;
+    any_attribute_set any_attribute_;
   };
 }
 

@@ -5,18 +5,19 @@
 #include <xbe/xbe-msg.hpp>
 
 namespace xbe {
-  class XbeLibUtils {
-  public:
-    ~XbeLibUtils() {}
+    class XbeLibUtils {
+    public:
+        ~XbeLibUtils() {}
 
-    static void initialise() throw(xbe::XbeException);
-    static void terminate() throw();
+        static void initialise() throw(xbe::XbeException);
+        static void terminate() throw();
 
-    static xml_schema::namespace_infomap& namespace_infomap();
+        static xml_schema::namespace_infomap& namespace_infomap();
+        static xml_schema::properties& schema_properties();
     
-  private:
-    XbeLibUtils() {}
-  };
+    private:
+        XbeLibUtils() {}
+    };
 }
 
 #endif // !XBE_XBELIBUTILS_HPP

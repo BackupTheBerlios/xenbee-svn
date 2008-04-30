@@ -1,10 +1,10 @@
 #ifndef XBE_ERROREVENT_HPP
 #define XBE_ERROREVENT_HPP 1
 
-#include <seda/IEvent.hpp>
+#include <seda/SystemEvent.hpp>
 
 namespace xbe {
-  class ErrorEvent : public seda::IEvent {
+  class ErrorEvent : public seda::SystemEvent {
   public:
     ErrorEvent(const std::string& reason, const std::string& additionalData="");
     ~ErrorEvent();
@@ -19,4 +19,4 @@ namespace xbe {
   };
 }
 
-#endif // !XBE_MESSAGEEVENT_HPP
+#endif // !XBE_ERROREVENT_HPP

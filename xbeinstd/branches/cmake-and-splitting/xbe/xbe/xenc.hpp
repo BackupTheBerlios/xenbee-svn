@@ -272,6 +272,8 @@ namespace xenc
 
 #include <xsd/cxx/xml/dom/parsing-header.hxx>
 
+#include <xsd/cxx/tree/containers-wildcard.hxx>
+
 #include "dsig.hpp"
 
 namespace xenc
@@ -525,6 +527,21 @@ namespace xenc
     void
     OAEPparams (::std::auto_ptr< OAEPparams_type > p);
 
+    // any
+    // 
+    typedef ::xsd::cxx::tree::element_sequence any_sequence;
+    typedef any_sequence::iterator any_iterator;
+    typedef any_sequence::const_iterator any_const_iterator;
+
+    const any_sequence&
+    any () const;
+
+    any_sequence&
+    any ();
+
+    void
+    any (const any_sequence& s);
+
     // Algorithm
     // 
     typedef ::xml_schema::uri Algorithm_type;
@@ -541,6 +558,14 @@ namespace xenc
 
     void
     Algorithm (::std::auto_ptr< Algorithm_type > p);
+
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
 
     // Constructors.
     //
@@ -569,8 +594,11 @@ namespace xenc
            ::xml_schema::flags);
 
     protected:
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
     KeySize_optional KeySize_;
     OAEPparams_optional OAEPparams_;
+    any_sequence any_;
     ::xsd::cxx::tree::one< Algorithm_type > Algorithm_;
   };
 
@@ -949,6 +977,21 @@ namespace xenc
     void
     KA_Nonce (::std::auto_ptr< KA_Nonce_type > p);
 
+    // any
+    // 
+    typedef ::xsd::cxx::tree::element_sequence any_sequence;
+    typedef any_sequence::iterator any_iterator;
+    typedef any_sequence::const_iterator any_const_iterator;
+
+    const any_sequence&
+    any () const;
+
+    any_sequence&
+    any ();
+
+    void
+    any (const any_sequence& s);
+
     // OriginatorKeyInfo
     // 
     typedef ::dsig::KeyInfoType OriginatorKeyInfo_type;
@@ -1008,6 +1051,14 @@ namespace xenc
     void
     Algorithm (::std::auto_ptr< Algorithm_type > p);
 
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
+
     // Constructors.
     //
     AgreementMethodType (const Algorithm_type&);
@@ -1035,7 +1086,10 @@ namespace xenc
            ::xml_schema::flags);
 
     protected:
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
     KA_Nonce_optional KA_Nonce_;
+    any_sequence any_;
     OriginatorKeyInfo_optional OriginatorKeyInfo_;
     RecipientKeyInfo_optional RecipientKeyInfo_;
     ::xsd::cxx::tree::one< Algorithm_type > Algorithm_;
@@ -1044,6 +1098,21 @@ namespace xenc
   class ReferenceType: public ::xml_schema::type
   {
     public:
+    // any
+    // 
+    typedef ::xsd::cxx::tree::element_sequence any_sequence;
+    typedef any_sequence::iterator any_iterator;
+    typedef any_sequence::const_iterator any_const_iterator;
+
+    const any_sequence&
+    any () const;
+
+    any_sequence&
+    any ();
+
+    void
+    any (const any_sequence& s);
+
     // URI
     // 
     typedef ::xml_schema::uri URI_type;
@@ -1060,6 +1129,14 @@ namespace xenc
 
     void
     URI (::std::auto_ptr< URI_type > p);
+
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
 
     // Constructors.
     //
@@ -1088,6 +1165,9 @@ namespace xenc
            ::xml_schema::flags);
 
     protected:
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
+    any_sequence any_;
     ::xsd::cxx::tree::one< URI_type > URI_;
   };
 
@@ -1166,6 +1246,21 @@ namespace xenc
   class EncryptionPropertyType: public ::xml_schema::type
   {
     public:
+    // any
+    // 
+    typedef ::xsd::cxx::tree::element_sequence any_sequence;
+    typedef any_sequence::iterator any_iterator;
+    typedef any_sequence::const_iterator any_const_iterator;
+
+    const any_sequence&
+    any () const;
+
+    any_sequence&
+    any ();
+
+    void
+    any (const any_sequence& s);
+
     // Target
     // 
     typedef ::xml_schema::uri Target_type;
@@ -1208,6 +1303,29 @@ namespace xenc
     void
     Id (::std::auto_ptr< Id_type > p);
 
+    // any_attribute
+    // 
+    typedef ::xsd::cxx::tree::attribute_set< char > any_attribute_set;
+    typedef any_attribute_set::iterator any_attribute_iterator;
+    typedef any_attribute_set::const_iterator any_attribute_const_iterator;
+
+    const any_attribute_set&
+    any_attribute () const;
+
+    any_attribute_set&
+    any_attribute ();
+
+    void
+    any_attribute (const any_attribute_set& s);
+
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
+
     // Constructors.
     //
     EncryptionPropertyType ();
@@ -1235,8 +1353,12 @@ namespace xenc
            ::xml_schema::flags);
 
     protected:
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
+    any_sequence any_;
     Target_optional Target_;
     Id_optional Id_;
+    any_attribute_set any_attribute_;
   };
 
   class ReferenceList: public ::xml_schema::type

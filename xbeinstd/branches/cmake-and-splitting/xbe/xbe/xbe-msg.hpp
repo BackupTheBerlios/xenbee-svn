@@ -262,6 +262,8 @@ namespace xbemsg
 
 #include <xsd/cxx/xml/dom/parsing-header.hxx>
 
+#include <xsd/cxx/tree/containers-wildcard.hxx>
+
 namespace xbemsg
 {
   class message_t: public ::xml_schema::type
@@ -301,6 +303,29 @@ namespace xbemsg
     void
     body (::std::auto_ptr< body_type > p);
 
+    // any_attribute
+    // 
+    typedef ::xsd::cxx::tree::attribute_set< char > any_attribute_set;
+    typedef any_attribute_set::iterator any_attribute_iterator;
+    typedef any_attribute_set::const_iterator any_attribute_const_iterator;
+
+    const any_attribute_set&
+    any_attribute () const;
+
+    any_attribute_set&
+    any_attribute ();
+
+    void
+    any_attribute (const any_attribute_set& s);
+
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
+
     // Constructors.
     //
     message_t (const header_type&,
@@ -329,30 +354,16 @@ namespace xbemsg
            ::xml_schema::flags);
 
     protected:
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
     ::xsd::cxx::tree::one< header_type > header_;
     ::xsd::cxx::tree::one< body_type > body_;
+    any_attribute_set any_attribute_;
   };
 
   class header_t: public ::xml_schema::type
   {
     public:
-    // from
-    // 
-    typedef ::xml_schema::string from_type;
-    typedef ::xsd::cxx::tree::traits< from_type, char > from_traits;
-
-    const from_type&
-    from () const;
-
-    from_type&
-    from ();
-
-    void
-    from (const from_type& x);
-
-    void
-    from (::std::auto_ptr< from_type > p);
-
     // to
     // 
     typedef ::xml_schema::string to_type;
@@ -370,10 +381,65 @@ namespace xbemsg
     void
     to (::std::auto_ptr< to_type > p);
 
+    // from
+    // 
+    typedef ::xml_schema::string from_type;
+    typedef ::xsd::cxx::tree::traits< from_type, char > from_traits;
+
+    const from_type&
+    from () const;
+
+    from_type&
+    from ();
+
+    void
+    from (const from_type& x);
+
+    void
+    from (::std::auto_ptr< from_type > p);
+
+    // any
+    // 
+    typedef ::xsd::cxx::tree::element_sequence any_sequence;
+    typedef any_sequence::iterator any_iterator;
+    typedef any_sequence::const_iterator any_const_iterator;
+
+    const any_sequence&
+    any () const;
+
+    any_sequence&
+    any ();
+
+    void
+    any (const any_sequence& s);
+
+    // any_attribute
+    // 
+    typedef ::xsd::cxx::tree::attribute_set< char > any_attribute_set;
+    typedef any_attribute_set::iterator any_attribute_iterator;
+    typedef any_attribute_set::const_iterator any_attribute_const_iterator;
+
+    const any_attribute_set&
+    any_attribute () const;
+
+    any_attribute_set&
+    any_attribute ();
+
+    void
+    any_attribute (const any_attribute_set& s);
+
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
+
     // Constructors.
     //
-    header_t (const from_type&,
-              const to_type&);
+    header_t (const to_type&,
+              const from_type&);
 
     header_t (const ::xercesc::DOMElement& e,
               ::xml_schema::flags f = 0,
@@ -398,13 +464,55 @@ namespace xbemsg
            ::xml_schema::flags);
 
     protected:
-    ::xsd::cxx::tree::one< from_type > from_;
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
     ::xsd::cxx::tree::one< to_type > to_;
+    ::xsd::cxx::tree::one< from_type > from_;
+    any_sequence any_;
+    any_attribute_set any_attribute_;
   };
 
   class body_t: public ::xml_schema::type
   {
     public:
+    // any
+    // 
+    typedef ::xsd::cxx::tree::element_sequence any_sequence;
+    typedef any_sequence::iterator any_iterator;
+    typedef any_sequence::const_iterator any_const_iterator;
+
+    const any_sequence&
+    any () const;
+
+    any_sequence&
+    any ();
+
+    void
+    any (const any_sequence& s);
+
+    // any_attribute
+    // 
+    typedef ::xsd::cxx::tree::attribute_set< char > any_attribute_set;
+    typedef any_attribute_set::iterator any_attribute_iterator;
+    typedef any_attribute_set::const_iterator any_attribute_const_iterator;
+
+    const any_attribute_set&
+    any_attribute () const;
+
+    any_attribute_set&
+    any_attribute ();
+
+    void
+    any_attribute (const any_attribute_set& s);
+
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
+
     // Constructors.
     //
     body_t ();
@@ -432,6 +540,10 @@ namespace xbemsg
            ::xml_schema::flags);
 
     protected:
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
+    any_sequence any_;
+    any_attribute_set any_attribute_;
   };
 }
 

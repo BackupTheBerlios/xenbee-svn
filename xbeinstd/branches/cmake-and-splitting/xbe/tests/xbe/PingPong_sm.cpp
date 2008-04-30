@@ -123,18 +123,37 @@ namespace tests
         {
             PingPong& ctxt(context.getOwner());
 
-            PingPongState& EndStateName = context.getState();
+            if (ctxt.sentMessages() < ctxt.maxMessages())
+            {
+                PingPongState& EndStateName = context.getState();
 
-            context.clearState();
-            try
-            {
-                ctxt.sendPing(msg);
-                context.setState(EndStateName);
+                context.clearState();
+                try
+                {
+                    ctxt.sendPing(msg);
+                    context.setState(EndStateName);
+                }
+                catch (...)
+                {
+                    context.setState(EndStateName);
+                    throw;
+                }
             }
-            catch (...)
+            else
             {
-                context.setState(EndStateName);
-                throw;
+                (context.getState()).Exit(context);
+                context.clearState();
+                try
+                {
+                    ctxt.stop();
+                    context.setState(PingPongFSM::Idle);
+                }
+                catch (...)
+                {
+                    context.setState(PingPongFSM::Idle);
+                    throw;
+                }
+                (context.getState()).Entry(context);
             }
 
             return;

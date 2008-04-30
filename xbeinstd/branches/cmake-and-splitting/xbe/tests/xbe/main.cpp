@@ -7,6 +7,7 @@
 
 #if ENABLE_LOGGING
 #include <log4cpp/BasicConfigurator.hh>
+#include <log4cpp/Priority.hh>
 #include <iostream>
 #endif
 
@@ -14,6 +15,7 @@ int
 main(int argc, char **argv) {
 #if ENABLE_LOGGING
     ::log4cpp::BasicConfigurator::configure();
+    ::log4cpp::Category::setRootPriority(::log4cpp::Priority::DEBUG);
 #endif
     CppUnit::TextUi::TestRunner runner;
     CppUnit::TestFactoryRegistry &registry = CppUnit::TestFactoryRegistry::getRegistry();

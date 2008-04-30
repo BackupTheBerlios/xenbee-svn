@@ -1,7 +1,7 @@
 #ifndef XBE_XML_MESSAGE_DISPATCHER_HPP
 #define XBE_XML_MESSAGE_DISPATCHER_HPP 1
 
-#include <seda/StrategyDecorator.hpp>
+#include <seda/Strategy.hpp>
 
 #include <xbe/XMLMessageEvent.hpp>
 
@@ -12,10 +12,15 @@ namespace xbe {
 
        Replace this class with your own one using this as a template.
     */
-    class XMLMessageDispatcher : public seda::StrategyDecorator {
+    class XMLMessageDispatcher : public seda::Strategy {
     public:
-        XMLMessageDispatcher(const seda::Strategy::Ptr& s)
-            : seda::StrategyDecorator(s->name()+".xml-fsm-gateway", s)
+        XMLMessageDispatcher()
+            : seda::Strategy("xml-fsm-gateway")
+        {}
+
+        explicit
+        XMLMessageDispatcher(const std::string& name)
+            : seda::Strategy(name)
         {}
         virtual ~XMLMessageDispatcher() {}
 

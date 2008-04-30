@@ -267,6 +267,8 @@ namespace jsdlPosix
 
 #include <xsd/cxx/xml/dom/parsing-header.hxx>
 
+#include <xsd/cxx/tree/containers-wildcard.hxx>
+
 namespace jsdlPosix
 {
   class Environment_Type: public ::xml_schema::string
@@ -310,6 +312,29 @@ namespace jsdlPosix
     void
     filesystemName (::std::auto_ptr< filesystemName_type > p);
 
+    // any_attribute
+    // 
+    typedef ::xsd::cxx::tree::attribute_set< char > any_attribute_set;
+    typedef any_attribute_set::iterator any_attribute_iterator;
+    typedef any_attribute_set::const_iterator any_attribute_const_iterator;
+
+    const any_attribute_set&
+    any_attribute () const;
+
+    any_attribute_set&
+    any_attribute ();
+
+    void
+    any_attribute (const any_attribute_set& s);
+
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
+
     // Constructors.
     //
     Environment_Type (const name_type&);
@@ -346,8 +371,11 @@ namespace jsdlPosix
            ::xml_schema::flags);
 
     protected:
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
     ::xsd::cxx::tree::one< name_type > name_;
     filesystemName_optional filesystemName_;
+    any_attribute_set any_attribute_;
   };
 
   class Argument_Type: public ::xml_schema::normalized_string
@@ -373,6 +401,29 @@ namespace jsdlPosix
 
     void
     filesystemName (::std::auto_ptr< filesystemName_type > p);
+
+    // any_attribute
+    // 
+    typedef ::xsd::cxx::tree::attribute_set< char > any_attribute_set;
+    typedef any_attribute_set::iterator any_attribute_iterator;
+    typedef any_attribute_set::const_iterator any_attribute_const_iterator;
+
+    const any_attribute_set&
+    any_attribute () const;
+
+    any_attribute_set&
+    any_attribute ();
+
+    void
+    any_attribute (const any_attribute_set& s);
+
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
 
     // Constructors.
     //
@@ -407,7 +458,10 @@ namespace jsdlPosix
            ::xml_schema::flags);
 
     protected:
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
     filesystemName_optional filesystemName_;
+    any_attribute_set any_attribute_;
   };
 
   class FileName_Type: public ::xml_schema::string
@@ -433,6 +487,29 @@ namespace jsdlPosix
 
     void
     filesystemName (::std::auto_ptr< filesystemName_type > p);
+
+    // any_attribute
+    // 
+    typedef ::xsd::cxx::tree::attribute_set< char > any_attribute_set;
+    typedef any_attribute_set::iterator any_attribute_iterator;
+    typedef any_attribute_set::const_iterator any_attribute_const_iterator;
+
+    const any_attribute_set&
+    any_attribute () const;
+
+    any_attribute_set&
+    any_attribute ();
+
+    void
+    any_attribute (const any_attribute_set& s);
+
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
 
     // Constructors.
     //
@@ -467,7 +544,10 @@ namespace jsdlPosix
            ::xml_schema::flags);
 
     protected:
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
     filesystemName_optional filesystemName_;
+    any_attribute_set any_attribute_;
   };
 
   class DirectoryName_Type: public ::xml_schema::string
@@ -493,6 +573,29 @@ namespace jsdlPosix
 
     void
     filesystemName (::std::auto_ptr< filesystemName_type > p);
+
+    // any_attribute
+    // 
+    typedef ::xsd::cxx::tree::attribute_set< char > any_attribute_set;
+    typedef any_attribute_set::iterator any_attribute_iterator;
+    typedef any_attribute_set::const_iterator any_attribute_const_iterator;
+
+    const any_attribute_set&
+    any_attribute () const;
+
+    any_attribute_set&
+    any_attribute ();
+
+    void
+    any_attribute (const any_attribute_set& s);
+
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
 
     // Constructors.
     //
@@ -527,12 +630,38 @@ namespace jsdlPosix
            ::xml_schema::flags);
 
     protected:
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
     filesystemName_optional filesystemName_;
+    any_attribute_set any_attribute_;
   };
 
   class Limits_Type: public ::xsd::cxx::tree::fundamental_base< ::xml_schema::non_negative_integer, char, ::xml_schema::simple_type >
   {
     public:
+    // any_attribute
+    // 
+    typedef ::xsd::cxx::tree::attribute_set< char > any_attribute_set;
+    typedef any_attribute_set::iterator any_attribute_iterator;
+    typedef any_attribute_set::const_iterator any_attribute_const_iterator;
+
+    const any_attribute_set&
+    any_attribute () const;
+
+    any_attribute_set&
+    any_attribute ();
+
+    void
+    any_attribute (const any_attribute_set& s);
+
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
+
     // Constructors.
     //
     Limits_Type (const ::xml_schema::non_negative_integer&);
@@ -551,11 +680,46 @@ namespace jsdlPosix
 
     virtual 
     ~Limits_Type ();
+
+    // Implementation.
+    //
+    protected:
+    void
+    parse (::xsd::cxx::xml::dom::parser< char >&,
+           ::xml_schema::flags);
+
+    protected:
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
+    any_attribute_set any_attribute_;
   };
 
   class UserName_Type: public ::xml_schema::string
   {
     public:
+    // any_attribute
+    // 
+    typedef ::xsd::cxx::tree::attribute_set< char > any_attribute_set;
+    typedef any_attribute_set::iterator any_attribute_iterator;
+    typedef any_attribute_set::const_iterator any_attribute_const_iterator;
+
+    const any_attribute_set&
+    any_attribute () const;
+
+    any_attribute_set&
+    any_attribute ();
+
+    void
+    any_attribute (const any_attribute_set& s);
+
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
+
     // Constructors.
     //
     UserName_Type ();
@@ -580,11 +744,46 @@ namespace jsdlPosix
 
     virtual 
     ~UserName_Type ();
+
+    // Implementation.
+    //
+    protected:
+    void
+    parse (::xsd::cxx::xml::dom::parser< char >&,
+           ::xml_schema::flags);
+
+    protected:
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
+    any_attribute_set any_attribute_;
   };
 
   class GroupName_Type: public ::xml_schema::string
   {
     public:
+    // any_attribute
+    // 
+    typedef ::xsd::cxx::tree::attribute_set< char > any_attribute_set;
+    typedef any_attribute_set::iterator any_attribute_iterator;
+    typedef any_attribute_set::const_iterator any_attribute_const_iterator;
+
+    const any_attribute_set&
+    any_attribute () const;
+
+    any_attribute_set&
+    any_attribute ();
+
+    void
+    any_attribute (const any_attribute_set& s);
+
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
+
     // Constructors.
     //
     GroupName_Type ();
@@ -609,6 +808,18 @@ namespace jsdlPosix
 
     virtual 
     ~GroupName_Type ();
+
+    // Implementation.
+    //
+    protected:
+    void
+    parse (::xsd::cxx::xml::dom::parser< char >&,
+           ::xml_schema::flags);
+
+    protected:
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
+    any_attribute_set any_attribute_;
   };
 
   class POSIXApplication_Type: public ::xml_schema::type
@@ -1089,6 +1300,29 @@ namespace jsdlPosix
     void
     name (::std::auto_ptr< name_type > p);
 
+    // any_attribute
+    // 
+    typedef ::xsd::cxx::tree::attribute_set< char > any_attribute_set;
+    typedef any_attribute_set::iterator any_attribute_iterator;
+    typedef any_attribute_set::const_iterator any_attribute_const_iterator;
+
+    const any_attribute_set&
+    any_attribute () const;
+
+    any_attribute_set&
+    any_attribute ();
+
+    void
+    any_attribute (const any_attribute_set& s);
+
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
+
     // Constructors.
     //
     POSIXApplication_Type ();
@@ -1116,6 +1350,8 @@ namespace jsdlPosix
            ::xml_schema::flags);
 
     protected:
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
     Executable_optional Executable_;
     Argument_sequence Argument_;
     Input_optional Input_;
@@ -1139,6 +1375,7 @@ namespace jsdlPosix
     UserName_optional UserName_;
     GroupName_optional GroupName_;
     name_optional name_;
+    any_attribute_set any_attribute_;
   };
 }
 

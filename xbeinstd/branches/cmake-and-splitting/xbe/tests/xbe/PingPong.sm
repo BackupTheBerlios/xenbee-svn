@@ -51,11 +51,18 @@ Active
         }
 
     Pong(msg: const tests::xbe::PongEvent&)
+        [ctxt.sentMessages() < ctxt.maxMessages()]
         Active
         {
                 sendPing(msg);
         }
     
+    Pong(msg: const tests::xbe::PongEvent&)
+        Idle
+        {
+                stop();
+        }
+
     Stop
         Idle
         {

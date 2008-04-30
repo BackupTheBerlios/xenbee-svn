@@ -6,11 +6,8 @@ using namespace xbe;
 MessageEvent::MessageEvent(const std::string& msg)
   : _msg(msg) {}
 
-MessageEvent::MessageEvent(const std::string& msg, const mqs::Destination& src)
-  : _msg(msg), _src(src) {}
-
-MessageEvent::MessageEvent(const std::string& msg, const mqs::Destination& src, const mqs::Destination& dst)
-  : _msg(msg), _src(src), _dst(dst) {}
+MessageEvent::MessageEvent(const std::string& msg, const mqs::Destination& to, const mqs::Destination& from)
+  : _msg(msg), _id(""), _dst(to), _src(from) {}
 
 MessageEvent::~MessageEvent() {
 

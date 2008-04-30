@@ -1,0 +1,65 @@
+#include <seda/SystemEvent.hpp>
+
+#include "ChannelAdapterStrategy.hpp"
+#include "MessageEvent.hpp"
+#include "EventFactory.hpp"
+
+using namespace xbe;
+
+ChannelAdapterStrategy::ChannelAdapterStrategy(const std::string& name,
+                                               const seda::Strategy::Ptr& decorated,
+                                               const mqs::Channel::Ptr& channel)
+    : seda::StrategyDecorator(name, decorated),
+      _channel(channel)
+{
+    _channel->setMessageListener(this);
+}
+
+ChannelAdapterStrategy::~ChannelAdapterStrategy() {}
+
+void ChannelAdapterStrategy::onMessage(const cms::Message *m) {
+    try {
+        LOG_INFO("got message");
+        StrategyDecorator::perform(EventFactory::instance().newEvent(m));
+    } catch (const xbe::UnknownConversion& ex) {
+        LOG_DEBUG("cms::Message could not be converted to Event: " << ex.what());
+    } catch (const std::exception& ex) {
+        LOG_WARN("message lost due to error during push: " << ex.what());
+    } catch (...) {
+        LOG_WARN("message lost due to error during push: unknown error");
+    }
+}
+
+void ChannelAdapterStrategy::onException(const cms::CMSException& ex) {
+    try {
+        StrategyDecorator::perform(EventFactory::instance().newEvent(ex));
+    } catch (...) {
+        LOG_WARN("error event lost due to error during push");
+    }
+}
+
+void ChannelAdapterStrategy::perform(const seda::IEvent::Ptr& e) const {
+    LOG_DEBUG("handling event: " << e->str());
+    // handle messages
+    if (xbe::MessageEvent *msgEvent = dynamic_cast<xbe::MessageEvent*>(e.get())) {
+        try {
+            if (msgEvent->destination().isValid()) {
+                LOG_DEBUG("sending message `"<< msgEvent->message() << "' to " << msgEvent->destination().str());
+                _channel->send(msgEvent->message(), msgEvent->destination());
+            } else {
+                LOG_DEBUG("sending message `"<< msgEvent->message() << "'");
+                _channel->send(msgEvent->message());
+            }
+        } catch(const cms::CMSException& ex) {
+            StrategyDecorator::perform(EventFactory::instance().newEvent(ex));
+        } catch(const std::exception& ex) {
+            StrategyDecorator::perform(EventFactory::instance().newEvent(ex));
+        } catch(...) {
+            StrategyDecorator::perform(EventFactory::instance().newErrorEvent("unknown error during message sending"));
+        }
+    } else if (seda::SystemEvent *systemEvent = dynamic_cast<seda::SystemEvent*>(e.get())) {
+        StrategyDecorator::perform(e);
+    } else {
+        LOG_WARN("ignoring non-MessageEvent: " << e->str());
+    }
+}

@@ -313,6 +313,24 @@ namespace dsig
   // CanonicalizationMethodType
   // 
 
+  const CanonicalizationMethodType::any_sequence& CanonicalizationMethodType::
+  any () const
+  {
+    return this->any_;
+  }
+
+  CanonicalizationMethodType::any_sequence& CanonicalizationMethodType::
+  any ()
+  {
+    return this->any_;
+  }
+
+  void CanonicalizationMethodType::
+  any (const any_sequence& s)
+  {
+    this->any_ = s;
+  }
+
   const CanonicalizationMethodType::Algorithm_type& CanonicalizationMethodType::
   Algorithm () const
   {
@@ -335,6 +353,18 @@ namespace dsig
   Algorithm (::std::auto_ptr< Algorithm_type > x)
   {
     this->Algorithm_.set (x);
+  }
+
+  const ::xercesc::DOMDocument& CanonicalizationMethodType::
+  dom_document () const
+  {
+    return *dom_document_;
+  }
+
+  ::xercesc::DOMDocument& CanonicalizationMethodType::
+  dom_document ()
+  {
+    return *dom_document_;
   }
 
 
@@ -371,6 +401,24 @@ namespace dsig
     this->HMACOutputLength_.set (x);
   }
 
+  const SignatureMethodType::any_sequence& SignatureMethodType::
+  any () const
+  {
+    return this->any_;
+  }
+
+  SignatureMethodType::any_sequence& SignatureMethodType::
+  any ()
+  {
+    return this->any_;
+  }
+
+  void SignatureMethodType::
+  any (const any_sequence& s)
+  {
+    this->any_ = s;
+  }
+
   const SignatureMethodType::Algorithm_type& SignatureMethodType::
   Algorithm () const
   {
@@ -393,6 +441,18 @@ namespace dsig
   Algorithm (::std::auto_ptr< Algorithm_type > x)
   {
     this->Algorithm_.set (x);
+  }
+
+  const ::xercesc::DOMDocument& SignatureMethodType::
+  dom_document () const
+  {
+    return *dom_document_;
+  }
+
+  ::xercesc::DOMDocument& SignatureMethodType::
+  dom_document ()
+  {
+    return *dom_document_;
   }
 
 
@@ -593,6 +653,24 @@ namespace dsig
   // TransformType
   // 
 
+  const TransformType::any_sequence& TransformType::
+  any () const
+  {
+    return this->any_;
+  }
+
+  TransformType::any_sequence& TransformType::
+  any ()
+  {
+    return this->any_;
+  }
+
+  void TransformType::
+  any (const any_sequence& s)
+  {
+    this->any_ = s;
+  }
+
   const TransformType::XPath_sequence& TransformType::
   XPath () const
   {
@@ -635,9 +713,39 @@ namespace dsig
     this->Algorithm_.set (x);
   }
 
+  const ::xercesc::DOMDocument& TransformType::
+  dom_document () const
+  {
+    return *dom_document_;
+  }
+
+  ::xercesc::DOMDocument& TransformType::
+  dom_document ()
+  {
+    return *dom_document_;
+  }
+
 
   // DigestMethodType
   // 
+
+  const DigestMethodType::any_sequence& DigestMethodType::
+  any () const
+  {
+    return this->any_;
+  }
+
+  DigestMethodType::any_sequence& DigestMethodType::
+  any ()
+  {
+    return this->any_;
+  }
+
+  void DigestMethodType::
+  any (const any_sequence& s)
+  {
+    this->any_ = s;
+  }
 
   const DigestMethodType::Algorithm_type& DigestMethodType::
   Algorithm () const
@@ -661,6 +769,18 @@ namespace dsig
   Algorithm (::std::auto_ptr< Algorithm_type > x)
   {
     this->Algorithm_.set (x);
+  }
+
+  const ::xercesc::DOMDocument& DigestMethodType::
+  dom_document () const
+  {
+    return *dom_document_;
+  }
+
+  ::xercesc::DOMDocument& DigestMethodType::
+  dom_document ()
+  {
+    return *dom_document_;
   }
 
 
@@ -797,6 +917,24 @@ namespace dsig
     this->MgmtData_ = s;
   }
 
+  const KeyInfoType::any_sequence& KeyInfoType::
+  any () const
+  {
+    return this->any_;
+  }
+
+  KeyInfoType::any_sequence& KeyInfoType::
+  any ()
+  {
+    return this->any_;
+  }
+
+  void KeyInfoType::
+  any (const any_sequence& s)
+  {
+    this->any_ = s;
+  }
+
   const KeyInfoType::Id_optional& KeyInfoType::
   Id () const
   {
@@ -825,6 +963,18 @@ namespace dsig
   Id (::std::auto_ptr< Id_type > x)
   {
     this->Id_.set (x);
+  }
+
+  const ::xercesc::DOMDocument& KeyInfoType::
+  dom_document () const
+  {
+    return *dom_document_;
+  }
+
+  ::xercesc::DOMDocument& KeyInfoType::
+  dom_document ()
+  {
+    return *dom_document_;
   }
 
 
@@ -889,6 +1039,48 @@ namespace dsig
   RSAKeyValue (::std::auto_ptr< RSAKeyValue_type > x)
   {
     this->RSAKeyValue_.set (x);
+  }
+
+  const KeyValueType::any_optional& KeyValueType::
+  any () const
+  {
+    return this->any_;
+  }
+
+  KeyValueType::any_optional& KeyValueType::
+  any ()
+  {
+    return this->any_;
+  }
+
+  void KeyValueType::
+  any (const ::xercesc::DOMElement& e)
+  {
+    this->any_.set (e);
+  }
+
+  void KeyValueType::
+  any (::xercesc::DOMElement* e)
+  {
+    this->any_.set (e);
+  }
+
+  void KeyValueType::
+  any (const any_optional& x)
+  {
+    this->any_ = x;
+  }
+
+  const ::xercesc::DOMDocument& KeyValueType::
+  dom_document () const
+  {
+    return *dom_document_;
+  }
+
+  ::xercesc::DOMDocument& KeyValueType::
+  dom_document ()
+  {
+    return *dom_document_;
   }
 
 
@@ -1079,6 +1271,36 @@ namespace dsig
     this->X509CRL_ = s;
   }
 
+  const X509DataType::any_sequence& X509DataType::
+  any () const
+  {
+    return this->any_;
+  }
+
+  X509DataType::any_sequence& X509DataType::
+  any ()
+  {
+    return this->any_;
+  }
+
+  void X509DataType::
+  any (const any_sequence& s)
+  {
+    this->any_ = s;
+  }
+
+  const ::xercesc::DOMDocument& X509DataType::
+  dom_document () const
+  {
+    return *dom_document_;
+  }
+
+  ::xercesc::DOMDocument& X509DataType::
+  dom_document ()
+  {
+    return *dom_document_;
+  }
+
 
   // X509IssuerSerialType
   // 
@@ -1189,6 +1411,54 @@ namespace dsig
     this->PGPKeyPacket_.set (x);
   }
 
+  const PGPDataType::any_sequence& PGPDataType::
+  any () const
+  {
+    return this->any_;
+  }
+
+  PGPDataType::any_sequence& PGPDataType::
+  any ()
+  {
+    return this->any_;
+  }
+
+  void PGPDataType::
+  any (const any_sequence& s)
+  {
+    this->any_ = s;
+  }
+
+  const PGPDataType::any1_sequence& PGPDataType::
+  any1 () const
+  {
+    return this->any1_;
+  }
+
+  PGPDataType::any1_sequence& PGPDataType::
+  any1 ()
+  {
+    return this->any1_;
+  }
+
+  void PGPDataType::
+  any1 (const any1_sequence& s)
+  {
+    this->any1_ = s;
+  }
+
+  const ::xercesc::DOMDocument& PGPDataType::
+  dom_document () const
+  {
+    return *dom_document_;
+  }
+
+  ::xercesc::DOMDocument& PGPDataType::
+  dom_document ()
+  {
+    return *dom_document_;
+  }
+
 
   // SPKIDataType
   // 
@@ -1211,9 +1481,57 @@ namespace dsig
     this->SPKISexp_ = s;
   }
 
+  const SPKIDataType::any_sequence& SPKIDataType::
+  any () const
+  {
+    return this->any_;
+  }
+
+  SPKIDataType::any_sequence& SPKIDataType::
+  any ()
+  {
+    return this->any_;
+  }
+
+  void SPKIDataType::
+  any (const any_sequence& s)
+  {
+    this->any_ = s;
+  }
+
+  const ::xercesc::DOMDocument& SPKIDataType::
+  dom_document () const
+  {
+    return *dom_document_;
+  }
+
+  ::xercesc::DOMDocument& SPKIDataType::
+  dom_document ()
+  {
+    return *dom_document_;
+  }
+
 
   // ObjectType
   // 
+
+  const ObjectType::any_sequence& ObjectType::
+  any () const
+  {
+    return this->any_;
+  }
+
+  ObjectType::any_sequence& ObjectType::
+  any ()
+  {
+    return this->any_;
+  }
+
+  void ObjectType::
+  any (const any_sequence& s)
+  {
+    this->any_ = s;
+  }
 
   const ObjectType::Id_optional& ObjectType::
   Id () const
@@ -1303,6 +1621,18 @@ namespace dsig
   Encoding (::std::auto_ptr< Encoding_type > x)
   {
     this->Encoding_.set (x);
+  }
+
+  const ::xercesc::DOMDocument& ObjectType::
+  dom_document () const
+  {
+    return *dom_document_;
+  }
+
+  ::xercesc::DOMDocument& ObjectType::
+  dom_document ()
+  {
+    return *dom_document_;
   }
 
 
@@ -1413,6 +1743,24 @@ namespace dsig
   // SignaturePropertyType
   // 
 
+  const SignaturePropertyType::any_sequence& SignaturePropertyType::
+  any () const
+  {
+    return this->any_;
+  }
+
+  SignaturePropertyType::any_sequence& SignaturePropertyType::
+  any ()
+  {
+    return this->any_;
+  }
+
+  void SignaturePropertyType::
+  any (const any_sequence& s)
+  {
+    this->any_ = s;
+  }
+
   const SignaturePropertyType::Target_type& SignaturePropertyType::
   Target () const
   {
@@ -1465,6 +1813,18 @@ namespace dsig
   Id (::std::auto_ptr< Id_type > x)
   {
     this->Id_.set (x);
+  }
+
+  const ::xercesc::DOMDocument& SignaturePropertyType::
+  dom_document () const
+  {
+    return *dom_document_;
+  }
+
+  ::xercesc::DOMDocument& SignaturePropertyType::
+  dom_document ()
+  {
+    return *dom_document_;
   }
 
 
@@ -1731,6 +2091,8 @@ namespace dsig
     this->Exponent_.set (x);
   }
 }
+
+#include <xsd/cxx/xml/dom/wildcard-source.hxx>
 
 #include <xsd/cxx/xml/dom/parsing-source.hxx>
 
@@ -2168,6 +2530,8 @@ namespace dsig
   CanonicalizationMethodType::
   CanonicalizationMethodType (const Algorithm_type& Algorithm)
   : ::xml_schema::type (),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (this->dom_document ()),
     Algorithm_ (Algorithm, ::xml_schema::flags (), this)
   {
   }
@@ -2177,6 +2541,8 @@ namespace dsig
                               ::xml_schema::flags f,
                               ::xml_schema::container* c)
   : ::xml_schema::type (x, f, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (x.any_, this->dom_document ()),
     Algorithm_ (x.Algorithm_, f, this)
   {
   }
@@ -2186,6 +2552,8 @@ namespace dsig
                               ::xml_schema::flags f,
                               ::xml_schema::container* c)
   : ::xml_schema::type (e, f | ::xml_schema::flags::base, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (this->dom_document ()),
     Algorithm_ (f, this)
   {
     if ((f & ::xml_schema::flags::base) == 0)
@@ -2204,6 +2572,18 @@ namespace dsig
       const ::xercesc::DOMElement& i (p.cur_element ());
       const ::xsd::cxx::xml::qualified_name< char > n (
         ::xsd::cxx::xml::dom::name< char > (i));
+
+      // any
+      //
+      if (true)
+      {
+        ::xercesc::DOMElement* r (
+          static_cast< ::xercesc::DOMElement* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMElement* > (&i), true)));
+        this->any ().push_back (r);
+        continue;
+      }
 
       break;
     }
@@ -2250,7 +2630,9 @@ namespace dsig
   SignatureMethodType::
   SignatureMethodType (const Algorithm_type& Algorithm)
   : ::xml_schema::type (),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     HMACOutputLength_ (::xml_schema::flags (), this),
+    any_ (this->dom_document ()),
     Algorithm_ (Algorithm, ::xml_schema::flags (), this)
   {
   }
@@ -2260,7 +2642,9 @@ namespace dsig
                        ::xml_schema::flags f,
                        ::xml_schema::container* c)
   : ::xml_schema::type (x, f, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     HMACOutputLength_ (x.HMACOutputLength_, f, this),
+    any_ (x.any_, this->dom_document ()),
     Algorithm_ (x.Algorithm_, f, this)
   {
   }
@@ -2270,7 +2654,9 @@ namespace dsig
                        ::xml_schema::flags f,
                        ::xml_schema::container* c)
   : ::xml_schema::type (e, f | ::xml_schema::flags::base, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     HMACOutputLength_ (f, this),
+    any_ (this->dom_document ()),
     Algorithm_ (f, this)
   {
     if ((f & ::xml_schema::flags::base) == 0)
@@ -2302,6 +2688,18 @@ namespace dsig
           this->HMACOutputLength (r);
           continue;
         }
+      }
+
+      // any
+      //
+      if ((!n.namespace_ ().empty () && n.namespace_ () != "http://www.w3.org/2000/09/xmldsig#"))
+      {
+        ::xercesc::DOMElement* r (
+          static_cast< ::xercesc::DOMElement* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMElement* > (&i), true)));
+        this->any ().push_back (r);
+        continue;
       }
 
       break;
@@ -2584,6 +2982,8 @@ namespace dsig
   TransformType::
   TransformType (const Algorithm_type& Algorithm)
   : ::xml_schema::type (),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (this->dom_document ()),
     XPath_ (::xml_schema::flags (), this),
     Algorithm_ (Algorithm, ::xml_schema::flags (), this)
   {
@@ -2594,6 +2994,8 @@ namespace dsig
                  ::xml_schema::flags f,
                  ::xml_schema::container* c)
   : ::xml_schema::type (x, f, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (x.any_, this->dom_document ()),
     XPath_ (x.XPath_, f, this),
     Algorithm_ (x.Algorithm_, f, this)
   {
@@ -2604,6 +3006,8 @@ namespace dsig
                  ::xml_schema::flags f,
                  ::xml_schema::container* c)
   : ::xml_schema::type (e, f | ::xml_schema::flags::base, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (this->dom_document ()),
     XPath_ (f, this),
     Algorithm_ (f, this)
   {
@@ -2623,6 +3027,18 @@ namespace dsig
       const ::xercesc::DOMElement& i (p.cur_element ());
       const ::xsd::cxx::xml::qualified_name< char > n (
         ::xsd::cxx::xml::dom::name< char > (i));
+
+      // any
+      //
+      if ((!n.namespace_ ().empty () && n.namespace_ () != "http://www.w3.org/2000/09/xmldsig#"))
+      {
+        ::xercesc::DOMElement* r (
+          static_cast< ::xercesc::DOMElement* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMElement* > (&i), true)));
+        this->any ().push_back (r);
+        continue;
+      }
 
       // XPath
       //
@@ -2680,6 +3096,8 @@ namespace dsig
   DigestMethodType::
   DigestMethodType (const Algorithm_type& Algorithm)
   : ::xml_schema::type (),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (this->dom_document ()),
     Algorithm_ (Algorithm, ::xml_schema::flags (), this)
   {
   }
@@ -2689,6 +3107,8 @@ namespace dsig
                     ::xml_schema::flags f,
                     ::xml_schema::container* c)
   : ::xml_schema::type (x, f, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (x.any_, this->dom_document ()),
     Algorithm_ (x.Algorithm_, f, this)
   {
   }
@@ -2698,6 +3118,8 @@ namespace dsig
                     ::xml_schema::flags f,
                     ::xml_schema::container* c)
   : ::xml_schema::type (e, f | ::xml_schema::flags::base, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (this->dom_document ()),
     Algorithm_ (f, this)
   {
     if ((f & ::xml_schema::flags::base) == 0)
@@ -2716,6 +3138,18 @@ namespace dsig
       const ::xercesc::DOMElement& i (p.cur_element ());
       const ::xsd::cxx::xml::qualified_name< char > n (
         ::xsd::cxx::xml::dom::name< char > (i));
+
+      // any
+      //
+      if ((!n.namespace_ ().empty () && n.namespace_ () != "http://www.w3.org/2000/09/xmldsig#"))
+      {
+        ::xercesc::DOMElement* r (
+          static_cast< ::xercesc::DOMElement* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMElement* > (&i), true)));
+        this->any ().push_back (r);
+        continue;
+      }
 
       break;
     }
@@ -2822,6 +3256,7 @@ namespace dsig
   KeyInfoType::
   KeyInfoType ()
   : ::xml_schema::type (),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     KeyName_ (::xml_schema::flags (), this),
     KeyValue_ (::xml_schema::flags (), this),
     RetrievalMethod_ (::xml_schema::flags (), this),
@@ -2829,6 +3264,7 @@ namespace dsig
     PGPData_ (::xml_schema::flags (), this),
     SPKIData_ (::xml_schema::flags (), this),
     MgmtData_ (::xml_schema::flags (), this),
+    any_ (this->dom_document ()),
     Id_ (::xml_schema::flags (), this)
   {
   }
@@ -2838,6 +3274,7 @@ namespace dsig
                ::xml_schema::flags f,
                ::xml_schema::container* c)
   : ::xml_schema::type (x, f, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     KeyName_ (x.KeyName_, f, this),
     KeyValue_ (x.KeyValue_, f, this),
     RetrievalMethod_ (x.RetrievalMethod_, f, this),
@@ -2845,6 +3282,7 @@ namespace dsig
     PGPData_ (x.PGPData_, f, this),
     SPKIData_ (x.SPKIData_, f, this),
     MgmtData_ (x.MgmtData_, f, this),
+    any_ (x.any_, this->dom_document ()),
     Id_ (x.Id_, f, this)
   {
   }
@@ -2854,6 +3292,7 @@ namespace dsig
                ::xml_schema::flags f,
                ::xml_schema::container* c)
   : ::xml_schema::type (e, f | ::xml_schema::flags::base, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     KeyName_ (f, this),
     KeyValue_ (f, this),
     RetrievalMethod_ (f, this),
@@ -2861,6 +3300,7 @@ namespace dsig
     PGPData_ (f, this),
     SPKIData_ (f, this),
     MgmtData_ (f, this),
+    any_ (this->dom_document ()),
     Id_ (f, this)
   {
     if ((f & ::xml_schema::flags::base) == 0)
@@ -2957,6 +3397,18 @@ namespace dsig
         continue;
       }
 
+      // any
+      //
+      if ((!n.namespace_ ().empty () && n.namespace_ () != "http://www.w3.org/2000/09/xmldsig#"))
+      {
+        ::xercesc::DOMElement* r (
+          static_cast< ::xercesc::DOMElement* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMElement* > (&i), true)));
+        this->any ().push_back (r);
+        continue;
+      }
+
       break;
     }
 
@@ -2995,8 +3447,10 @@ namespace dsig
   KeyValueType::
   KeyValueType ()
   : ::xml_schema::type (),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     DSAKeyValue_ (::xml_schema::flags (), this),
-    RSAKeyValue_ (::xml_schema::flags (), this)
+    RSAKeyValue_ (::xml_schema::flags (), this),
+    any_ (this->dom_document ())
   {
   }
 
@@ -3005,8 +3459,10 @@ namespace dsig
                 ::xml_schema::flags f,
                 ::xml_schema::container* c)
   : ::xml_schema::type (x, f, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     DSAKeyValue_ (x.DSAKeyValue_, f, this),
-    RSAKeyValue_ (x.RSAKeyValue_, f, this)
+    RSAKeyValue_ (x.RSAKeyValue_, f, this),
+    any_ (x.any_, this->dom_document ())
   {
   }
 
@@ -3015,8 +3471,10 @@ namespace dsig
                 ::xml_schema::flags f,
                 ::xml_schema::container* c)
   : ::xml_schema::type (e, f | ::xml_schema::flags::base, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     DSAKeyValue_ (f, this),
-    RSAKeyValue_ (f, this)
+    RSAKeyValue_ (f, this),
+    any_ (this->dom_document ())
   {
     if ((f & ::xml_schema::flags::base) == 0)
     {
@@ -3059,6 +3517,21 @@ namespace dsig
         if (!this->RSAKeyValue ())
         {
           this->RSAKeyValue (r);
+          continue;
+        }
+      }
+
+      // any
+      //
+      if ((!n.namespace_ ().empty () && n.namespace_ () != "http://www.w3.org/2000/09/xmldsig#"))
+      {
+        if (!this->any ())
+        {
+          ::xercesc::DOMElement* r (
+            static_cast< ::xercesc::DOMElement* > (
+              this->dom_document ().importNode (
+                const_cast< ::xercesc::DOMElement* > (&i), true)));
+          this->any (r);
           continue;
         }
       }
@@ -3189,11 +3662,13 @@ namespace dsig
   X509DataType::
   X509DataType ()
   : ::xml_schema::type (),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     X509IssuerSerial_ (::xml_schema::flags (), this),
     X509SKI_ (::xml_schema::flags (), this),
     X509SubjectName_ (::xml_schema::flags (), this),
     X509Certificate_ (::xml_schema::flags (), this),
-    X509CRL_ (::xml_schema::flags (), this)
+    X509CRL_ (::xml_schema::flags (), this),
+    any_ (this->dom_document ())
   {
   }
 
@@ -3202,11 +3677,13 @@ namespace dsig
                 ::xml_schema::flags f,
                 ::xml_schema::container* c)
   : ::xml_schema::type (x, f, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     X509IssuerSerial_ (x.X509IssuerSerial_, f, this),
     X509SKI_ (x.X509SKI_, f, this),
     X509SubjectName_ (x.X509SubjectName_, f, this),
     X509Certificate_ (x.X509Certificate_, f, this),
-    X509CRL_ (x.X509CRL_, f, this)
+    X509CRL_ (x.X509CRL_, f, this),
+    any_ (x.any_, this->dom_document ())
   {
   }
 
@@ -3215,11 +3692,13 @@ namespace dsig
                 ::xml_schema::flags f,
                 ::xml_schema::container* c)
   : ::xml_schema::type (e, f | ::xml_schema::flags::base, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     X509IssuerSerial_ (f, this),
     X509SKI_ (f, this),
     X509SubjectName_ (f, this),
     X509Certificate_ (f, this),
-    X509CRL_ (f, this)
+    X509CRL_ (f, this),
+    any_ (this->dom_document ())
   {
     if ((f & ::xml_schema::flags::base) == 0)
     {
@@ -3290,6 +3769,18 @@ namespace dsig
           X509CRL_traits::create (i, f, this));
 
         this->X509CRL ().push_back (r);
+        continue;
+      }
+
+      // any
+      //
+      if ((!n.namespace_ ().empty () && n.namespace_ () != "http://www.w3.org/2000/09/xmldsig#"))
+      {
+        ::xercesc::DOMElement* r (
+          static_cast< ::xercesc::DOMElement* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMElement* > (&i), true)));
+        this->any ().push_back (r);
         continue;
       }
 
@@ -3417,8 +3908,11 @@ namespace dsig
   PGPDataType::
   PGPDataType ()
   : ::xml_schema::type (),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     PGPKeyID_ (::xml_schema::flags (), this),
-    PGPKeyPacket_ (::xml_schema::flags (), this)
+    PGPKeyPacket_ (::xml_schema::flags (), this),
+    any_ (this->dom_document ()),
+    any1_ (this->dom_document ())
   {
   }
 
@@ -3427,8 +3921,11 @@ namespace dsig
                ::xml_schema::flags f,
                ::xml_schema::container* c)
   : ::xml_schema::type (x, f, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     PGPKeyID_ (x.PGPKeyID_, f, this),
-    PGPKeyPacket_ (x.PGPKeyPacket_, f, this)
+    PGPKeyPacket_ (x.PGPKeyPacket_, f, this),
+    any_ (x.any_, this->dom_document ()),
+    any1_ (x.any1_, this->dom_document ())
   {
   }
 
@@ -3437,8 +3934,11 @@ namespace dsig
                ::xml_schema::flags f,
                ::xml_schema::container* c)
   : ::xml_schema::type (e, f | ::xml_schema::flags::base, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     PGPKeyID_ (f, this),
-    PGPKeyPacket_ (f, this)
+    PGPKeyPacket_ (f, this),
+    any_ (this->dom_document ()),
+    any1_ (this->dom_document ())
   {
     if ((f & ::xml_schema::flags::base) == 0)
     {
@@ -3485,6 +3985,30 @@ namespace dsig
         }
       }
 
+      // any
+      //
+      if ((!n.namespace_ ().empty () && n.namespace_ () != "http://www.w3.org/2000/09/xmldsig#"))
+      {
+        ::xercesc::DOMElement* r (
+          static_cast< ::xercesc::DOMElement* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMElement* > (&i), true)));
+        this->any ().push_back (r);
+        continue;
+      }
+
+      // any1
+      //
+      if ((!n.namespace_ ().empty () && n.namespace_ () != "http://www.w3.org/2000/09/xmldsig#"))
+      {
+        ::xercesc::DOMElement* r (
+          static_cast< ::xercesc::DOMElement* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMElement* > (&i), true)));
+        this->any1 ().push_back (r);
+        continue;
+      }
+
       break;
     }
   }
@@ -3507,7 +4031,9 @@ namespace dsig
   SPKIDataType::
   SPKIDataType ()
   : ::xml_schema::type (),
-    SPKISexp_ (::xml_schema::flags (), this)
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    SPKISexp_ (::xml_schema::flags (), this),
+    any_ (this->dom_document ())
   {
   }
 
@@ -3516,7 +4042,9 @@ namespace dsig
                 ::xml_schema::flags f,
                 ::xml_schema::container* c)
   : ::xml_schema::type (x, f, c),
-    SPKISexp_ (x.SPKISexp_, f, this)
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    SPKISexp_ (x.SPKISexp_, f, this),
+    any_ (x.any_, this->dom_document ())
   {
   }
 
@@ -3525,7 +4053,9 @@ namespace dsig
                 ::xml_schema::flags f,
                 ::xml_schema::container* c)
   : ::xml_schema::type (e, f | ::xml_schema::flags::base, c),
-    SPKISexp_ (f, this)
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    SPKISexp_ (f, this),
+    any_ (this->dom_document ())
   {
     if ((f & ::xml_schema::flags::base) == 0)
     {
@@ -3555,6 +4085,18 @@ namespace dsig
         continue;
       }
 
+      // any
+      //
+      if ((!n.namespace_ ().empty () && n.namespace_ () != "http://www.w3.org/2000/09/xmldsig#"))
+      {
+        ::xercesc::DOMElement* r (
+          static_cast< ::xercesc::DOMElement* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMElement* > (&i), true)));
+        this->any ().push_back (r);
+        continue;
+      }
+
       break;
     }
   }
@@ -3577,6 +4119,8 @@ namespace dsig
   ObjectType::
   ObjectType ()
   : ::xml_schema::type (),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (this->dom_document ()),
     Id_ (::xml_schema::flags (), this),
     MimeType_ (::xml_schema::flags (), this),
     Encoding_ (::xml_schema::flags (), this)
@@ -3588,6 +4132,8 @@ namespace dsig
               ::xml_schema::flags f,
               ::xml_schema::container* c)
   : ::xml_schema::type (x, f, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (x.any_, this->dom_document ()),
     Id_ (x.Id_, f, this),
     MimeType_ (x.MimeType_, f, this),
     Encoding_ (x.Encoding_, f, this)
@@ -3599,6 +4145,8 @@ namespace dsig
               ::xml_schema::flags f,
               ::xml_schema::container* c)
   : ::xml_schema::type (e, f | ::xml_schema::flags::base, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (this->dom_document ()),
     Id_ (f, this),
     MimeType_ (f, this),
     Encoding_ (f, this)
@@ -3619,6 +4167,18 @@ namespace dsig
       const ::xercesc::DOMElement& i (p.cur_element ());
       const ::xsd::cxx::xml::qualified_name< char > n (
         ::xsd::cxx::xml::dom::name< char > (i));
+
+      // any
+      //
+      if (true)
+      {
+        ::xercesc::DOMElement* r (
+          static_cast< ::xercesc::DOMElement* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMElement* > (&i), true)));
+        this->any ().push_back (r);
+        continue;
+      }
 
       break;
     }
@@ -3854,6 +4414,8 @@ namespace dsig
   SignaturePropertyType::
   SignaturePropertyType (const Target_type& Target)
   : ::xml_schema::type (),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (this->dom_document ()),
     Target_ (Target, ::xml_schema::flags (), this),
     Id_ (::xml_schema::flags (), this)
   {
@@ -3864,6 +4426,8 @@ namespace dsig
                          ::xml_schema::flags f,
                          ::xml_schema::container* c)
   : ::xml_schema::type (x, f, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (x.any_, this->dom_document ()),
     Target_ (x.Target_, f, this),
     Id_ (x.Id_, f, this)
   {
@@ -3874,6 +4438,8 @@ namespace dsig
                          ::xml_schema::flags f,
                          ::xml_schema::container* c)
   : ::xml_schema::type (e, f | ::xml_schema::flags::base, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (this->dom_document ()),
     Target_ (f, this),
     Id_ (f, this)
   {
@@ -3893,6 +4459,18 @@ namespace dsig
       const ::xercesc::DOMElement& i (p.cur_element ());
       const ::xsd::cxx::xml::qualified_name< char > n (
         ::xsd::cxx::xml::dom::name< char > (i));
+
+      // any
+      //
+      if ((!n.namespace_ ().empty () && n.namespace_ () != "http://www.w3.org/2000/09/xmldsig#"))
+      {
+        ::xercesc::DOMElement* r (
+          static_cast< ::xercesc::DOMElement* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMElement* > (&i), true)));
+        this->any ().push_back (r);
+        continue;
+      }
 
       break;
     }
@@ -11678,6 +12256,17 @@ namespace dsig
   {
     e << static_cast< const ::xml_schema::type& > (i);
 
+    // any
+    //
+    for (CanonicalizationMethodType::any_const_iterator
+         b (i.any ().begin ()), n (i.any ().end ());
+         b != n; ++b)
+    {
+      e.appendChild (
+        e.getOwnerDocument ()->importNode (
+          const_cast< ::xercesc::DOMElement* > (&(*b)), true));
+    }
+
     // Algorithm
     //
     {
@@ -11865,6 +12454,17 @@ namespace dsig
           e));
 
       s << *i.HMACOutputLength ();
+    }
+
+    // any
+    //
+    for (SignatureMethodType::any_const_iterator
+         b (i.any ().begin ()), n (i.any ().end ());
+         b != n; ++b)
+    {
+      e.appendChild (
+        e.getOwnerDocument ()->importNode (
+          const_cast< ::xercesc::DOMElement* > (&(*b)), true));
     }
 
     // Algorithm
@@ -12461,6 +13061,17 @@ namespace dsig
   {
     e << static_cast< const ::xml_schema::type& > (i);
 
+    // any
+    //
+    for (TransformType::any_const_iterator
+         b (i.any ().begin ()), n (i.any ().end ());
+         b != n; ++b)
+    {
+      e.appendChild (
+        e.getOwnerDocument ()->importNode (
+          const_cast< ::xercesc::DOMElement* > (&(*b)), true));
+    }
+
     // XPath
     //
     for (TransformType::XPath_const_iterator
@@ -12651,6 +13262,17 @@ namespace dsig
   operator<< (::xercesc::DOMElement& e, const DigestMethodType& i)
   {
     e << static_cast< const ::xml_schema::type& > (i);
+
+    // any
+    //
+    for (DigestMethodType::any_const_iterator
+         b (i.any ().begin ()), n (i.any ().end ());
+         b != n; ++b)
+    {
+      e.appendChild (
+        e.getOwnerDocument ()->importNode (
+          const_cast< ::xercesc::DOMElement* > (&(*b)), true));
+    }
 
     // Algorithm
     //
@@ -13109,6 +13731,17 @@ namespace dsig
           e));
 
       s << *b;
+    }
+
+    // any
+    //
+    for (KeyInfoType::any_const_iterator
+         b (i.any ().begin ()), n (i.any ().end ());
+         b != n; ++b)
+    {
+      e.appendChild (
+        e.getOwnerDocument ()->importNode (
+          const_cast< ::xercesc::DOMElement* > (&(*b)), true));
     }
 
     // Id
@@ -13631,6 +14264,15 @@ namespace dsig
 
       s << *i.RSAKeyValue ();
     }
+
+    // any
+    //
+    if (i.any ())
+    {
+      e.appendChild (
+        e.getOwnerDocument ()->importNode (
+          const_cast< ::xercesc::DOMElement* > (&(*i.any ())), true));
+    }
   }
 
   void
@@ -14073,6 +14715,17 @@ namespace dsig
 
       s << *b;
     }
+
+    // any
+    //
+    for (X509DataType::any_const_iterator
+         b (i.any ().begin ()), n (i.any ().end ());
+         b != n; ++b)
+    {
+      e.appendChild (
+        e.getOwnerDocument ()->importNode (
+          const_cast< ::xercesc::DOMElement* > (&(*b)), true));
+    }
   }
 
   void
@@ -14294,6 +14947,28 @@ namespace dsig
 
       s << *i.PGPKeyPacket ();
     }
+
+    // any
+    //
+    for (PGPDataType::any_const_iterator
+         b (i.any ().begin ()), n (i.any ().end ());
+         b != n; ++b)
+    {
+      e.appendChild (
+        e.getOwnerDocument ()->importNode (
+          const_cast< ::xercesc::DOMElement* > (&(*b)), true));
+    }
+
+    // any1
+    //
+    for (PGPDataType::any1_const_iterator
+         b (i.any1 ().begin ()), n (i.any1 ().end ());
+         b != n; ++b)
+    {
+      e.appendChild (
+        e.getOwnerDocument ()->importNode (
+          const_cast< ::xercesc::DOMElement* > (&(*b)), true));
+    }
   }
 
   void
@@ -14474,6 +15149,17 @@ namespace dsig
 
       s << *b;
     }
+
+    // any
+    //
+    for (SPKIDataType::any_const_iterator
+         b (i.any ().begin ()), n (i.any ().end ());
+         b != n; ++b)
+    {
+      e.appendChild (
+        e.getOwnerDocument ()->importNode (
+          const_cast< ::xercesc::DOMElement* > (&(*b)), true));
+    }
   }
 
   void
@@ -14639,6 +15325,17 @@ namespace dsig
   operator<< (::xercesc::DOMElement& e, const ObjectType& i)
   {
     e << static_cast< const ::xml_schema::type& > (i);
+
+    // any
+    //
+    for (ObjectType::any_const_iterator
+         b (i.any ().begin ()), n (i.any ().end ());
+         b != n; ++b)
+    {
+      e.appendChild (
+        e.getOwnerDocument ()->importNode (
+          const_cast< ::xercesc::DOMElement* > (&(*b)), true));
+    }
 
     // Id
     //
@@ -15224,6 +15921,17 @@ namespace dsig
   operator<< (::xercesc::DOMElement& e, const SignaturePropertyType& i)
   {
     e << static_cast< const ::xml_schema::type& > (i);
+
+    // any
+    //
+    for (SignaturePropertyType::any_const_iterator
+         b (i.any ().begin ()), n (i.any ().end ());
+         b != n; ++b)
+    {
+      e.appendChild (
+        e.getOwnerDocument ()->importNode (
+          const_cast< ::xercesc::DOMElement* > (&(*b)), true));
+    }
 
     // Target
     //

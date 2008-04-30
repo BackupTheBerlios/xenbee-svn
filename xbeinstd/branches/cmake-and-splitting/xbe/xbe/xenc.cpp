@@ -343,6 +343,24 @@ namespace xenc
     this->OAEPparams_.set (x);
   }
 
+  const EncryptionMethodType::any_sequence& EncryptionMethodType::
+  any () const
+  {
+    return this->any_;
+  }
+
+  EncryptionMethodType::any_sequence& EncryptionMethodType::
+  any ()
+  {
+    return this->any_;
+  }
+
+  void EncryptionMethodType::
+  any (const any_sequence& s)
+  {
+    this->any_ = s;
+  }
+
   const EncryptionMethodType::Algorithm_type& EncryptionMethodType::
   Algorithm () const
   {
@@ -365,6 +383,18 @@ namespace xenc
   Algorithm (::std::auto_ptr< Algorithm_type > x)
   {
     this->Algorithm_.set (x);
+  }
+
+  const ::xercesc::DOMDocument& EncryptionMethodType::
+  dom_document () const
+  {
+    return *dom_document_;
+  }
+
+  ::xercesc::DOMDocument& EncryptionMethodType::
+  dom_document ()
+  {
+    return *dom_document_;
   }
 
 
@@ -647,6 +677,24 @@ namespace xenc
     this->KA_Nonce_.set (x);
   }
 
+  const AgreementMethodType::any_sequence& AgreementMethodType::
+  any () const
+  {
+    return this->any_;
+  }
+
+  AgreementMethodType::any_sequence& AgreementMethodType::
+  any ()
+  {
+    return this->any_;
+  }
+
+  void AgreementMethodType::
+  any (const any_sequence& s)
+  {
+    this->any_ = s;
+  }
+
   const AgreementMethodType::OriginatorKeyInfo_optional& AgreementMethodType::
   OriginatorKeyInfo () const
   {
@@ -731,9 +779,39 @@ namespace xenc
     this->Algorithm_.set (x);
   }
 
+  const ::xercesc::DOMDocument& AgreementMethodType::
+  dom_document () const
+  {
+    return *dom_document_;
+  }
+
+  ::xercesc::DOMDocument& AgreementMethodType::
+  dom_document ()
+  {
+    return *dom_document_;
+  }
+
 
   // ReferenceType
   // 
+
+  const ReferenceType::any_sequence& ReferenceType::
+  any () const
+  {
+    return this->any_;
+  }
+
+  ReferenceType::any_sequence& ReferenceType::
+  any ()
+  {
+    return this->any_;
+  }
+
+  void ReferenceType::
+  any (const any_sequence& s)
+  {
+    this->any_ = s;
+  }
 
   const ReferenceType::URI_type& ReferenceType::
   URI () const
@@ -757,6 +835,18 @@ namespace xenc
   URI (::std::auto_ptr< URI_type > x)
   {
     this->URI_.set (x);
+  }
+
+  const ::xercesc::DOMDocument& ReferenceType::
+  dom_document () const
+  {
+    return *dom_document_;
+  }
+
+  ::xercesc::DOMDocument& ReferenceType::
+  dom_document ()
+  {
+    return *dom_document_;
   }
 
 
@@ -814,6 +904,24 @@ namespace xenc
 
   // EncryptionPropertyType
   // 
+
+  const EncryptionPropertyType::any_sequence& EncryptionPropertyType::
+  any () const
+  {
+    return this->any_;
+  }
+
+  EncryptionPropertyType::any_sequence& EncryptionPropertyType::
+  any ()
+  {
+    return this->any_;
+  }
+
+  void EncryptionPropertyType::
+  any (const any_sequence& s)
+  {
+    this->any_ = s;
+  }
 
   const EncryptionPropertyType::Target_optional& EncryptionPropertyType::
   Target () const
@@ -875,6 +983,36 @@ namespace xenc
     this->Id_.set (x);
   }
 
+  const EncryptionPropertyType::any_attribute_set& EncryptionPropertyType::
+  any_attribute () const
+  {
+    return this->any_attribute_;
+  }
+
+  EncryptionPropertyType::any_attribute_set& EncryptionPropertyType::
+  any_attribute ()
+  {
+    return this->any_attribute_;
+  }
+
+  void EncryptionPropertyType::
+  any_attribute (const any_attribute_set& s)
+  {
+    this->any_attribute_ = s;
+  }
+
+  const ::xercesc::DOMDocument& EncryptionPropertyType::
+  dom_document () const
+  {
+    return *dom_document_;
+  }
+
+  ::xercesc::DOMDocument& EncryptionPropertyType::
+  dom_document ()
+  {
+    return *dom_document_;
+  }
+
 
   // ReferenceList
   // 
@@ -915,6 +1053,8 @@ namespace xenc
     this->KeyReference_ = s;
   }
 }
+
+#include <xsd/cxx/xml/dom/wildcard-source.hxx>
 
 #include <xsd/cxx/xml/dom/parsing-source.hxx>
 
@@ -1112,8 +1252,10 @@ namespace xenc
   EncryptionMethodType::
   EncryptionMethodType (const Algorithm_type& Algorithm)
   : ::xml_schema::type (),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     KeySize_ (::xml_schema::flags (), this),
     OAEPparams_ (::xml_schema::flags (), this),
+    any_ (this->dom_document ()),
     Algorithm_ (Algorithm, ::xml_schema::flags (), this)
   {
   }
@@ -1123,8 +1265,10 @@ namespace xenc
                         ::xml_schema::flags f,
                         ::xml_schema::container* c)
   : ::xml_schema::type (x, f, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     KeySize_ (x.KeySize_, f, this),
     OAEPparams_ (x.OAEPparams_, f, this),
+    any_ (x.any_, this->dom_document ()),
     Algorithm_ (x.Algorithm_, f, this)
   {
   }
@@ -1134,8 +1278,10 @@ namespace xenc
                         ::xml_schema::flags f,
                         ::xml_schema::container* c)
   : ::xml_schema::type (e, f | ::xml_schema::flags::base, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     KeySize_ (f, this),
     OAEPparams_ (f, this),
+    any_ (this->dom_document ()),
     Algorithm_ (f, this)
   {
     if ((f & ::xml_schema::flags::base) == 0)
@@ -1181,6 +1327,18 @@ namespace xenc
           this->OAEPparams (r);
           continue;
         }
+      }
+
+      // any
+      //
+      if ((!n.namespace_ ().empty () && n.namespace_ () != "http://www.w3.org/2001/04/xmlenc#"))
+      {
+        ::xercesc::DOMElement* r (
+          static_cast< ::xercesc::DOMElement* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMElement* > (&i), true)));
+        this->any ().push_back (r);
+        continue;
       }
 
       break;
@@ -1691,7 +1849,9 @@ namespace xenc
   AgreementMethodType::
   AgreementMethodType (const Algorithm_type& Algorithm)
   : ::xml_schema::type (),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     KA_Nonce_ (::xml_schema::flags (), this),
+    any_ (this->dom_document ()),
     OriginatorKeyInfo_ (::xml_schema::flags (), this),
     RecipientKeyInfo_ (::xml_schema::flags (), this),
     Algorithm_ (Algorithm, ::xml_schema::flags (), this)
@@ -1703,7 +1863,9 @@ namespace xenc
                        ::xml_schema::flags f,
                        ::xml_schema::container* c)
   : ::xml_schema::type (x, f, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     KA_Nonce_ (x.KA_Nonce_, f, this),
+    any_ (x.any_, this->dom_document ()),
     OriginatorKeyInfo_ (x.OriginatorKeyInfo_, f, this),
     RecipientKeyInfo_ (x.RecipientKeyInfo_, f, this),
     Algorithm_ (x.Algorithm_, f, this)
@@ -1715,7 +1877,9 @@ namespace xenc
                        ::xml_schema::flags f,
                        ::xml_schema::container* c)
   : ::xml_schema::type (e, f | ::xml_schema::flags::base, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     KA_Nonce_ (f, this),
+    any_ (this->dom_document ()),
     OriginatorKeyInfo_ (f, this),
     RecipientKeyInfo_ (f, this),
     Algorithm_ (f, this)
@@ -1749,6 +1913,18 @@ namespace xenc
           this->KA_Nonce (r);
           continue;
         }
+      }
+
+      // any
+      //
+      if ((!n.namespace_ ().empty () && n.namespace_ () != "http://www.w3.org/2001/04/xmlenc#"))
+      {
+        ::xercesc::DOMElement* r (
+          static_cast< ::xercesc::DOMElement* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMElement* > (&i), true)));
+        this->any ().push_back (r);
+        continue;
       }
 
       // OriginatorKeyInfo
@@ -1824,6 +2000,8 @@ namespace xenc
   ReferenceType::
   ReferenceType (const URI_type& URI)
   : ::xml_schema::type (),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (this->dom_document ()),
     URI_ (URI, ::xml_schema::flags (), this)
   {
   }
@@ -1833,6 +2011,8 @@ namespace xenc
                  ::xml_schema::flags f,
                  ::xml_schema::container* c)
   : ::xml_schema::type (x, f, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (x.any_, this->dom_document ()),
     URI_ (x.URI_, f, this)
   {
   }
@@ -1842,6 +2022,8 @@ namespace xenc
                  ::xml_schema::flags f,
                  ::xml_schema::container* c)
   : ::xml_schema::type (e, f | ::xml_schema::flags::base, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (this->dom_document ()),
     URI_ (f, this)
   {
     if ((f & ::xml_schema::flags::base) == 0)
@@ -1860,6 +2042,18 @@ namespace xenc
       const ::xercesc::DOMElement& i (p.cur_element ());
       const ::xsd::cxx::xml::qualified_name< char > n (
         ::xsd::cxx::xml::dom::name< char > (i));
+
+      // any
+      //
+      if ((!n.namespace_ ().empty () && n.namespace_ () != "http://www.w3.org/2001/04/xmlenc#"))
+      {
+        ::xercesc::DOMElement* r (
+          static_cast< ::xercesc::DOMElement* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMElement* > (&i), true)));
+        this->any ().push_back (r);
+        continue;
+      }
 
       break;
     }
@@ -1995,8 +2189,11 @@ namespace xenc
   EncryptionPropertyType::
   EncryptionPropertyType ()
   : ::xml_schema::type (),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (this->dom_document ()),
     Target_ (::xml_schema::flags (), this),
-    Id_ (::xml_schema::flags (), this)
+    Id_ (::xml_schema::flags (), this),
+    any_attribute_ (this->dom_document ())
   {
   }
 
@@ -2005,8 +2202,11 @@ namespace xenc
                           ::xml_schema::flags f,
                           ::xml_schema::container* c)
   : ::xml_schema::type (x, f, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (x.any_, this->dom_document ()),
     Target_ (x.Target_, f, this),
-    Id_ (x.Id_, f, this)
+    Id_ (x.Id_, f, this),
+    any_attribute_ (x.any_attribute_, this->dom_document ())
   {
   }
 
@@ -2015,8 +2215,11 @@ namespace xenc
                           ::xml_schema::flags f,
                           ::xml_schema::container* c)
   : ::xml_schema::type (e, f | ::xml_schema::flags::base, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (this->dom_document ()),
     Target_ (f, this),
-    Id_ (f, this)
+    Id_ (f, this),
+    any_attribute_ (this->dom_document ())
   {
     if ((f & ::xml_schema::flags::base) == 0)
     {
@@ -2034,6 +2237,18 @@ namespace xenc
       const ::xercesc::DOMElement& i (p.cur_element ());
       const ::xsd::cxx::xml::qualified_name< char > n (
         ::xsd::cxx::xml::dom::name< char > (i));
+
+      // any
+      //
+      if ((!n.namespace_ ().empty () && n.namespace_ () != "http://www.w3.org/2001/04/xmlenc#"))
+      {
+        ::xercesc::DOMElement* r (
+          static_cast< ::xercesc::DOMElement* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMElement* > (&i), true)));
+        this->any ().push_back (r);
+        continue;
+      }
 
       break;
     }
@@ -2059,6 +2274,18 @@ namespace xenc
           Id_traits::create (i, f, this));
 
         this->Id (r);
+        continue;
+      }
+
+      // any_attribute
+      //
+      if (n.namespace_ () == "http://www.w3.org/XML/1998/namespace")
+      {
+        ::xercesc::DOMAttr* r (
+          static_cast< ::xercesc::DOMAttr* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMAttr* > (&i), true)));
+        this->any_attribute ().insert (r);
         continue;
       }
     }
@@ -4502,6 +4729,17 @@ namespace xenc
       s << *i.OAEPparams ();
     }
 
+    // any
+    //
+    for (EncryptionMethodType::any_const_iterator
+         b (i.any ().begin ()), n (i.any ().end ());
+         b != n; ++b)
+    {
+      e.appendChild (
+        e.getOwnerDocument ()->importNode (
+          const_cast< ::xercesc::DOMElement* > (&(*b)), true));
+    }
+
     // Algorithm
     //
     {
@@ -5479,6 +5717,17 @@ namespace xenc
       s << *i.KA_Nonce ();
     }
 
+    // any
+    //
+    for (AgreementMethodType::any_const_iterator
+         b (i.any ().begin ()), n (i.any ().end ());
+         b != n; ++b)
+    {
+      e.appendChild (
+        e.getOwnerDocument ()->importNode (
+          const_cast< ::xercesc::DOMElement* > (&(*b)), true));
+    }
+
     // OriginatorKeyInfo
     //
     if (i.OriginatorKeyInfo ())
@@ -5680,6 +5929,17 @@ namespace xenc
   operator<< (::xercesc::DOMElement& e, const ReferenceType& i)
   {
     e << static_cast< const ::xml_schema::type& > (i);
+
+    // any
+    //
+    for (ReferenceType::any_const_iterator
+         b (i.any ().begin ()), n (i.any ().end ());
+         b != n; ++b)
+    {
+      e.appendChild (
+        e.getOwnerDocument ()->importNode (
+          const_cast< ::xercesc::DOMElement* > (&(*b)), true));
+    }
 
     // URI
     //
@@ -6048,6 +6308,34 @@ namespace xenc
   operator<< (::xercesc::DOMElement& e, const EncryptionPropertyType& i)
   {
     e << static_cast< const ::xml_schema::type& > (i);
+
+    // any_attribute
+    //
+    for (EncryptionPropertyType::any_attribute_const_iterator
+         b (i.any_attribute ().begin ()), n (i.any_attribute ().end ());
+         b != n; ++b)
+    {
+      ::xercesc::DOMAttr* a (
+        static_cast< ::xercesc::DOMAttr* > (
+          e.getOwnerDocument ()->importNode (
+            const_cast< ::xercesc::DOMAttr* > (&(*b)), true)));
+
+      if (a->getLocalName () == 0)
+        e.setAttributeNode (a);
+      else
+        e.setAttributeNodeNS (a);
+    }
+
+    // any
+    //
+    for (EncryptionPropertyType::any_const_iterator
+         b (i.any ().begin ()), n (i.any ().end ());
+         b != n; ++b)
+    {
+      e.appendChild (
+        e.getOwnerDocument ()->importNode (
+          const_cast< ::xercesc::DOMElement* > (&(*b)), true));
+    }
 
     // Target
     //

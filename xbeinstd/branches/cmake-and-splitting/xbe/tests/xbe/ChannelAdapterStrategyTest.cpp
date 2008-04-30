@@ -1,8 +1,11 @@
+#include "testsconfig.hpp"
+#include "ChannelAdapterStrategyTest.hpp"
+
 #include <string>
 
 #include <xbe/common.hpp>
-#include <xbe/ChannelEventQueueAdapter.hpp>
-#include <xbe/XMLMessageEvent.hpp>
+#include <xbe/ChannelAdapterStrategy.hpp>
+#include <xbe/MessageEvent.hpp>
 
 #include <seda/Stage.hpp>
 #include <seda/EventQueue.hpp>
@@ -12,33 +15,29 @@
 #include <seda/DiscardStrategy.hpp>
 #include <seda/LoggingStrategy.hpp>
 
-#include "testsconfig.hpp"
-#include "MessagePingPongTest.hpp"
-
 using namespace xbe::tests;
 
-CPPUNIT_TEST_SUITE_REGISTRATION( MessagePingPongTest );
+CPPUNIT_TEST_SUITE_REGISTRATION( ChannelAdapterStrategyTest );
 
-ChannelEventQueueAdapterTest::ChannelEventQueueAdapterTest()
+ChannelAdapterStrategyTest::ChannelAdapterStrategyTest()
   : INIT_LOGGER("tests.xbe.channeladapter")
 {}
 
 void
-ChannelEventQueueAdapterTest::setUp() {}
+ChannelAdapterStrategyTest::setUp() {}
 
 void
-ChannelEventQueueAdapterTest::tearDown() {}
+ChannelAdapterStrategyTest::tearDown() {}
 
 void
-ChannelEventQueueAdapterTest::testSendViaChannelText() {
+ChannelAdapterStrategyTest::testSendViaChannelText() {
   mqs::Channel::Ptr channel(new mqs::Channel(mqs::BrokerURI(TEST_BROKER_URI),
 					     mqs::Destination("tests.xbe.queue?type=queue")));
-  seda::IEventQueue::Ptr queue(new xbe::ChannelEventQueueAdapter(channel));
   seda::Strategy::Ptr discard(new seda::DiscardStrategy());
   seda::EventCountStrategy::Ptr ecs(new seda::EventCountStrategy(discard));
   discard = seda::Strategy::Ptr(ecs);
-  
-  seda::Stage::Ptr stage(new seda::Stage("net", queue, discard));
+  discard = seda::Strategy::Ptr(new ::xbe::ChannelAdapterStrategy("tests.xbe.channeladapter", discard, channel));
+  seda::Stage::Ptr stage(new seda::Stage("net", discard));
 
   channel->start();
   stage->start();
@@ -56,15 +55,14 @@ ChannelEventQueueAdapterTest::testSendViaChannelText() {
 }
 
 void
-ChannelEventQueueAdapterTest::testSendViaChannelNoneText() {
+ChannelAdapterStrategyTest::testSendViaChannelNoneText() {
   mqs::Channel::Ptr channel(new mqs::Channel(mqs::BrokerURI(TEST_BROKER_URI),
 					     mqs::Destination("tests.xbe.queue?type=queue")));
-  seda::IEventQueue::Ptr queue(new xbe::ChannelEventQueueAdapter(channel));
   seda::Strategy::Ptr discard(new seda::DiscardStrategy());
   seda::EventCountStrategy::Ptr ecs(new seda::EventCountStrategy(discard));
   discard = seda::Strategy::Ptr(ecs);
-  
-  seda::Stage::Ptr stage(new seda::Stage("net", queue, discard));
+  discard = seda::Strategy::Ptr(new ::xbe::ChannelAdapterStrategy("tests.xbe.channeladapter", discard, channel));
+  seda::Stage::Ptr stage(new seda::Stage("net", discard));
 
   channel->start();
   stage->start();
@@ -81,20 +79,17 @@ ChannelEventQueueAdapterTest::testSendViaChannelNoneText() {
 
   stage->stop();
   channel->stop();
-  //  CPPUNIT_ASSERT_MESSAGE("test not implemented", false);
 }
 
 void
-ChannelEventQueueAdapterTest::testSendViaStageMessage() {
+ChannelAdapterStrategyTest::testSendViaStageMessage() {
   mqs::Channel::Ptr channel(new mqs::Channel(mqs::BrokerURI(TEST_BROKER_URI),
 					     mqs::Destination("tests.xbe.queue?type=queue")));
-  seda::IEventQueue::Ptr queue(new xbe::ChannelEventQueueAdapter(channel));
-
   seda::Strategy::Ptr discard(new seda::DiscardStrategy());
   seda::EventCountStrategy::Ptr ecs(new seda::EventCountStrategy(discard));
   discard = seda::Strategy::Ptr(ecs);
-  
-  seda::Stage::Ptr stage(new seda::Stage("net", queue, discard));
+  discard = seda::Strategy::Ptr(new ::xbe::ChannelAdapterStrategy("tests.xbe.channeladapter", discard, channel));
+  seda::Stage::Ptr stage(new seda::Stage("net", discard));
 
   channel->start();
   stage->start();
@@ -112,16 +107,13 @@ ChannelEventQueueAdapterTest::testSendViaStageMessage() {
 }
 
 void
-ChannelEventQueueAdapterTest::testSendViaStageNoneMessage() {
+ChannelAdapterStrategyTest::testSendViaStageNoneMessage() {
   mqs::Channel::Ptr channel(new mqs::Channel(mqs::BrokerURI(TEST_BROKER_URI),
 					     mqs::Destination("tests.xbe.queue?type=queue")));
-  seda::IEventQueue::Ptr queue(new xbe::ChannelEventQueueAdapter(channel));
-
   seda::Strategy::Ptr discard(new seda::DiscardStrategy());
   seda::EventCountStrategy::Ptr ecs(new seda::EventCountStrategy(discard));
-  discard = seda::Strategy::Ptr(ecs);
-
-  seda::Stage::Ptr stage(new seda::Stage("net", queue, discard));
+  discard = seda::Strategy::Ptr(new ::xbe::ChannelAdapterStrategy("tests.xbe.channeladapter", ecs, channel));
+  seda::Stage::Ptr stage(new seda::Stage("net", discard));
 
   channel->start();
   stage->start();

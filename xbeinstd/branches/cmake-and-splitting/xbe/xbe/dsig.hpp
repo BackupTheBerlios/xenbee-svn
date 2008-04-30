@@ -284,6 +284,8 @@ namespace dsig
 
 #include <xsd/cxx/xml/dom/parsing-header.hxx>
 
+#include <xsd/cxx/tree/containers-wildcard.hxx>
+
 namespace dsig
 {
   class CryptoBinary: public ::xml_schema::base64_binary
@@ -619,6 +621,21 @@ namespace dsig
   class CanonicalizationMethodType: public ::xml_schema::type
   {
     public:
+    // any
+    // 
+    typedef ::xsd::cxx::tree::element_sequence any_sequence;
+    typedef any_sequence::iterator any_iterator;
+    typedef any_sequence::const_iterator any_const_iterator;
+
+    const any_sequence&
+    any () const;
+
+    any_sequence&
+    any ();
+
+    void
+    any (const any_sequence& s);
+
     // Algorithm
     // 
     typedef ::xml_schema::uri Algorithm_type;
@@ -635,6 +652,14 @@ namespace dsig
 
     void
     Algorithm (::std::auto_ptr< Algorithm_type > p);
+
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
 
     // Constructors.
     //
@@ -663,6 +688,9 @@ namespace dsig
            ::xml_schema::flags);
 
     protected:
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
+    any_sequence any_;
     ::xsd::cxx::tree::one< Algorithm_type > Algorithm_;
   };
 
@@ -690,6 +718,21 @@ namespace dsig
     void
     HMACOutputLength (::std::auto_ptr< HMACOutputLength_type > p);
 
+    // any
+    // 
+    typedef ::xsd::cxx::tree::element_sequence any_sequence;
+    typedef any_sequence::iterator any_iterator;
+    typedef any_sequence::const_iterator any_const_iterator;
+
+    const any_sequence&
+    any () const;
+
+    any_sequence&
+    any ();
+
+    void
+    any (const any_sequence& s);
+
     // Algorithm
     // 
     typedef ::xml_schema::uri Algorithm_type;
@@ -706,6 +749,14 @@ namespace dsig
 
     void
     Algorithm (::std::auto_ptr< Algorithm_type > p);
+
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
 
     // Constructors.
     //
@@ -734,7 +785,10 @@ namespace dsig
            ::xml_schema::flags);
 
     protected:
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
     HMACOutputLength_optional HMACOutputLength_;
+    any_sequence any_;
     ::xsd::cxx::tree::one< Algorithm_type > Algorithm_;
   };
 
@@ -948,6 +1002,21 @@ namespace dsig
   class TransformType: public ::xml_schema::type
   {
     public:
+    // any
+    // 
+    typedef ::xsd::cxx::tree::element_sequence any_sequence;
+    typedef any_sequence::iterator any_iterator;
+    typedef any_sequence::const_iterator any_const_iterator;
+
+    const any_sequence&
+    any () const;
+
+    any_sequence&
+    any ();
+
+    void
+    any (const any_sequence& s);
+
     // XPath
     // 
     typedef ::xml_schema::string XPath_type;
@@ -982,6 +1051,14 @@ namespace dsig
     void
     Algorithm (::std::auto_ptr< Algorithm_type > p);
 
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
+
     // Constructors.
     //
     TransformType (const Algorithm_type&);
@@ -1009,6 +1086,9 @@ namespace dsig
            ::xml_schema::flags);
 
     protected:
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
+    any_sequence any_;
     XPath_sequence XPath_;
     ::xsd::cxx::tree::one< Algorithm_type > Algorithm_;
   };
@@ -1016,6 +1096,21 @@ namespace dsig
   class DigestMethodType: public ::xml_schema::type
   {
     public:
+    // any
+    // 
+    typedef ::xsd::cxx::tree::element_sequence any_sequence;
+    typedef any_sequence::iterator any_iterator;
+    typedef any_sequence::const_iterator any_const_iterator;
+
+    const any_sequence&
+    any () const;
+
+    any_sequence&
+    any ();
+
+    void
+    any (const any_sequence& s);
+
     // Algorithm
     // 
     typedef ::xml_schema::uri Algorithm_type;
@@ -1032,6 +1127,14 @@ namespace dsig
 
     void
     Algorithm (::std::auto_ptr< Algorithm_type > p);
+
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
 
     // Constructors.
     //
@@ -1060,6 +1163,9 @@ namespace dsig
            ::xml_schema::flags);
 
     protected:
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
+    any_sequence any_;
     ::xsd::cxx::tree::one< Algorithm_type > Algorithm_;
   };
 
@@ -1219,6 +1325,21 @@ namespace dsig
     void
     MgmtData (const MgmtData_sequence& s);
 
+    // any
+    // 
+    typedef ::xsd::cxx::tree::element_sequence any_sequence;
+    typedef any_sequence::iterator any_iterator;
+    typedef any_sequence::const_iterator any_const_iterator;
+
+    const any_sequence&
+    any () const;
+
+    any_sequence&
+    any ();
+
+    void
+    any (const any_sequence& s);
+
     // Id
     // 
     typedef ::xml_schema::id Id_type;
@@ -1239,6 +1360,14 @@ namespace dsig
 
     void
     Id (::std::auto_ptr< Id_type > p);
+
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
 
     // Constructors.
     //
@@ -1267,6 +1396,8 @@ namespace dsig
            ::xml_schema::flags);
 
     protected:
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
     KeyName_sequence KeyName_;
     KeyValue_sequence KeyValue_;
     RetrievalMethod_sequence RetrievalMethod_;
@@ -1274,6 +1405,7 @@ namespace dsig
     PGPData_sequence PGPData_;
     SPKIData_sequence SPKIData_;
     MgmtData_sequence MgmtData_;
+    any_sequence any_;
     Id_optional Id_;
   };
 
@@ -1322,6 +1454,33 @@ namespace dsig
     void
     RSAKeyValue (::std::auto_ptr< RSAKeyValue_type > p);
 
+    // any
+    // 
+    typedef ::xsd::cxx::tree::element_optional any_optional;
+
+    const any_optional&
+    any () const;
+
+    any_optional&
+    any ();
+
+    void
+    any (const ::xercesc::DOMElement& e);
+
+    void
+    any (::xercesc::DOMElement* p);
+
+    void
+    any (const any_optional& x);
+
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
+
     // Constructors.
     //
     KeyValueType ();
@@ -1349,8 +1508,11 @@ namespace dsig
            ::xml_schema::flags);
 
     protected:
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
     DSAKeyValue_optional DSAKeyValue_;
     RSAKeyValue_optional RSAKeyValue_;
+    any_optional any_;
   };
 
   class RetrievalMethodType: public ::xml_schema::type
@@ -1539,6 +1701,29 @@ namespace dsig
     void
     X509CRL (const X509CRL_sequence& s);
 
+    // any
+    // 
+    typedef ::xsd::cxx::tree::element_sequence any_sequence;
+    typedef any_sequence::iterator any_iterator;
+    typedef any_sequence::const_iterator any_const_iterator;
+
+    const any_sequence&
+    any () const;
+
+    any_sequence&
+    any ();
+
+    void
+    any (const any_sequence& s);
+
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
+
     // Constructors.
     //
     X509DataType ();
@@ -1566,11 +1751,14 @@ namespace dsig
            ::xml_schema::flags);
 
     protected:
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
     X509IssuerSerial_sequence X509IssuerSerial_;
     X509SKI_sequence X509SKI_;
     X509SubjectName_sequence X509SubjectName_;
     X509Certificate_sequence X509Certificate_;
     X509CRL_sequence X509CRL_;
+    any_sequence any_;
   };
 
   class X509IssuerSerialType: public ::xml_schema::type
@@ -1684,6 +1872,44 @@ namespace dsig
     void
     PGPKeyPacket (::std::auto_ptr< PGPKeyPacket_type > p);
 
+    // any
+    // 
+    typedef ::xsd::cxx::tree::element_sequence any_sequence;
+    typedef any_sequence::iterator any_iterator;
+    typedef any_sequence::const_iterator any_const_iterator;
+
+    const any_sequence&
+    any () const;
+
+    any_sequence&
+    any ();
+
+    void
+    any (const any_sequence& s);
+
+    // any1
+    // 
+    typedef ::xsd::cxx::tree::element_sequence any1_sequence;
+    typedef any1_sequence::iterator any1_iterator;
+    typedef any1_sequence::const_iterator any1_const_iterator;
+
+    const any1_sequence&
+    any1 () const;
+
+    any1_sequence&
+    any1 ();
+
+    void
+    any1 (const any1_sequence& s);
+
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
+
     // Constructors.
     //
     PGPDataType ();
@@ -1711,8 +1937,12 @@ namespace dsig
            ::xml_schema::flags);
 
     protected:
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
     PGPKeyID_optional PGPKeyID_;
     PGPKeyPacket_optional PGPKeyPacket_;
+    any_sequence any_;
+    any1_sequence any1_;
   };
 
   class SPKIDataType: public ::xml_schema::type
@@ -1734,6 +1964,29 @@ namespace dsig
 
     void
     SPKISexp (const SPKISexp_sequence& s);
+
+    // any
+    // 
+    typedef ::xsd::cxx::tree::element_sequence any_sequence;
+    typedef any_sequence::iterator any_iterator;
+    typedef any_sequence::const_iterator any_const_iterator;
+
+    const any_sequence&
+    any () const;
+
+    any_sequence&
+    any ();
+
+    void
+    any (const any_sequence& s);
+
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
 
     // Constructors.
     //
@@ -1762,12 +2015,30 @@ namespace dsig
            ::xml_schema::flags);
 
     protected:
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
     SPKISexp_sequence SPKISexp_;
+    any_sequence any_;
   };
 
   class ObjectType: public ::xml_schema::type
   {
     public:
+    // any
+    // 
+    typedef ::xsd::cxx::tree::element_sequence any_sequence;
+    typedef any_sequence::iterator any_iterator;
+    typedef any_sequence::const_iterator any_const_iterator;
+
+    const any_sequence&
+    any () const;
+
+    any_sequence&
+    any ();
+
+    void
+    any (const any_sequence& s);
+
     // Id
     // 
     typedef ::xml_schema::id Id_type;
@@ -1831,6 +2102,14 @@ namespace dsig
     void
     Encoding (::std::auto_ptr< Encoding_type > p);
 
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
+
     // Constructors.
     //
     ObjectType ();
@@ -1858,6 +2137,9 @@ namespace dsig
            ::xml_schema::flags);
 
     protected:
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
+    any_sequence any_;
     Id_optional Id_;
     MimeType_optional MimeType_;
     Encoding_optional Encoding_;
@@ -2010,6 +2292,21 @@ namespace dsig
   class SignaturePropertyType: public ::xml_schema::type
   {
     public:
+    // any
+    // 
+    typedef ::xsd::cxx::tree::element_sequence any_sequence;
+    typedef any_sequence::iterator any_iterator;
+    typedef any_sequence::const_iterator any_const_iterator;
+
+    const any_sequence&
+    any () const;
+
+    any_sequence&
+    any ();
+
+    void
+    any (const any_sequence& s);
+
     // Target
     // 
     typedef ::xml_schema::uri Target_type;
@@ -2048,6 +2345,14 @@ namespace dsig
     void
     Id (::std::auto_ptr< Id_type > p);
 
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
+
     // Constructors.
     //
     SignaturePropertyType (const Target_type&);
@@ -2075,6 +2380,9 @@ namespace dsig
            ::xml_schema::flags);
 
     protected:
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
+    any_sequence any_;
     ::xsd::cxx::tree::one< Target_type > Target_;
     Id_optional Id_;
   };

@@ -99,6 +99,36 @@ namespace jsdlPosix
     this->filesystemName_.set (x);
   }
 
+  const Environment_Type::any_attribute_set& Environment_Type::
+  any_attribute () const
+  {
+    return this->any_attribute_;
+  }
+
+  Environment_Type::any_attribute_set& Environment_Type::
+  any_attribute ()
+  {
+    return this->any_attribute_;
+  }
+
+  void Environment_Type::
+  any_attribute (const any_attribute_set& s)
+  {
+    this->any_attribute_ = s;
+  }
+
+  const ::xercesc::DOMDocument& Environment_Type::
+  dom_document () const
+  {
+    return *dom_document_;
+  }
+
+  ::xercesc::DOMDocument& Environment_Type::
+  dom_document ()
+  {
+    return *dom_document_;
+  }
+
 
   // Argument_Type
   // 
@@ -131,6 +161,36 @@ namespace jsdlPosix
   filesystemName (::std::auto_ptr< filesystemName_type > x)
   {
     this->filesystemName_.set (x);
+  }
+
+  const Argument_Type::any_attribute_set& Argument_Type::
+  any_attribute () const
+  {
+    return this->any_attribute_;
+  }
+
+  Argument_Type::any_attribute_set& Argument_Type::
+  any_attribute ()
+  {
+    return this->any_attribute_;
+  }
+
+  void Argument_Type::
+  any_attribute (const any_attribute_set& s)
+  {
+    this->any_attribute_ = s;
+  }
+
+  const ::xercesc::DOMDocument& Argument_Type::
+  dom_document () const
+  {
+    return *dom_document_;
+  }
+
+  ::xercesc::DOMDocument& Argument_Type::
+  dom_document ()
+  {
+    return *dom_document_;
   }
 
 
@@ -167,6 +227,36 @@ namespace jsdlPosix
     this->filesystemName_.set (x);
   }
 
+  const FileName_Type::any_attribute_set& FileName_Type::
+  any_attribute () const
+  {
+    return this->any_attribute_;
+  }
+
+  FileName_Type::any_attribute_set& FileName_Type::
+  any_attribute ()
+  {
+    return this->any_attribute_;
+  }
+
+  void FileName_Type::
+  any_attribute (const any_attribute_set& s)
+  {
+    this->any_attribute_ = s;
+  }
+
+  const ::xercesc::DOMDocument& FileName_Type::
+  dom_document () const
+  {
+    return *dom_document_;
+  }
+
+  ::xercesc::DOMDocument& FileName_Type::
+  dom_document ()
+  {
+    return *dom_document_;
+  }
+
 
   // DirectoryName_Type
   // 
@@ -201,17 +291,137 @@ namespace jsdlPosix
     this->filesystemName_.set (x);
   }
 
+  const DirectoryName_Type::any_attribute_set& DirectoryName_Type::
+  any_attribute () const
+  {
+    return this->any_attribute_;
+  }
+
+  DirectoryName_Type::any_attribute_set& DirectoryName_Type::
+  any_attribute ()
+  {
+    return this->any_attribute_;
+  }
+
+  void DirectoryName_Type::
+  any_attribute (const any_attribute_set& s)
+  {
+    this->any_attribute_ = s;
+  }
+
+  const ::xercesc::DOMDocument& DirectoryName_Type::
+  dom_document () const
+  {
+    return *dom_document_;
+  }
+
+  ::xercesc::DOMDocument& DirectoryName_Type::
+  dom_document ()
+  {
+    return *dom_document_;
+  }
+
 
   // Limits_Type
   // 
+
+  const Limits_Type::any_attribute_set& Limits_Type::
+  any_attribute () const
+  {
+    return this->any_attribute_;
+  }
+
+  Limits_Type::any_attribute_set& Limits_Type::
+  any_attribute ()
+  {
+    return this->any_attribute_;
+  }
+
+  void Limits_Type::
+  any_attribute (const any_attribute_set& s)
+  {
+    this->any_attribute_ = s;
+  }
+
+  const ::xercesc::DOMDocument& Limits_Type::
+  dom_document () const
+  {
+    return *dom_document_;
+  }
+
+  ::xercesc::DOMDocument& Limits_Type::
+  dom_document ()
+  {
+    return *dom_document_;
+  }
 
 
   // UserName_Type
   // 
 
+  const UserName_Type::any_attribute_set& UserName_Type::
+  any_attribute () const
+  {
+    return this->any_attribute_;
+  }
+
+  UserName_Type::any_attribute_set& UserName_Type::
+  any_attribute ()
+  {
+    return this->any_attribute_;
+  }
+
+  void UserName_Type::
+  any_attribute (const any_attribute_set& s)
+  {
+    this->any_attribute_ = s;
+  }
+
+  const ::xercesc::DOMDocument& UserName_Type::
+  dom_document () const
+  {
+    return *dom_document_;
+  }
+
+  ::xercesc::DOMDocument& UserName_Type::
+  dom_document ()
+  {
+    return *dom_document_;
+  }
+
 
   // GroupName_Type
   // 
+
+  const GroupName_Type::any_attribute_set& GroupName_Type::
+  any_attribute () const
+  {
+    return this->any_attribute_;
+  }
+
+  GroupName_Type::any_attribute_set& GroupName_Type::
+  any_attribute ()
+  {
+    return this->any_attribute_;
+  }
+
+  void GroupName_Type::
+  any_attribute (const any_attribute_set& s)
+  {
+    this->any_attribute_ = s;
+  }
+
+  const ::xercesc::DOMDocument& GroupName_Type::
+  dom_document () const
+  {
+    return *dom_document_;
+  }
+
+  ::xercesc::DOMDocument& GroupName_Type::
+  dom_document ()
+  {
+    return *dom_document_;
+  }
 
 
   // POSIXApplication_Type
@@ -882,7 +1092,39 @@ namespace jsdlPosix
   {
     this->name_.set (x);
   }
+
+  const POSIXApplication_Type::any_attribute_set& POSIXApplication_Type::
+  any_attribute () const
+  {
+    return this->any_attribute_;
+  }
+
+  POSIXApplication_Type::any_attribute_set& POSIXApplication_Type::
+  any_attribute ()
+  {
+    return this->any_attribute_;
+  }
+
+  void POSIXApplication_Type::
+  any_attribute (const any_attribute_set& s)
+  {
+    this->any_attribute_ = s;
+  }
+
+  const ::xercesc::DOMDocument& POSIXApplication_Type::
+  dom_document () const
+  {
+    return *dom_document_;
+  }
+
+  ::xercesc::DOMDocument& POSIXApplication_Type::
+  dom_document ()
+  {
+    return *dom_document_;
+  }
 }
+
+#include <xsd/cxx/xml/dom/wildcard-source.hxx>
 
 #include <xsd/cxx/xml/dom/parsing-source.hxx>
 
@@ -894,8 +1136,10 @@ namespace jsdlPosix
   Environment_Type::
   Environment_Type (const name_type& name)
   : ::xml_schema::string (),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     name_ (name, ::xml_schema::flags (), this),
-    filesystemName_ (::xml_schema::flags (), this)
+    filesystemName_ (::xml_schema::flags (), this),
+    any_attribute_ (this->dom_document ())
   {
   }
 
@@ -903,8 +1147,10 @@ namespace jsdlPosix
   Environment_Type (const char* string,
                     const name_type& name)
   : ::xml_schema::string (string),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     name_ (name, ::xml_schema::flags (), this),
-    filesystemName_ (::xml_schema::flags (), this)
+    filesystemName_ (::xml_schema::flags (), this),
+    any_attribute_ (this->dom_document ())
   {
   }
 
@@ -912,8 +1158,10 @@ namespace jsdlPosix
   Environment_Type (const ::std::string& string,
                     const name_type& name)
   : ::xml_schema::string (string),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     name_ (name, ::xml_schema::flags (), this),
-    filesystemName_ (::xml_schema::flags (), this)
+    filesystemName_ (::xml_schema::flags (), this),
+    any_attribute_ (this->dom_document ())
   {
   }
 
@@ -921,8 +1169,10 @@ namespace jsdlPosix
   Environment_Type (const ::xml_schema::string& string,
                     const name_type& name)
   : ::xml_schema::string (string),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     name_ (name, ::xml_schema::flags (), this),
-    filesystemName_ (::xml_schema::flags (), this)
+    filesystemName_ (::xml_schema::flags (), this),
+    any_attribute_ (this->dom_document ())
   {
   }
 
@@ -931,8 +1181,10 @@ namespace jsdlPosix
                     ::xml_schema::flags f,
                     ::xml_schema::container* c)
   : ::xml_schema::string (x, f, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     name_ (x.name_, f, this),
-    filesystemName_ (x.filesystemName_, f, this)
+    filesystemName_ (x.filesystemName_, f, this),
+    any_attribute_ (x.any_attribute_, this->dom_document ())
   {
   }
 
@@ -941,8 +1193,10 @@ namespace jsdlPosix
                     ::xml_schema::flags f,
                     ::xml_schema::container* c)
   : ::xml_schema::string (e, f | ::xml_schema::flags::base, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     name_ (f, this),
-    filesystemName_ (f, this)
+    filesystemName_ (f, this),
+    any_attribute_ (this->dom_document ())
   {
     if ((f & ::xml_schema::flags::base) == 0)
     {
@@ -978,6 +1232,21 @@ namespace jsdlPosix
         this->filesystemName (r);
         continue;
       }
+
+      // any_attribute
+      //
+      if ((!n.namespace_ ().empty () &&
+           n.namespace_ () != "http://schemas.ggf.org/jsdl/2005/11/jsdl-posix" &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xmlns_namespace< char > () &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xsi_namespace< char > ()))
+      {
+        ::xercesc::DOMAttr* r (
+          static_cast< ::xercesc::DOMAttr* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMAttr* > (&i), true)));
+        this->any_attribute ().insert (r);
+        continue;
+      }
     }
 
     if (!name_.present ())
@@ -1006,28 +1275,36 @@ namespace jsdlPosix
   Argument_Type::
   Argument_Type ()
   : ::xml_schema::normalized_string (),
-    filesystemName_ (::xml_schema::flags (), this)
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    filesystemName_ (::xml_schema::flags (), this),
+    any_attribute_ (this->dom_document ())
   {
   }
 
   Argument_Type::
   Argument_Type (const char* normalized_string)
   : ::xml_schema::normalized_string (normalized_string),
-    filesystemName_ (::xml_schema::flags (), this)
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    filesystemName_ (::xml_schema::flags (), this),
+    any_attribute_ (this->dom_document ())
   {
   }
 
   Argument_Type::
   Argument_Type (const ::std::string& normalized_string)
   : ::xml_schema::normalized_string (normalized_string),
-    filesystemName_ (::xml_schema::flags (), this)
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    filesystemName_ (::xml_schema::flags (), this),
+    any_attribute_ (this->dom_document ())
   {
   }
 
   Argument_Type::
   Argument_Type (const ::xml_schema::normalized_string& normalized_string)
   : ::xml_schema::normalized_string (normalized_string),
-    filesystemName_ (::xml_schema::flags (), this)
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    filesystemName_ (::xml_schema::flags (), this),
+    any_attribute_ (this->dom_document ())
   {
   }
 
@@ -1036,7 +1313,9 @@ namespace jsdlPosix
                  ::xml_schema::flags f,
                  ::xml_schema::container* c)
   : ::xml_schema::normalized_string (x, f, c),
-    filesystemName_ (x.filesystemName_, f, this)
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    filesystemName_ (x.filesystemName_, f, this),
+    any_attribute_ (x.any_attribute_, this->dom_document ())
   {
   }
 
@@ -1045,7 +1324,9 @@ namespace jsdlPosix
                  ::xml_schema::flags f,
                  ::xml_schema::container* c)
   : ::xml_schema::normalized_string (e, f | ::xml_schema::flags::base, c),
-    filesystemName_ (f, this)
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    filesystemName_ (f, this),
+    any_attribute_ (this->dom_document ())
   {
     if ((f & ::xml_schema::flags::base) == 0)
     {
@@ -1072,6 +1353,21 @@ namespace jsdlPosix
         this->filesystemName (r);
         continue;
       }
+
+      // any_attribute
+      //
+      if ((!n.namespace_ ().empty () &&
+           n.namespace_ () != "http://schemas.ggf.org/jsdl/2005/11/jsdl-posix" &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xmlns_namespace< char > () &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xsi_namespace< char > ()))
+      {
+        ::xercesc::DOMAttr* r (
+          static_cast< ::xercesc::DOMAttr* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMAttr* > (&i), true)));
+        this->any_attribute ().insert (r);
+        continue;
+      }
     }
   }
 
@@ -1093,28 +1389,36 @@ namespace jsdlPosix
   FileName_Type::
   FileName_Type ()
   : ::xml_schema::string (),
-    filesystemName_ (::xml_schema::flags (), this)
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    filesystemName_ (::xml_schema::flags (), this),
+    any_attribute_ (this->dom_document ())
   {
   }
 
   FileName_Type::
   FileName_Type (const char* string)
   : ::xml_schema::string (string),
-    filesystemName_ (::xml_schema::flags (), this)
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    filesystemName_ (::xml_schema::flags (), this),
+    any_attribute_ (this->dom_document ())
   {
   }
 
   FileName_Type::
   FileName_Type (const ::std::string& string)
   : ::xml_schema::string (string),
-    filesystemName_ (::xml_schema::flags (), this)
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    filesystemName_ (::xml_schema::flags (), this),
+    any_attribute_ (this->dom_document ())
   {
   }
 
   FileName_Type::
   FileName_Type (const ::xml_schema::string& string)
   : ::xml_schema::string (string),
-    filesystemName_ (::xml_schema::flags (), this)
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    filesystemName_ (::xml_schema::flags (), this),
+    any_attribute_ (this->dom_document ())
   {
   }
 
@@ -1123,7 +1427,9 @@ namespace jsdlPosix
                  ::xml_schema::flags f,
                  ::xml_schema::container* c)
   : ::xml_schema::string (x, f, c),
-    filesystemName_ (x.filesystemName_, f, this)
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    filesystemName_ (x.filesystemName_, f, this),
+    any_attribute_ (x.any_attribute_, this->dom_document ())
   {
   }
 
@@ -1132,7 +1438,9 @@ namespace jsdlPosix
                  ::xml_schema::flags f,
                  ::xml_schema::container* c)
   : ::xml_schema::string (e, f | ::xml_schema::flags::base, c),
-    filesystemName_ (f, this)
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    filesystemName_ (f, this),
+    any_attribute_ (this->dom_document ())
   {
     if ((f & ::xml_schema::flags::base) == 0)
     {
@@ -1159,6 +1467,21 @@ namespace jsdlPosix
         this->filesystemName (r);
         continue;
       }
+
+      // any_attribute
+      //
+      if ((!n.namespace_ ().empty () &&
+           n.namespace_ () != "http://schemas.ggf.org/jsdl/2005/11/jsdl-posix" &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xmlns_namespace< char > () &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xsi_namespace< char > ()))
+      {
+        ::xercesc::DOMAttr* r (
+          static_cast< ::xercesc::DOMAttr* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMAttr* > (&i), true)));
+        this->any_attribute ().insert (r);
+        continue;
+      }
     }
   }
 
@@ -1180,28 +1503,36 @@ namespace jsdlPosix
   DirectoryName_Type::
   DirectoryName_Type ()
   : ::xml_schema::string (),
-    filesystemName_ (::xml_schema::flags (), this)
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    filesystemName_ (::xml_schema::flags (), this),
+    any_attribute_ (this->dom_document ())
   {
   }
 
   DirectoryName_Type::
   DirectoryName_Type (const char* string)
   : ::xml_schema::string (string),
-    filesystemName_ (::xml_schema::flags (), this)
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    filesystemName_ (::xml_schema::flags (), this),
+    any_attribute_ (this->dom_document ())
   {
   }
 
   DirectoryName_Type::
   DirectoryName_Type (const ::std::string& string)
   : ::xml_schema::string (string),
-    filesystemName_ (::xml_schema::flags (), this)
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    filesystemName_ (::xml_schema::flags (), this),
+    any_attribute_ (this->dom_document ())
   {
   }
 
   DirectoryName_Type::
   DirectoryName_Type (const ::xml_schema::string& string)
   : ::xml_schema::string (string),
-    filesystemName_ (::xml_schema::flags (), this)
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    filesystemName_ (::xml_schema::flags (), this),
+    any_attribute_ (this->dom_document ())
   {
   }
 
@@ -1210,7 +1541,9 @@ namespace jsdlPosix
                       ::xml_schema::flags f,
                       ::xml_schema::container* c)
   : ::xml_schema::string (x, f, c),
-    filesystemName_ (x.filesystemName_, f, this)
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    filesystemName_ (x.filesystemName_, f, this),
+    any_attribute_ (x.any_attribute_, this->dom_document ())
   {
   }
 
@@ -1219,7 +1552,9 @@ namespace jsdlPosix
                       ::xml_schema::flags f,
                       ::xml_schema::container* c)
   : ::xml_schema::string (e, f | ::xml_schema::flags::base, c),
-    filesystemName_ (f, this)
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    filesystemName_ (f, this),
+    any_attribute_ (this->dom_document ())
   {
     if ((f & ::xml_schema::flags::base) == 0)
     {
@@ -1246,6 +1581,21 @@ namespace jsdlPosix
         this->filesystemName (r);
         continue;
       }
+
+      // any_attribute
+      //
+      if ((!n.namespace_ ().empty () &&
+           n.namespace_ () != "http://schemas.ggf.org/jsdl/2005/11/jsdl-posix" &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xmlns_namespace< char > () &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xsi_namespace< char > ()))
+      {
+        ::xercesc::DOMAttr* r (
+          static_cast< ::xercesc::DOMAttr* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMAttr* > (&i), true)));
+        this->any_attribute ().insert (r);
+        continue;
+      }
     }
   }
 
@@ -1266,7 +1616,9 @@ namespace jsdlPosix
 
   Limits_Type::
   Limits_Type (const ::xml_schema::non_negative_integer& non_negative_integer)
-  : ::xsd::cxx::tree::fundamental_base< ::xml_schema::non_negative_integer, char, ::xml_schema::simple_type > (non_negative_integer)
+  : ::xsd::cxx::tree::fundamental_base< ::xml_schema::non_negative_integer, char, ::xml_schema::simple_type > (non_negative_integer),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_attribute_ (this->dom_document ())
   {
   }
 
@@ -1274,7 +1626,9 @@ namespace jsdlPosix
   Limits_Type (const Limits_Type& x,
                ::xml_schema::flags f,
                ::xml_schema::container* c)
-  : ::xsd::cxx::tree::fundamental_base< ::xml_schema::non_negative_integer, char, ::xml_schema::simple_type > (x, f, c)
+  : ::xsd::cxx::tree::fundamental_base< ::xml_schema::non_negative_integer, char, ::xml_schema::simple_type > (x, f, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_attribute_ (x.any_attribute_, this->dom_document ())
   {
   }
 
@@ -1282,8 +1636,42 @@ namespace jsdlPosix
   Limits_Type (const ::xercesc::DOMElement& e,
                ::xml_schema::flags f,
                ::xml_schema::container* c)
-  : ::xsd::cxx::tree::fundamental_base< ::xml_schema::non_negative_integer, char, ::xml_schema::simple_type > (e, f, c)
+  : ::xsd::cxx::tree::fundamental_base< ::xml_schema::non_negative_integer, char, ::xml_schema::simple_type > (e, f | ::xml_schema::flags::base, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_attribute_ (this->dom_document ())
   {
+    if ((f & ::xml_schema::flags::base) == 0)
+    {
+      ::xsd::cxx::xml::dom::parser< char > p (e);
+      this->parse (p, f);
+    }
+  }
+
+  void Limits_Type::
+  parse (::xsd::cxx::xml::dom::parser< char >& p,
+         ::xml_schema::flags)
+  {
+    while (p.more_attributes ())
+    {
+      const ::xercesc::DOMAttr& i (p.next_attribute ());
+      const ::xsd::cxx::xml::qualified_name< char > n (
+        ::xsd::cxx::xml::dom::name< char > (i));
+
+      // any_attribute
+      //
+      if ((!n.namespace_ ().empty () &&
+           n.namespace_ () != "http://schemas.ggf.org/jsdl/2005/11/jsdl-posix" &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xmlns_namespace< char > () &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xsi_namespace< char > ()))
+      {
+        ::xercesc::DOMAttr* r (
+          static_cast< ::xercesc::DOMAttr* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMAttr* > (&i), true)));
+        this->any_attribute ().insert (r);
+        continue;
+      }
+    }
   }
 
   Limits_Type* Limits_Type::
@@ -1303,25 +1691,33 @@ namespace jsdlPosix
 
   UserName_Type::
   UserName_Type ()
-  : ::xml_schema::string ()
+  : ::xml_schema::string (),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_attribute_ (this->dom_document ())
   {
   }
 
   UserName_Type::
   UserName_Type (const char* string)
-  : ::xml_schema::string (string)
+  : ::xml_schema::string (string),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_attribute_ (this->dom_document ())
   {
   }
 
   UserName_Type::
   UserName_Type (const ::std::string& string)
-  : ::xml_schema::string (string)
+  : ::xml_schema::string (string),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_attribute_ (this->dom_document ())
   {
   }
 
   UserName_Type::
   UserName_Type (const ::xml_schema::string& string)
-  : ::xml_schema::string (string)
+  : ::xml_schema::string (string),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_attribute_ (this->dom_document ())
   {
   }
 
@@ -1329,7 +1725,9 @@ namespace jsdlPosix
   UserName_Type (const UserName_Type& x,
                  ::xml_schema::flags f,
                  ::xml_schema::container* c)
-  : ::xml_schema::string (x, f, c)
+  : ::xml_schema::string (x, f, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_attribute_ (x.any_attribute_, this->dom_document ())
   {
   }
 
@@ -1337,8 +1735,42 @@ namespace jsdlPosix
   UserName_Type (const ::xercesc::DOMElement& e,
                  ::xml_schema::flags f,
                  ::xml_schema::container* c)
-  : ::xml_schema::string (e, f, c)
+  : ::xml_schema::string (e, f | ::xml_schema::flags::base, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_attribute_ (this->dom_document ())
   {
+    if ((f & ::xml_schema::flags::base) == 0)
+    {
+      ::xsd::cxx::xml::dom::parser< char > p (e);
+      this->parse (p, f);
+    }
+  }
+
+  void UserName_Type::
+  parse (::xsd::cxx::xml::dom::parser< char >& p,
+         ::xml_schema::flags)
+  {
+    while (p.more_attributes ())
+    {
+      const ::xercesc::DOMAttr& i (p.next_attribute ());
+      const ::xsd::cxx::xml::qualified_name< char > n (
+        ::xsd::cxx::xml::dom::name< char > (i));
+
+      // any_attribute
+      //
+      if ((!n.namespace_ ().empty () &&
+           n.namespace_ () != "http://schemas.ggf.org/jsdl/2005/11/jsdl-posix" &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xmlns_namespace< char > () &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xsi_namespace< char > ()))
+      {
+        ::xercesc::DOMAttr* r (
+          static_cast< ::xercesc::DOMAttr* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMAttr* > (&i), true)));
+        this->any_attribute ().insert (r);
+        continue;
+      }
+    }
   }
 
   UserName_Type* UserName_Type::
@@ -1358,25 +1790,33 @@ namespace jsdlPosix
 
   GroupName_Type::
   GroupName_Type ()
-  : ::xml_schema::string ()
+  : ::xml_schema::string (),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_attribute_ (this->dom_document ())
   {
   }
 
   GroupName_Type::
   GroupName_Type (const char* string)
-  : ::xml_schema::string (string)
+  : ::xml_schema::string (string),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_attribute_ (this->dom_document ())
   {
   }
 
   GroupName_Type::
   GroupName_Type (const ::std::string& string)
-  : ::xml_schema::string (string)
+  : ::xml_schema::string (string),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_attribute_ (this->dom_document ())
   {
   }
 
   GroupName_Type::
   GroupName_Type (const ::xml_schema::string& string)
-  : ::xml_schema::string (string)
+  : ::xml_schema::string (string),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_attribute_ (this->dom_document ())
   {
   }
 
@@ -1384,7 +1824,9 @@ namespace jsdlPosix
   GroupName_Type (const GroupName_Type& x,
                   ::xml_schema::flags f,
                   ::xml_schema::container* c)
-  : ::xml_schema::string (x, f, c)
+  : ::xml_schema::string (x, f, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_attribute_ (x.any_attribute_, this->dom_document ())
   {
   }
 
@@ -1392,8 +1834,42 @@ namespace jsdlPosix
   GroupName_Type (const ::xercesc::DOMElement& e,
                   ::xml_schema::flags f,
                   ::xml_schema::container* c)
-  : ::xml_schema::string (e, f, c)
+  : ::xml_schema::string (e, f | ::xml_schema::flags::base, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_attribute_ (this->dom_document ())
   {
+    if ((f & ::xml_schema::flags::base) == 0)
+    {
+      ::xsd::cxx::xml::dom::parser< char > p (e);
+      this->parse (p, f);
+    }
+  }
+
+  void GroupName_Type::
+  parse (::xsd::cxx::xml::dom::parser< char >& p,
+         ::xml_schema::flags)
+  {
+    while (p.more_attributes ())
+    {
+      const ::xercesc::DOMAttr& i (p.next_attribute ());
+      const ::xsd::cxx::xml::qualified_name< char > n (
+        ::xsd::cxx::xml::dom::name< char > (i));
+
+      // any_attribute
+      //
+      if ((!n.namespace_ ().empty () &&
+           n.namespace_ () != "http://schemas.ggf.org/jsdl/2005/11/jsdl-posix" &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xmlns_namespace< char > () &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xsi_namespace< char > ()))
+      {
+        ::xercesc::DOMAttr* r (
+          static_cast< ::xercesc::DOMAttr* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMAttr* > (&i), true)));
+        this->any_attribute ().insert (r);
+        continue;
+      }
+    }
   }
 
   GroupName_Type* GroupName_Type::
@@ -1414,6 +1890,7 @@ namespace jsdlPosix
   POSIXApplication_Type::
   POSIXApplication_Type ()
   : ::xml_schema::type (),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     Executable_ (::xml_schema::flags (), this),
     Argument_ (::xml_schema::flags (), this),
     Input_ (::xml_schema::flags (), this),
@@ -1436,7 +1913,8 @@ namespace jsdlPosix
     ThreadCountLimit_ (::xml_schema::flags (), this),
     UserName_ (::xml_schema::flags (), this),
     GroupName_ (::xml_schema::flags (), this),
-    name_ (::xml_schema::flags (), this)
+    name_ (::xml_schema::flags (), this),
+    any_attribute_ (this->dom_document ())
   {
   }
 
@@ -1445,6 +1923,7 @@ namespace jsdlPosix
                          ::xml_schema::flags f,
                          ::xml_schema::container* c)
   : ::xml_schema::type (x, f, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     Executable_ (x.Executable_, f, this),
     Argument_ (x.Argument_, f, this),
     Input_ (x.Input_, f, this),
@@ -1467,7 +1946,8 @@ namespace jsdlPosix
     ThreadCountLimit_ (x.ThreadCountLimit_, f, this),
     UserName_ (x.UserName_, f, this),
     GroupName_ (x.GroupName_, f, this),
-    name_ (x.name_, f, this)
+    name_ (x.name_, f, this),
+    any_attribute_ (x.any_attribute_, this->dom_document ())
   {
   }
 
@@ -1476,6 +1956,7 @@ namespace jsdlPosix
                          ::xml_schema::flags f,
                          ::xml_schema::container* c)
   : ::xml_schema::type (e, f | ::xml_schema::flags::base, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     Executable_ (f, this),
     Argument_ (f, this),
     Input_ (f, this),
@@ -1498,7 +1979,8 @@ namespace jsdlPosix
     ThreadCountLimit_ (f, this),
     UserName_ (f, this),
     GroupName_ (f, this),
-    name_ (f, this)
+    name_ (f, this),
+    any_attribute_ (this->dom_document ())
   {
     if ((f & ::xml_schema::flags::base) == 0)
     {
@@ -1834,6 +2316,21 @@ namespace jsdlPosix
           name_traits::create (i, f, this));
 
         this->name (r);
+        continue;
+      }
+
+      // any_attribute
+      //
+      if ((!n.namespace_ ().empty () &&
+           n.namespace_ () != "http://schemas.ggf.org/jsdl/2005/11/jsdl-posix" &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xmlns_namespace< char > () &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xsi_namespace< char > ()))
+      {
+        ::xercesc::DOMAttr* r (
+          static_cast< ::xercesc::DOMAttr* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMAttr* > (&i), true)));
+        this->any_attribute ().insert (r);
         continue;
       }
     }
@@ -8172,6 +8669,23 @@ namespace jsdlPosix
   {
     e << static_cast< const ::xml_schema::string& > (i);
 
+    // any_attribute
+    //
+    for (Environment_Type::any_attribute_const_iterator
+         b (i.any_attribute ().begin ()), n (i.any_attribute ().end ());
+         b != n; ++b)
+    {
+      ::xercesc::DOMAttr* a (
+        static_cast< ::xercesc::DOMAttr* > (
+          e.getOwnerDocument ()->importNode (
+            const_cast< ::xercesc::DOMAttr* > (&(*b)), true)));
+
+      if (a->getLocalName () == 0)
+        e.setAttributeNode (a);
+      else
+        e.setAttributeNodeNS (a);
+    }
+
     // name
     //
     {
@@ -8201,6 +8715,23 @@ namespace jsdlPosix
   {
     e << static_cast< const ::xml_schema::normalized_string& > (i);
 
+    // any_attribute
+    //
+    for (Argument_Type::any_attribute_const_iterator
+         b (i.any_attribute ().begin ()), n (i.any_attribute ().end ());
+         b != n; ++b)
+    {
+      ::xercesc::DOMAttr* a (
+        static_cast< ::xercesc::DOMAttr* > (
+          e.getOwnerDocument ()->importNode (
+            const_cast< ::xercesc::DOMAttr* > (&(*b)), true)));
+
+      if (a->getLocalName () == 0)
+        e.setAttributeNode (a);
+      else
+        e.setAttributeNodeNS (a);
+    }
+
     // filesystemName
     //
     if (i.filesystemName ())
@@ -8218,6 +8749,23 @@ namespace jsdlPosix
   operator<< (::xercesc::DOMElement& e, const FileName_Type& i)
   {
     e << static_cast< const ::xml_schema::string& > (i);
+
+    // any_attribute
+    //
+    for (FileName_Type::any_attribute_const_iterator
+         b (i.any_attribute ().begin ()), n (i.any_attribute ().end ());
+         b != n; ++b)
+    {
+      ::xercesc::DOMAttr* a (
+        static_cast< ::xercesc::DOMAttr* > (
+          e.getOwnerDocument ()->importNode (
+            const_cast< ::xercesc::DOMAttr* > (&(*b)), true)));
+
+      if (a->getLocalName () == 0)
+        e.setAttributeNode (a);
+      else
+        e.setAttributeNodeNS (a);
+    }
 
     // filesystemName
     //
@@ -8237,6 +8785,23 @@ namespace jsdlPosix
   {
     e << static_cast< const ::xml_schema::string& > (i);
 
+    // any_attribute
+    //
+    for (DirectoryName_Type::any_attribute_const_iterator
+         b (i.any_attribute ().begin ()), n (i.any_attribute ().end ());
+         b != n; ++b)
+    {
+      ::xercesc::DOMAttr* a (
+        static_cast< ::xercesc::DOMAttr* > (
+          e.getOwnerDocument ()->importNode (
+            const_cast< ::xercesc::DOMAttr* > (&(*b)), true)));
+
+      if (a->getLocalName () == 0)
+        e.setAttributeNode (a);
+      else
+        e.setAttributeNodeNS (a);
+    }
+
     // filesystemName
     //
     if (i.filesystemName ())
@@ -8254,24 +8819,92 @@ namespace jsdlPosix
   operator<< (::xercesc::DOMElement& e, const Limits_Type& i)
   {
     e << static_cast< const ::xsd::cxx::tree::fundamental_base< ::xml_schema::non_negative_integer, char, ::xml_schema::simple_type >& > (i);
+
+    // any_attribute
+    //
+    for (Limits_Type::any_attribute_const_iterator
+         b (i.any_attribute ().begin ()), n (i.any_attribute ().end ());
+         b != n; ++b)
+    {
+      ::xercesc::DOMAttr* a (
+        static_cast< ::xercesc::DOMAttr* > (
+          e.getOwnerDocument ()->importNode (
+            const_cast< ::xercesc::DOMAttr* > (&(*b)), true)));
+
+      if (a->getLocalName () == 0)
+        e.setAttributeNode (a);
+      else
+        e.setAttributeNodeNS (a);
+    }
   }
 
   void
   operator<< (::xercesc::DOMElement& e, const UserName_Type& i)
   {
     e << static_cast< const ::xml_schema::string& > (i);
+
+    // any_attribute
+    //
+    for (UserName_Type::any_attribute_const_iterator
+         b (i.any_attribute ().begin ()), n (i.any_attribute ().end ());
+         b != n; ++b)
+    {
+      ::xercesc::DOMAttr* a (
+        static_cast< ::xercesc::DOMAttr* > (
+          e.getOwnerDocument ()->importNode (
+            const_cast< ::xercesc::DOMAttr* > (&(*b)), true)));
+
+      if (a->getLocalName () == 0)
+        e.setAttributeNode (a);
+      else
+        e.setAttributeNodeNS (a);
+    }
   }
 
   void
   operator<< (::xercesc::DOMElement& e, const GroupName_Type& i)
   {
     e << static_cast< const ::xml_schema::string& > (i);
+
+    // any_attribute
+    //
+    for (GroupName_Type::any_attribute_const_iterator
+         b (i.any_attribute ().begin ()), n (i.any_attribute ().end ());
+         b != n; ++b)
+    {
+      ::xercesc::DOMAttr* a (
+        static_cast< ::xercesc::DOMAttr* > (
+          e.getOwnerDocument ()->importNode (
+            const_cast< ::xercesc::DOMAttr* > (&(*b)), true)));
+
+      if (a->getLocalName () == 0)
+        e.setAttributeNode (a);
+      else
+        e.setAttributeNodeNS (a);
+    }
   }
 
   void
   operator<< (::xercesc::DOMElement& e, const POSIXApplication_Type& i)
   {
     e << static_cast< const ::xml_schema::type& > (i);
+
+    // any_attribute
+    //
+    for (POSIXApplication_Type::any_attribute_const_iterator
+         b (i.any_attribute ().begin ()), n (i.any_attribute ().end ());
+         b != n; ++b)
+    {
+      ::xercesc::DOMAttr* a (
+        static_cast< ::xercesc::DOMAttr* > (
+          e.getOwnerDocument ()->importNode (
+            const_cast< ::xercesc::DOMAttr* > (&(*b)), true)));
+
+      if (a->getLocalName () == 0)
+        e.setAttributeNode (a);
+      else
+        e.setAttributeNodeNS (a);
+    }
 
     // Executable
     //

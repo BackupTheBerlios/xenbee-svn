@@ -1,9 +1,9 @@
 #ifndef TESTS_XBE_PING_PONG_HPP
 #define TESTS_XBE_PING_PONG_HPP 1
 
-#include <seda/Stage.hpp>
-#include <seda/Strategy.hpp>
-#include <xbe/XMLMessageDispatcher.hpp>
+#include <string>
+
+#include <seda/ForwardStrategy.hpp>
 
 #include <tests/xbe/PingEvent.hpp>
 #include <tests/xbe/PongEvent.hpp>
@@ -12,25 +12,45 @@
 
 namespace tests {
     namespace xbe {
-        class PingPong : ::xbe::XMLMessageDispatcher {
+        class PingPong : public ::seda::ForwardStrategy {
         public:
-            PingPong(const seda::Strategy::Ptr& s, const seda::Stage::Ptr& out, bool initialSend=false);
+            typedef std::tr1::shared_ptr<PingPong> Ptr;
+            
+            PingPong(const std::string& name,
+                     const std::string& next,
+                     const std::string& to,
+                     const std::string& from,
+                     std::size_t maxMessages,
+                     bool initialSend=false);
             ~PingPong();
 
+        public:
+            void perform(const seda::IEvent::Ptr& e) const;
+
+            void doStart();
+            void doStop();
+            
         public: // StateMachine callbacks
             void start();
             void sendPing(const tests::xbe::PongEvent&);
             void sendPong(const tests::xbe::PingEvent&);
             void stop();
 
+            std::size_t maxMessages() const { return _maxMessages; }
+            std::size_t sentMessages() const { return _sentMessages; }
         protected: // message dispatcher
             virtual void dispatch(const xbemsg::message_t& msg);
             
         protected:
             PingPongContext _fsm;  // what to do with incoming events
-            seda::Stage::Ptr _out; // where to send generated events
 
         private:
+            void incSentMessages() { _sentMessages++; }
+
+            std::string _to;
+            std::string _from;
+            std::size_t _maxMessages;
+            std::size_t _sentMessages;
             bool _initialSend; // perform an inital send operation during start up
         };
     }

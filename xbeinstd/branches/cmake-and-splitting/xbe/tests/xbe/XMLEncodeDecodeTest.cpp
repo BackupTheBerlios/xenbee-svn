@@ -6,6 +6,7 @@
 #include <seda/Stage.hpp>
 #include <seda/EventQueue.hpp>
 #include <seda/IEvent.hpp>
+#include <seda/StageRegistry.hpp>
 #include <seda/ForwardStrategy.hpp>
 #include <seda/EventCountStrategy.hpp>
 #include <seda/DiscardStrategy.hpp>
@@ -34,6 +35,7 @@ XMLEncodeDecodeTest::setUp() {
 
 void
 XMLEncodeDecodeTest::tearDown() {
+  seda::StageRegistry::instance().clear();
   XbeLibUtils::terminate();
 }
 
@@ -45,9 +47,11 @@ XMLEncodeDecodeTest::testEncode() {
   discard = seda::Strategy::Ptr(new seda::LoggingStrategy(discard));
   seda::Stage::Ptr final(new seda::Stage("final", discard));
 
-  seda::Strategy::Ptr fwd(new seda::ForwardStrategy(final));
+  seda::Strategy::Ptr fwd(new seda::ForwardStrategy("final"));
   fwd = seda::Strategy::Ptr(new xbe::XMLSerializeStrategy(fwd));
   seda::Stage::Ptr start(new seda::Stage("final", fwd));
+
+  seda::StageRegistry::instance().insert(final);
 
   start->start();
   final->start();

@@ -9,6 +9,7 @@ macro(add_xsd_schema BASE_NAME PATH_TO_SCHEMA)
       COMMAND ${XSD_EXECUTABLE} cxx-tree --generate-serialization
       --hxx-suffix .hpp --cxx-suffix .cpp
       --root-element-all
+      --generate-wildcard
       --reserved-name "LINUX=LINUX_OS"
       --namespace-map "http://www.xenbee.net/schema/2008/02/xbe-msg=xbemsg"
       --namespace-map "http://schemas.ggf.org/jsdl/2005/11/jsdl-posix=jsdlPosix"

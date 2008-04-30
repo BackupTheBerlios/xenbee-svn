@@ -41,3 +41,12 @@ IEvent::Ptr EventFactory::newEvent(const cms::TextMessage* m) const {
 IEvent::Ptr EventFactory::newEvent(const cms::CMSException& ex) const {
   return seda::IEvent::Ptr(new ErrorEvent(ex.getMessage(), ex.getStackTraceString()));
 }
+
+IEvent::Ptr EventFactory::newEvent(const std::exception& ex) const {
+  return seda::IEvent::Ptr(new ErrorEvent(ex.what()));
+}
+
+
+SystemEvent::Ptr EventFactory::newErrorEvent(const std::string& reason, const std::string& additionalData) const {
+    return SystemEvent::Ptr(new ErrorEvent(reason, additionalData));
+}

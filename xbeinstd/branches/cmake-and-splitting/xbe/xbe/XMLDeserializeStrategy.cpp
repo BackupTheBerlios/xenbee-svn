@@ -1,7 +1,10 @@
+#include <sstream>
+
+#include "XbeLibUtils.hpp"
 #include "XMLDeserializeStrategy.hpp"
 #include "MessageEvent.hpp"
 #include "XMLMessageEvent.hpp"
-#include <sstream>
+
 
 using namespace xbe;
 
@@ -10,7 +13,8 @@ void XMLDeserializeStrategy::perform(const seda::IEvent::Ptr& e) const {
   if (msgEvent) {
     std::istringstream is(msgEvent->message());
     try {
-      std::auto_ptr<xbemsg::message_t> msg = xbemsg::message(is);
+      std::auto_ptr<xbemsg::message_t> msg = xbemsg::message(is, xml_schema::flags::dont_initialize);
+      LOG_DEBUG("length of body: " << msg->body().any().size());
       seda::IEvent::Ptr xmlMsg(new XMLMessageEvent(*msg));
       seda::StrategyDecorator::perform(xmlMsg);
     } catch (const xml_schema::exception& ex) {
