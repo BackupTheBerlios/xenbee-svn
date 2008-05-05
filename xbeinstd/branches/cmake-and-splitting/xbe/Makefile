@@ -1,3 +1,4 @@
+CMAKE=cmake
 BUILD_DIR=build
 top_srcdir=${CURDIR}
 
@@ -9,7 +10,7 @@ compile: config
 	make -C $(BUILD_DIR)
 
 config: $(BUILD_DIR) CMakeLists.txt
-	cd $(BUILD_DIR) && cmake $(top_srcdir)
+	cd $(BUILD_DIR) && $(CMAKE) $(top_srcdir)
 
 distclean:
 	@-rm -r $(BUILD_DIR) 2>/dev/null
