@@ -121,7 +121,7 @@ link_directories(${AMQ_LIBRARY_DIRS})
 link_libraries(-lcrypto -lpthread -lmqs -lseda)
 link_libraries(-Wl,-Bstatic ${AMQ_STATIC_LIBRARIES})
 link_libraries(-Wl,-Bdynamic ${XERCESC_LIBRARIES})
-link_libraries(-Wl,-Bdynamic -lxalan-c)
+#link_libraries(-Wl,-Bdynamic -lxalan-c)
 link_libraries(${XMLSecurityC_LIBRARIES})
 
 if(XSD_FOUND)
