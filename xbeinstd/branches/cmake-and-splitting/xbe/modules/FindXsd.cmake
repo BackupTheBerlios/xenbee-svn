@@ -7,22 +7,26 @@
 # XSD_EXECUTABLE, where is the xsd compiler
 # XSD_FOUND, If false, don't try to use xsd
 
-FIND_PATH(XSD_INCLUDE_DIR cxx/parser/elements.hxx
+FIND_PATH(XSD_INCLUDE_DIR xsd/cxx/parser/elements.hxx
   "[HKEY_CURRENT_USER\\software\\xsd\\include]"
   "[HKEY_CURRENT_USER]\\xsd\\include]"
-  $ENV{XSDDIR}/include
-  /usr/local/include/xsd
-  /usr/include/xsd
+  $ENV{XSD_INCLUDE_DIR}
+  $ENV{XSDDIR}/libxsd
+  /usr/local/include
+  /usr/include
 )
 
-FIND_PROGRAM(XSD_EXECUTABLE 
+FIND_PROGRAM(XSD_EXECUTABLE
   NAMES 
     xsd
   PATHS
     "[HKEY_CURRENT_USER\\xsd\\bin"
-    $ENV{XSDDIR}/bin 
+    $ENV{XSDDIR}/bin
     /usr/local/bin
     /usr/bin
+    ENV XSD_BIN_DIR
+  DOC "Path to the CodeSynthesis Schema Compiler"
+  NO_DEFAULT_PATH
 )
 
 # if the include and the program are found then we have it
