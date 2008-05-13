@@ -29,7 +29,7 @@ namespace xbe {
       void testSendViaStageMessage();
       void testSendViaStageNoneMessage();
     private:
-      DECLARE_LOGGER();
+      XBE_DECLARE_LOGGER();
     };
   }
 }

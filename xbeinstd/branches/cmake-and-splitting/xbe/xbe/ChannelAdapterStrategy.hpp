@@ -54,6 +54,7 @@ namespace xbe {
          ***********************************/
         void onException(const cms::CMSException& ex);
     private:
+        XBE_DECLARE_LOGGER();
         mqs::Channel::Ptr _channel;
     };
 }

@@ -11,7 +11,7 @@ using namespace seda::tests;
 CPPUNIT_TEST_SUITE_REGISTRATION( EventQueueTest );
 
 EventQueueTest::EventQueueTest()
-  : INIT_LOGGER("tests.seda.EventQueueTest")
+  : SEDA_INIT_LOGGER("tests.seda.EventQueueTest")
 {}
 
 void

@@ -22,10 +22,10 @@ namespace seda {
            executed sequentially. */
     protected:
         explicit
-        Strategy(const std::string& name)
-            : INIT_LOGGER("seda.strategy."+name), _name(name)
+        Strategy(const std::string& name) 
+            : SEDA_INIT_LOGGER(name), _name(name)
         {}
-        DECLARE_LOGGER();
+        SEDA_DECLARE_LOGGER();
     private:
         std::string _name;
     };

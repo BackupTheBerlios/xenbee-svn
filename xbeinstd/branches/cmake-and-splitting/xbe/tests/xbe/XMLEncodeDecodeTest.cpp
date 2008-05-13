@@ -25,7 +25,7 @@ using namespace xbe::tests;
 CPPUNIT_TEST_SUITE_REGISTRATION( XMLEncodeDecodeTest );
 
 XMLEncodeDecodeTest::XMLEncodeDecodeTest()
-  : INIT_LOGGER("tests.xbe.xml-endecode")
+  : XBE_INIT_LOGGER("tests.xbe.xml-endecode")
 {}
 
 void
@@ -56,7 +56,7 @@ XMLEncodeDecodeTest::testEncode() {
   start->start();
   final->start();
 
-  LOG_DEBUG("sending XML message");
+  XBE_LOG_DEBUG("sending XML message");
   xbemsg::header_t hdr("tests.xbe.foo.bar", "tests.xbe.foo.bar");
   xbemsg::body_t body;
   seda::IEvent::Ptr xmlMsg(new xbe::XMLMessageEvent(xbemsg::message_t(hdr,body)));

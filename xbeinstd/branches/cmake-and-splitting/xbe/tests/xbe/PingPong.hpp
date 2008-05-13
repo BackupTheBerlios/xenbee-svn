@@ -2,12 +2,11 @@
 #define TESTS_XBE_PING_PONG_HPP 1
 
 #include <string>
+#include <xbe/common.hpp>
 
 #include <seda/ForwardStrategy.hpp>
-
 #include <tests/xbe/PingEvent.hpp>
 #include <tests/xbe/PongEvent.hpp>
-
 #include <tests/xbe/PingPong_sm.h>
 
 namespace tests {
@@ -47,6 +46,7 @@ namespace tests {
         private:
             void incSentMessages() { _sentMessages++; }
 
+            XBE_DECLARE_LOGGER();
             std::string _to;
             std::string _from;
             std::size_t _maxMessages;

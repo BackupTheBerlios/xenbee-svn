@@ -48,6 +48,7 @@ namespace seda {
         StageRegistry(const StageRegistry&);
         void operator=(const StageRegistry&);
 
+        SEDA_DECLARE_LOGGER();
         std::map<std::string, Stage::Ptr> _stages;
     };
 }

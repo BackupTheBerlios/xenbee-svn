@@ -6,7 +6,7 @@
 
 namespace seda {
     Stage::Stage(const std::string& name, Strategy::Ptr strategy, std::size_t maxPoolSize, std::size_t maxQueueSize)
-        : INIT_LOGGER("seda.stage."+name),
+        : SEDA_INIT_LOGGER("seda.stage."+name),
           _queue(new EventQueue("seda.stage."+name+".queue", maxQueueSize)),
           _strategy(strategy),
           _name(name),
@@ -16,7 +16,7 @@ namespace seda {
     }
 
     Stage::Stage(const std::string& name, IEventQueue::Ptr queue, Strategy::Ptr strategy, std::size_t maxPoolSize)
-        : INIT_LOGGER("seda.stage."+name),
+        : SEDA_INIT_LOGGER("seda.stage."+name),
           _queue(queue),
           _strategy(strategy),
           _name(name),
@@ -30,20 +30,20 @@ namespace seda {
             // stop the running threads and delete them
             stop();
         } catch (const std::exception& e) {
-            LOG_ERROR("stopping failed: " << e.what());
+            SEDA_LOG_ERROR("stopping failed: " << e.what());
         } catch (...) {
-            LOG_ERROR("stopping failed: unknown reason");
+            SEDA_LOG_ERROR("stopping failed: unknown reason");
         }
 
         try {
             /* log input queue if not empty */
             if (!queue()->empty()) {
-                LOG_DEBUG("cleaning up input queue");
+                SEDA_LOG_DEBUG("cleaning up input queue");
                 while (!queue()->empty()) {
                     IEvent::Ptr e(queue()->pop());
-                    LOG_DEBUG("removed incoming event: " << e->str());
+                    SEDA_LOG_DEBUG("removed incoming event: " << e->str());
                 }
-                LOG_DEBUG("done");
+                SEDA_LOG_DEBUG("done");
             }
         } catch (...) {}
     }
@@ -73,7 +73,7 @@ namespace seda {
             if (w->id() != activemq::concurrent::Thread::getId()) {
                 w->join(); delete w;
             } else {
-                LOG_FATAL("StageWorker performed cleanup of its own stage!!!");
+                SEDA_LOG_FATAL("StageWorker performed cleanup of its own stage!!!");
                 exit(EXIT_FAILURE);
             }
         }

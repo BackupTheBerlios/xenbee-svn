@@ -31,7 +31,7 @@ using namespace xbe::tests;
 CPPUNIT_TEST_SUITE_REGISTRATION( XMLSecurityTest );
 
 XMLSecurityTest::XMLSecurityTest()
-  : INIT_LOGGER("tests.xbe.xml-security")
+  : XBE_INIT_LOGGER("tests.xbe.xml-security")
 {}
 
 void
@@ -116,7 +116,7 @@ XMLSecurityTest::testSign() {
 //         std::ofstream ofs("sig-test-2.xml");
 //         ofs << oss.str();
 //   }
-  LOG_DEBUG(oss.str());
+  XBE_LOG_DEBUG(oss.str());
 
   std::string expected_digest("6gEokD/uXFJHZdGdup83UEJAL7U=\n");
   std::string expected_sigval("t9LLbEU8GHtWrrx+qWTWWujTGEY=\n");
@@ -205,7 +205,7 @@ XMLSecurityTest::testEncrypt() {
   ::xercesc::DOMElement *bodyElem = doc->getDocumentElement();
   cipher->encryptElement(bodyElem, ENCRYPT_3DES_CBC);
 
-  LOG_DEBUG("body element encrypted");
+  XBE_LOG_DEBUG("body element encrypted");
   
   /* set the Key Encryption Key, ie. encrypt the key with the string "secret" */
   /*
@@ -217,7 +217,7 @@ XMLSecurityTest::testEncrypt() {
   XENCEncryptedKey *encryptedKey =
     cipher->encryptKey(keyBuf, 24, ENCRYPT_NONE);
 
-  LOG_DEBUG("encryption key encrypted");
+  XBE_LOG_DEBUG("encryption key encrypted");
   */
   
   /*
@@ -235,23 +235,23 @@ XMLSecurityTest::testEncrypt() {
   xbexsd::header_t hdr("tests.xbe.foo.bar", "tests.xbe.foo.bar");
   xbexsd::message_t msg(hdr,enc_body);
 
-  LOG_DEBUG("encrypted message created");
+  XBE_LOG_DEBUG("encrypted message created");
 
   try {
     std::ostringstream oss;
     xbexsd::message(oss, msg, XbeLibUtils::namespace_infomap());
-    LOG_DEBUG("serialized");
-    LOG_DEBUG(oss.str());
+    XBE_LOG_DEBUG("serialized");
+    XBE_LOG_DEBUG(oss.str());
   } catch(XSECCryptoException& ex) {
-    LOG_WARN(ex.getMsg());
+    XBE_LOG_WARN(ex.getMsg());
     CPPUNIT_ASSERT_MESSAGE(ex.getMsg(), false);
   } catch(XSECException& ex) {
     char *errMsg = XMLString::transcode(ex.getMsg());
-    LOG_WARN(errMsg);
+    XBE_LOG_WARN(errMsg);
     XMLString::release(&errMsg);
     CPPUNIT_ASSERT_MESSAGE("serialization failed, see log message for more information", false);
   } catch (const std::exception& ex) {
-    LOG_WARN(ex.what());
+    XBE_LOG_WARN(ex.what());
     CPPUNIT_ASSERT_MESSAGE(ex.what(), false);
   }
   //  CPPUNIT_ASSERT_MESSAGE("test not implemented", false);

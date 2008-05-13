@@ -1,6 +1,7 @@
 #ifndef XBE_XML_SERIALIZE_STRATEGY_HPP
 #define XBE_XML_SERIALIZE_STRATEGY_HPP 1
 
+#include <xbe/common.hpp>
 #include <seda/StrategyDecorator.hpp>
 
 namespace xbe {
@@ -10,10 +11,14 @@ namespace xbe {
     class XMLSerializeStrategy : public seda::StrategyDecorator {
     public:
         XMLSerializeStrategy(const seda::Strategy::Ptr& decorated)
-            : seda::StrategyDecorator(decorated->name()+".xml-serialize", decorated) {}
+            : seda::StrategyDecorator(decorated->name()+".xml-serialize", decorated),
+              XBE_INIT_LOGGER(decorated->name()+".xml-serialize")
+        {}
         virtual ~XMLSerializeStrategy() {}
 
         virtual void perform(const seda::IEvent::Ptr&) const;
+    private:
+        XBE_DECLARE_LOGGER();
     };
 }
 

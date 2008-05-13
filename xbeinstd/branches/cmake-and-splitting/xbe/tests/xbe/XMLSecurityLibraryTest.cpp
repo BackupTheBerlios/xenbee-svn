@@ -87,7 +87,7 @@ static void dumpXML(DOMImplementation& impl, DOMDocument& doc) {
 CPPUNIT_TEST_SUITE_REGISTRATION( XMLSecurityLibraryTest );
 
 XMLSecurityLibraryTest::XMLSecurityLibraryTest()
-    : INIT_LOGGER("tests.xbe.xml-security-library")
+    : XBE_INIT_LOGGER("tests.xbe.xml-security-library")
 {}
 
 void
@@ -186,7 +186,7 @@ XMLSecurityLibraryTest::testSign() {
     // Verify
     CPPUNIT_ASSERT_MESSAGE(errMsgs, isValid);
 
-    LOG_DEBUG("the message is valid!");
+    XBE_LOG_DEBUG("the message is valid!");
 #else
     DOMDocument* doc = impl->createDocument(X("http://www.xenbee.net/schema/2008/02/xbe"),   // root element namespace URI.
                                             X("xbe:message"),         // root element name
@@ -279,13 +279,13 @@ XMLSecurityLibraryTest::testSign() {
     // Verify
     CPPUNIT_ASSERT_MESSAGE(errMsgs, isValid);
 
-    LOG_DEBUG("the message is valid!");
+    XBE_LOG_DEBUG("the message is valid!");
 #endif
 }
 
 void
 XMLSecurityLibraryTest::testValidate() {
-    LOG_DEBUG("setting up parser");
+    XBE_LOG_DEBUG("setting up parser");
     XercesDOMParser *parser = new XercesDOMParser;
     parser->setValidationScheme(XercesDOMParser::Val_Always);
     parser->setDoNamespaces(true);
@@ -295,16 +295,16 @@ XMLSecurityLibraryTest::testValidate() {
     std::string filename("sig-test-5.xml");
     try {
         parser->parse(filename.c_str());
-        LOG_DEBUG("parsed: " << filename);
+        XBE_LOG_DEBUG("parsed: " << filename);
     } catch (const DOMException& e) {
-        LOG_FATAL("errors occured during parsing: " << filename);
+        XBE_LOG_FATAL("errors occured during parsing: " << filename);
     }
 
     DOMDocument *doc = parser->getDocument();
     
     XSECProvider prov;
     DSIGSignature *sig = prov.newSignatureFromDOM(doc);
-    LOG_DEBUG("loading signature");
+    XBE_LOG_DEBUG("loading signature");
     sig->load();
 
     OpenSSLCryptoProvider cryptoProvider;
@@ -312,7 +312,7 @@ XMLSecurityLibraryTest::testValidate() {
     hmacKey->setKey((unsigned char *) "secret", strlen("secret"));
     sig->setSigningKey(hmacKey);
 
-    LOG_DEBUG("verifying signature");
+    XBE_LOG_DEBUG("verifying signature");
     bool isValid(sig->verify());
     char *_errMsgs = XMLString::transcode(sig->getErrMsgs());
     std::string errMsgs(_errMsgs);
@@ -322,7 +322,7 @@ XMLSecurityLibraryTest::testValidate() {
     doc->release();
 
     CPPUNIT_ASSERT_MESSAGE(errMsgs, isValid);
-    LOG_DEBUG("message is valid");
+    XBE_LOG_DEBUG("message is valid");
 }
 
 void

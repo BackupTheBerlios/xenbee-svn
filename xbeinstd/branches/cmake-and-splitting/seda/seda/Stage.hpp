@@ -53,7 +53,7 @@ namespace seda {
         unsigned long timeout() const { return _timeout; }
         void timeout(unsigned long millis) { _timeout = millis; }
     private:
-        DECLARE_LOGGER();
+        SEDA_DECLARE_LOGGER();
         IEventQueue::Ptr _queue;
         Strategy::Ptr _strategy;
         std::string _name;

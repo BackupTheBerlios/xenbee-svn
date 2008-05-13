@@ -13,7 +13,7 @@ const EventFactory& EventFactory::instance() {
   return instance;
 }
 
-EventFactory::EventFactory() : INIT_LOGGER("xbe.eventFactory") {}
+EventFactory::EventFactory() : XBE_INIT_LOGGER("xbe.eventFactory") {}
 EventFactory::~EventFactory() {}
 
 IEvent::Ptr EventFactory::newEvent(const cms::Message* m) const throw (UnknownConversion) {
@@ -29,8 +29,8 @@ IEvent::Ptr EventFactory::newEvent(const cms::Message* m) const throw (UnknownCo
 
 IEvent::Ptr EventFactory::newEvent(const cms::TextMessage* m) const {
   // build source and destination from message
-  LOG_DEBUG("msg has reply-to: " << (m->getCMSReplyTo() != 0 ? "true" : "false"));
-  LOG_DEBUG("msg has dst: " << (m->getCMSDestination() != 0 ? "true" : "false"));
+  XBE_LOG_DEBUG("msg has reply-to: " << (m->getCMSReplyTo() != 0 ? "true" : "false"));
+  XBE_LOG_DEBUG("msg has dst: " << (m->getCMSDestination() != 0 ? "true" : "false"));
   mqs::Destination src(m->getCMSReplyTo());
   mqs::Destination dst(m->getCMSDestination());
   MessageEvent *me(new MessageEvent(m->getText(), src, dst));

@@ -18,7 +18,7 @@ namespace seda {
 
     explicit
     EventQueue(const std::string& name, std::size_t maxQueueSize=SEDA_MAX_QUEUE_SIZE)
-      : INIT_LOGGER("seda.queue."+name),
+      : SEDA_INIT_LOGGER("seda.queue."+name),
 	_name(name),
 	_maxQueueSize(maxQueueSize) {}
     virtual ~EventQueue() {}
@@ -131,7 +131,7 @@ namespace seda {
     std::size_t maxQueueSize() const { return _maxQueueSize; }
     void maxQueueSize(const std::size_t& max) { _maxQueueSize = max; }
   protected:
-    DECLARE_LOGGER();
+    SEDA_DECLARE_LOGGER();
     mutable activemq::concurrent::Mutex _mtx;
     mutable activemq::concurrent::Mutex _emptyCond;
     mutable activemq::concurrent::Mutex _notEmptyCond;

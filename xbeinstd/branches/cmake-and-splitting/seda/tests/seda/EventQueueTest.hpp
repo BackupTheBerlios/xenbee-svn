@@ -23,7 +23,7 @@ namespace seda {
       void tearDown();
 
     protected:
-      DECLARE_LOGGER();
+      SEDA_DECLARE_LOGGER();
       void testPushPop();
       void testQueueEmpty_Throws();
       void testQueueFull_Throws();

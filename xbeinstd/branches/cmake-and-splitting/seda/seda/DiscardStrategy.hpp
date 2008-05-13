@@ -12,7 +12,7 @@ namespace seda {
     ~DiscardStrategy() {}
 
     void perform(const IEvent::Ptr& e) const {
-        LOG_DEBUG("discarding: " << e->str());
+        SEDA_LOG_DEBUG("discarding: " << e->str());
     }
   };
 }

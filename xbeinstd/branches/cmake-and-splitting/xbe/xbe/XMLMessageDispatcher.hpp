@@ -1,9 +1,10 @@
 #ifndef XBE_XML_MESSAGE_DISPATCHER_HPP
 #define XBE_XML_MESSAGE_DISPATCHER_HPP 1
 
-#include <seda/Strategy.hpp>
-
+#include <xbe/common.hpp>
 #include <xbe/XMLMessageEvent.hpp>
+
+#include <seda/Strategy.hpp>
 
 namespace xbe {
     /**
@@ -14,19 +15,18 @@ namespace xbe {
     */
     class XMLMessageDispatcher : public seda::Strategy {
     public:
-        XMLMessageDispatcher()
-            : seda::Strategy("xml-fsm-gateway")
-        {}
-
         explicit
         XMLMessageDispatcher(const std::string& name)
-            : seda::Strategy(name)
+            : seda::Strategy(name),
+              XBE_INIT_LOGGER(name)
         {}
         virtual ~XMLMessageDispatcher() {}
 
         virtual void perform(const seda::IEvent::Ptr&) const;
     protected:
         virtual void dispatch(const xbemsg::message_t& msg) = 0;
+    private:
+        XBE_DECLARE_LOGGER();
     };
 }
 

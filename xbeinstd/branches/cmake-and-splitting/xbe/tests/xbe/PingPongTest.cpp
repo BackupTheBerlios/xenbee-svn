@@ -25,7 +25,7 @@ using namespace xbe::tests;
 CPPUNIT_TEST_SUITE_REGISTRATION( PingPongTest );
 
 PingPongTest::PingPongTest()
-    : INIT_LOGGER("tests.xbe.pingpong")
+    : XBE_INIT_LOGGER("tests.xbe.pingpong")
 {}
 
 void
@@ -141,8 +141,8 @@ FSM <- PingClient --> XMLSerializer ---> Forwarder --> XMLDeserializer ---> Pong
     ecsPongNetStub->wait(numMsgs, 2000);
     ecsPingNetStub->wait(numMsgs, 2000);
 
-    LOG_DEBUG("sent pings: " << ecsPingNetStub->count());
-    LOG_DEBUG("sent pongs: " << ecsPongNetStub->count());
+    XBE_LOG_DEBUG("sent pings: " << ecsPingNetStub->count());
+    XBE_LOG_DEBUG("sent pongs: " << ecsPongNetStub->count());
 
     pingClientStage->stop();
     pingXmlSerializeStage->stop();

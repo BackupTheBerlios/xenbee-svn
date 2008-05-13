@@ -7,6 +7,6 @@ void XMLMessageDispatcher::perform(const seda::IEvent::Ptr& e) const {
     if (xmlEvent) {
         const_cast<XMLMessageDispatcher*>(this)->dispatch(xmlEvent->message());
     } else {
-        LOG_WARN("throwing away non-XMLMessageEvent: " << e);
+        XBE_LOG_WARN("throwing away non-XMLMessageEvent: " << e);
     }
 }

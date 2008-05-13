@@ -28,7 +28,7 @@ namespace xbe {
       void testDecrypt();
 
     private:
-      DECLARE_LOGGER();
+      XBE_DECLARE_LOGGER();
     };
   }
 }

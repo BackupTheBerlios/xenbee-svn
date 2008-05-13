@@ -6,6 +6,7 @@ using namespace xbe;
 
 ChannelEventQueueAdapter::ChannelEventQueueAdapter(const mqs::Channel::Ptr& channel, std::size_t maxQueueSize)
     : seda::EventQueue("channeladapter", maxQueueSize),
+      XBE_INIT_LOGGER("xbe.channel-eventqueue-adapter"),
       _channel(channel) {
     _channel->setMessageListener(this);
 }
@@ -16,11 +17,11 @@ void ChannelEventQueueAdapter::onMessage(const cms::Message *m) {
     try {
         EventQueue::push(EventFactory::instance().newEvent(m));
     } catch (const xbe::UnknownConversion& ex) {
-        LOG_DEBUG("cms::Message could not be converted to Event: " << ex.what());
+        XBE_LOG_DEBUG("cms::Message could not be converted to Event: " << ex.what());
     } catch (const std::exception& ex) {
-        LOG_WARN("message lost due to error during push: " << ex.what());
+        XBE_LOG_WARN("message lost due to error during push: " << ex.what());
     } catch (...) {
-        LOG_WARN("message lost due to error during push: unknown error");
+        XBE_LOG_WARN("message lost due to error during push: unknown error");
     }
 }
 
@@ -28,7 +29,7 @@ void ChannelEventQueueAdapter::onException(const cms::CMSException& ex) {
     try {
         EventQueue::push(EventFactory::instance().newEvent(ex));
     } catch (...) {
-        LOG_WARN("error event lost due to error during push");
+        XBE_LOG_WARN("error event lost due to error during push");
     }
 }
 
@@ -37,10 +38,10 @@ void ChannelEventQueueAdapter::push(const seda::IEvent::Ptr& e) throw (seda::Que
     if (msgEvent) {
         try {
             if (msgEvent->destination().isValid()) {
-                LOG_DEBUG("sending message `"<< msgEvent->message() << "' to " << msgEvent->destination().str());
+                XBE_LOG_DEBUG("sending message `"<< msgEvent->message() << "' to " << msgEvent->destination().str());
                 _channel->send(msgEvent->message(), msgEvent->destination());
             } else {
-                LOG_DEBUG("sending message `"<< msgEvent->message() << "'");
+                XBE_LOG_DEBUG("sending message `"<< msgEvent->message() << "'");
                 _channel->send(msgEvent->message());
             }
         } catch(const cms::CMSException& ex) {
@@ -56,7 +57,7 @@ void ChannelEventQueueAdapter::push(const seda::IEvent::Ptr& e) throw (seda::Que
         if (systemEvent) {
             EventQueue::push(e);
         } else {
-            LOG_INFO("ignoring non-MessageEvent:" << e->str());
+            XBE_LOG_INFO("ignoring non-MessageEvent:" << e->str());
         }
     }
 }

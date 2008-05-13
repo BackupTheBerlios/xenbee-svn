@@ -19,6 +19,7 @@ PingPong::PingPong(const std::string& name,
                    std::size_t maxMessages,
                    bool initialSend) :
     ::seda::ForwardStrategy(name, next),
+    XBE_INIT_LOGGER("tests.xbe.pingpong"),
     _fsm(*this),
     _to(to),
     _from(from),

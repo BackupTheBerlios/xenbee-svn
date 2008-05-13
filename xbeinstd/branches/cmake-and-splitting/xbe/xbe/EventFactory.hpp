@@ -39,7 +39,7 @@ namespace xbe {
     private:
         EventFactory();
 
-        DECLARE_LOGGER();
+        XBE_DECLARE_LOGGER();
     };
 }
 

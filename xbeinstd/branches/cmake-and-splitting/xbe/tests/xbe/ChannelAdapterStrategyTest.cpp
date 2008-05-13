@@ -20,7 +20,7 @@ using namespace xbe::tests;
 CPPUNIT_TEST_SUITE_REGISTRATION( ChannelAdapterStrategyTest );
 
 ChannelAdapterStrategyTest::ChannelAdapterStrategyTest()
-  : INIT_LOGGER("tests.xbe.channeladapter")
+  : XBE_INIT_LOGGER("tests.xbe.channeladapter")
 {}
 
 void
@@ -44,7 +44,7 @@ ChannelAdapterStrategyTest::testSendViaChannelText() {
   
   channel->send("testSendViaChannelText"); // message will be consumed by discard strategy
 
-  LOG_INFO("waiting at most 2s for message arival");
+  XBE_LOG_INFO("waiting at most 2s for message arival");
   ecs->wait(1, 2000);
 
   CPPUNIT_ASSERT(stage->queue()->empty());
@@ -71,7 +71,7 @@ ChannelAdapterStrategyTest::testSendViaChannelNoneText() {
   channel->send(bmsg);
   delete bmsg;
 
-  LOG_INFO("waiting at most 1s for message arival");
+  XBE_LOG_INFO("waiting at most 1s for message arival");
   ecs->wait(1, 1000);
 
   CPPUNIT_ASSERT(stage->queue()->empty());
@@ -96,7 +96,7 @@ ChannelAdapterStrategyTest::testSendViaStageMessage() {
   
   stage->send(seda::IEvent::Ptr(new xbe::MessageEvent("testSendViaStageMessage")));
 
-  LOG_INFO("waiting at most 2s for message arival");
+  XBE_LOG_INFO("waiting at most 2s for message arival");
   ecs->wait(1, 2000);
 
   CPPUNIT_ASSERT(stage->queue()->empty());

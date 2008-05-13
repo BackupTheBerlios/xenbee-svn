@@ -7,50 +7,50 @@
 #if HAVE_LOG4CXX
 #include <log4cxx/logger.h>
 
-#define LDECLARE_LOGGER(logger)           ::log4cxx::LoggerPtr logger
-#define LDEFINE_LOGGER(logger, hierarchy) ::log4cxx::LoggerPtr LINIT_LOGGER(logger, hierarchy)
-#define LINIT_LOGGER(logger, hierarchy)   logger(::log4cxx::Logger::getLogger(hierarchy))
+#define SEDA_LDECLARE_LOGGER(logger)           ::log4cxx::LoggerPtr logger
+#define SEDA_LDEFINE_LOGGER(logger, hierarchy) ::log4cxx::LoggerPtr SEDA_LINIT_LOGGER(logger, hierarchy)
+#define SEDA_LINIT_LOGGER(logger, hierarchy)   logger(::log4cxx::Logger::getLogger(hierarchy))
 
-#define DECLARE_LOGGER()         LDECLARE_LOGGER(logger)
-#define DEFINE_LOGGER(hierarchy) LDEFINE_LOGGER(logger, hierarchy)
-#define INIT_LOGGER(hierarchy)   LINIT_LOGGER(logger, hierarchy)
+#define SEDA_DECLARE_LOGGER()         SEDA_LDECLARE_LOGGER(seda_logger)
+#define SEDA_DEFINE_LOGGER(hierarchy) SEDA_LDEFINE_LOGGER(seda_logger, hierarchy)
+#define SEDA_INIT_LOGGER(hierarchy)   SEDA_LINIT_LOGGER(seda_logger, hierarchy)
 
-#define LLOG_DEBUG(logger, msg) LOG4CXX_DEBUG(logger, msg)
-#define LLOG_INFO(logger, msg)  LOG4CXX_INFO(logger, msg)
-#define LLOG_WARN(logger, msg)  LOG4CXX_WARN(logger, msg)
-#define LLOG_ERROR(logger, msg) LOG4CXX_ERROR(logger, msg)
-#define LLOG_FATAL(logger, msg) LOG4CXX_FATAL(logger, msg)
+#define SEDA_LLOG_DEBUG(logger, msg) LOG4CXX_DEBUG(logger, msg)
+#define SEDA_LLOG_INFO(logger, msg)  LOG4CXX_INFO(logger, msg)
+#define SEDA_LLOG_WARN(logger, msg)  LOG4CXX_WARN(logger, msg)
+#define SEDA_LLOG_ERROR(logger, msg) LOG4CXX_ERROR(logger, msg)
+#define SEDA_LLOG_FATAL(logger, msg) LOG4CXX_FATAL(logger, msg)
 
-#define LOG_DEBUG(msg) LLOG_DEBUG(logger, msg)
-#define LOG_INFO(msg)  LLOG_INFO(logger, msg) 
-#define LOG_WARN(msg)  LLOG_WARN(logger, msg) 
-#define LOG_ERROR(msg) LLOG_ERROR(logger, msg)
-#define LOG_FATAL(msg) LLOG_FATAL(logger, msg)
+#define SEDA_LOG_DEBUG(msg) SEDA_LLOG_DEBUG(seda_logger, msg)
+#define SEDA_LOG_INFO(msg)  SEDA_LLOG_INFO(seda_logger, msg) 
+#define SEDA_LOG_WARN(msg)  SEDA_LLOG_WARN(seda_logger, msg) 
+#define SEDA_LOG_ERROR(msg) SEDA_LLOG_ERROR(seda_logger, msg)
+#define SEDA_LOG_FATAL(msg) SEDA_LLOG_FATAL(seda_logger, msg)
 
 #elif HAVE_LOG4CPP /* ! HAVE_LOG4CXX */
 
 #include <log4cpp/Category.hh>
 #include <log4cpp/convenience.h>
 
-#define LDECLARE_LOGGER(logger)           ::log4cpp::Category& logger
-#define LDEFINE_LOGGER(logger, hierarchy) ::log4cpp::Category& LINIT_LOGGER(logger, hierarchy)
-#define LINIT_LOGGER(logger, hierarchy)   logger(::log4cpp::Category::getInstance(hierarchy))
+#define SEDA_LDECLARE_LOGGER(logger)           ::log4cpp::Category& logger
+#define SEDA_LDEFINE_LOGGER(logger, hierarchy) ::log4cpp::Category& SEDA_LINIT_LOGGER(logger, hierarchy)
+#define SEDA_LINIT_LOGGER(logger, hierarchy)   logger(::log4cpp::Category::getInstance(hierarchy))
 
-#define DECLARE_LOGGER()         LDECLARE_LOGGER(logger)
-#define DEFINE_LOGGER(hierarchy) LDEFINE_LOGGER(logger, hierarchy)
-#define INIT_LOGGER(hierarchy)   LINIT_LOGGER(logger, hierarchy)
+#define SEDA_DECLARE_LOGGER()         SEDA_LDECLARE_LOGGER(seda_logger)
+#define SEDA_DEFINE_LOGGER(hierarchy) SEDA_LDEFINE_LOGGER(seda_logger, hierarchy)
+#define SEDA_INIT_LOGGER(hierarchy)   SEDA_LINIT_LOGGER(seda_logger, hierarchy)
 
-#define LLOG_DEBUG(logger, msg) LOG4CPP_DEBUG_S(logger) << msg
-#define LLOG_INFO(logger, msg)  LOG4CPP_INFO_S(logger)  << msg
-#define LLOG_WARN(logger, msg)  LOG4CPP_WARN_S(logger)  << msg
-#define LLOG_ERROR(logger, msg) LOG4CPP_ERROR_S(logger) << msg
-#define LLOG_FATAL(logger, msg) LOG4CPP_FATAL_S(logger) << msg
+#define SEDA_LLOG_DEBUG(logger, msg) LOG4CPP_DEBUG_S(logger) << msg
+#define SEDA_LLOG_INFO(logger, msg)  LOG4CPP_INFO_S(logger)  << msg
+#define SEDA_LLOG_WARN(logger, msg)  LOG4CPP_WARN_S(logger)  << msg
+#define SEDA_LLOG_ERROR(logger, msg) LOG4CPP_ERROR_S(logger) << msg
+#define SEDA_LLOG_FATAL(logger, msg) LOG4CPP_FATAL_S(logger) << msg
 
-#define LOG_DEBUG(msg) LLOG_DEBUG(logger, msg)
-#define LOG_INFO(msg)  LLOG_INFO(logger, msg) 
-#define LOG_WARN(msg)  LLOG_WARN(logger, msg) 
-#define LOG_ERROR(msg) LLOG_ERROR(logger, msg)
-#define LOG_FATAL(msg) LLOG_FATAL(logger, msg)
+#define SEDA_LOG_DEBUG(msg) SEDA_LLOG_DEBUG(seda_logger, msg)
+#define SEDA_LOG_INFO(msg)  SEDA_LLOG_INFO(seda_logger, msg) 
+#define SEDA_LOG_WARN(msg)  SEDA_LLOG_WARN(seda_logger, msg) 
+#define SEDA_LOG_ERROR(msg) SEDA_LLOG_ERROR(seda_logger, msg)
+#define SEDA_LOG_FATAL(msg) SEDA_LLOG_FATAL(seda_logger, msg)
 
 #else
 #error Logging has been enabled, but no usable logging mechanism available!
@@ -58,19 +58,25 @@
 
 #else /* ! ENABLE_LOGGING */
 
-#define LDECLARE_LOGGER(logger)   void* __unused_##logger
-#define LDEFINE_LOGGER(logger, h)
-#define LINIT_LOGGER(logger, h)   __unused_##logger(0)
+#define SEDA_LDECLARE_LOGGER(logger)   void* __seda_unused_##logger
+#define SEDA_LDEFINE_LOGGER(logger, h)
+#define SEDA_LINIT_LOGGER(logger, h)   __seda_unused_##logger(0)
 
-#define DECLARE_LOGGER()          LDECLARE_LOGGER(logger)
-#define DEFINE_LOGGER(hierarchy)  LDEFINE_LOGGER(logger, hierarchy)
-#define INIT_LOGGER(hierarchy)    LINIT_LOGGER(logger, hierarchy)
+#define SEDA_DECLARE_LOGGER()          SEDA_LDECLARE_LOGGER(logger)
+#define SEDA_DEFINE_LOGGER(hierarchy)  SEDA_LDEFINE_LOGGER(logger, hierarchy)
+#define SEDA_INIT_LOGGER(hierarchy)    SEDA_LINIT_LOGGER(logger, hierarchy)
 
-#define LOG_DEBUG(msg) 
-#define LOG_INFO(msg)  
-#define LOG_WARN(msg)  
-#define LOG_ERROR(msg) 
-#define LOG_FATAL(msg) 
+#define SEDA_LLOG_DEBUG(logger, msg) 
+#define SEDA_LLOG_INFO(logger, msg)  
+#define SEDA_LLOG_WARN(logger, msg)  
+#define SEDA_LLOG_ERROR(logger, msg) 
+#define SEDA_LLOG_FATAL(logger, msg) 
+
+#define SEDA_LOG_DEBUG(msg) 
+#define SEDA_LOG_INFO(msg)  
+#define SEDA_LOG_WARN(msg)  
+#define SEDA_LOG_ERROR(msg) 
+#define SEDA_LOG_FATAL(msg) 
 
 #endif
 

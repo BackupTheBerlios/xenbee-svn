@@ -2,7 +2,7 @@
 
 using namespace seda;
 
-StageRegistry::StageRegistry() {}
+StageRegistry::StageRegistry() : SEDA_INIT_LOGGER("seda.stage-registry") {}
 StageRegistry::~StageRegistry() {}
 
 StageRegistry& StageRegistry::instance() {
@@ -12,9 +12,11 @@ StageRegistry& StageRegistry::instance() {
 
 void StageRegistry::insert(const std::string& name, const Stage::Ptr& stage) {
     _stages.insert(std::make_pair(name, stage));
+    SEDA_LOG_INFO("added stage `" << name << "'");
 }
 void StageRegistry::insert(const std::string& name, Stage* stage) {
     _stages.insert(std::make_pair(name, Stage::Ptr(stage)));
+    SEDA_LOG_INFO("added stage `" << name << "'");
 }
 
 void StageRegistry::insert(const Stage::Ptr& stage) {
@@ -34,5 +36,6 @@ const Stage::Ptr StageRegistry::lookup(const std::string& name) const throw (Sta
 }
 
 void StageRegistry::clear() {
+    SEDA_LOG_INFO("removing all registered stages");
     _stages.clear();
 }

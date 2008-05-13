@@ -22,7 +22,7 @@ namespace xbe {
       void testPingPong();
       void testPingPongComplete();
     private:
-      DECLARE_LOGGER();
+      XBE_DECLARE_LOGGER();
     };
   }
 }

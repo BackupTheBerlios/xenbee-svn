@@ -24,7 +24,7 @@ using namespace activemq::core;
 using namespace activemq::concurrent;
 
 Channel::Channel(const mqs::BrokerURI& broker, const mqs::Destination& inout)
-  : INIT_LOGGER("mqs.channel"),
+  : MQS_INIT_LOGGER("mqs.channel"),
     _broker(broker),
     _inQueue(inout),
     _outQueue(inout),
@@ -37,7 +37,7 @@ Channel::Channel(const mqs::BrokerURI& broker, const mqs::Destination& inout)
 }
 
 Channel::Channel(const mqs::BrokerURI& broker, const mqs::Destination& in, const mqs::Destination& out)
-  : INIT_LOGGER("mqs.channel"),
+  : MQS_INIT_LOGGER("mqs.channel"),
     _broker(broker),
     _inQueue(in),
     _outQueue(out),
@@ -58,52 +58,18 @@ Channel::~Channel() {
       delete c.consumer;
       _consumer.pop_front();
     } catch (cms::CMSException& e) {
-      LOG_ERROR(e.getStackTraceString());
+      MQS_LOG_ERROR(e.getStackTraceString());
     }
   }
   _consumerMtx.unlock();
 
-  /*  
-  try {
-    if (_producer_destination)
-      delete _producer_destination;
-  } catch (cms::CMSException& e) {
-    LOG_ERROR(e.getStackTraceString());
-  }
-  _producer_destination = 0;
-  
-  try {
-    if (_producer) {
-      delete _producer;
-    }
-  } catch (cms::CMSException& e) {
-    LOG_ERROR(e.getStackTraceString());
-  }
-  _producer = 0;
-  */
-  
   try {
     if (_session.get()) _session->close();
     if (_connection.get()) _connection->close();
   } catch (cms::CMSException& e) {
-    LOG_ERROR(e.getStackTraceString());
+    MQS_LOG_ERROR(e.getStackTraceString());
   }
   
-  /*
-  try {
-    if (_session) delete _session;
-  } catch (cms::CMSException& e) {
-    LOG_ERROR(e.getStackTraceString());
-  }
-  _session = 0;
-
-  try {
-    if (_connection) delete _connection;
-  } catch (cms::CMSException& e) {
-    LOG_ERROR(e.getStackTraceString());
-  }
-  _connection = 0;
-  */
 }
 
 void
@@ -164,7 +130,7 @@ Channel::addIncomingQueue(const mqs::Destination& dst) {
     throw std::runtime_error("channel not started!");
   }
 
-  LOG_DEBUG("adding incoming queue: " << dst.str());
+  MQS_LOG_DEBUG("adding incoming queue: " << dst.str());
   
   struct Consumer consumer;
   if (dst.isTopic())
@@ -229,7 +195,7 @@ void
 Channel::send(Message *msg, const cms::Destination* d, int deliveryMode, int priority, long long timeToLive) {
   // ensure_started();
   _producer->send(d, msg, deliveryMode, priority, timeToLive);
-  LOG_DEBUG("sent message"
+  MQS_LOG_DEBUG("sent message"
 	    << " id:"   << msg->getCMSMessageID()
 	    << " mode:" << ((deliveryMode == cms::DeliveryMode::PERSISTENT) ? "persistent" : "non-persistent")
 	    << " prio:" << priority
@@ -267,7 +233,7 @@ Channel::reply(const Message* msg, Message* r) {
     throw std::invalid_argument("cannot reply to a message that does not have a reply-to field");
   }
   r->setCMSCorrelationID(msg->getCMSMessageID());
-  LOG_DEBUG("replying to msg: " << msg->getCMSMessageID());
+  MQS_LOG_DEBUG("replying to msg: " << msg->getCMSMessageID());
   send(r, msg->getCMSReplyTo(), _producer->getDeliveryMode(), _producer->getPriority(), _producer->getTimeToLive());
 }
 
@@ -282,7 +248,7 @@ Channel::async_request(Message* msg, const mqs::Destination& dst) {
   Lock awaitingResponseLock(&_awaitingResponseMtx);
 
   msg->setCMSReplyTo(_consumer.front().destination);
-  LOG_DEBUG("sending async request to " << dst.str());
+  MQS_LOG_DEBUG("sending async request to " << dst.str());
   send(msg, dst);
   assert(!msg->getCMSMessageID().empty());
   
@@ -295,7 +261,7 @@ Channel::async_request(Message* msg, const mqs::Destination& dst) {
 
 Message*
 Channel::wait_reply(const std::string& requestID, unsigned long millisecs) {
-  LOG_DEBUG("waiting for reply to: " << requestID);
+  MQS_LOG_DEBUG("waiting for reply to: " << requestID);
   _awaitingResponseMtx.lock();
   // look for the matching response object
   std::vector<mqs::Response*>::iterator it = _awaitingResponse.begin();
@@ -328,7 +294,7 @@ Channel::wait_reply(const std::string& requestID, unsigned long millisecs) {
     delete response;
     return reply;
   } else {
-    LOG_FATAL("Inconsistent state: wait for reply did not find response object!");
+    MQS_LOG_FATAL("Inconsistent state: wait for reply did not find response object!");
     assert(false);
   }
 }
@@ -362,14 +328,14 @@ void
 Channel::onMessage(const cms::Message* msg) {
   // handle incoming messages
 
-  LOG_DEBUG("got new message: " << msg->getCMSMessageID());
+  MQS_LOG_DEBUG("got new message: " << msg->getCMSMessageID());
   
   // 1. check for a thread waiting for a response
   {
     Lock awaitingResponseLock(&_awaitingResponseMtx);
     const std::string correlationID = msg->getCMSCorrelationID();
     if (!correlationID.empty()) {
-      LOG_DEBUG("message correlates to: " << correlationID);
+      MQS_LOG_DEBUG("message correlates to: " << correlationID);
       std::vector<mqs::Response*>::iterator it = _awaitingResponse.begin();
       for (; it != _awaitingResponse.end(); it++) {
 	if ((*it)->getCorrelationID() == correlationID) {
@@ -381,7 +347,7 @@ Channel::onMessage(const cms::Message* msg) {
       }
 
       // got a response to some message, but no thread is waiting for one!!!
-      LOG_WARN("got response to some message but noone is waiting!");
+      MQS_LOG_WARN("got response to some message but noone is waiting!");
       return; // discard the message
     }
   }
@@ -390,16 +356,16 @@ Channel::onMessage(const cms::Message* msg) {
   // incoming messages unless there are blocked receivers
   Lock incomingMessageLock(&_incomingMessagesMtx);
   if (_messageListener && !_blocked_receivers) {
-    LOG_DEBUG("dispatching message to message listener");
+    MQS_LOG_DEBUG("dispatching message to message listener");
     try {
       _messageListener->onMessage(msg);
     } catch(const std::exception& ex) {
-      LOG_WARN("message handling failed: " << ex.what());
+      MQS_LOG_WARN("message handling failed: " << ex.what());
     } catch(...) {
-      LOG_WARN("message handling failed: unknown error");
+      MQS_LOG_WARN("message handling failed: unknown error");
     }
   } else {
-    LOG_DEBUG("enqueueing message");
+    MQS_LOG_DEBUG("enqueueing message");
     cms::Message* clonedMsg = msg->clone();
     _incomingMessages.push_back(clonedMsg);
     _incomingMessagesMtx.notify();
@@ -412,18 +378,18 @@ Channel::recv(unsigned long millisecs) {
   _blocked_receivers++;
   // wait until a message is available
   while(_incomingMessages.empty()) {
-    LOG_DEBUG("waiting for new messages");
+    MQS_LOG_DEBUG("waiting for new messages");
     _incomingMessagesMtx.wait(millisecs);
     if (millisecs != WAIT_INFINITE)
       break;
   }
   if (_incomingMessages.empty()) {
-    LOG_DEBUG("message waiting timed out");
+    MQS_LOG_DEBUG("message waiting timed out");
     _blocked_receivers--;
     return 0;
   } else {
     Message* msg(_incomingMessages.front());
-    LOG_DEBUG("received message: " << msg->getCMSMessageID());
+    MQS_LOG_DEBUG("received message: " << msg->getCMSMessageID());
     _incomingMessages.pop_front();
     _blocked_receivers--;
     return msg;
@@ -436,7 +402,7 @@ Channel::flushMessages() {
   for (;;) {
     Message *m = recv(50);
     if (m) {
-      LOG_DEBUG("flushed message ("<< m->getCMSMessageID() <<")...");
+      MQS_LOG_DEBUG("flushed message ("<< m->getCMSMessageID() <<")...");
       count++;
       delete m;
     } else {
@@ -452,9 +418,9 @@ Channel::onException(const cms::CMSException& ex) {
     try {
       _exceptionListener->onException(ex);
     } catch(...) {
-      LOG_WARN("registered exception handler threw exception, discarding it!");
+      MQS_LOG_WARN("registered exception handler threw exception, discarding it!");
     }
   } else {
-    LOG_WARN("no message listener registered to handle: " << ex.getMessage() << " " << ex.getStackTraceString());
+    MQS_LOG_WARN("no message listener registered to handle: " << ex.getMessage() << " " << ex.getStackTraceString());
   }
 }

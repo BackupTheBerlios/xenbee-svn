@@ -29,7 +29,7 @@ namespace xbe {
       void testDecodeIllegal();
       void testEnDecode();
     private:
-      DECLARE_LOGGER();
+      XBE_DECLARE_LOGGER();
     };
   }
 }
