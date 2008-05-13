@@ -106,14 +106,15 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/libxbe.pc.in   ${CMAKE_CURRENT_BINARY
 ADD_DEFINITIONS( -DHAVE_CONFIG_H )
 
 # Make sure all subdirectories include correctly
-include_directories(${CMAKE_CURRENT_BINARY_DIR} ${LOG4CPP_STATIC_INCLUDE_DIRS})
-include_directories(${CMAKE_INCLUDE_PATH})
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
 include_directories(${${PROJECT_NAME}_SOURCE_DIR})
+include_directories(${LOG4CPP_STATIC_INCLUDE_DIRS})
 include_directories(${XERCESC_INCLUDE_DIR})
 include_directories(${XMLSecurityC_INCLUDE_DIR})
 include_directories(${AMQ_INCLUDE_DIRS})
 include_directories(${SMC_INCLUDE_DIR})
 include_directories(${XSD_INCLUDE_DIR})
+include_directories(${CMAKE_INCLUDE_PATH})
 
 link_directories(${CMAKE_LIBRARY_PATH} ${LOG4CPP_STATIC_LIBRARY_DIRS})
 link_directories(${${PROJECT_NAME}_BINARY_DIR})
