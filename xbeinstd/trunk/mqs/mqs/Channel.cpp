@@ -18,7 +18,6 @@
 #include <activemq/core/ActiveMQConnectionFactory.h>
 #include <activemq/concurrent/Lock.h>
 
-#define PERFORM_CHANNEL_IS_STARTED_CHECK 1
 #if PERFORM_CHANNEL_IS_STARTED_CHECK
 #define ENSURE_STARTED() ensure_started()
 #else

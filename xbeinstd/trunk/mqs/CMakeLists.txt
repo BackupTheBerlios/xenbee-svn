@@ -23,6 +23,10 @@ OPTION(ENABLE_UNIT_TESTS
   "Build and perform unit tests"
   YES)
 
+OPTION(PERFORM_CHANNEL_IS_STARTED_CHECK
+ "Perform sanity checks when calling mqs::Channel methods"
+ YES)
+
 set(TEST_BROKER_URI "tcp://localhost:61616" CACHE STRING "The ActiveMQ broker to use for unit tests")
 
 cmake_minimum_required(VERSION "2.6" FATAL_ERROR)
@@ -62,6 +66,10 @@ Include(FindThreads)
 if (CMAKE_USE_PTHREADS_INIT)
   set (HAVE_PTHREAD_H 1)
 endif (CMAKE_USE_PTHREADS_INIT)
+
+if (PERFORM_CHANNEL_IS_STARTED_CHECK)
+  set (PERFORM_CHANNEL_IS_STARTED_CHECK 1)
+endif (PERFORM_CHANNEL_IS_STARTED_CHECK)
 
 # Deal with logging
 if(ENABLE_LOGGING)
