@@ -6,6 +6,7 @@
 #include <seda/Stage.hpp>
 #include <seda/EventQueue.hpp>
 #include <seda/IEvent.hpp>
+#include <seda/StageRegistry.hpp>
 #include <seda/EventCountStrategy.hpp>
 #include <seda/CompositeStrategy.hpp>
 #include <seda/DiscardStrategy.hpp>
@@ -24,7 +25,9 @@ void
 SedaStageTest::setUp() {}
 
 void
-SedaStageTest::tearDown() {}
+SedaStageTest::tearDown() {
+    StageRegistry::instance().clear(); // remove all registered stages
+}
 
 void
 SedaStageTest::testSendFoo() {
@@ -91,11 +94,15 @@ SedaStageTest::testForwardEvents() {
   seda::Strategy::Ptr discard(new seda::DiscardStrategy());
   seda::EventCountStrategy::Ptr ecs(new seda::EventCountStrategy(discard));
   discard = seda::Strategy::Ptr(ecs);
-  seda::Stage::Ptr final(new seda::Stage("discard", discard, 2));
+  seda::Stage::Ptr final(new seda::Stage("final", discard, 2));
 
-  seda::Strategy::Ptr fwdStrategy(new seda::ForwardStrategy(final));
-  seda::Stage::Ptr first(new seda::Stage("fwd", fwdStrategy));
+  seda::Strategy::Ptr fwdStrategy(new seda::ForwardStrategy("final"));
+  seda::Stage::Ptr first(new seda::Stage("first", fwdStrategy));
 
+  // register the stages
+  StageRegistry::instance().insert(first);
+  StageRegistry::instance().insert(final);
+  
   first->start();
   final->start();
 
@@ -124,9 +131,13 @@ SedaStageTest::testCompositeStrategy() {
   seda::Stage::Ptr final(new seda::Stage("discard", discard, 2));
 
   seda::CompositeStrategy::Ptr composite(new seda::CompositeStrategy("composite"));
-  composite->add(seda::Strategy::Ptr(new seda::ForwardStrategy(final)));
-  composite->add(seda::Strategy::Ptr(new seda::ForwardStrategy(final)));
+  composite->add(seda::Strategy::Ptr(new seda::ForwardStrategy("discard")));
+  composite->add(seda::Strategy::Ptr(new seda::ForwardStrategy("discard")));
   seda::Stage::Ptr first(new seda::Stage("fwd", composite));
+
+  // register the stages
+  StageRegistry::instance().insert(first);
+  StageRegistry::instance().insert(final);
 
   first->start();
   final->start();

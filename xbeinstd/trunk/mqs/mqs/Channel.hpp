@@ -1,7 +1,7 @@
 #ifndef MQS_CHANNEL_HPP
 #define MQS_CHANNEL_HPP
 
-#include <mqs/common.h>
+#include <mqs/common.hpp>
 
 #include <vector>
 #include <list>
@@ -201,7 +201,7 @@ namespace mqs {
     std::size_t flushMessages();
     void send(cms::Message* msg, const cms::Destination* dst, int deliveryMode, int priority, long long timeToLive);
     
-    DECLARE_LOGGER();
+    MQS_DECLARE_LOGGER();
     activemq::concurrent::Mutex _mtx;
     
     mqs::BrokerURI _broker;

@@ -11,7 +11,9 @@ namespace seda {
     DiscardStrategy() : Strategy("discard") {}
     ~DiscardStrategy() {}
 
-    void perform(const IEvent::Ptr&) const { }
+    void perform(const IEvent::Ptr& e) const {
+        SEDA_LOG_DEBUG("discarding: " << e->str());
+    }
   };
 }
 
