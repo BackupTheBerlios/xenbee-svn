@@ -72,7 +72,7 @@ namespace tests
 
         void PingPongFSM_Idle::Start(PingPongContext& context)
         {
-            PingPong& ctxt(context.getOwner());
+            PingPong& ctxt = context.getOwner();
 
             (context.getState()).Exit(context);
             context.clearState();
@@ -100,7 +100,7 @@ namespace tests
 
         void PingPongFSM_Active::Ping(PingPongContext& context, const tests::xbe::PingEvent& msg)
         {
-            PingPong& ctxt(context.getOwner());
+            PingPong& ctxt = context.getOwner();
 
             PingPongState& EndStateName = context.getState();
 
@@ -121,7 +121,7 @@ namespace tests
 
         void PingPongFSM_Active::Pong(PingPongContext& context, const tests::xbe::PongEvent& msg)
         {
-            PingPong& ctxt(context.getOwner());
+            PingPong& ctxt = context.getOwner();
 
             if (ctxt.sentMessages() < ctxt.maxMessages())
             {
@@ -168,7 +168,7 @@ namespace tests
 
         void PingPongFSM_Active::Stop(PingPongContext& context)
         {
-            PingPong& ctxt(context.getOwner());
+            PingPong& ctxt = context.getOwner();
 
             (context.getState()).Exit(context);
             context.clearState();

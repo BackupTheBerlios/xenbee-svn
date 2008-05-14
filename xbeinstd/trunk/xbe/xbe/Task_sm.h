@@ -140,6 +140,6 @@ namespace xbe
 
         Task& _owner;
     };
-}
+};
 
-#endif // _H_TASK_SM
+#endif
