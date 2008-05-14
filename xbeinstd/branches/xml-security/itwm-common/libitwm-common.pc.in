@@ -1,0 +1,10 @@
+prefix=${CMAKE_INSTALL_PREFIX}
+exec_prefix=${CMAKE_INSTALL_PREFIX}/bin
+libdir=${CMAKE_INSTALL_PREFIX}/lib
+includedir=${CMAKE_INSTALL_PREFIX}/include
+
+Name: ITWM-HPC Common C++ Library
+Description: This library contains common code used by several other libraries developed at the Fraunhofer ITWM CC-HPC
+Version: ${V_MAJOR}.${V_MINOR}
+Libs: -L${CMAKE_INSTALL_PREFIX}/lib -litwm-common
+Cflags: -I${CMAKE_INSTALL_PREFIX}/include
