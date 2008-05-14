@@ -1,14 +1,12 @@
-#include <iostream>
+#include <xbe/common.hpp>
 
 #include <cppunit/extensions/TestFactoryRegistry.h>
 #include <cppunit/ui/text/TestRunner.h>
 #include <cppunit/CompilerOutputter.h>
-#include <xbe/common.hpp>
 
 #if ENABLE_LOGGING
 #include <log4cpp/BasicConfigurator.hh>
 #include <log4cpp/Priority.hh>
-#include <iostream>
 #endif
 
 int

@@ -39,7 +39,6 @@ namespace mqs {
         ChannelNotStarted() : MQSException("channel not started yet") {}
         virtual ~ChannelNotStarted() throw () {}
     };
-
     
     class Channel : public cms::MessageListener,
                     public cms::ExceptionListener {
@@ -69,6 +68,11 @@ namespace mqs {
         */
         void start();
 
+        /**
+           Returns true iff the channel has been started, false otherwise.
+         */
+        bool is_started() const;
+        
         /**
            Stops the channel
         */
@@ -183,6 +187,11 @@ namespace mqs {
         void addIncomingQueue(const mqs::Destination& dst);
         //    void delIncomingQueue(const mqs::Destination& dst);
 
+        /**
+           Removes all messages from the incoming queue.
+       
+        */
+        std::size_t flushMessages();
     public:
         /**
            Implementation for the MessageListener interface.
@@ -210,11 +219,6 @@ namespace mqs {
         void onException(const cms::CMSException&);
 
     private:
-        /**
-           Removes all messages from the incoming queue.
-       
-        */
-        std::size_t flushMessages();
         void send(cms::Message* msg, const cms::Destination* dst, int deliveryMode, int priority, long long timeToLive);
         void ensure_started() const throw (ChannelNotStarted);
     

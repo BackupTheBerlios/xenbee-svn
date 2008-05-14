@@ -138,8 +138,8 @@ namespace tests
 
             PingPong& _owner;
         };
-    };
+    }
 
-};
+}
 
-#endif
+#endif // _H_PINGPONG_SM

@@ -55,27 +55,15 @@ Channel::Channel(const mqs::BrokerURI& broker, const mqs::Destination& in, const
 }
 
 Channel::~Channel() {
-    _consumerMtx.lock();
-    while (!_consumer.empty()) {
-        try {
-            struct Consumer c = _consumer.front();
-            delete c.mqs_destination;
-            delete c.destination;
-            delete c.consumer;
-            _consumer.pop_front();
-        } catch (cms::CMSException& e) {
-            MQS_LOG_ERROR(e.getStackTraceString());
-        }
-    }
-    _consumerMtx.unlock();
-
     try {
-        if (_session.get()) _session->close();
-        if (_connection.get()) _connection->close();
+        stop();
     } catch (cms::CMSException& e) {
-        MQS_LOG_ERROR(e.getStackTraceString());
+        MQS_LOG_ERROR("error during channel stop procedure: " << e.getStackTraceString());
+    } catch (const std::exception& e) {
+        MQS_LOG_ERROR("error during channel stop procedure: " << e.what());
+    } catch (...) {
+        MQS_LOG_ERROR("unknown error during channel stop procedure");
     }
-  
 }
 
 void
@@ -112,7 +100,7 @@ Channel::start() {
     } else if (deliveryMode == "non-persistent") {
         _producer->setDeliveryMode(DeliveryMode::NON_PERSISTENT);
     } else {
-        throw std::invalid_argument("invalid delivery mode: "+deliveryMode);
+        throw MQSException("invalid delivery mode: "+deliveryMode);
     }
     _producer->setDisableMessageID(_outQueue.getBooleanProperty("disableMessageID", false));
     _producer->setDisableMessageTimeStamp(_outQueue.getBooleanProperty("disableMessageTimeStamp", false));
@@ -129,7 +117,40 @@ void
 Channel::stop() {
     Lock channelLock(&_mtx);
 
-    MQS_LOG_DEBUG("implement me");
+    {
+        Lock consumerLock(&_consumerMtx);
+        while (!_consumer.empty()) {
+            struct Consumer c = _consumer.front(); _consumer.pop_front();
+            if (c.mqs_destination) {
+                delete c.mqs_destination;
+                c.mqs_destination = 0;
+            }
+            if (c.destination) {
+                delete c.destination;
+                c.destination = 0;
+            }
+            if (c.consumer) {
+                c.consumer->setMessageListener( this );
+                delete c.consumer;
+                c.consumer = 0;
+            }
+        }
+    }
+
+    _producer_destination.reset();
+    _producer.reset();
+        
+    
+    if (_session.get())
+        _session->close();
+
+    if (_connection.get())
+        _connection->close();
+
+    _session.reset();
+    _connection.reset();
+
+    _started = false;
 }
 
 void
@@ -350,11 +371,13 @@ Channel::createBytesMessage(const unsigned char* bytes, std::size_t length) cons
 
 void
 Channel::setMessageListener(cms::MessageListener* listener) {
+    Lock channelLock(&_mtx);
     _messageListener = listener;
 }
 
 void
 Channel::setExceptionListener(cms::ExceptionListener *listener) {
+    Lock channelLock(&_mtx);
     _exceptionListener = listener;
 }
 
@@ -459,9 +482,15 @@ Channel::onException(const cms::CMSException& ex) {
     }
 }
 
+bool
+Channel::is_started() const {
+    activemq::concurrent::Mutex* _non_const_mtx(const_cast<activemq::concurrent::Mutex*>(&_mtx));
+    Lock channelLock(_non_const_mtx);
+    return _started;
+}
+
 void
 Channel::ensure_started() const throw(ChannelNotStarted) {
-    if (! _started) {
+    if (! is_started())
         throw ChannelNotStarted();
-    }
 }

@@ -11,9 +11,10 @@ using namespace mqs::tests;
 
 CPPUNIT_TEST_SUITE_REGISTRATION( ChannelTest );
 
-ChannelTest::ChannelTest() : _channel(0) {}
+ChannelTest::ChannelTest() : MQS_INIT_LOGGER("tests.mqs.channel"), _channel(0) {}
 
 void ChannelTest::setUp() {
+    MQS_LOG_DEBUG("setup");
 }
 
 void ChannelTest::tearDown() {
@@ -60,6 +61,45 @@ void ChannelTest::testSendReply() {
   msg = dynamic_cast<cms::TextMessage*>(_channel->wait_reply(id, 1000));
   CPPUNIT_ASSERT_MESSAGE("did not receive a message", msg != 0);
   CPPUNIT_ASSERT_EQUAL(std::string("world!"), msg->getText());
+}
+
+void ChannelTest::testStartStopChannel() {
+    MQS_LOG_INFO("starting the channel");
+    
+    // start the channel
+    _channel = new mqs::Channel(mqs::BrokerURI(TEST_BROKER_URI), mqs::Destination("tests.mqs?type=queue"));
+    CPPUNIT_ASSERT(!_channel->is_started());
+
+    _channel->start();
+
+    CPPUNIT_ASSERT_MESSAGE("channel could not be started", _channel->is_started());
+    
+    MQS_LOG_INFO("sending first message");
+
+    // send a message
+    cms::TextMessage* msg = _channel->createTextMessage("hello");
+    _channel->send(msg);
+    delete msg;
+    msg = dynamic_cast<cms::TextMessage*>(_channel->recv(1000));
+    CPPUNIT_ASSERT_MESSAGE("did not receive a message", msg != 0);
+
+    MQS_LOG_INFO("stopping the channel");
+
+    // stop the channel
+    _channel->stop();
+    CPPUNIT_ASSERT_MESSAGE("channel could not be stopped", (!_channel->is_started()));
+    
+    MQS_LOG_INFO("starting the channel again");
+    // start it again
+    _channel->start();
+
+    MQS_LOG_INFO("sending second message");
+    // send another message
+    msg = _channel->createTextMessage("hello");
+    _channel->send(msg);
+    delete msg;
+    msg = dynamic_cast<cms::TextMessage*>(_channel->recv(1000));
+    CPPUNIT_ASSERT_MESSAGE("did not receive a message", msg != 0);
 }
 
 void ChannelTest::doStart(const std::string& uri, const std::string& q) {
