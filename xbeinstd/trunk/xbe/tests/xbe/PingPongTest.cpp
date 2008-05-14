@@ -59,8 +59,8 @@ FSM <- PingClient --> XMLSerializer ---> Forwarder --> XMLDeserializer ---> Pong
     /* PingClient stage */
     ::tests::xbe::PingPong::Ptr pingClient(new ::tests::xbe::PingPong("tests.xbe.pingpong.ping.stage.strategy",
                                                                       "tests.xbe.ping.stage.xml-serialize", // next stage
-                                                                      "urn:queue:tests.xbe.pingpong.pong", // messages go to
-                                                                      "urn:queue:tests.xbe.pingpong.ping", // messages come from
+                                                                      "tests.xbe.pingpong.pong", // messages go to
+                                                                      "tests.xbe.pingpong.ping", // messages come from
                                                                       numMsgs, // number of messages to send
                                                                       true // perform the initial send
                                                                       ));
@@ -96,8 +96,8 @@ FSM <- PingClient --> XMLSerializer ---> Forwarder --> XMLDeserializer ---> Pong
     /* PongClient stage */
     ::tests::xbe::PingPong::Ptr pongClient(new ::tests::xbe::PingPong("tests.xbe.pingpong.pong.stage.strategy",
                                                                       "tests.xbe.pong.stage.xml-serialize", // next stage
-                                                                      "urn:queue:tests.xbe.pingpong.ping", // messages go to
-                                                                      "urn:queue:tests.xbe.pingpong.pong", // messages come from
+                                                                      "tests.xbe.pingpong.ping", // messages go to
+                                                                      "tests.xbe.pingpong.pong", // messages come from
                                                                       numMsgs, // number of messages to send
                                                                       false // do not perform the initial send
                                                                       ));
@@ -172,6 +172,8 @@ FSM <- PingClient --> XMLSerializer --> ChannelAdapter <--> Channel <--> Channel
        +------------ XMLDeserializer <------+                               +-------------- XMLSerializer <----------------------+
     */
 
+    const std::size_t numMsgs(5);
+    
     
     /*
      * Ping part
@@ -179,38 +181,114 @@ FSM <- PingClient --> XMLSerializer --> ChannelAdapter <--> Channel <--> Channel
      */
 
     /* PingClient stage */
-    seda::Strategy::Ptr pingClient(new ::tests::xbe::PingPong("tests.xbe.pingpong.ping.stage.strategy",
-                                                              "tests.xbe.ping.stage.xml-serialize", // next stage
-                                                              "urn:queue:tests.xbe.pingpong.pong", // messages go to
-                                                              "urn:queue:tests.xbe.pingpong.ping", // messages come from
-                                                              10, // number of messages to send
-                                                              true // perform the initial send
-                                                              ));
+    ::tests::xbe::PingPong::Ptr pingClient(new ::tests::xbe::PingPong("tests.xbe.pingpong.ping.stage.strategy",
+                                                                      "tests.xbe.ping.stage.xml-serialize", // next stage
+                                                                      "tests.xbe.pingpong.pong", // messages go to
+                                                                      "tests.xbe.pingpong.ping", // messages come from
+                                                                      numMsgs, // number of messages to send
+                                                                      true // perform the initial send
+                                                                      ));
     seda::Stage::Ptr pingClientStage(new seda::Stage("tests.xbe.pingpong.ping.stage", pingClient));
     seda::StageRegistry::instance().insert(pingClientStage);
-
     
     /* XML Serializer stage */
-    seda::Strategy::Ptr xmlSerializer(new seda::ForwardStrategy("tests.xbe.ping.net"));
-    xmlSerializer = seda::Strategy::Ptr(new ::xbe::XMLSerializeStrategy(xmlSerializer));
-    seda::Stage::Ptr pingXmlSerializeStage(new seda::Stage("tests.xbe.ping.stage.xml-serialize", xmlSerializer));
+    seda::Strategy::Ptr pingXmlSerializer(new seda::ForwardStrategy("tests.xbe.ping.net"));
+    pingXmlSerializer = seda::Strategy::Ptr(new seda::LoggingStrategy(pingXmlSerializer));
+    pingXmlSerializer = seda::Strategy::Ptr(new ::xbe::XMLSerializeStrategy(pingXmlSerializer));
+    seda::Stage::Ptr pingXmlSerializeStage(new seda::Stage("tests.xbe.ping.stage.xml-serialize", pingXmlSerializer));
     seda::StageRegistry::instance().insert(pingXmlSerializeStage);
-
     
-    /* ChannelAdapter */
-    mqs::Channel::Ptr pingClientChannel(new mqs::Channel(mqs::BrokerURI(TEST_BROKER_URI),
-                                                         mqs::Destination("tests.xbe.pingpong.ping?type=queue")));
-    seda::Strategy::Ptr pingNetAdapter(new seda::ForwardStrategy("tests.xbe.ping.stage.xml-deserialize"));
-    pingNetAdapter = seda::Strategy::Ptr(new ::xbe::ChannelAdapterStrategy("tests.xbe.ping.net.strategy",
-                                                                           pingNetAdapter,
-                                                                           pingClientChannel));
-    seda::Stage::Ptr pingNetStage(new seda::Stage("tests.xbe.ping.net", pingNetAdapter));
+    /* Channel stage */
+    mqs::Channel::Ptr pingChannel(new mqs::Channel(mqs::BrokerURI(TEST_BROKER_URI),
+                                                   mqs::Destination("tests.xbe.pingpong.ping")));
+    seda::Strategy::Ptr pingNet(new ::xbe::ChannelAdapterStrategy("tests.xbe.ping.channeladapter",
+                                                                  seda::Strategy::Ptr(new seda::ForwardStrategy("tests.xbe.ping.stage.xml-deserialize")),
+                                                                  pingChannel));
+    seda::EventCountStrategy::Ptr ecsPingNet(new seda::EventCountStrategy(pingNet));
+    pingNet = ecsPingNet;
+    seda::Stage::Ptr pingNetStage(new seda::Stage("tests.xbe.ping.net", pingNet));
     seda::StageRegistry::instance().insert(pingNetStage);
     
     /* XML De-Serializer stage */
-    seda::Strategy::Ptr xmlDeSerializer(new seda::ForwardStrategy("tests.xbe.pingpong.ping.stage"));
-    xmlDeSerializer = seda::Strategy::Ptr(new ::xbe::XMLDeserializeStrategy(xmlDeSerializer));
-    seda::Stage::Ptr pingXmlDeSerializerStage(new seda::Stage("tests.xbe.ping.stage.xml-deserialize", xmlDeSerializer));
+    seda::Strategy::Ptr pingXmlDeSerializer(new seda::ForwardStrategy("tests.xbe.pingpong.ping.stage"));
+    pingXmlDeSerializer = seda::Strategy::Ptr(new ::xbe::XMLDeserializeStrategy(pingXmlDeSerializer));
+    seda::Stage::Ptr pingXmlDeSerializerStage(new seda::Stage("tests.xbe.ping.stage.xml-deserialize", pingXmlDeSerializer));
     seda::StageRegistry::instance().insert(pingXmlDeSerializerStage);
 
+    
+    /*
+     * Pong part
+     *
+     */
+
+    /* PongClient stage */
+    ::tests::xbe::PingPong::Ptr pongClient(new ::tests::xbe::PingPong("tests.xbe.pingpong.pong.stage.strategy",
+                                                                      "tests.xbe.pong.stage.xml-serialize", // next stage
+                                                                      "tests.xbe.pingpong.ping", // messages go to
+                                                                      "tests.xbe.pingpong.pong", // messages come from
+                                                                      numMsgs, // number of messages to send
+                                                                      false // do not perform the initial send
+                                                                      ));
+    seda::Stage::Ptr pongClientStage(new seda::Stage("tests.xbe.pingpong.pong.stage", pongClient));
+    seda::StageRegistry::instance().insert(pongClientStage);
+    
+    /* XML Serializer stage */
+    seda::Strategy::Ptr pongXmlSerializer(new seda::ForwardStrategy("tests.xbe.pong.net"));
+    pongXmlSerializer = seda::Strategy::Ptr(new ::xbe::XMLSerializeStrategy(pongXmlSerializer));
+    seda::Stage::Ptr pongXmlSerializeStage(new seda::Stage("tests.xbe.pong.stage.xml-serialize", pongXmlSerializer));
+    seda::StageRegistry::instance().insert(pongXmlSerializeStage);
+    
+    /* Channel stage */
+    mqs::Channel::Ptr pongChannel(new mqs::Channel(mqs::BrokerURI(TEST_BROKER_URI),
+                                                   mqs::Destination("tests.xbe.pingpong.pong")));
+    seda::Strategy::Ptr pongNet(new ::xbe::ChannelAdapterStrategy("tests.xbe.pong.channeladapter",
+                                                                  seda::Strategy::Ptr(new seda::ForwardStrategy("tests.xbe.pong.stage.xml-deserialize")),
+                                                                  pongChannel));
+    seda::EventCountStrategy::Ptr ecsPongNet(new seda::EventCountStrategy(pongNet));
+    pongNet = ecsPongNet;
+    seda::Stage::Ptr pongNetStage(new seda::Stage("tests.xbe.pong.net", pongNet));
+    seda::StageRegistry::instance().insert(pongNetStage);
+
+    /* XML De-Serializer stage */
+    seda::Strategy::Ptr pongXmlDeSerializer(new seda::ForwardStrategy("tests.xbe.pingpong.pong.stage"));
+    pongXmlDeSerializer = seda::Strategy::Ptr(new ::xbe::XMLDeserializeStrategy(pongXmlDeSerializer));
+    pongXmlDeSerializer = seda::Strategy::Ptr(new seda::LoggingStrategy(pongXmlDeSerializer));
+    seda::Stage::Ptr pongXmlDeSerializerStage(new seda::Stage("tests.xbe.pong.stage.xml-deserialize", pongXmlDeSerializer));
+    seda::StageRegistry::instance().insert(pongXmlDeSerializerStage);
+
+    pingClientStage->start();
+    pingXmlSerializeStage->start();
+    pingNetStage->start();
+    pingXmlDeSerializerStage->start();
+    
+    pongClientStage->start();
+    pongXmlSerializeStage->start();
+    pongNetStage->start();
+    pongXmlDeSerializerStage->start();
+
+    pongClient->doStart();
+    pingClient->doStart();
+
+    // wait until #msgs have been sent
+    ecsPongNet->wait(numMsgs, 2000);
+    ecsPingNet->wait(numMsgs, 2000);
+
+    XBE_LOG_DEBUG("sent pings: " << ecsPingNet->count());
+    XBE_LOG_DEBUG("sent pongs: " << ecsPongNet->count());
+
+    pingClientStage->stop();
+    pingXmlSerializeStage->stop();
+    pingNetStage->stop();
+    pingXmlDeSerializerStage->stop();
+    
+    pongClientStage->stop();
+    pongXmlSerializeStage->stop();
+    pongNetStage->stop();
+    pongXmlDeSerializerStage->stop();
+
+    pongClient->doStop();
+    pingClient->doStop();
+    
+    CPPUNIT_ASSERT(ecsPingNet->count() == numMsgs);
+    CPPUNIT_ASSERT(ecsPongNet->count() == numMsgs);
 }

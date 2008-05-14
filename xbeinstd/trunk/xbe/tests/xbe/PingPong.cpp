@@ -48,10 +48,10 @@ void PingPong::dispatch(const xbemsg::message_t& msg) {
             ::tests::xbe::PongEvent pe(msg);
             _fsm.Pong(pe);
         } else {
-            LOG_WARN("got a message with illegal content!");
+            XBE_LOG_WARN("got a message with illegal content!");
         }
     } else {
-        LOG_WARN("got a message without any content!");
+        XBE_LOG_WARN("got a message without any content!");
     }
 }
 
@@ -69,7 +69,7 @@ void PingPong::stop() {
 
 void PingPong::start() {
     if (_initialSend) {
-        LOG_DEBUG("sending ping " << (_sentMessages+1));
+        XBE_LOG_DEBUG("sending ping " << (_sentMessages+1));
 
         // generate a new PingEvent and send it to 'out'
         xbemsg::header_t hdr(_to, _from);
@@ -85,7 +85,7 @@ void PingPong::start() {
 }
 
 void PingPong::sendPong(const tests::xbe::PingEvent& m) {
-    LOG_DEBUG("sending pong " << (_sentMessages+1));
+    XBE_LOG_DEBUG("sending pong " << (_sentMessages+1));
 
     // generate a new PingEvent and send it to 'out'
     xbemsg::header_t hdr(_to, _from);
@@ -99,7 +99,7 @@ void PingPong::sendPong(const tests::xbe::PingEvent& m) {
 }
 
 void PingPong::sendPing(const tests::xbe::PongEvent& m) {
-    LOG_DEBUG("sending ping " << (_sentMessages+1));
+    XBE_LOG_DEBUG("sending ping " << (_sentMessages+1));
 
     // generate a new PingEvent and send it to 'out'
     xbemsg::header_t hdr(_to, _from);

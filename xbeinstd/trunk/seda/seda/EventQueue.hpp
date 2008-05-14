@@ -7,6 +7,7 @@
 #include <activemq/concurrent/Mutex.h>
 #include <activemq/concurrent/Lock.h>
 
+#include <seda/common.hpp>
 #include <seda/constants.hpp>
 #include <seda/IEventQueue.hpp>
 #include <seda/IEvent.hpp>
