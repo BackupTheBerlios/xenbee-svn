@@ -102,6 +102,10 @@ void ChannelTest::testStartStopChannel() {
     CPPUNIT_ASSERT_MESSAGE("did not receive a message", msg != 0);
 }
 
+void ChannelTest::testConnectionLoss() {
+    MQS_LOG_WARN("think about a way how to check this automatically");
+}
+
 void ChannelTest::doStart(const std::string& uri, const std::string& q) {
   if (_channel) {
     _channel->stop();
