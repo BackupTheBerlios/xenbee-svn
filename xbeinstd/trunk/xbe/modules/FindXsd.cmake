@@ -11,13 +11,13 @@ set(ADDITIONAL_XSD_PATH $ENV{XSDDIR})
 #debugging
 MESSAGE("XSD additional search path is: ${ADDITIONAL_XSD_PATH}")
 
-FIND_PATH(XSD_INCLUDE_DIR xsd/cxx/parser/elements.hxx
+FIND_PATH(XSD_INCLUDE_DIR cxx/parser/elements.hxx
   "[HKEY_CURRENT_USER\\software\\xsd\\include]"
   "[HKEY_CURRENT_USER]\\xsd\\include]"
-  $ENV{XSD_INCLUDE_DIR}
-  $ENV{XSDDIR}/libxsd
-  /usr/local/include
-  /usr/include
+  $ENV{XSD_INCLUDE_DIR}/xsd
+  $ENV{XSDDIR}/libxsd/xsd
+  /usr/local/include/xsd
+  /usr/include/xsd
 )
 
 FIND_PROGRAM(XSD_EXECUTABLE
