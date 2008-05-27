@@ -38,7 +38,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/modules")
 set(CMAKE_CXX_FLAGS_DEBUG "-Wall -Wno-non-virtual-dtor")
 # Releases are made with the release build. Optimize code.
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Wno-non-virtual-dtor")
-#set(LINK_FLAGS "-Wl,-Bstatic")
+#set(LINK_FLAGS "-Wl,-Bdynamic")
 
 ## PkgConfig is helpful
 include(FindPkgConfig)
@@ -121,8 +121,8 @@ link_directories(${CMAKE_LIBRARY_PATH} ${LOG4CPP_STATIC_LIBRARY_DIRS})
 link_directories(${${PROJECT_NAME}_BINARY_DIR})
 link_directories(${AMQ_LIBRARY_DIRS})
 link_libraries(-lcrypto -lpthread -lmqs -lseda)
-link_libraries(-Wl,-Bstatic ${AMQ_STATIC_LDFLAGS})
-link_libraries(-Wl,-Bdynamic ${XERCESC_LIBRARIES})
+link_libraries(${AMQ_STATIC_LDFLAGS})
+link_libraries(${XERCESC_LIBRARIES})
 #link_libraries(-Wl,-Bdynamic -lxalan-c)
 link_libraries(${XMLSecurityC_LIBRARIES})
 
