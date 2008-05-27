@@ -19,7 +19,7 @@ FIND_PATH(XMLSecurityC_INCLUDE_DIR xsec/framework/XSECConfig.hpp
 
 FIND_LIBRARY(XMLSecurityC_LIBRARIES
   NAMES 
-    xml-security-c
+    libxml-security-c.a xml-security-c
   PATHS
     "[HKEY_CURRENT_USER\\software\\xml-security-c\\lib]"
     "[HKEY_CURRENT_USER\\xml-security-c\\lib]"
