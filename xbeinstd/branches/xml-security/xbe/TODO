@@ -1,16 +1,6 @@
-* finish the PingPong TestCase
-	* add thread-safety to class PingPong
-	* create on both sides: 
-		- Channel, ChannelAdapter, PingPong Strategy with counting
-		- Ping Event could look like:
-			<message>
-			  <header>...</header>
-			  <body><tests-xbe:PingEvent/></body>
-			</message>
-		- Pong Event similar
-		- PingPong should only send a fixed number of messages (ping part)
-		- PingPong should await a fixed number of messages (pong part)
-		- invariant: #msgs sent == #msgs received
+XML-Security
+============
+        * missing: corrected version for the strategy decorators
+        * missing: a nice way to load schema files
+                - probably put that into XbeLibUtils somehow
 
-	* TestCase must stop after a given time (i.e. channels and threads should be stopped)
-	* test was successful if #pings == #pongs == #MessagesToSend
