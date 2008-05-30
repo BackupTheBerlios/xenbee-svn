@@ -27,13 +27,13 @@ void XbeLibUtils::initialise() throw (xbe::XbeException) {
   // initalize namespace map
   xml_schema::namespace_infomap& map = namespace_infomap();
   //  map["xbe"].name = "http://www.xenbee.net/schema/2008/02/xbe";
-  map[""].name = "http://www.xenbee.net/schema/2008/02/xbe-msg";
-  map[""].schema = "xbe-msg.xsd";
+  map["xbemsg"].name = "http://www.xenbee.net/schema/2008/02/xbe-msg";
+  //  map[""].schema = "xbe-msg.xsd";
   
   //  map["jsdl"].name = "http://schemas.ggf.org/jsdl/2005/11/jsdl";
   //  map["jsdl-posix"].name = "http://schemas.ggf.org/jsdl/2005/11/jsdl-posix";
-  map["dsig"].name = "http://www.w3.org/2000/09/xmldsig#";
-  map["dsig"].schema = "dsig.xsd";
+  //  map["dsig"].name = "http://www.w3.org/2000/09/xmldsig#";
+  //  map["dsig"].schema = "dsig.xsd";
   //  map["xenc"].name = "http://www.w3.org/2001/04/xmlenc#";
 
   // TODO: fix the hard-coded stuff here!!!!

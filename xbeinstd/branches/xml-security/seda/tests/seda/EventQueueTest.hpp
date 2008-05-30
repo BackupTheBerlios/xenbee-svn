@@ -2,7 +2,7 @@
 #define SEDA_TESTS_EVENTQUEUE_HPP 1
 
 #include <cppunit/extensions/HelperMacros.h>
-#include <seda/logging.hpp>
+#include <seda/common.hpp>
 #include <seda/IEventQueue.hpp>
 
 namespace seda {

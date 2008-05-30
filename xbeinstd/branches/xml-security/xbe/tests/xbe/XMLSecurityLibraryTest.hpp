@@ -10,10 +10,11 @@ namespace xbe {
       CPPUNIT_TEST_SUITE( xbe::tests::XMLSecurityLibraryTest );
       //      CPPUNIT_TEST_EXCEPTION( testStart_illegal_URI_Throws, cms::CMSException );
       CPPUNIT_TEST( testSign );
+      CPPUNIT_TEST( testValidate );
       CPPUNIT_TEST( testSignHomePageExample );
-      CPPUNIT_TEST( testParseValidate1 );
-      CPPUNIT_TEST( testParseValidate2 );
-        //      CPPUNIT_TEST( testValidate ); // currently deactivated due to unidentified segfault
+      CPPUNIT_TEST( testParseValidateHomePageExample );
+      CPPUNIT_TEST( testParseValidateValidSignature );
+      CPPUNIT_TEST( testParseValidateInvalidSignature );
         //      CPPUNIT_TEST( testEncrypt );
         //      CPPUNIT_TEST( testDecrypt );
       //      CPPUNIT_TEST_EXCEPTION( testStart_Timeout_Throws, cms::CMSException );
@@ -26,10 +27,11 @@ namespace xbe {
 
     protected:
       void testSign();
-      void testSignHomePageExample();
       void testValidate();
-      void testParseValidate1();
-      void testParseValidate2();
+      void testSignHomePageExample();
+      void testParseValidateHomePageExample();
+      void testParseValidateValidSignature();
+      void testParseValidateInvalidSignature();
       void testEncrypt();
       void testDecrypt();
     private:

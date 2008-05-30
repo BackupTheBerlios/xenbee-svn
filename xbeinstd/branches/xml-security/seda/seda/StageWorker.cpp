@@ -1,6 +1,8 @@
 #include "StageWorker.hpp"
 #include "Stage.hpp"
 #include "IEvent.hpp"
+#include "SystemEvent.hpp"
+#include "StageRegistry.hpp"
 
 namespace seda {
     void StageWorker::run() {
@@ -9,8 +11,26 @@ namespace seda {
         while (!stopped()) {
             try {
                 IEvent::Ptr e = _stage->queue()->pop(_stage->timeout());
-                _busy = true; SEDA_LOG_DEBUG("got work");
-                _stage->strategy()->perform(e);
+                _busy = true; SEDA_LOG_DEBUG("got work: " << e->str());
+                
+                // handle system events:
+                SystemEvent *se(dynamic_cast<SystemEvent*>(e.get()));
+                if (se) {
+                    // check if there is a system-event-handler stage
+                    Stage::Ptr systemEventHandler(StageRegistry::instance().lookup("system-event-handler"));
+                    if (systemEventHandler) {
+                        // is our own stage the system-event-handler?
+                        if (systemEventHandler.get() == _stage) {
+                            _stage->strategy()->perform(e);
+                        } else {
+                            systemEventHandler->send(e);
+                        }
+                    } else {
+                        SEDA_LOG_FATAL("received a SystemEvent, but no system-event-handler has been registered!");
+                    }
+                } else {
+                    _stage->strategy()->perform(e);
+                }
                 _busy = false; SEDA_LOG_DEBUG("done");
             } catch (const seda::QueueEmpty&) {
                 // ignore

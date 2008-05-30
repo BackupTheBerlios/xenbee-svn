@@ -22,8 +22,6 @@
 
 #include <xsec/framework/XSECProvider.hpp>
 #include <xsec/framework/XSECException.hpp>
-#include <xsec/enc/OpenSSL/OpenSSLCryptoProvider.hpp> // TODO: fix this!!!
-#include <xsec/enc/OpenSSL/OpenSSLCryptoSymmetricKey.hpp>
 #include <xsec/xenc/XENCEncryptedData.hpp>
 #include <xsec/enc/XSECCryptoException.hpp>
 #include <xsec/dsig/DSIGSignature.hpp>
@@ -98,12 +96,12 @@ serialize (std::ostream& os,
 
     // Set encoding.
     //
-    writer->setEncoding(xml::string (encoding).c_str ());
+    //    writer->setEncoding(xml::string (encoding).c_str ());
 
     // Set some generally nice features.
     //
-    writer->setFeature (XMLUni::fgDOMWRTDiscardDefaultContent, true);
-    writer->setFeature (XMLUni::fgDOMWRTFormatPrettyPrint, true);
+    //writer->setFeature (XMLUni::fgDOMWRTDiscardDefaultContent, true);
+    //writer->setFeature (XMLUni::fgDOMWRTFormatPrettyPrint, true);
 
     // Adapt ostream to format target and serialize.
     //
@@ -152,8 +150,9 @@ parse (std::istream& is, const std::string& id, bool validate)
     // corresponding to their fully expanded substitution text
     // will be created.
     //
-    parser->setFeature (XMLUni::fgDOMEntities, false);
-
+    //parser->setFeature (XMLUni::fgDOMEntities, false);
+    parser->setFeature (XMLUni::fgDOMEntities, true);
+ 
     // Perform Namespace processing.
     //
     parser->setFeature (XMLUni::fgDOMNamespaces, true);
@@ -187,6 +186,49 @@ parse (std::istream& is, const std::string& id, bool validate)
 
     eh.throw_if_failed<tree::parsing<char> > ();
 
+    return doc;
+}
+
+xsd::cxx::xml::dom::auto_ptr<xercesc::DOMDocument>
+createExample (const std::string& text) {
+    xsd::cxx::xml::dom::auto_ptr<xercesc::DOMDocument> doc(create("message", "http://www.xenbee.net/schema/2008/02/xbe-msg", "xbemsg"));
+    DOMElement* root = doc->getDocumentElement();
+
+    root->setAttributeNS(xml::string("http://www.w3.org/2000/xmlns/").c_str(),
+                         xml::string("xmlns:xbemsg").c_str(),
+                         xml::string("http://www.xenbee.net/schema/2008/02/xbe-msg").c_str());
+
+    /* HEADER */
+    DOMElement*  hdrElem = doc->createElementNS(xml::string("http://www.xenbee.net/schema/2008/02/xbe-msg").c_str(),
+                                                xml::string("xbemsg:header").c_str());
+    root->appendChild(hdrElem);
+
+    DOMElement*  toElem = doc->createElementNS(xml::string("http://www.xenbee.net/schema/2008/02/xbe-msg").c_str(),
+                                               xml::string("xbemsg:to").c_str());
+    hdrElem->appendChild(toElem);
+    DOMText*    toTxt   = doc->createTextNode(xml::string("foo.bar").c_str());
+    toElem->appendChild(toTxt);
+    
+    DOMElement*  fromElem = doc->createElementNS(xml::string("http://www.xenbee.net/schema/2008/02/xbe-msg").c_str(),
+                                                 xml::string("xbemsg:from").c_str());
+    hdrElem->appendChild(fromElem);
+    DOMText*    fromTxt   = doc->createTextNode(xml::string("foo.bar").c_str());
+    fromElem->appendChild(fromTxt);
+
+    /* BODY */
+    DOMElement*  bodyElem = doc->createElementNS(xml::string("http://www.xenbee.net/schema/2008/02/xbe-msg").c_str(),
+                                                 xml::string("xbemsg:body").c_str());
+    root->appendChild(bodyElem);
+
+    /* some example content */
+    DOMElement*  exampleContentElem = doc->createElementNS(xml::string("http://www.example.com/text").c_str(), xml::string("text").c_str());
+    exampleContentElem->setAttributeNS(xml::string("http://www.w3.org/2000/xmlns/").c_str(),
+                                      xml::string("xmlns").c_str(),
+                                      xml::string("http://www.example.com/text").c_str());
+    bodyElem->appendChild(exampleContentElem);
+    
+    DOMText*    exampleContentTxt   = doc->createTextNode(xml::string(text).c_str());
+    exampleContentElem->appendChild(exampleContentTxt);
     return doc;
 }
 
@@ -244,13 +286,13 @@ void XMLSecurityLibraryTest::testSignHomePageExample() {
     DOMElement *sigNode;
 
     sig = prov.newSignature();
-    sig->setDSIGNSPrefix(xml::string("dsig").c_str()); // MAKE_UNICODE_STRING is provided by xml-security
+    sig->setDSIGNSPrefix(xml::string("dsig").c_str());
 
     // Use it to create a blank signature DOM structure from the doc
 
     sigNode = sig->createBlankSignature(doc.get(),
-                                        CANON_C14N_COM, 
-                                        SIGNATURE_HMAC, 
+                                        CANON_C14N_NOC,
+                                        SIGNATURE_HMAC,
                                         HASH_SHA1);
     // Insert the signature DOM nodes into the doc
 
@@ -259,11 +301,10 @@ void XMLSecurityLibraryTest::testSignHomePageExample() {
     // Create an envelope reference for the text to be signed
     DSIGReference * ref = sig->createReference(xml::string("").c_str());
     ref->appendEnvelopedSignatureTransform();
-  
+
     // Set the HMAC Key to be the string "secret"
 
-    OpenSSLCryptoProvider cryptoProvider;
-    XSECCryptoKeyHMAC *hmacKey = cryptoProvider.keyHMAC();
+    XSECCryptoKeyHMAC *hmacKey = XSECPlatformUtils::g_cryptoProvider->keyHMAC();
     hmacKey->setKey((unsigned char *) "secret", strlen("secret"));
     sig->setSigningKey(hmacKey);
 
@@ -275,15 +316,15 @@ void XMLSecurityLibraryTest::testSignHomePageExample() {
     sig->sign();
 
     {
-        std::stringstream sstr;
-        serialize(sstr, *doc);
-        XBE_LOG_DEBUG("signed document:\n" << sstr.str());
+        std::ofstream of("resources/company-example.xml");
+        serialize(of, *doc);
+        XBE_LOG_DEBUG("dumped signed document to: " << "resources/company-example.xml");
     }
 
     DSIGSignature *sig1 = prov.newSignatureFromDOM(doc.get());
     sig1->load();
 
-    hmacKey = cryptoProvider.keyHMAC();
+    hmacKey = XSECPlatformUtils::g_cryptoProvider->keyHMAC();
     hmacKey->setKey((unsigned char *) "secret", strlen("secret"));
     sig1->setSigningKey(hmacKey);
 
@@ -302,18 +343,45 @@ void XMLSecurityLibraryTest::testSignHomePageExample() {
 }
 
 void
+XMLSecurityLibraryTest::testParseValidateHomePageExample() {
+    std::string filename("resources/company-example.xml");
+    XBE_LOG_DEBUG("parsing valid message: " << filename);
+    std::ifstream ifs(filename.c_str());
+    xsd::cxx::xml::dom::auto_ptr<xercesc::DOMDocument> doc(parse(ifs, filename, false));
+
+    XSECProvider prov;
+    DSIGSignature *sig = prov.newSignatureFromDOM(doc.get());
+    XBE_LOG_DEBUG("loading signature");
+    sig->load();
+
+    XSECCryptoKeyHMAC *hmacKey = XSECPlatformUtils::g_cryptoProvider->keyHMAC();
+    hmacKey->setKey((unsigned char *) "secret", (unsigned int)strlen("secret"));
+    sig->setSigningKey(hmacKey);
+
+    XBE_LOG_DEBUG("verifying signature");
+    bool isValid(sig->verify());
+
+    if (!isValid) {
+        char *_errMsgs = XMLString::transcode(sig->getErrMsgs());
+        std::string errMsgs(_errMsgs);
+        XMLString::release(&_errMsgs);
+        CPPUNIT_ASSERT_MESSAGE(errMsgs, isValid);
+    } else {
+        CPPUNIT_ASSERT(isValid);
+    }
+    XBE_LOG_DEBUG("message is valid");
+}
+
+void
 XMLSecurityLibraryTest::testSign() {
     XBE_LOG_DEBUG("signing a xbe-message document by hand");
     
     xsd::cxx::xml::dom::auto_ptr<xercesc::DOMDocument> doc(create("message", "http://www.xenbee.net/schema/2008/02/xbe-msg", "xbemsg"));
     DOMElement* root = doc->getDocumentElement();
-    root->setAttributeNS (xml::string ("http://www.w3.org/2000/xmlns/").c_str (),
-                          xml::string ("xmlns:xsi").c_str (),
-                          xml::string ("http://www.w3.org/2001/XMLSchema-instance").c_str ());
-    root->setAttributeNS (xml::string ("http://www.w3.org/2001/XMLSchema-instance").c_str (),
-                          xml::string ("xsi:schemaLocation").c_str (),
-                          xml::string ("http://www.xenbee.net/schema/2008/02/xbe-msg xbe-msg.xsd "
-                                       "http://www.w3.org/2000/09/xmldsig# dsig.xsd").c_str ());
+
+    root->setAttributeNS(xml::string("http://www.w3.org/2000/xmlns/").c_str(),
+                         xml::string("xmlns:xbemsg").c_str(),
+                         xml::string("http://www.xenbee.net/schema/2008/02/xbe-msg").c_str());
 
     /* HEADER */
     DOMElement*  hdrElem = doc->createElementNS(xml::string("http://www.xenbee.net/schema/2008/02/xbe-msg").c_str(),
@@ -339,6 +407,9 @@ XMLSecurityLibraryTest::testSign() {
 
     /* some example content */
     DOMElement*  exampleContentElem = doc->createElementNS(xml::string("http://www.example.com/text").c_str(), xml::string("text").c_str());
+    exampleContentElem->setAttributeNS(xml::string("http://www.w3.org/2000/xmlns/").c_str(),
+                                      xml::string("xmlns").c_str(),
+                                      xml::string("http://www.example.com/text").c_str());
     bodyElem->appendChild(exampleContentElem);
     
     DOMText*    exampleContentTxt   = doc->createTextNode(xml::string("Hello World!").c_str());
@@ -354,22 +425,20 @@ XMLSecurityLibraryTest::testSign() {
     // Use it to create a blank signature DOM structure from the doc
 
     sigNode = sig->createBlankSignature(doc.get(),
-                                        CANON_C14NE_NOC,
+                                        CANON_C14N_NOC,
                                         SIGNATURE_HMAC,
                                         HASH_SHA1);
     // Insert the signature DOM nodes into the doc
 
     hdrElem->appendChild(sigNode);
-    doc->normalizeDocument();
-
+    //    doc->normalizeDocument();
     // Create an envelope reference for the text to be signed
     DSIGReference * ref = sig->createReference(xml::string("").c_str());
     ref->appendEnvelopedSignatureTransform();
-  
+
     // Set the HMAC Key to be the string "secret"
-    OpenSSLCryptoProvider cryptoProvider;
-    XSECCryptoKeyHMAC *hmacKey = cryptoProvider.keyHMAC();
-    hmacKey->setKey((unsigned char *) "secret", strlen("secret"));
+    XSECCryptoKeyHMAC *hmacKey = XSECPlatformUtils::g_cryptoProvider->keyHMAC();
+    hmacKey->setKey((unsigned char *) "secret", (unsigned int)strlen("secret"));
     sig->setSigningKey(hmacKey);
 
     // Add a KeyInfo element
@@ -380,15 +449,15 @@ XMLSecurityLibraryTest::testSign() {
     sig->sign();
 
     {
-        std::stringstream sstr;
-        serialize(sstr, *doc);
-        XBE_LOG_DEBUG("signed document:\n" << sstr.str());
+        std::ofstream of("resources/xbe-message-example.xml");
+        serialize(of, *doc);
+        XBE_LOG_DEBUG("dumped signed document to: " << "resources/xbe-message-example.xml");
     }
 
     DSIGSignature *sig1 = prov.newSignatureFromDOM(doc.get());
     sig1->load();
 
-    hmacKey = cryptoProvider.keyHMAC();
+    hmacKey = XSECPlatformUtils::g_cryptoProvider->keyHMAC();
     hmacKey->setKey((unsigned char *) "secret", strlen("secret"));
     sig1->setSigningKey(hmacKey);
 
@@ -407,116 +476,134 @@ XMLSecurityLibraryTest::testSign() {
 }
 
 void
-XMLSecurityLibraryTest::testParseValidate1() {
-    XBE_LOG_DEBUG("parsing file: " << "parse-validate-1.xml");
-    std::ifstream ifs("resources/parse-validate-1.xml");
-    xsd::cxx::xml::dom::auto_ptr<xercesc::DOMDocument> doc(parse(ifs, "resources/parse-validate-1.xml", true));
-    
-    XSECProvider prov;
-    DSIGSignature *sig = prov.newSignatureFromDOM(doc.get());
-    XBE_LOG_DEBUG("loading signature");
-    sig->load();
-
-    OpenSSLCryptoProvider cryptoProvider;
-    XSECCryptoKeyHMAC *hmacKey = cryptoProvider.keyHMAC();
-    hmacKey->setKey((unsigned char *) "secret", strlen("secret"));
-    sig->setSigningKey(hmacKey);
-
-    XBE_LOG_DEBUG("verifying signature");
-    bool isValid(sig->verify());
-    char *_errMsgs = XMLString::transcode(sig->getErrMsgs());
-    std::string errMsgs(_errMsgs);
-    XMLString::release(&_errMsgs);
-
-    CPPUNIT_ASSERT_MESSAGE(errMsgs, isValid);
-    XBE_LOG_DEBUG("message is valid");
-}
-
-void
-XMLSecurityLibraryTest::testParseValidate2() {
-    XBE_LOG_DEBUG("parsing file: " << "parse-validate-2.xml");
-    std::ifstream ifs("resources/parse-validate-2.xml");
-    xsd::cxx::xml::dom::auto_ptr<xercesc::DOMDocument> doc(parse(ifs, "resources/parse-validate-2.xml", true));
-    
-    XSECProvider prov;
-    DSIGSignature *sig = prov.newSignatureFromDOM(doc.get());
-    XBE_LOG_DEBUG("loading signature");
-    sig->load();
-
-    OpenSSLCryptoProvider cryptoProvider;
-    XSECCryptoKeyHMAC *hmacKey = cryptoProvider.keyHMAC();
-    hmacKey->setKey((unsigned char *) "secret", strlen("secret"));
-    sig->setSigningKey(hmacKey);
-
-    XBE_LOG_DEBUG("verifying signature");
-    bool isValid(sig->verify());
-    char *_errMsgs = XMLString::transcode(sig->getErrMsgs());
-    std::string errMsgs(_errMsgs);
-    XMLString::release(&_errMsgs);
-
-    CPPUNIT_ASSERT_MESSAGE(errMsgs, isValid);
-    XBE_LOG_DEBUG("message is valid");
-}
-
-void
 XMLSecurityLibraryTest::testValidate() {
-    XBE_LOG_DEBUG("setting up parser");
-    XercesDOMParser *parser = new XercesDOMParser;
-    parser->setValidationScheme(XercesDOMParser::Val_Always);
-    parser->setDoNamespaces(true);
-    parser->setDoSchema(true);
-    parser->setValidationSchemaFullChecking(true);
+    std::string filename("resources/xbe-message-example.xml");
+    XBE_LOG_DEBUG("parsing valid message: " << filename);
+    std::ifstream ifs(filename.c_str());
+    xsd::cxx::xml::dom::auto_ptr<xercesc::DOMDocument> doc(parse(ifs, filename, false));
 
-    std::string filename("resources/signed-message-1.xml");
-    try {
-        parser->parse(filename.c_str());
-        XBE_LOG_DEBUG("parsed: " << filename);
-    } catch (const DOMException& e) {
-        XBE_LOG_FATAL("errors occured during parsing: " << filename);
-        CPPUNIT_ASSERT_MESSAGE(false, "check the logging output for more details");
-    } catch (const std::exception& e) {
-        XBE_LOG_FATAL("errors occured during parsing: " << filename);
-        CPPUNIT_ASSERT_MESSAGE(false, "check the logging output for more details");
-    } catch (...) {
-        XBE_LOG_FATAL("an unknown error occured during paring: " << filename);
-        CPPUNIT_ASSERT_MESSAGE(false, "check the logging output for more details");
-    }
-
-    DOMDocument *doc = parser->getDocument();
-
-    if (! doc) {
-        XBE_LOG_FATAL("parsing of " << filename << " failed!");
-        CPPUNIT_ASSERT_MESSAGE(false, "check the logging output for more details");
-    }
-    
     XSECProvider prov;
-    DSIGSignature *sig = prov.newSignatureFromDOM(doc);
+    DSIGSignature *sig = prov.newSignatureFromDOM(doc.get());
     XBE_LOG_DEBUG("loading signature");
     sig->load();
 
-    OpenSSLCryptoProvider cryptoProvider;
-    XSECCryptoKeyHMAC *hmacKey = cryptoProvider.keyHMAC();
+    XSECCryptoKeyHMAC *hmacKey = XSECPlatformUtils::g_cryptoProvider->keyHMAC();
+    hmacKey->setKey((unsigned char *) "secret", (unsigned int)strlen("secret"));
+    sig->setSigningKey(hmacKey);
+
+    XBE_LOG_DEBUG("verifying signature");
+    bool isValid(sig->verify());
+
+    if (!isValid) {
+        char *_errMsgs = XMLString::transcode(sig->getErrMsgs());
+        std::string errMsgs(_errMsgs);
+        XMLString::release(&_errMsgs);
+        CPPUNIT_ASSERT_MESSAGE(errMsgs, isValid);
+    } else {
+        CPPUNIT_ASSERT(isValid);
+    }
+    XBE_LOG_DEBUG("message is valid");
+}
+
+void
+XMLSecurityLibraryTest::testParseValidateValidSignature() {
+    std::string filename("resources/signed-message-checked-valid.xml");
+    XBE_LOG_DEBUG("parsing valid message: " << filename);
+    std::ifstream ifs(filename.c_str());
+    xsd::cxx::xml::dom::auto_ptr<xercesc::DOMDocument> doc(parse(ifs, filename, false));
+
+    XSECProvider prov;
+    DSIGSignature *sig = prov.newSignatureFromDOM(doc.get());
+    XBE_LOG_DEBUG("loading signature");
+    sig->load();
+
+    XSECCryptoKeyHMAC *hmacKey = XSECPlatformUtils::g_cryptoProvider->keyHMAC();
+    hmacKey->setKey((unsigned char *) "secret", (unsigned int)strlen("secret"));
+    sig->setSigningKey(hmacKey);
+
+    XBE_LOG_DEBUG("verifying signature");
+    bool isValid(sig->verify());
+
+    if (!isValid) {
+        char *_errMsgs = XMLString::transcode(sig->getErrMsgs());
+        std::string errMsgs(_errMsgs);
+        XMLString::release(&_errMsgs);
+        CPPUNIT_ASSERT_MESSAGE(errMsgs, isValid);
+    } else {
+        CPPUNIT_ASSERT(isValid);
+    }
+    XBE_LOG_DEBUG("message is valid");
+}
+
+void
+XMLSecurityLibraryTest::testParseValidateInvalidSignature() {
+    std::string filename("resources/signed-message-checked-invalid.xml");
+    XBE_LOG_DEBUG("parsing invalid message: " << filename);
+    std::ifstream ifs(filename.c_str());
+    xsd::cxx::xml::dom::auto_ptr<xercesc::DOMDocument> doc(parse(ifs, filename, false));
+    
+    XSECProvider prov;
+    DSIGSignature *sig = prov.newSignatureFromDOM(doc.get());
+    XBE_LOG_DEBUG("loading signature");
+    sig->load();
+
+    XSECCryptoKeyHMAC *hmacKey = XSECPlatformUtils::g_cryptoProvider->keyHMAC();
     hmacKey->setKey((unsigned char *) "secret", strlen("secret"));
     sig->setSigningKey(hmacKey);
 
     XBE_LOG_DEBUG("verifying signature");
     bool isValid(sig->verify());
-    char *_errMsgs = XMLString::transcode(sig->getErrMsgs());
-    std::string errMsgs(_errMsgs);
-    XMLString::release(&_errMsgs);
-
-    prov.releaseSignature(sig);
-    doc->release();
-
-    CPPUNIT_ASSERT_MESSAGE(errMsgs, isValid);
-    XBE_LOG_DEBUG("message is valid");
+    CPPUNIT_ASSERT(! isValid);
+    XBE_LOG_DEBUG("message is invalid");
 }
 
 void
 XMLSecurityLibraryTest::testEncrypt() {
+    XBE_LOG_DEBUG("encrypting a xbe-message document by hand");
+    
+    xsd::cxx::xml::dom::auto_ptr<xercesc::DOMDocument> doc(create("message", "http://www.xenbee.net/schema/2008/02/xbe-msg", "xbemsg"));
+    DOMElement* root = doc->getDocumentElement();
+
+    root->setAttributeNS(xml::string("http://www.w3.org/2000/xmlns/").c_str(),
+                         xml::string("xmlns:xbemsg").c_str(),
+                         xml::string("http://www.xenbee.net/schema/2008/02/xbe-msg").c_str());
+
+    /* HEADER */
+    DOMElement*  hdrElem = doc->createElementNS(xml::string("http://www.xenbee.net/schema/2008/02/xbe-msg").c_str(),
+                                                xml::string("xbemsg:header").c_str());
+    root->appendChild(hdrElem);
+
+    DOMElement*  toElem = doc->createElementNS(xml::string("http://www.xenbee.net/schema/2008/02/xbe-msg").c_str(),
+                                               xml::string("xbemsg:to").c_str());
+    hdrElem->appendChild(toElem);
+    DOMText*    toTxt   = doc->createTextNode(xml::string("foo.bar").c_str());
+    toElem->appendChild(toTxt);
+    
+    DOMElement*  fromElem = doc->createElementNS(xml::string("http://www.xenbee.net/schema/2008/02/xbe-msg").c_str(),
+                                                 xml::string("xbemsg:from").c_str());
+    hdrElem->appendChild(fromElem);
+    DOMText*    fromTxt   = doc->createTextNode(xml::string("foo.bar").c_str());
+    fromElem->appendChild(fromTxt);
+
+    /* BODY */
+    DOMElement*  bodyElem = doc->createElementNS(xml::string("http://www.xenbee.net/schema/2008/02/xbe-msg").c_str(),
+                                                 xml::string("xbemsg:body").c_str());
+    root->appendChild(bodyElem);
+
+    /* some example content */
+    DOMElement*  exampleContentElem = doc->createElementNS(xml::string("http://www.example.com/text").c_str(), xml::string("text").c_str());
+    exampleContentElem->setAttributeNS(xml::string("http://www.w3.org/2000/xmlns/").c_str(),
+                                      xml::string("xmlns").c_str(),
+                                      xml::string("http://www.example.com/text").c_str());
+    bodyElem->appendChild(exampleContentElem);
+    
+    DOMText*    exampleContentTxt   = doc->createTextNode(xml::string("Hello World!").c_str());
+    exampleContentElem->appendChild(exampleContentTxt);
+
+    
 }
 
 void
 XMLSecurityLibraryTest::testDecrypt() {
-}
 
+}
