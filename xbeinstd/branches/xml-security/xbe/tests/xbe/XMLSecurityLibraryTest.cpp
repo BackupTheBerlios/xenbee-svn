@@ -189,49 +189,6 @@ parse (std::istream& is, const std::string& id, bool validate)
     return doc;
 }
 
-xsd::cxx::xml::dom::auto_ptr<xercesc::DOMDocument>
-createExample (const std::string& text) {
-    xsd::cxx::xml::dom::auto_ptr<xercesc::DOMDocument> doc(create("message", "http://www.xenbee.net/schema/2008/02/xbe-msg", "xbemsg"));
-    DOMElement* root = doc->getDocumentElement();
-
-    root->setAttributeNS(xml::string("http://www.w3.org/2000/xmlns/").c_str(),
-                         xml::string("xmlns:xbemsg").c_str(),
-                         xml::string("http://www.xenbee.net/schema/2008/02/xbe-msg").c_str());
-
-    /* HEADER */
-    DOMElement*  hdrElem = doc->createElementNS(xml::string("http://www.xenbee.net/schema/2008/02/xbe-msg").c_str(),
-                                                xml::string("xbemsg:header").c_str());
-    root->appendChild(hdrElem);
-
-    DOMElement*  toElem = doc->createElementNS(xml::string("http://www.xenbee.net/schema/2008/02/xbe-msg").c_str(),
-                                               xml::string("xbemsg:to").c_str());
-    hdrElem->appendChild(toElem);
-    DOMText*    toTxt   = doc->createTextNode(xml::string("foo.bar").c_str());
-    toElem->appendChild(toTxt);
-    
-    DOMElement*  fromElem = doc->createElementNS(xml::string("http://www.xenbee.net/schema/2008/02/xbe-msg").c_str(),
-                                                 xml::string("xbemsg:from").c_str());
-    hdrElem->appendChild(fromElem);
-    DOMText*    fromTxt   = doc->createTextNode(xml::string("foo.bar").c_str());
-    fromElem->appendChild(fromTxt);
-
-    /* BODY */
-    DOMElement*  bodyElem = doc->createElementNS(xml::string("http://www.xenbee.net/schema/2008/02/xbe-msg").c_str(),
-                                                 xml::string("xbemsg:body").c_str());
-    root->appendChild(bodyElem);
-
-    /* some example content */
-    DOMElement*  exampleContentElem = doc->createElementNS(xml::string("http://www.example.com/text").c_str(), xml::string("text").c_str());
-    exampleContentElem->setAttributeNS(xml::string("http://www.w3.org/2000/xmlns/").c_str(),
-                                      xml::string("xmlns").c_str(),
-                                      xml::string("http://www.example.com/text").c_str());
-    bodyElem->appendChild(exampleContentElem);
-    
-    DOMText*    exampleContentTxt   = doc->createTextNode(xml::string(text).c_str());
-    exampleContentElem->appendChild(exampleContentTxt);
-    return doc;
-}
-
 XERCES_CPP_NAMESPACE_USE
 
 using namespace xbe::tests;
