@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?><!-- -*- mode: nxml; -*- -->
+<xs:schema
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns="http://www.xenbee.net/schema/2008/02/xbetest"
+    xmlns:pp="http://www.xenbee.net/schema/2008/02/xbetest"
+    targetNamespace="http://www.xenbee.net/schema/2008/02/xbetest"
+    elementFormDefault="qualified">
+
+  <!-- valid root elements -->
+  <xs:element name="Ping" type="xs:string"/>
+  <xs:element name="Pong" type="xs:string"/>
+</xs:schema>

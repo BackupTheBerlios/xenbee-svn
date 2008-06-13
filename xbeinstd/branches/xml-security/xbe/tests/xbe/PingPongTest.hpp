@@ -10,6 +10,8 @@ namespace xbe {
       CPPUNIT_TEST_SUITE( xbe::tests::PingPongTest );
       //      CPPUNIT_TEST_EXCEPTION( testStart_illegal_URI_Throws, cms::CMSException );
       CPPUNIT_TEST( testPingPong );
+      CPPUNIT_TEST( testPingPongSigning );
+      CPPUNIT_TEST( testPingPongComplete );
       //      CPPUNIT_TEST_EXCEPTION( testStart_Timeout_Throws, cms::CMSException );
       CPPUNIT_TEST_SUITE_END();
 
@@ -20,6 +22,7 @@ namespace xbe {
 
     protected:
       void testPingPong();
+      void testPingPongSigning();
       void testPingPongComplete();
     private:
       XBE_DECLARE_LOGGER();

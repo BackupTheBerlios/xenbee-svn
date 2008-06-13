@@ -9,7 +9,7 @@
 namespace xbe {
     /**
        This class  is used to dispatch  received XML messages  to a finite
-       state machine.
+       state machine or to whatever you like.
 
        Replace this class with your own one using this as a template.
     */
@@ -22,9 +22,7 @@ namespace xbe {
         {}
         virtual ~XMLMessageDispatcher() {}
 
-        virtual void perform(const seda::IEvent::Ptr&) const;
-    protected:
-        virtual void dispatch(const xbemsg::message_t& msg) = 0;
+        virtual void perform(const seda::IEvent::Ptr&) const = 0;
     private:
         XBE_DECLARE_LOGGER();
     };

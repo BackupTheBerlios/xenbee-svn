@@ -4,15 +4,24 @@ add_state_machine(PingPong)
 list(APPEND srcs "${CMAKE_CURRENT_SOURCE_DIR}/PingPong_sm.cpp")
 list(APPEND hdrs "${CMAKE_CURRENT_SOURCE_DIR}/PingPong_sm.h")
 
-set(xbetest_src main.cpp
+set(channeltest_src main.cpp
    ChannelEventQueueAdapterTest.hpp ChannelEventQueueAdapterTest.cpp
    ChannelAdapterStrategyTest.hpp ChannelAdapterStrategyTest.cpp
-   XMLEncodeDecodeTest.hpp XMLEncodeDecodeTest.cpp
+)
+
+set(xmlsecuritytest_src main.cpp
+   XMLSecurityLibraryTest.hpp XMLSecurityLibraryTest.cpp
+#   XMLSecurityTest.hpp XMLSecurityTest.cpp
+)
+
+#set(xmlendecodetest_src main.cpp
+#    XMLEncodeDecodeTest.hpp XMLEncodeDecodeTest.cpp
+#)
+
+set(xbetest_src main.cpp
    PingPong_sm.h PingPong_sm.cpp
    PingPong.hpp PingPong.cpp
    PingPongTest.hpp PingPongTest.cpp
-   XMLSecurityLibraryTest.hpp XMLSecurityLibraryTest.cpp
-#   XMLSecurityTest.hpp XMLSecurityTest.cpp
 )
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
@@ -22,6 +31,20 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/testsconfig.hpp.in ${CMAKE_CURRENT_BI
 # copy ressource files to the build directory
 exec_program("${CMAKE_COMMAND}" ARGS "-E copy_directory \"${CMAKE_CURRENT_SOURCE_DIR}/resources\" \"${CMAKE_CURRENT_BINARY_DIR}/resources\"")
 
-add_executable(xbetestsuite ${xbetest_src})
-add_test(xbetestsuite ${CMAKE_CURRENT_BINARY_DIR}/xbetestsuite)
-target_link_libraries(xbetestsuite xbe)
+add_executable(channeltest ${channeltest_src})
+add_executable(xmlsecuritytest ${xmlsecuritytest_src})
+add_executable(xmlendecodetest ${xmlendecodetest_src})
+add_executable(xbetest ${xbetest_src})
+add_executable(xml-test-tool xml-test-tool.cpp)
+
+add_test(channeltest ${CMAKE_CURRENT_BINARY_DIR}/channeltest)
+add_test(xmlsecuritytest ${CMAKE_CURRENT_BINARY_DIR}/xmlsecuritytest)
+#add_test(xmlendecodetest ${CMAKE_CURRENT_BINARY_DIR}/xmlendecodetest)
+add_test(xbetest ${CMAKE_CURRENT_BINARY_DIR}/xbetest)
+
+target_link_libraries(channeltest xbe)
+target_link_libraries(xmlsecuritytest xbe)
+#target_link_libraries(xmlendecodetest xbe)
+target_link_libraries(xbetest xbe)
+target_link_libraries(xml-test-tool xbe)
+

@@ -1,22 +1,26 @@
-#include "XMLSerializeStrategy.hpp"
-#include "MessageEvent.hpp"
-#include "XMLMessageEvent.hpp"
-#include "XbeLibUtils.hpp"
+#include <fstream>
 #include <sstream>
+
+#include "XMLEvent.hpp"
+#include "XMLSerializeStrategy.hpp"
+#include "XbeLibUtils.hpp"
+#include "MessageEvent.hpp"
 
 using namespace xbe;
 
 void XMLSerializeStrategy::perform(const seda::IEvent::Ptr& e) const {
-    const XMLMessageEvent* xmlEvent(dynamic_cast<const XMLMessageEvent*>(e.get()));
+    const XMLEvent* xmlEvent(dynamic_cast<const XMLEvent*>(e.get()));
     if (xmlEvent) {
-        XBE_LOG_DEBUG("length of body: " << xmlEvent->message().body().any().size());
         std::ostringstream oss;
-        xbemsg::message(oss, xmlEvent->message(), XbeLibUtils::namespace_infomap());
+        XbeLibUtils::serialize(oss, xmlEvent->payload());
+        std::ofstream out("resources/test1.xml");
+        XbeLibUtils::serialize(out, xmlEvent->payload());
+
         MessageEvent *msgEvent(new MessageEvent(oss.str(),
-                                                mqs::Destination(xmlEvent->message().header().to()),
-                                                mqs::Destination(xmlEvent->message().header().from())));
+                                                mqs::Destination(xmlEvent->to()),
+                                                mqs::Destination(xmlEvent->from())));
         seda::StrategyDecorator::perform(seda::IEvent::Ptr(msgEvent));
     } else {
-        XBE_LOG_WARN("throwing away non-XMLMessageEvent: " << e);
+        XBE_LOG_WARN("throwing away non-XMLEvent: " << e);
     }
 }

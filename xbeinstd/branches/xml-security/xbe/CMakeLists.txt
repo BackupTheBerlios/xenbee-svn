@@ -100,6 +100,7 @@ else(ENABLE_LOGGING)
   message("Disabled logging by request.")
   set(ENABLE_LOGGING)
 endif(ENABLE_LOGGING)
+set(INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in    ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/libxbe.pc.in   ${CMAKE_CURRENT_BINARY_DIR}/libxbe.pc)
@@ -150,6 +151,10 @@ INSTALL(FILES INSTALL README COPYING ChangeLog NEWS DESTINATION
 #pkgconfig file
 INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/libxbe.pc
   DESTINATION lib/pkgconfig
+)
+
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/etc/xbe DESTINATION etc
+  PATTERN ".svn" EXCLUDE
 )
 
 # CPACK packaging

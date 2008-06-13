@@ -12,6 +12,7 @@ namespace xbe {
 
         virtual std::string str() const;
         const xbemsg::message_t& message() const { return *_msg; }
+        xbemsg::message_t& message() { return *_msg; }
         void message(const xbemsg::message_t& m);
     private:
         std::auto_ptr<xbemsg::message_t> _msg;

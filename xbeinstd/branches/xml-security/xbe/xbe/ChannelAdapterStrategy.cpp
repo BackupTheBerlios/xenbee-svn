@@ -10,7 +10,7 @@ ChannelAdapterStrategy::ChannelAdapterStrategy(const std::string& name,
                                                const seda::Strategy::Ptr& decorated,
                                                const mqs::Channel::Ptr& channel)
     : seda::StrategyDecorator(name, decorated),
-      XBE_INIT_LOGGER("xbe.channel-adapter."+name),
+      XBE_INIT_LOGGER(name),
       _channel(channel)
 {
     _channel->setMessageListener(this);
@@ -20,7 +20,7 @@ ChannelAdapterStrategy::~ChannelAdapterStrategy() {}
 
 void ChannelAdapterStrategy::onMessage(const cms::Message *m) {
     try {
-        XBE_LOG_INFO("got message");
+        XBE_LOG_INFO("got new message from the network");
         StrategyDecorator::perform(EventFactory::instance().newEvent(m));
     } catch (const xbe::UnknownConversion& ex) {
         XBE_LOG_DEBUG("cms::Message could not be converted to Event: " << ex.what());
