@@ -1,5 +1,9 @@
 #include <sstream>
 
+#include <xercesc/dom/DOM.hpp>
+#include <xsd/cxx/xml/dom/auto-ptr.hxx>
+#include <xsd/cxx/tree/error-handler.hxx>
+
 #include "XbeLibUtils.hpp"
 #include "XMLDeserializeStrategy.hpp"
 #include "MessageEvent.hpp"

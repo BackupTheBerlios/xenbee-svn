@@ -33,7 +33,7 @@ exec_program("${CMAKE_COMMAND}" ARGS "-E copy_directory \"${CMAKE_CURRENT_SOURCE
 
 add_executable(channeltest ${channeltest_src})
 add_executable(xmlsecuritytest ${xmlsecuritytest_src})
-add_executable(xmlendecodetest ${xmlendecodetest_src})
+#add_executable(xmlendecodetest ${xmlendecodetest_src})
 add_executable(xbetest ${xbetest_src})
 add_executable(xml-test-tool xml-test-tool.cpp)
 

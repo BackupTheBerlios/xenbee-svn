@@ -24,10 +24,8 @@ namespace mqs {
     */
     class Destination {
     public:
-        explicit
         Destination(const std::string& descriptor);
 
-        explicit
         Destination(const cms::Destination* d) throw();
 
         Destination(const Destination& dst) throw();

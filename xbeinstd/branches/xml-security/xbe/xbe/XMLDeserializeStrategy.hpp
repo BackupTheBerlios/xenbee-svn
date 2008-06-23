@@ -4,24 +4,22 @@
 #include <xbe/common.hpp>
 #include <seda/StrategyDecorator.hpp>
 
-#include <xercesc/dom/DOM.hpp>
-#include <xsd/cxx/xml/dom/auto-ptr.hxx>
-#include <xsd/cxx/tree/error-handler.hxx>
-
 namespace xbe {
     /** Decodes  text messages  that contain  an XML  document  into XML
-        messages.
-    */
+      messages.
+      */
     class XMLDeserializeStrategy : public seda::StrategyDecorator {
-    public:
-        XMLDeserializeStrategy(const seda::Strategy::Ptr& s);
-        virtual ~XMLDeserializeStrategy() {}
+        public:
+            XMLDeserializeStrategy(const seda::Strategy::Ptr& decorated)
+                : seda::StrategyDecorator(decorated->name()+".xml-deserialize", decorated),
+                XBE_INIT_LOGGER(decorated->name()+".xml-deserialize")
+        {}
 
-        virtual void perform(const seda::IEvent::Ptr&) const;
-    private:
-        XBE_DECLARE_LOGGER();
-        xsd::cxx::xml::dom::auto_ptr<xercesc::DOMBuilder> parser;
-        xsd::cxx::tree::error_handler<char> eh;
+            virtual ~XMLDeserializeStrategy() {}
+
+            virtual void perform(const seda::IEvent::Ptr&) const;
+        private:
+            XBE_DECLARE_LOGGER();
     };
 }
 
