@@ -15,6 +15,7 @@ namespace mqs {
       CPPUNIT_TEST( testStartStopChannel );
       CPPUNIT_TEST( testSendReply );
       CPPUNIT_TEST( testConnectionLoss );
+      CPPUNIT_TEST( testAddDelIncomingQueue );
       CPPUNIT_TEST_EXCEPTION( testStartNoQueueServer_Throws, cms::CMSException );
       //      CPPUNIT_TEST_EXCEPTION( testStart_Timeout_Throws, cms::CMSException );
       CPPUNIT_TEST_SUITE_END();
@@ -34,6 +35,7 @@ namespace mqs {
       void testSendReply();
       void testStartNoQueueServer_Throws();
       void testStartStopChannel();
+      void testAddDelIncomingQueue();
       void testConnectionLoss();
     private:
         MQS_DECLARE_LOGGER();

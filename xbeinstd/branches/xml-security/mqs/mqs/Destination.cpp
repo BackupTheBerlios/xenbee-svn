@@ -16,17 +16,23 @@
 
 using namespace mqs;
 
-Destination::Destination(const std::string& descriptor)
+Destination::Destination(const std::string &descriptor)
     : _isValid(false), _name(""), _type(UNSPECIFIED) {
     reset(descriptor);
 }
 
-Destination::Destination(const Destination& dst) throw()
+Destination::Destination(const char *descriptor)
+    : _isValid(false), _name(""), _type(UNSPECIFIED) {
+    reset(std::string(descriptor));
+}
+
+
+Destination::Destination(const Destination &dst) throw()
     : _isValid(false), _name(""), _type(UNSPECIFIED) {
     reset(dst);
 }
 
-Destination::Destination(const cms::Destination* dst) throw()
+Destination::Destination(const cms::Destination *dst) throw()
     : _isValid(false), _name(""), _type(UNSPECIFIED) {
     reset(dst);
 }
@@ -36,8 +42,16 @@ Destination::Destination() throw()
     _isValid = false;
 }
 
+std::tr1::shared_ptr<cms::Destination>
+Destination::toCMSDestination(cms::Session &session) const {
+    if (isTopic())
+        return std::tr1::shared_ptr<cms::Destination>(session.createTopic(str()));
+    else
+        return std::tr1::shared_ptr<cms::Destination>(session.createQueue(str()));
+}
+
 void
-Destination::reset(const std::string& newDestination) {
+Destination::reset(const std::string &newDestination) {
     try {
         parse_destination_descriptor(newDestination);
         _isValid = true;

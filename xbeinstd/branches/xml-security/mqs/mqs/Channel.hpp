@@ -135,10 +135,12 @@ namespace mqs {
 
            @param msg the message to be sent
         */
-        void send(const std::string& msg) { send(msg, _outQueue); }
-        void send(const std::string& msg, const mqs::Destination& dst);
-        void send(cms::Message* msg);
-        void send(cms::Message* msg, const mqs::Destination& dst);
+        std::string send(const std::string& msg) { send(msg, _outQueue); }
+        std::string send(const std::string& msg, const mqs::Destination& dst);
+        std::string send(const std::string& msg, const mqs::Destination& dst, const mqs::Destination& replyTo);
+        std::string send(cms::Message* msg);
+        std::string send(cms::Message* msg, const mqs::Destination& dst);
+        std::string send(cms::Message* msg, const mqs::Destination& dst, const mqs::Destination& replyTo);
 
         Channel& operator<<(const std::string& msg) { send(msg); return *this; }
         Channel& operator<<(cms::Message* msg) { send(msg); return *this; }
@@ -149,8 +151,8 @@ namespace mqs {
            @param msg orginal message
            @param reply the reply message
         */
-        void reply(const cms::Message* msg, cms::Message* reply);
-        void reply(const cms::Message* msg, const std::string& reply);
+        std::string reply(const cms::Message* msg, cms::Message* reply);
+        std::string reply(const cms::Message* msg, const std::string& reply);
     
         /**
            Receive the next new message.
@@ -159,6 +161,19 @@ namespace mqs {
            @return the message or NULL
         */
         cms::Message* recv(unsigned long millisecs = INFINITE_WAITTIME);
+        template <class T> T* recv(unsigned long millisecs = INFINITE_WAITTIME) {
+            cms::Message *m(recv(millisecs));
+            T *t_msg(dynamic_cast<T*>(m));
+            if (t_msg) {
+                return t_msg;
+            } else {
+                if (m) {
+                    MQS_LOG_WARN("recv could not dynamic_cast<...> the received message");
+                    delete m; m = 0;
+                }
+                return 0;
+            }
+        }
 
         /**
            Asynchronously handle new messages.
@@ -185,7 +200,7 @@ namespace mqs {
         cms::BytesMessage* createBytesMessage(const unsigned char* bytes = 0, std::size_t = 0) const;
 
         void addIncomingQueue(const mqs::Destination& dst);
-        //    void delIncomingQueue(const mqs::Destination& dst);
+        void delIncomingQueue(const mqs::Destination& dst);
 
         /**
            Removes all messages from the incoming queue.
@@ -219,7 +234,7 @@ namespace mqs {
         void onException(const cms::CMSException&);
 
     private:
-        void send(cms::Message* msg, const cms::Destination* dst, int deliveryMode, int priority, long long timeToLive);
+        std::string send(cms::Message* msg, const cms::Destination* dst, int deliveryMode, int priority, long long timeToLive);
         void ensure_started() const throw (ChannelNotStarted);
     
         MQS_DECLARE_LOGGER();
@@ -236,9 +251,9 @@ namespace mqs {
 
         activemq::concurrent::Mutex _consumerMtx;
         struct Consumer {
-            mqs::Destination* mqs_destination;
-            cms::Destination* destination;
-            cms::MessageConsumer* consumer;
+            std::tr1::shared_ptr<mqs::Destination> mqs_destination;
+            std::tr1::shared_ptr<cms::Destination> destination;
+            std::tr1::shared_ptr<cms::MessageConsumer> consumer;
         };
         std::list<Consumer> _consumer;
 

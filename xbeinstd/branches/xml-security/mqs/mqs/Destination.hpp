@@ -6,7 +6,9 @@
 #include <string>
 #include <stdexcept>
 #include <ostream>
+#include <tr1/memory>
 #include <cms/Destination.h>
+#include <cms/Session.h>
 
 namespace mqs {
     /**
@@ -24,12 +26,10 @@ namespace mqs {
     */
     class Destination {
     public:
-        Destination(const std::string& descriptor);
-
-        Destination(const cms::Destination* d) throw();
-
-        Destination(const Destination& dst) throw();
-
+        Destination(const std::string &descriptor);
+        Destination(const char *descriptor);
+        Destination(const cms::Destination *d) throw();
+        Destination(const Destination &dst) throw();
         Destination() throw();
 
         enum Type {
@@ -42,11 +42,13 @@ namespace mqs {
         typedef std::map<std::string, std::string> PropertyMap;
     public:
         const std::string& name() const;
+        const Type type() const { return _type; }
         const std::string& getStringProperty(const std::string& key, const std::string& def = "") const;
         int getIntProperty(const std::string& key, int def = 0) const;
         long long getLongLongProperty(const std::string& key, long long def = 0) const;
         bool getBooleanProperty(const std::string& key, bool def = false) const;
     
+        std::tr1::shared_ptr<cms::Destination> toCMSDestination(cms::Session &session) const;
         bool hasProperty(const std::string& key) const;
         bool isTopic() const;
         bool isQueue() const;
