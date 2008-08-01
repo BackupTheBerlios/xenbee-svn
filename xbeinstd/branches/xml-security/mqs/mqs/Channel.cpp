@@ -37,7 +37,8 @@ Channel::Channel(const mqs::BrokerURI &broker, const mqs::Destination &inout)
       _messageListener(0),
       _exceptionListener(0),
       _started(false),
-      _blocked_receivers(0)
+      _blocked_receivers(0),
+      _state(DISCONNECTED)
 {
   
 }
@@ -49,7 +50,8 @@ Channel::Channel(const mqs::BrokerURI &broker, const mqs::Destination &in, const
       _outQueue(out),
       _messageListener(0),
       _started(false),
-      _blocked_receivers(0)
+      _blocked_receivers(0),
+      _state(DISCONNECTED)
 {
   
 }
@@ -108,9 +110,10 @@ Channel::start() {
     _producer->setTimeToLive(_outQueue.getLongLongProperty("timeToLive", 0));
   
     _started = true;
-
+    _state = CONNECTED;
     addIncomingQueue(_inQueue);
     flushMessages();
+    notify();
 }
 
 void
@@ -144,6 +147,8 @@ Channel::stop() {
     _connection.reset();
 
     _started = false;
+    _state = DISCONNECTED;
+    notify();
 }
 
 void

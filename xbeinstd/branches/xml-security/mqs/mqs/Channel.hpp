@@ -17,6 +17,7 @@
 #include <mqs/Destination.hpp>
 #include <mqs/BrokerURI.hpp>
 #include <mqs/MQSException.hpp>
+#include <mqs/Observable.hpp>
 
 // forward declarations
 namespace cms {
@@ -41,9 +42,15 @@ namespace mqs {
     };
     
     class Channel : public cms::MessageListener,
-                    public cms::ExceptionListener {
+                    public cms::ExceptionListener,
+                    public mqs::Observable {
     public:
         typedef std::tr1::shared_ptr<Channel> Ptr;
+
+        enum State {
+            DISCONNECTED,
+            CONNECTED
+        };
 
         /**
            Create a new channel with the given broker uri.
@@ -72,6 +79,10 @@ namespace mqs {
            Returns true iff the channel has been started, false otherwise.
          */
         bool is_started() const;
+
+        State state() const {
+            return _state;
+        }
         
         /**
            Stops the channel
@@ -269,6 +280,7 @@ namespace mqs {
         // internal state keeper
         bool _started;
         std::size_t _blocked_receivers;
+        State _state;
     };
 }
 
