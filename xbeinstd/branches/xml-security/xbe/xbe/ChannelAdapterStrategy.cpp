@@ -3,6 +3,7 @@
 #include "ChannelAdapterStrategy.hpp"
 #include "MessageEvent.hpp"
 #include "EventFactory.hpp"
+#include "ChannelCommandEvent.hpp"
 
 using namespace xbe;
 
@@ -59,7 +60,12 @@ void ChannelAdapterStrategy::perform(const seda::IEvent::Ptr& e) const {
             StrategyDecorator::perform(EventFactory::instance().newErrorEvent("unknown error during message sending"));
         }
     } else if (seda::SystemEvent *systemEvent = dynamic_cast<seda::SystemEvent*>(e.get())) {
-        StrategyDecorator::perform(e);
+        if (xbe::ChannelCommandEvent *channelCommand = dynamic_cast<xbe::ChannelCommandEvent*>(systemEvent)) {
+            XBE_LOG_DEBUG("got command for channel: " << channelCommand->str());
+            channelCommand->execute(_channel);
+        } else {
+            StrategyDecorator::perform(e);
+        }
     } else {
         XBE_LOG_WARN("ignoring non-MessageEvent: " << e->str());
     }
