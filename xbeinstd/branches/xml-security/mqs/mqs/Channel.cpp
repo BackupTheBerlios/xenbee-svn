@@ -125,6 +125,7 @@ Channel::stop() {
             c.destination.reset();
             if (c.consumer) {
                 c.consumer->setMessageListener( NULL );
+                c.consumer->close();
                 c.consumer.reset();
             }
         }
@@ -132,7 +133,6 @@ Channel::stop() {
 
     _producer_destination.reset();
     _producer.reset();
-        
     
     if (_session.get())
         _session->close();

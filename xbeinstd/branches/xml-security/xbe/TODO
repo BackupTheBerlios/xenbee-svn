@@ -4,3 +4,29 @@ XML-Security
         * missing: a nice way to load schema files
                 - probably put that into XbeLibUtils somehow
 
+Promela Model
+=============
+    * write a promela specification for the communication protocol between
+      client and server and verify the results.
+
+Mediator Pattern
+================
+    * introduce the mediator pattern for system events in the seda library
+    * the xbe library subclasses the defined system-event-handler to handle
+      library/application specific system-events
+            - Strategies etc. may emit SystemEvents to the mediator
+            - the mediator knows about these events and is linked to other
+              objects that know what to do
+                - example:
+                    the application's state-machine wants to reconnect to the
+                    message queue server, therefore the FSM provides
+                    doReconnect() which sends a system event to the mediator,
+                    which in turn forwards the event/transforms the event into
+                    a command to the channel-adapter.
+
+Observer Pattern
+================
+
+    * The MQS Channel should provide the ability to be observed by other objects
+        * add an explicit state (connected, disconnected) that can be queried by observers
+        * useful to notify the channel-adapter about state changes that did not throw an exception

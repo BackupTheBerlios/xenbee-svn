@@ -1,13 +1,13 @@
 #ifndef XBE_XML_EVENT_HPP
 #define XBE_XML_EVENT_HPP 1
 
-#include <seda/IEvent.hpp>
+#include <seda/UserEvent.hpp>
 
 #include <xercesc/dom/DOM.hpp>
 #include <xsd/cxx/xml/dom/auto-ptr.hxx>
 
 namespace xbe {
-    class XMLEvent : public seda::IEvent {
+    class XMLEvent : public seda::UserEvent {
         public:
             XMLEvent(const std::string& to,
                     const std::string& from,

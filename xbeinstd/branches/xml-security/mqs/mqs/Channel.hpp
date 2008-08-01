@@ -135,7 +135,7 @@ namespace mqs {
 
            @param msg the message to be sent
         */
-        std::string send(const std::string& msg) { send(msg, _outQueue); }
+        std::string send(const std::string& msg) { return send(msg, _outQueue); }
         std::string send(const std::string& msg, const mqs::Destination& dst);
         std::string send(const std::string& msg, const mqs::Destination& dst, const mqs::Destination& replyTo);
         std::string send(cms::Message* msg);

@@ -3,10 +3,10 @@
 
 #include <cms/Message.h>
 #include <mqs/Destination.hpp>
-#include <seda/IEvent.hpp>
+#include <seda/UserEvent.hpp>
 
 namespace xbe {
-    class MessageEvent : public seda::IEvent {
+    class MessageEvent : public seda::UserEvent {
     public:
         MessageEvent(const std::string& msg);
         MessageEvent(const std::string& msg, const mqs::Destination& dst, const mqs::Destination& src);

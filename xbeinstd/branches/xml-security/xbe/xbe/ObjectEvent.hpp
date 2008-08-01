@@ -1,12 +1,12 @@
 #ifndef XBE_OBJECT_EVENT_HPP
 #define XBE_OBJECT_EVENT_HPP 1
 
-#include <seda/IEvent.hpp>
+#include <seda/UserEvent.hpp>
 #include <memory>
 
 namespace xbe {
     template <class T>
-        class ObjectEvent : public seda::IEvent {
+        class ObjectEvent : public seda::UserEvent {
             public:
                 ObjectEvent(const std::string& to,
                         const std::string& from,
