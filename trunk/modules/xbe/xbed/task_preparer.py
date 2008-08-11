@@ -189,7 +189,7 @@ class Preparer(object):
         from xbe.util import disk
         img = disk.mountImage(
             os.path.join(self.__spool, "image"),  # path to the image file
-            fs_type=disk.FS_EXT3,                 # filesystem type
+            fs_type=disk.FS_GUESS,                # filesystem type
             dir=self.__spool                      # where to create the tmp mount-point
         )
         log.debug("mounted image to '%s'" % img.mount_point())

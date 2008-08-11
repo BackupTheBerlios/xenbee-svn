@@ -61,13 +61,20 @@ class DataStagingHandler:
             directory = workdir
         file_name = os.path.join(directory, ds["FileName"])
         if ds.get("Target") is not None:
-            return self.handle_upload(file_name, ds["Target"]["URI"], mount_point)
+		# compress the file if necessary and upload the compressed file
+		compression = ds.get("Target").get("Compression")
+		if compression is not None:
+			log.debug("compressing %s" % (file_name))
+			file_name = compression.compress(file_name=file_name, remove_original=False)
+		return self.handle_upload(file_name, ds["Target"]["URI"], mount_point)
+	return None
 
     def handle_upload(self, file_name, uri, mount_point):
         log.debug("uploading: %s -> %s" % (file_name, uri))
 
         # make file relative to image mount_point
         file_name = os.path.join(mount_point, file_name.lstrip("/"))
+
 
         stager = DataStager(file_name, uri)
         rv = stager.perform_upload()

@@ -269,11 +269,11 @@ class HashValidator:
             "algo": self.__algorithm
         }
 
-class Decompressor:
-    """Represent a decompression algorithm.
+class Compression:
+    """Represent a compression/decompression algorithm.
 
-    Its only defined method is 'decompress' which accepts source and
-    destination paths. It uses the stored decompression algorithm.
+    Its only defined methods are 'compress' and 'decompress' which accepts
+    source and destination paths. It uses the stored decompression algorithm.
        * bzip2
        * gzip
        * tbz -> bzip2 compressed tar archive
@@ -288,6 +288,67 @@ class Decompressor:
     def format(self):
         """Return the used compression format."""
         return self.__format
+
+    def file_ending(self):
+	"""Returns the standard file ending of the compression algorithm."""
+	return {"bzip2": "bz2", "gzip": "gz", "tbz": "tar.bz2", "tgz": "tar.gz"}[self.format()]
+
+    def compress(self, src_file_name, dst_file_name=None, remove_original=True):
+        """Compress the src using the stored algorithm to dst.
+
+        if dst is None src is compressed to "src"+(special ending for format).
+        """
+        import resource
+        if dst_file_name is None:
+            dst_file_name = src_file_name + self.file_ending()
+        start = time.time()
+        log.debug("compressing '%s' to '%s'" % (src_file_name, dst_file_name))
+        if self.format() in ('tbz', 'tgz'):
+            # use tar
+            import tarfile
+            tar_file = None
+            if self.format() == "tbz":
+                tar_file = tarfile.open(dst_file_name, "w:bz")
+            else:
+                tar_file = tarfile.open(dst_file_name, "w:gz")
+            tar_file.add(src_file_name, os.path.basename(src_file_name))
+            log.debug("compression took %.2fs" % (time.time() - start))
+
+            if remove_original:
+                log.debug("removing %s" % (file_name))
+                os.unlink(file_name)
+        elif self.format() in ["bzip2", "gzip"]:
+            if self.format() == "bzip2":
+                import bz2
+                compressed_file = bz2.BZ2File(file_name)
+            else:
+                import gzip
+                compressed_file = gzip.GzipFile(file_name)
+            # decompress to temporary file
+            tmp_file_fd, tmp_path = tempfile.mkstemp(dir=dst_dir)
+            tmp_file = os.fdopen(tmp_file_fd, 'w')
+            blksize = resource.getpagesize()
+            try:
+                while True:
+                    data = compressed_file.read(blksize)
+                    tmp_file.write(data)
+                    if len(data) < blksize:
+                        break
+            except Exception, e:
+                raise
+            finally:
+                compressed_file.close()
+                tmp_file.close()
+            # decompression successful, rename the file
+            try:
+                os.unlink(file_name)
+            except OSError, e:
+                pass
+            os.rename(tmp_path, file_name)
+        else:
+            raise NotImplementedError(
+                "decompression for this format is not yet implemented", self.__format
+            )
 
     def decompress(self, file_name, dst_dir=None, remove_original=True):
         """Decompress the src using the stored algorithm to dst.
@@ -578,7 +639,7 @@ class JsdlDocument:
         return int(xml.text, 8)
     def _parse_compression(self, xml):
         algo = xml.attrib.get("algorithm").lower()
-        return Decompressor(algo)
+        return Compression(algo)
 
     def _parse_posix_text_array(self, xml):
         return [self._parse_posix_text(xml)]

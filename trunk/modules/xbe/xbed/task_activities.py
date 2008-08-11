@@ -257,6 +257,12 @@ class StageOutHandler(StagingActivity):
             real_file_name = os.path.join(mount_point, file_name.lstrip("/"))
             if not os.path.exists(real_file_name):
                 raise OSError(errno.ENOENT, os.strerror(errno.ENOENT), file_name)
+            # compress the file if necessary and upload the compressed file
+            compression = ds.get("Target").get("Compression")
+            if compression is not None:
+                log.debug("compressing '%s' -> '%s'" % (real_file_name, real_file_name + "." + compression.file_ending()))
+                compression.compress(real_file_name, real_file_name + "." + compression.file_ending(), remove_original=False)
+		real_file_name = real_file_name + "." + compression.file_ending()
             return self.perform_upload(real_file_name, uri)
 
 class TaskActivity(ActivityProxy):
@@ -417,12 +423,12 @@ class SetUpActivity(TaskActivity):
         """
         TaskActivity.__init__(self, spool)
 
-        from xbe.xml.jsdl import Decompressor
+        from xbe.xml.jsdl import Compression
         self._jail_location = {
             "URI": "file://"+jail_package,
-            "Compression": Decompressor(jail_compression),
+            "Compression": Compression(jail_compression),
         }
-        del Decompressor
+        del Compression
         self.register_location_handler(URILocationHandler(self))
 
     def perform(self, jsdl_doc):
