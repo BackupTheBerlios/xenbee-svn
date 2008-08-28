@@ -185,6 +185,7 @@ class Image(object):
         while True:
             try:
                 self.__umount()
+		break
             except NotMountedException:
                 raise
             except Exception, e:
