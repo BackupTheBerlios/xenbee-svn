@@ -108,7 +108,7 @@ class Image(object):
                 mount_point = [mount_point,
                                False]
             try:
-                p = subprocess.Popen(["mount", "-o", "loop", "-t",
+                p = subprocess.Popen(getCommand("mount") + ["-o", "loop", "-t",
                                       self.__fs_type, self.__path, mount_point[0]],
                                      stdout=devnull, stderr=subprocess.PIPE)
                 stdout, stderr = p.communicate()
@@ -135,7 +135,7 @@ class Image(object):
         _module_lock.acquire()
         try:
             try:
-                p = subprocess.Popen(["umount", mount_point[0]],
+                p = subprocess.Popen(getCommand("umount")+[mount_point[0]],
                                      stdout=devnull, stderr=subprocess.PIPE)
                 stdout, stderr = p.communicate()
                 if p.returncode != 0:
@@ -193,6 +193,12 @@ class Image(object):
                 do, retries, delay = retry(retries, delay)
                 if not do:
                     raise
+
+def getCommand(cmd):
+    if os.geteuid() != 0:
+        return ["sudo", cmd]
+    else:
+        return [cmd]
 
 def guess_fs_type(path):
     """Try to guess the file system type using the 'file' command.
