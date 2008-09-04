@@ -14,8 +14,7 @@ namespace seda {
                 _busy = true; SEDA_LOG_DEBUG("got work: " << e->str());
                 
                 // handle system events:
-                SystemEvent *se(dynamic_cast<SystemEvent*>(e.get()));
-                if (se) {
+                if (SystemEvent *se = dynamic_cast<SystemEvent*>(e.get())) {
                     // check if there is a system-event-handler stage
                     Stage::Ptr systemEventHandler(StageRegistry::instance().lookup("system-event-handler"));
                     if (systemEventHandler) {
