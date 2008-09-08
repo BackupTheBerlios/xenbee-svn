@@ -1,0 +1,398 @@
+#!/usr/bin/env python
+#
+# This script tries to strip down an existing filesystem image.
+#
+# Usage: xbe-create-image [-d|-i image|-b blacklist|-t template...] src-dir dst-dir
+#    -d       output debug information
+#    -i image generate a filesystem image from dst-dir
+#    -b blist black list of regular expressions that define paths to not include in the resulting image
+#
+# The "image" file may be proceeded with the filesystem-type to use:
+#    ext2:/tmp/foo.img and so on
+# effectively, mkfs.<fs-type> will be called. The default is ext2.
+#
+# Overall procedure:
+#   The script relies on an existing and working linux installation in some
+#   directory (defined by src-dir), this maybe the root of the host environment
+#   or some other path, problems exist, when different architectures are used,
+#   of course.
+#
+#   The steps are as follows:
+#     Take all files and directories from the given template files and check
+#     them against the blacklist. If they are not blacklisted, continue,
+#     otherwise take the next entry.
+#
+#        With the non-blacklisted items:
+#           evaluate the dependencies heuristic (currently this is a
+#           combination of 'ldd' and 'strings')
+#
+#           copy the resulting list of elements to the target directory
+#
+#   Finally create required directories, if they do not already exist:
+#       /proc, /sys, /dev
+#   Fill /dev with some always required device nodes.
+#   
+# Known limitations:
+#   
+# 
+import os, os.path, sys
+import re
+from subprocess import Popen, PIPE
+from xbe.util import disk
+
+debug = True
+
+# exit codes
+EXIT_SUCCESS = 0
+EXIT_FAILURE = 1
+EXIT_UNRESOLVED_DEP = 8
+
+if debug:
+    def trace(fmt, *args):
+        print >>sys.stderr, "*** DBG:", fmt % args
+else:
+    def trace(fmt, *args):
+        pass
+
+def runcmd(cmd, *args, **kw):
+    pipe = Popen(cmd, stdout=PIPE, stderr=PIPE, close_fds=True, *args, **kw)
+    (stdout, stderr) = pipe.communicate()
+    exitcode = pipe.wait()
+    return (exitcode, stdout.split("\n"), stderr.split("\n"))
+
+class DependencyHeuristic:
+    def __init__(self, root):
+        self.__root = root
+
+    def __call__(self, path):
+        return self.run(path)
+
+    def run(self, path, blacklist=None):
+        self.__blacklist = blacklist
+        deps = [path] + self.resolve_symlinks(path) + self.get_deps(path)
+        deps = list(set(deps))
+        for f in deps:
+            deps.extend(self.resolve_symlinks(f))
+
+        # return unique list
+        return list(set(deps))
+
+    def exists_path(self, path, pathFilter=None):
+        """Checks whether the given path exists according to the root path."""
+        if pathFilter is None:
+            pathFilter = lambda x: True
+        normalized_path = os.path.normpath(path)
+        if not normalized_path.startswith(self.__root):
+           normalized_path = os.path.join(self.__root, normalized_path) 
+        return os.path.exists(normalized_path) and pathFilter(normalized_path)
+
+    def get_deps(self, file, deps=None):
+        if deps is None:
+            deps = []
+        if self.__blacklist is not None and self.__blacklist(file):
+            return deps
+        if file not in deps:
+            deps.extend(self.get_ldd_deps(file))
+            deps.extend(self.get_strings_deps(file))
+        return deps
+
+    def get_ldd_deps(self, file):
+        trace("getting ldd deps for %s", file)
+        deps = []
+        exitcode, output, _ = runcmd(["ldd", file])
+        if exitcode == 0:
+            for line in output:
+                line = line.strip()
+                if not len(line): continue
+                if line == "statically linked": continue
+                dependency=None
+                if '=>' in line:
+                    dependency=line.split()[2]
+                else:
+                    dependency=line.split()[0]
+
+                if not self.exists_path(dependency):
+                    trace("library dependency could not be resolved relative to root '%s': %s", self.__root, dependency)
+                    sys.exit(EXIT_UNRESOLVED_DEP)
+                else:
+                    deps.append(dependency)
+                    deps.extend(self.get_deps(dependency, deps))
+                # recurse
+                #trace("recursing ldd dependency tree %s -> %s", file, dependency)
+        trace("done")
+        return deps
+
+    def get_strings_deps(self, file):
+        trace("getting string deps from %s", file)
+        deps = []
+        # extract "absolute paths" from the file
+        regexp = re.compile('[^/]*([/][^ :;)"]+)+')
+        (exitcode, output, _) = runcmd(["strings", file])
+        if exitcode == 0:
+            for line in output:
+                match = regexp.match(line)
+                if match and len(match.groups()) and self.exists_path(match.group(1), os.path.isfile):
+                    dep = match.group(1).strip()
+                    trace("string dependency: %s", dep)
+                    deps.append(dep)
+                    deps.extend(self.get_deps(dep, deps))
+        trace("done")
+        return deps
+
+    def resolve_symlinks(self, file):
+        trace("resolving symlinks of %s", file)
+        if os.path.islink(file):
+            link = os.readlink(file)
+
+            # make it absolute
+            if not os.path.isabs(link):
+                link = os.path.join(os.path.dirname(file), link)
+            links = [link]
+            links.extend(self.resolve_symlinks(link))
+            return links
+        else:
+            return []
+
+class ImageCreator:
+    def __init__(self, src, dst, heuristic, options):
+        self.__src = src
+        self.__dst = dst
+        self.__heuristic = heuristic
+        self.__options = options
+
+    def run(self, templates, blacklist=None, filters=(None,None)):
+        failed_deps=[]
+        for T in templates:
+            for f in T:
+                deps = self.__heuristic.run(f, blacklist)
+                if blacklist is not None:
+                    deps = filter(lambda x: not blacklist(x), deps)
+                for d in deps:
+                    result, path = self.copy_file(d, filters[0], filters[1])
+                    if result == 1:
+                        failed_deps.append(path)
+        return failed_deps
+
+    def copy_file(self, file, before_filter=None, after_filter=None):
+        # get the directory that contains the original file
+        # relative to the root directory
+        (drive, src_dir) = os.path.splitdrive(os.path.dirname(file))
+        relative_src_dir = src_dir.lstrip(os.path.sep)
+        if before_filter is not None:
+            if self.__options.dry_run:
+                trace("Running before filter on '%s'", file)
+            else:
+                file = before_filter(file)
+
+        # the actual file name
+        file_name = os.path.basename(file)
+
+        # copy the file to the destination directory
+        dst_path = os.path.join(self.__dst, relative_src_dir)
+        # makedirs
+        if not os.path.exists(dst_path):
+            if self.__options.dry_run:
+                trace("Creating directory: %s", dst_path)
+            else:
+                os.makedirs(dst_path)
+        dst_file = os.path.join(dst_path, file_name)
+        if not os.path.exists(dst_file):
+            exitcode, out, err = 0, "", ""
+            if self.__options.dry_run:
+                trace("Copying '%s' -> '%s'", file, dst_file)
+            else:
+                exitcode, out, err = runcmd(["cp", "-aP", file, dst_file])
+            if exitcode == 0:
+                if after_filter is not None:
+                    if self.__options.dry_run:
+                        trace("Running before filter on '%s'", file)
+                    else:
+                        after_filter(dst_file)
+            else:
+                trace("copy '%s' -> '%s' failed: out: '%s', err: '%s'", file, dst_file, out, err) 
+                return (1, file)
+        else:
+            #trace("destination path '%s' does already exist!", dst_file)
+            pass
+        return (0, file)
+
+    def parseImageURI(self, image_uri):
+        colon_index = image_uri.find(":")
+        if colon_index != -1:
+            image_type = image_uri[0:colon_index]
+            image_path = image_uri[colon_index+1:]
+            return (image_type, image_path)
+        return ('', image_uri)
+
+    def createFSImage(self, image_type, image_path, appDataSpace=0, bonusSpacePercent=0.01):
+        """Create the filesystem image at 'image_path' with fs-type 'image_type'.
+
+        The 'appDataSpace' is a fixed amount of #bytes to reserve within the image for future application data.
+        The 'bonusSpacePercent' (0 <= p <= 1) will be added to the sum of required space + application data.
+        """
+        image_size = int(round( (self.getRequiredSpace() + appDataSpace) * (1 + bonusSpacePercent)))
+        try:
+            disk.makeSparseDisk(image_path, image_size / (1024**2))
+            # format the image with the given fs-type
+            exitcode, output, errout = runcmd(["mkfs.%s" % image_type, "-F", image_path])
+            if exitcode != 0:
+                trace("could not create filesystem '%s' on '%s': %s", image_type, image_path, errout)
+                raise RuntimeError("filesystem creation failed")
+        except:
+            trace("could not create image at path: %s", image_path)
+            raise
+        image = disk.Image(image_path, image_type)
+
+        # the following step requires root priviledges
+        mount_point = image.mount()
+
+        # copy everything into the image while preserving their access rights
+        trace("filling the image")
+        for e in os.listdir(self.__dst):
+            exitcode, out, err = runcmd(["cp", "-a", os.path.join(self.__dst, e), mount_point])
+
+        image.umount()
+
+    def getRequiredSpace(self):
+        result = 0
+        for root, subdirs, files in os.walk(self.__dst):
+            files = filter(lambda x: not os.path.islink(x), files)
+            result += sum(os.path.getsize(os.path.join(root, name)) for name in files)
+        return result
+    
+class StripFilter:
+    def __init__(self):
+        pass
+
+    def __call__(self, path):
+        if os.access(path, os.X_OK):
+            runcmd(["strip", "--strip-unneeded", path])
+        return path
+
+class Blacklist:
+    def __init__(self):
+        self.__blacklist = []
+
+    def __call__(self, path):
+        return self.is_blacklisted(path)
+
+    def is_blacklisted(self, path):
+        for pattern, regexp in self.__blacklist:
+            found_match=False
+            try:
+                found_match=(regexp.match(path) is not None)
+            except:
+                pass
+            if found_match:
+                trace("Dependency '%s' blacklisted due to pattern '%s'", path, pattern)
+                return True
+        return False
+
+    def add(self, item):
+        try:
+            self.__blacklist.append( (item, re.compile(item)) )
+        except:
+            trace("could not add pattern: '%s'", item)
+
+    @classmethod
+    def from_file(cls, path, bl=None):
+        """Create a blacklist from the entries found in a file.
+
+        The extra argument "bl" can be used to extend a previously created blacklist.
+        
+        The file needs to be formatted as follows:
+            Each line contains either a valid regular expression (in terms of Python regexps) or
+            is an empty line or starts with an # which is interpreted as a comment.
+        """
+
+        # create a new blacklist if none is given
+        if bl == None:
+            bl = cls()
+        try:
+            F = open(path, "r")
+            for line in F:
+                line=line.strip()
+                if line.startswith("#"): continue
+                if not len(line): continue
+                trace("Adding pattern '%s' to blacklist.", line)
+                bl.add(line)                
+        except IOError, ioe:
+            print >>sys.stderr, "E: Could not open `%s' for reading: %s" % (path, ioe)
+        except:
+            print >>sys.stderr, "E: Could not open `%s' for reading!" % (path)
+        return bl
+
+class ImageTemplate:
+    """This class defines the contents of the generated image."""
+
+    def __init__(self):
+        self.__items = []
+
+    def __iter__(self):
+        return self.__items.__iter__()
+
+    def add(self, item):
+        self.__items.append(item)
+
+    @classmethod
+    def from_file(cls, path, template=None):
+        """Create a template from the entries found in a file.
+
+        The extra argument "template" can be used to extend an existing
+        template instead of creating a new one.
+        """
+
+        # create a new template if None is given
+        if template == None:
+            template = cls()
+        try:
+            F = open(path, "r")
+            for line in F:
+                line=line.strip()
+                if line.startswith("#"): continue
+                if not len(line): continue
+                trace("Adding template entry '%s' to template.", line)
+                template.add(line)                
+        except IOError, ioe:
+            print >>sys.stderr, "E: Could not open `%s' for reading: %s" % (path, ioe)
+        except:
+            print >>sys.stderr, "E: Could not open `%s' for reading!" % (path)
+        return template
+
+def main():
+    from optparse import OptionParser
+    parser = OptionParser(usage="usage: %prog [options] src dst")
+    parser.add_option("-d", "--debug", action="store_true", dest="debug", default=False, help="print debug information")
+    parser.add_option("-n", "--dry-run", action="store_true", dest="dry_run", default=False, help="don't perform any action, just print what would have been done")
+    parser.add_option("-i", "--image", dest="image", help="create an image from the generated directory")
+    parser.add_option("-b", "--blacklist", dest="blacklists", type="string", action="append", help="add a blacklist")
+    parser.add_option("-t", "--template", dest="templates", type="string", action="append", help="add a template")
+
+    (options, args) = parser.parse_args()
+
+    if len(args) < 2:
+        print >>sys.stderr, "src and/or destination parameters are missing"
+        sys.exit(EXIT_FAILURE)
+    (src, dst) = args[:2]
+
+    dh = DependencyHeuristic(src)
+    ic = ImageCreator(src, dst, dh, options)
+    template = ImageTemplate()
+    blacklist = Blacklist()
+    for path in options.blacklists:
+        blacklist = Blacklist.from_file(path, blacklist)
+    for path in options.templates:
+        template = ImageTemplate.from_file(path, template)
+    templates = [template]
+#
+    failed = ic.run(templates, blacklist, (None, StripFilter()))
+    if len(failed):
+        print >>sys.stderr, "failed dependencies:", failed
+    print ic.parseImageURI("ext2:/tmp/test.img")
+    ic.createFSImage("ext2", "/tmp/test.img", 1024*1024*20)
+    print "The FS consumes %d MB" % (ic.getRequiredSpace() / (1024**2))
+    sys.exit(EXIT_SUCCESS)
+
+if __name__ == "__main__":
+    main()
+
