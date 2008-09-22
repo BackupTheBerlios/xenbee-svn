@@ -66,14 +66,44 @@ def runcmd(cmd, *args, **kw):
 
 class AmbiguousPath(RuntimeError):
     def __init__(self, path, resolved_paths):
-        RuntimeError.__init__(self)
+        RuntimeError.__init__(self, "%s resolves to %s" % (path, resolved_paths))
         self.path = path
         self.resolved_paths = resolved_paths
 
 class PathBlacklisted(RuntimeError):
     def __init__(self, path):
-        RuntimeError.__init__(self)
+        RuntimeError.__init__(self, "%s is blacklisted" % path)
         self.path = path
+
+class TraceMap:
+    """Maps from program paths to parameters required for strace."""
+    instance = None
+    def __init__(self):
+        self.__map = {}
+
+    @classmethod
+    def getInstance(cls):
+        if cls.instance is None:
+            cls.instance = cls()
+        return cls.instance
+
+    def get_params(self, program):
+        return self.__map[program]
+
+    def add_from_file(self, path):
+        F = open(path, "r")
+        for line in F:
+            line=line.strip()
+            if line.startswith("#"): continue
+            if not len(line): continue
+            try:
+                (program, parameters) = line.split(":", 1)
+                program = program.strip()
+                parameters.strip()
+                params = parameters.split(" ")
+                self.__map[program] = params
+            except:
+                trace("ignoring ill-formatted mapping: %s", line)
 
 class PathResolver:
     def __init__(self, blacklist):
@@ -91,6 +121,8 @@ class PathResolver:
         for root in self.__paths:
             normalized_path = os.path.normpath(path).lstrip("/")
             normalized_path = os.path.join(root, normalized_path)
+            if path.endswith("/"):
+                normalized_path += "/"
             if os.path.exists(normalized_path) and not self.__blacklist(normalized_path) and pathFilter(normalized_path):
                 resolved_paths.append(normalized_path)
         if len(resolved_paths) > 1:
@@ -109,6 +141,18 @@ class PreorderVisitor:
         for c in node.get_dependencies():
             self(c)
 
+class ProgressMeter:
+    def __init__(self, max):
+        self.__max = max
+        self.__progress = 0
+
+    def __call__(self, notused):
+        self.__progress = self.__progress + 1
+        if (int(float(self.__progress)/float(self.__max) * 100 + 1)) % 10 == 0:
+            sys.stderr.write(".")
+        if self.__progress == self.__max:
+            sys.stderr.write("\n")
+
 class Path:
     def __init__(self, src_path, dst_path):
         self.__src = src_path      # the one on the local filesystem, resolved by the path resolver
@@ -116,19 +160,38 @@ class Path:
 
     def src(self):
         return self.__src
+
     def dst(self):
         return self.__dst
+
+    def get_mode(self):
+        return os.stat(self.src()).st_mode
+
+    def getFileType(self):
+        if self.is_file(): return "file"
+        if self.is_dir(): return "dir"
+        if self.is_link(): return "link"
+        return "n/a"
+
+    def is_file(self):
+        return os.path.isfile(self.src())
+    def is_link(self):
+        return os.path.islink(self.src())
+    def is_dir(self):
+        return os.path.isdir(self.src())
 
     def __str__(self):
         return self.src()
 
 class DependencyNode:
-    def __init__(self, path, type="str", parent=None, blacklist=None, max_depth=None):
+    def __init__(self, path, type="str", parent=None, blacklist=None, max_depth=None, strace=False):
         self.__path = path
         self.__type = type # str dep, or ldd dep
         self.__parent = parent
+        self.__strace = strace
         if parent is not None:
             self.__depth = parent.get_depth() + 1
+            self.__strace = parent.__strace
         else:
             self.__depth = 0
         if blacklist is None and parent is not None:
@@ -153,12 +216,6 @@ class DependencyNode:
 
     def max_depth(self):
         return self.__max_depth
-
-#    def _blacklisted(self, p):
-#        if self.__blacklist is not None:
-#            return self.__blacklist(p)
-#        else:
-#            return False
 
     def apply(self, visitor):
         visitor(self)
@@ -197,20 +254,49 @@ class DependencyNode:
     def resolve_dependencies(self, path_resolver, depth=0):
         if self.path() is None:
             return
+        trace("  "*depth + "getting dependencies for %s" % self.path().src())
 
         # always resolve symlinks
         self._resolve_symlinks(path_resolver, depth)
-        # if the file is executable, resolve libraries as well
-        if os.access(self.path().src(), os.X_OK):
-            self._resolve_ldd_deps(path_resolver, depth)
-
+        self._resolve_ldd_deps(path_resolver, depth)
+        self._resolve_dir_deps(path_resolver, depth)
+        # if the file is executable, resolve strace dependencies as well
+        if self.__strace and (os.access(self.path().src(), os.X_OK) and os.path.isfile(self.path().src())):
+            self._resolve_trace_deps(path_resolver, depth)
         # resolve string dependencies only up to the given max depth
-        if depth >= self.max_depth():
-            return
-        self._resolve_str_deps(path_resolver, depth)
+        if depth < self.max_depth():
+            self._resolve_str_deps(path_resolver, depth)
+
+        trace("  "*depth + "done.")
+
+    def _resolve_dir_deps(self, path_resolver, depth=0):
+        if os.path.isdir(self.path().src()) and not self.path().src().endswith("/"):
+            # add dependencies for each file and directory contained in src()
+            for root, subdirs, files in os.walk(self.path().src()):
+                for d in subdirs:
+                    dependency = os.path.join(self.path().dst(), d)
+                    try:
+                        resolved_dependency = path_resolver.resolve(dependency)
+                        child = DependencyNode(resolved_dependency, "dir", self)
+                        self.add(child)
+                        child.resolve_dependencies(path_resolver, depth + 1)
+                    except PathBlacklisted:
+                        pass
+                for f in files:
+                    dependency = os.path.join(self.path().dst(), f)
+                    try:
+                        resolved_dependency = path_resolver.resolve(dependency)
+                        child = DependencyNode(resolved_dependency, "dir", self)
+                        self.add(child)
+                        child.resolve_dependencies(path_resolver, depth + 1)
+                    except PathBlacklisted:
+                        pass
+        else:
+            # do nothing (not a directory)
+            pass
 
     def _resolve_ldd_deps(self, path_resolver, depth=0):
-        trace("getting ldd deps for %s (%d)", self.path(), depth)
+#        trace("getting ldd deps for %s (%d)", self.path(), depth)
         exitcode, output, _ = runcmd(["ldd", self.path().src()])
         if exitcode == 0:
             for line in output:
@@ -225,34 +311,72 @@ class DependencyNode:
                 try:
                     resolved_dependency = path_resolver.resolve(dependency)
                     if not self.get_root().contains_dependency(dependency):
-                        trace("ldd dependency: %s", dependency)
+#                        trace("ldd dependency: %s", dependency)
                         child = DependencyNode(resolved_dependency, "ldd", self)
                         self.add(child)
                         child.resolve_dependencies(path_resolver, depth+1)
                 except PathBlacklisted:
                     pass
-        trace("done")
+#        trace("done")
 
+    def _resolve_trace_deps(self, path_resolver, depth=0):
+        trace("resolving strace dependencies for %s (%d)", self.path(), depth)
+        # matches path and return value of the open syscall
+        # open returns >= 0 on success and -1 on failure
+        regexp = re.compile('open\("([^"]+)".*=\s+(\d+)')
+        # lookup trace parameters
+        cmd = ["strace", "-e", "open", self.path().src()]
+        params = None
+        try:
+            params = TraceMap.getInstance().get_params(self.path().dst())
+        except Exception, e:
+            trace("tracemap failed: %s", e)
+            pass
+        if params is not None:
+            cmd.extend(params)
+        else:
+            return
+
+        (exitcode, output, errout) = runcmd(cmd) # TODO: the dummy parameter needs to go to the template file
+        if exitcode == 0:
+            for line in errout: # strace writes to stderr
+                match = regexp.match(line)
+                if match and len(match.groups()):
+                    dependency = match.group(1).strip()
+#                    path_found = (int(match.group(2)) != -1)
+                    try:
+                        resolved_dependency = path_resolver.resolve(dependency, os.path.isfile)
+                        if not self.get_root().contains_dependency(dependency):
+                            trace("trace dependency: %s", dependency)
+                            child = DependencyNode(resolved_dependency, "trace", self)
+                            self.add(child)
+                            child.resolve_dependencies(path_resolver, depth+1)
+                    except PathBlacklisted:
+                        pass
+       
     def _resolve_str_deps(self, path_resolver, depth=0):
-        trace("getting str deps for %s (%d)", self.path(), depth)
+#        trace("getting str deps for %s (%d)", self.path(), depth)
         # extract "absolute paths" from the file
         regexp = re.compile('[^/]*([/][^ :;)"]+)+')
         (exitcode, output, _) = runcmd(["strings", self.path().src()])
         if exitcode == 0:
             for line in output:
                 match = regexp.match(line)
-                if match and len(match.groups()):
-                    dependency = match.group(1).strip()
-                    try:
-                        resolved_dependency = path_resolver.resolve(dependency, os.path.isfile)
-                        if not self.get_root().contains_dependency(dependency):
-                            trace("str dependency: %s", dependency)
-                            child = DependencyNode(resolved_dependency, "str", self)
-                            self.add(child)
-                            child.resolve_dependencies(path_resolver, depth+1)
-                    except PathBlacklisted:
-                        pass
-        trace(" "*depth + "done")
+                while match is not None:
+                    if len(match.groups()):
+                        dependency = match.group(1).strip()
+                        try:
+                            resolved_dependency = path_resolver.resolve(dependency, os.path.isfile)
+                            if not self.get_root().contains_dependency(dependency):
+#                            trace("str dependency: %s", dependency)
+                                child = DependencyNode(resolved_dependency, "str", self)
+                                self.add(child)
+                                child.resolve_dependencies(path_resolver, depth+1)
+                        except PathBlacklisted:
+                            pass
+                    line = line.lstrip(match.group())
+                    match = regexp.match(line)
+#        trace(" "*depth + "done")
 
     def _resolve_symlinks_helper(self, p, path_resolver):
         links = []
@@ -268,20 +392,17 @@ class DependencyNode:
         return links
 
     def _resolve_symlinks(self, path_resolver, depth=0):
-        trace("resolving symlinks of %s", self.path())
+#        trace("resolving symlinks of %s", self.path())
         links = self._resolve_symlinks_helper(self.path(), path_resolver)
         for link in links:
-            child = DependencyNode(link, "sym", self)
-            self.add(child)
-            child.resolve_dependencies(path_resolver, depth+1)
+            if not self.get_root().contains_dependency(link):
+                child = DependencyNode(link, "sym", self)
+                self.add(child)
+                child.resolve_dependencies(path_resolver, depth+1)
 
     def getFileType(self):
         if self.path() is None: return "n/a"
-        f = self.path().src()
-        if os.path.isfile(f): return "file"
-        if os.path.isdir(f): return "dir"
-        if os.path.islink(f): return "file"
-        return "n/a"
+        return self.path().getFileType()
 
     def toString(self, depth=0):
         name = "<root>"
@@ -296,84 +417,95 @@ class DependencyNode:
         return self.toString(-1)
 
 class DependencyScanner:
-    def __init__(self, path_resolver, template, blacklist, max_depth):
+    def __init__(self, path_resolver, template, blacklist, max_depth, run_strace):
         self.__path_resolver = path_resolver
         self.__template = template
         self.__blacklist = blacklist
         self.__max_depth = max_depth
+        self.__run_strace = run_strace
 
     def run(self):
-        root = DependencyNode(None, "root", None, self.__blacklist, self.__max_depth+1)
+        root = DependencyNode(None, "root", None, self.__blacklist, self.__max_depth+1, strace=self.__run_strace)
         root.set_depth(-1)
         for f in self.__template:
             path = self.__path_resolver.resolve(f)
-            node = DependencyNode(path, "tpl", root)
+            node = DependencyNode(path, "tpl", root, strace=self.__run_strace)
             root.add(node)
             node.resolve_dependencies(self.__path_resolver)
         return root
 
 class ImageCreator:
-    def __init__(self, src, dst, heuristic, options):
-        self.__src = src
+    def __init__(self, dependency_graph, dst, options, filters=(None,None)):
+        self.__graph = dependency_graph
         self.__dst = dst
-        self.__heuristic = heuristic
         self.__options = options
+        self.__before_filter, self.__after_filter = filters
 
-    def run(self, templates, blacklist=None, filters=(None,None)):
-        failed_deps=[]
-        for T in templates:
-            for f in T:
-                deps = self.__heuristic.run(f, blacklist)
-                if blacklist is not None:
-                    deps = filter(lambda x: not blacklist(x), deps)
-                for d in deps:
-                    result, path = self.copy_file(d, filters[0], filters[1])
-                    if result == 1:
-                        failed_deps.append(path)
-        return failed_deps
+    def run(self, filters=(None,None)):
+        class C:
+            def __init__(self, ic, progress):
+                self.ic = ic
+                self.failed = []
+                self.__progress = progress
+            def __call__(self, node):
+                self.__progress(node)
+                if node.path() is not None:
+                    (error, n) = self.ic._copy_dependency(node)
+                    if error == 1:
+                        self.failed.append(n)
+        CopyFun = C(self, ProgressMeter(self.__graph.get_child_count()))
+        self.__graph.apply(PreorderVisitor(CopyFun))
+        return CopyFun.failed
 
-    def copy_file(self, file, before_filter=None, after_filter=None):
+    def get_child_count(self):
+        class F:
+            def __init__(self):
+                self.count = 0
+            def __call__(self, notused):
+                self.count = self.count + 1
+        Counter = F()
+        self.apply(PreorderVisitor(Counter))
+        return Counter.count
+
+    def _copy_dependency(self, node):
         # get the directory that contains the original file
         # relative to the root directory
-        (drive, src_dir) = os.path.splitdrive(os.path.dirname(file))
-        relative_src_dir = src_dir.lstrip(os.path.sep)
-        if before_filter is not None:
-            if self.__options.dry_run:
-                trace("Running before filter on '%s'", file)
-            else:
-                file = before_filter(file)
+        path = node.path()
 
-        # the actual file name
-        file_name = os.path.basename(file)
+        # get the actual destination path
+        dst_path = os.path.join(self.__dst, path.dst().lstrip(os.path.sep)).rstrip(os.path.sep)
+#        if path.is_file() or path.is_link():
+        dst_dir = os.path.dirname(dst_path)
+#        else:
+#            dst_dir = dst_path
 
-        # copy the file to the destination directory
-        dst_path = os.path.join(self.__dst, relative_src_dir)
-        # makedirs
-        if not os.path.exists(dst_path):
+        # create the destination path
+        if not os.path.exists(dst_dir):
             if self.__options.dry_run:
-                trace("Creating directory: %s", dst_path)
+                trace("Creating directory hierarchy: %s", dst_dir)
             else:
-                os.makedirs(dst_path)
-        dst_file = os.path.join(dst_path, file_name)
-        if not os.path.exists(dst_file):
+                os.makedirs(dst_dir)
+        
+        # copy the file
+        if not os.path.exists(dst_path) or (os.path.getmtime(path.src()) > os.path.getmtime(dst_path)):
             exitcode, out, err = 0, "", ""
             if self.__options.dry_run:
-                trace("Copying '%s' -> '%s'", file, dst_file)
+                trace("Copying '%s' -> '%s'", path.src(), dst_path)
             else:
-                exitcode, out, err = runcmd(["cp", "-aP", file, dst_file])
+                exitcode, out, err = runcmd(["cp", "-pPa", path.src(), dst_path])
             if exitcode == 0:
-                if after_filter is not None:
+                if self.__after_filter is not None:
                     if self.__options.dry_run:
-                        trace("Running before filter on '%s'", file)
+                        trace("Running after filter on '%s'", dst_path)
                     else:
-                        after_filter(dst_file)
+                        self.__after_filter(dst_path)
             else:
-                trace("copy '%s' -> '%s' failed: out: '%s', err: '%s'", file, dst_file, out, err) 
-                return (1, file)
+                trace("copy '%s' -> '%s' failed: out: '%s', err: '%s'", path.src(), dst_path, out, err) 
+                return (1, node)
         else:
             #trace("destination path '%s' does already exist!", dst_file)
             pass
-        return (0, file)
+        return (0, node)
 
     def parseImageURI(self, image_uri, default_type="ext2"):
         colon_index = image_uri.find(":")
@@ -409,16 +541,31 @@ class ImageCreator:
         # copy everything into the image while preserving their access rights
         trace("filling the image")
         for e in os.listdir(self.__dst):
-            exitcode, out, err = runcmd(["cp", "-a", os.path.join(self.__dst, e), mount_point])
-
+            trace("copying %s", os.path.join(self.__dst, e))
+            exitcode, out, err = runcmd(["sudo", "cp", "-a", os.path.join(self.__dst, e), mount_point])
+            if exitcode != 0:
+                trace("failed: %d: %s: %s", exitcode, out, err)
+                raise RuntimeError("copy failed")
         image.umount()
+        return image_size
 
     def getRequiredSpace(self):
         result = 0
-        for root, subdirs, files in os.walk(self.__dst):
-            files = filter(lambda x: not os.path.islink(x), files)
-            result += sum(os.path.getsize(os.path.join(root, name)) for name in files)
-        return result
+        exitcode, out, err = runcmd(["sudo", "du", "-s", self.__dst])
+        if exitcode != 0 or len(out) < 1:
+            raise RuntimeError("could not get required space")
+        (size, _) = out[0].split()
+        return int(size) * 1024
+
+#        for root, subdirs, files in os.walk(self.__dst):
+#            print "size(%s) = %d" % (root, os.path.getsize(root))
+#            result += os.path.getsize(root)
+#            for f in files:
+#                path = os.path.join(root, f)
+#                if os.path.islink(path): continue
+#                file_size = os.path.getsize(path)
+#                result += file_size
+#        return result
     
 class StripFilter:
     def __init__(self):
@@ -444,7 +591,7 @@ class Blacklist:
             except:
                 pass
             if found_match:
-                trace("Dependency '%s' blacklisted due to pattern '%s'", path, pattern)
+#                trace("Dependency '%s' blacklisted due to pattern '%s'", path, pattern)
                 return True
         return False
 
@@ -474,7 +621,7 @@ class Blacklist:
                 line=line.strip()
                 if line.startswith("#"): continue
                 if not len(line): continue
-                trace("Adding pattern '%s' to blacklist.", line)
+#                trace("Adding pattern '%s' to blacklist.", line)
                 bl.add(line)                
         except IOError, ioe:
             print >>sys.stderr, "E: Could not open `%s' for reading: %s" % (path, ioe)
@@ -511,7 +658,7 @@ class ImageTemplate:
                 line=line.strip()
                 if line.startswith("#"): continue
                 if not len(line): continue
-                trace("Adding template entry '%s' to template.", line)
+#                trace("Adding template entry '%s' to template.", line)
                 template.add(line)                
         except IOError, ioe:
             print >>sys.stderr, "E: Could not open `%s' for reading: %s" % (path, ioe)
@@ -521,13 +668,15 @@ class ImageTemplate:
 
 def main():
     from optparse import OptionParser
-    parser = OptionParser(usage="usage: %prog [options] src dst")
+    parser = OptionParser(usage="usage: %prog [options] src [src,...] dst")
     parser.add_option("-d", "--debug", action="store_true", dest="debug", default=False, help="print debug information")
     parser.add_option("-n", "--dry-run", action="store_true", dest="dry_run", default=False, help="don't perform any action, just print what would have been done")
     parser.add_option("--max-depth", dest="max_depth", type="int", default=4, help="traverse dependency tree up to this depth")
+    parser.add_option("--run-strace", action="store_true", dest="run_strace", default=False, help="run strace on executable files")
+    parser.add_option("--trace-map", dest="trace_map", default=[], type="string", action="append", help="map programs to strace parameters")
     parser.add_option("-i", "--image", dest="image", help="create an image from the generated directory")
-    parser.add_option("-b", "--blacklist", dest="blacklists", type="string", action="append", help="add a blacklist")
-    parser.add_option("-t", "--template", dest="templates", type="string", action="append", help="add a template")
+    parser.add_option("-b", "--blacklist", dest="blacklists", default=[], type="string", action="append", help="add a blacklist")
+    parser.add_option("-t", "--template", dest="templates", default=[], type="string", action="append", help="add a template")
     parser.add_option("-s", "--appdata-size", dest="appdata_size", type="int", default=0, help="additional space to reserve for application data in bytes")
     parser.add_option("-p", "--bonus-percent", dest="bonus_percent", type="float", default=0.0, help="additional space (in percent) to reserve within the image")
 
@@ -537,10 +686,8 @@ def main():
         print >>sys.stderr, "src and/or destination parameters are missing"
         print >>sys.stderr, "  try `%s --help' for help" % sys.argv[0]
         sys.exit(EXIT_FAILURE)
-    (src, dst) = args[:2]
-
-#    dh = DependencyHeuristic(src)
-#    ic = ImageCreator(src, dst, dh, options)
+    srcs = args[:-1]
+    dst  = args[-1]
 
     template = ImageTemplate()
     for path in options.templates:
@@ -551,19 +698,32 @@ def main():
         blacklist = Blacklist.from_file(path, blacklist)
 
     resolver = PathResolver(blacklist)
-    resolver.add(src)
+    for src in srcs:
+        resolver.add(src)
 
-    scanner = DependencyScanner(resolver, template, blacklist, options.max_depth)
+    traceMap = TraceMap.getInstance()
+    for m in options.trace_map:
+        traceMap.add_from_file(m)
+
+    scanner = DependencyScanner(resolver, template, blacklist, options.max_depth, options.run_strace)
     root = scanner.run()
     print root
     print "number of nodes:", root.get_child_count()
+    ic = ImageCreator(root, dst, options, (None, StripFilter()))
+    failed = ic.run()
+    if len(failed):
+        print >>sys.stderr, "failed dependencies:", failed
+    if options.dry_run:
+        print "The FS would consume %d MB, the generated image requires %d MB" % (ic.getRequiredSpace() / (1024**2), image_size / (1024**2))
+        sys.exit(0)
+    if options.image is not None:
+        image_size = ic.createFSImage(options.image, options.appdata_size, options.bonus_percent / 100.0)
+        print "The FS consumes %d MB, the generated image requires %d MB" % (ic.getRequiredSpace() / (1024**2), image_size / (1024**2))
+
 #
 #    failed = ic.run(templates, blacklist, (None, StripFilter()))
-#    if len(failed):
-#        print >>sys.stderr, "failed dependencies:", failed
 #    if options.image is not None:
 #        ic.createFSImage(options.image, options.appdata_size, options.bonus_percent / 100.0)
-#    print "The FS consumes %d MB" % (ic.getRequiredSpace() / (1024**2))
     sys.exit(EXIT_SUCCESS)
 
 if __name__ == "__main__":
