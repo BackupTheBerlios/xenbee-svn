@@ -219,6 +219,7 @@ class XBEInstProtocol(xmlprotocol.XMLProtocol):
     def processEnded(self, status_object):
         log.info("process ended: code:%d" %
                  (status_object.value.exitCode))
+	os.system("/bin/sync")
         msg = message.ExecutionFinished(
             inst_id=self.factory.instance_id,
             exitcode=status_object.value.exitCode)

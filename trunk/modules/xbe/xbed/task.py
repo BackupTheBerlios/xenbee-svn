@@ -412,6 +412,7 @@ class Task(TaskFSM):
         self.log.debug(
             "assigning mac '%s' with IP '%s' to instance: %s" % (mac_ip[0], mac_ip[1], inst.id()))
         inst.config().setMac(mac_ip[0])
+#	inst.config().setIP(mac_ip[1])
         inst.ip = mac_ip[1]
 
     def _cb_assign_files_to_inst(self):

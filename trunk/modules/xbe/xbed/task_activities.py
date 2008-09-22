@@ -252,9 +252,9 @@ class StageOutHandler(StagingActivity):
             uri = ds["Target"]["URI"]
             
             log.debug("uploading: %s -> %s", file_name, uri)
-            
             # make file relative to image mount_point
             real_file_name = os.path.join(mount_point, file_name.lstrip("/"))
+            log.debug("real file name: %s", real_file_name)
             if not os.path.exists(real_file_name):
                 raise OSError(errno.ENOENT, os.strerror(errno.ENOENT), file_name)
             # compress the file if necessary and upload the compressed file
@@ -391,12 +391,13 @@ class TaskActivity(ActivityProxy):
                 return h.handle(location, *args, **kw)
         raise ValueError("I cannot handle this location-element", location)
 
-    def _mount_image(self, image_path, directory):
+    def _mount_image(self, image_path, image_fs_type, directory):
+        log.info("mounting image %s:%s to %s" % (image_fs_type, image_path, directory))
         # mount the image
         from xbe.util import disk
         img = disk.mountImage(
             image_path,                          # path to the image file
-            fs_type=disk.FS_EXT3,                # filesystem type
+            fs_type=(image_fs_type or disk.FS_EXT2),                # filesystem type
             dir=directory                        # where to mount the image
         )
         log.debug("mounted image to '%s'", img.mount_point())
@@ -489,10 +490,12 @@ class SetUpActivity(TaskActivity):
         # Retrieve a package or an inline definition
         #
         ##############################################
+	self.image_fs_type = None
         if instdesc.get("Package") is not None:
             self._prepare_package(instdesc.get("Package"))
         else:
             self._prepare_inst(instdesc.get("Instance"))
+            self.image_fs_type = instdesc.get("Instance")["Image"][":attributes:"]["fs-type"]
 
         self.check_abort()
 
@@ -515,8 +518,7 @@ class SetUpActivity(TaskActivity):
             # call the pre-setup hooks, they may modify the image in place
             self._call_scripts(os.path.join(self.xbe_spool, "scripts"), "pre-setup", self.jail_path)
         
-            img = self._mount_image(os.path.join(self.xbe_spool, "image"),
-                                    self.xbe_spool)
+            img = self._mount_image(os.path.join(self.xbe_spool, "image"), self.image_fs_type, self.xbe_spool)
             try:
 
                 ##############################################
@@ -700,12 +702,15 @@ class TearDownActivity(TaskActivity):
         except Exception, e:
             wd = "/"
 
-
+        self.image_fs_type = jsdl_doc.lookup_path("JobDefinition/JobDescription/"+
+                                                  "Resources/InstanceDefinition/"+
+                                                  "InstanceDescription/Instance/Image")[":attributes:"]["fs-type"]
+ 
         try:
             # mount the proc filesystem
             subprocess.check_call(["mount", "-t", "proc", "proc", self.proc_path])
 
-            img = self._mount_image(os.path.join(self.xbe_spool, "image"),
+            img = self._mount_image(os.path.join(self.xbe_spool, "image"), self.image_fs_type,
                                     self.xbe_spool)
             try:
                 self._call_scripts(os.path.join(self.xbe_spool, "scripts"), "cleanup", self.jail_path,

@@ -53,7 +53,7 @@ class InstanceConfig:
         self.name = name
         self.diskImages = []
         self.mac = None
-        self.ip = ""
+        self.ip = None
         self.netmask = ""
         self.gateway = ""
         self.memory = 128 * 1024**2
@@ -240,7 +240,7 @@ class XenConfigGenerator:
         print >>self.out, "# Disk device(s)"
         
         # root
-        self._write_helper("root", "/dev/"+self.config.getDisks()[0]["target"]+" ro")
+        self._write_helper("root", "/dev/"+self.config.getDisks()[0]["target"])
 
         # all disks
         disks = []
@@ -255,10 +255,10 @@ class XenConfigGenerator:
         else:
             vif = [ 'bridge=xenbr0' ]
         self._write_helper("vif", vif)
-        if self.ip != None:
-           self._write_helper("ip", self.ip)
-           self._write_helper("gateway", self.gateway)
-           self._write_helper("netmask", self.netmask)
+        if self.config.getIP():
+           self._write_helper("ip", self.config.getIP())
+           self._write_helper("gateway", self.config.getGateway())
+           self._write_helper("netmask", self.config.getNetmask())
            self._write_helper("dhcp", "off")
         else:
            # use dhcp
