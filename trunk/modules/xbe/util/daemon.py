@@ -46,8 +46,8 @@ class Daemon(singleton.Singleton):
         self.daemonize=daemonize
         self.workdir = workdir
         self.umask = umask
-        self.user = user
-        self.group = group
+        self.set_user(user)
+        self.set_group(group)
         self.name = name
         self.parser = OptionParser(
             usage="usage: %prog start|stop|status|help [options]", add_help_option=False)
@@ -109,6 +109,10 @@ class Daemon(singleton.Singleton):
             print >>sys.stdout, msg
         sys.exit(SUCCESS)
 
+    def set_user(self, user):
+        self.user = user
+    def set_group(self, group):
+        self.group = group
     def do_help(self):
         """I print some helpful information about this daemon."""
         self.parser.print_help()

@@ -56,10 +56,18 @@ class XBEInstDaemon(Daemon):
         p.add_option("-u", "--uuid", dest="uuid", type="string",
                      help="the uuid to use",
                      default=os.environ.get("XBE_UUID"))
+        p.add_option("-U", "--user", dest="user", type="string",
+                     help="the user to switch to",
+                     default=os.getuid())
+        p.add_option("-G", "--group", dest="group", type="string",
+                     help="the group to switch to",
+                     default=os.getgid())
 
     def configure(self):
         self.daemonize = self.opts.daemonize
         self.pidfile = self.opts.pidfile
+        self.set_user(self.opts.user)
+        self.set_group(self.opts.group)
 
     def setup_logging(self):
         # fix the 'currentframe' function in the logging module,
