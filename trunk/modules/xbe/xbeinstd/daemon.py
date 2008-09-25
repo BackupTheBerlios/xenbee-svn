@@ -62,12 +62,16 @@ class XBEInstDaemon(Daemon):
         p.add_option("-G", "--group", dest="group", type="string",
                      help="the group to switch to",
                      default=os.getgid())
+        p.add_option("-T", "--timeout", dest="timeout", type="int",
+                     help="the maximum timeout to wait for a connection in seconds",
+                     default=5)
 
     def configure(self):
         self.daemonize = self.opts.daemonize
         self.pidfile = self.opts.pidfile
         self.set_user(self.opts.user)
         self.set_group(self.opts.group)
+        self.timeout = self.opts.timeout
 
     def setup_logging(self):
         # fix the 'currentframe' function in the logging module,
@@ -140,7 +144,7 @@ class XBEInstDaemon(Daemon):
                                       my_queue=self.queue, server_queue="/queue"+queue)
         reactor.connectTCP(self.host,
                            self.port,
-                           f)
+                           f, self.timeout)
         log.info("  done.")
         
     def run(self, *args, **kw):

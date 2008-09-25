@@ -505,11 +505,13 @@ class StompClientFactory(ReconnectingClientFactory):
     maxRetries = 5
 
     def __init__(self, user = '', password = ''):
-	self.user = user
-	self.password = password
+        self.user = user
+        self.password = password
+        self.retries = 0
 
     def clientConnectionFailed(self, connector, reason):
-        if self.retries > self.maxRetries:
+        self.retries = self.retries + 1
+        if self.retries >= StompClientFactory.maxRetries:
             log.warn("connecting failed, giving up")
             reactor.exitcode = 2
             reactor.stop()
