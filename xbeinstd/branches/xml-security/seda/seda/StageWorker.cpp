@@ -16,7 +16,7 @@ namespace seda {
                 // handle system events:
                 if (SystemEvent *se = dynamic_cast<SystemEvent*>(e.get())) {
                     // check if there is a system-event-handler stage
-                    Stage::Ptr systemEventHandler(StageRegistry::instance().lookup("system-event-handler"));
+                    Stage::Ptr systemEventHandler(StageRegistry::instance().lookup(_stage->getErrorHandler()));
                     if (systemEventHandler) {
                         // is our own stage the system-event-handler?
                         if (systemEventHandler.get() == _stage) {
