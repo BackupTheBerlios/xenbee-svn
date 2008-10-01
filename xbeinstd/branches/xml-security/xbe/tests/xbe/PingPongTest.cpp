@@ -525,7 +525,9 @@ PingPongTest::testPingPongComplete() {
     seda::StageRegistry::instance().insert(pongXmlBindStage);
 
     pingChannel->start();
+    pingChannel->flushMessages();
     pongChannel->start();
+    pongChannel->flushMessages();
 
     pingClientStage->start();
     pingXmlUnbindStage->start();

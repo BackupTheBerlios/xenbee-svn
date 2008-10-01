@@ -69,7 +69,7 @@ Channel::~Channel() {
 }
 
 void
-Channel::start() {
+Channel::start(bool doFlush) {
     Lock channelLock(&_mtx);
 
     if (_started)
@@ -112,8 +112,11 @@ Channel::start() {
     _started = true;
     _state = CONNECTED;
     addIncomingQueue(_inQueue);
-    flushMessages();
     notify();
+
+    if (doFlush) {
+        flushMessages();
+    }
 }
 
 void

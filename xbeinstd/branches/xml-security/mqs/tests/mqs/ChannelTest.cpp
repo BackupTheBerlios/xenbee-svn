@@ -167,4 +167,7 @@ void ChannelTest::doStart(const std::string& uri, const std::string& q) {
     }
     _channel = new mqs::Channel(mqs::BrokerURI(uri), mqs::Destination(q));
     _channel->start();
+
+    // remove possibly old messages
+    _channel->flushMessages();
 }

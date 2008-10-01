@@ -73,7 +73,7 @@ namespace mqs {
         /**
            Start the channel and its underlying components.
         */
-        void start();
+        void start(bool doFlush=false);
 
         /**
            Returns true iff the channel has been started, false otherwise.
