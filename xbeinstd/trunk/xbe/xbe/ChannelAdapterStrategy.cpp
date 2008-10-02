@@ -3,6 +3,7 @@
 #include "ChannelAdapterStrategy.hpp"
 #include "MessageEvent.hpp"
 #include "EventFactory.hpp"
+#include "ChannelCommandEvent.hpp"
 
 using namespace xbe;
 
@@ -10,7 +11,7 @@ ChannelAdapterStrategy::ChannelAdapterStrategy(const std::string& name,
                                                const seda::Strategy::Ptr& decorated,
                                                const mqs::Channel::Ptr& channel)
     : seda::StrategyDecorator(name, decorated),
-      XBE_INIT_LOGGER("xbe.channel-adapter."+name),
+      XBE_INIT_LOGGER(name),
       _channel(channel)
 {
     _channel->setMessageListener(this);
@@ -20,7 +21,7 @@ ChannelAdapterStrategy::~ChannelAdapterStrategy() {}
 
 void ChannelAdapterStrategy::onMessage(const cms::Message *m) {
     try {
-        XBE_LOG_INFO("got message");
+        XBE_LOG_INFO("got new message from the network");
         StrategyDecorator::perform(EventFactory::instance().newEvent(m));
     } catch (const xbe::UnknownConversion& ex) {
         XBE_LOG_DEBUG("cms::Message could not be converted to Event: " << ex.what());
@@ -59,7 +60,12 @@ void ChannelAdapterStrategy::perform(const seda::IEvent::Ptr& e) const {
             StrategyDecorator::perform(EventFactory::instance().newErrorEvent("unknown error during message sending"));
         }
     } else if (seda::SystemEvent *systemEvent = dynamic_cast<seda::SystemEvent*>(e.get())) {
-        StrategyDecorator::perform(e);
+        if (xbe::ChannelCommandEvent *channelCommand = dynamic_cast<xbe::ChannelCommandEvent*>(systemEvent)) {
+            XBE_LOG_DEBUG("got command for channel: " << channelCommand->str());
+            channelCommand->execute(_channel);
+        } else {
+            StrategyDecorator::perform(e);
+        }
     } else {
         XBE_LOG_WARN("ignoring non-MessageEvent: " << e->str());
     }

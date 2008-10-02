@@ -1,16 +1,32 @@
-* finish the PingPong TestCase
-	* add thread-safety to class PingPong
-	* create on both sides: 
-		- Channel, ChannelAdapter, PingPong Strategy with counting
-		- Ping Event could look like:
-			<message>
-			  <header>...</header>
-			  <body><tests-xbe:PingEvent/></body>
-			</message>
-		- Pong Event similar
-		- PingPong should only send a fixed number of messages (ping part)
-		- PingPong should await a fixed number of messages (pong part)
-		- invariant: #msgs sent == #msgs received
+XML-Security
+============
+        * missing: corrected version for the strategy decorators
+        * missing: a nice way to load schema files
+                - probably put that into XbeLibUtils somehow
 
-	* TestCase must stop after a given time (i.e. channels and threads should be stopped)
-	* test was successful if #pings == #pongs == #MessagesToSend
+Promela Model
+=============
+    * write a promela specification for the communication protocol between
+      client and server and verify the results.
+
+Mediator Pattern
+================
+    * introduce the mediator pattern for system events in the seda library
+    * the xbe library subclasses the defined system-event-handler to handle
+      library/application specific system-events
+            - Strategies etc. may emit SystemEvents to the mediator
+            - the mediator knows about these events and is linked to other
+              objects that know what to do
+                - example:
+                    the application's state-machine wants to reconnect to the
+                    message queue server, therefore the FSM provides
+                    doReconnect() which sends a system event to the mediator,
+                    which in turn forwards the event/transforms the event into
+                    a command to the channel-adapter.
+
+Observer Pattern
+================
+
+    * The MQS Channel should provide the ability to be observed by other objects
+        * add an explicit state (connected, disconnected) that can be queried by observers
+        * useful to notify the channel-adapter about state changes that did not throw an exception

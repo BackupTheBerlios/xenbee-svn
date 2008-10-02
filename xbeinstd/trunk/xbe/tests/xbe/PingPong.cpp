@@ -2,10 +2,10 @@
 #include <seda/Stage.hpp>
 
 #include <xbe/ChannelEventQueueAdapter.hpp>
+#include <xbe/XbeXMLMessageHandling.hpp>
 #include <mqs/Channel.hpp>
 #include <xbe/xbe-msg.hpp>
 #include <xsd/cxx/xml/string.hxx>
-#include <xbe/XMLMessageEvent.hpp>
 
 #include "PingPong.hpp"
 
@@ -13,11 +13,11 @@ using namespace tests::xbe;
 namespace xml = xsd::cxx::xml;
 
 PingPong::PingPong(const std::string& name,
-                   const std::string& next,
-                   const std::string& to,
-                   const std::string& from,
-                   std::size_t maxMessages,
-                   bool initialSend) :
+        const std::string& next,
+        const std::string& to,
+        const std::string& from,
+        std::size_t maxMessages,
+        bool initialSend) :
     ::seda::ForwardStrategy(name, next),
     XBE_INIT_LOGGER("tests.xbe.pingpong"),
     _fsm(*this),
@@ -33,8 +33,8 @@ PingPong::~PingPong() {}
 
 
 void PingPong::perform(const seda::IEvent::Ptr& e) const {
-    if (const ::xbe::XMLMessageEvent* xmlEvent = dynamic_cast<const ::xbe::XMLMessageEvent*>(e.get())) {
-        const_cast<PingPong*>(this)->dispatch(xmlEvent->message());
+    if (const ::xbe::XbeMessageEvent* const xmlEvent = dynamic_cast<const ::xbe::XbeMessageEvent* const>(e.get())) {
+        const_cast<PingPong*>(this)->dispatch(xmlEvent->const_payload());
     }
 }
 
@@ -64,7 +64,7 @@ void PingPong::doStop() {
 }
 
 void PingPong::stop() {
-    
+
 }
 
 void PingPong::start() {
@@ -75,11 +75,11 @@ void PingPong::start() {
         xbemsg::header_t hdr(_to, _from);
         xbemsg::body_t body;
 
-        body.any().push_back(body.dom_document().createElementNS(xml::string("http://www.xenbee.net/schema/2008/02/pingpong").c_str(),
-                                                                 xml::string("Ping").c_str()));
-        xbemsg::message_t msg(hdr, body);
+        body.any().push_back(body.dom_document().createElementNS(xml::string("http://www.xenbee.net/schema/2008/02/xbetest").c_str(),
+                    xml::string("xbetest:Ping").c_str()));
+        std::auto_ptr<xbemsg::message_t> msg(new xbemsg::message_t(hdr, body));
 
-        seda::ForwardStrategy::perform(seda::IEvent::Ptr(new ::xbe::XMLMessageEvent(msg)));
+        seda::ForwardStrategy::perform(seda::IEvent::Ptr(new ::xbe::XbeMessageEvent(_to, _from, msg)));
         incSentMessages();
     }
 }
@@ -90,11 +90,11 @@ void PingPong::sendPong(const tests::xbe::PingEvent& m) {
     // generate a new PingEvent and send it to 'out'
     xbemsg::header_t hdr(_to, _from);
     xbemsg::body_t body;
-    body.any().push_back(body.dom_document().createElementNS(xml::string("http://www.xenbee.net/schema/2008/02/pingpong").c_str(),
-                                                             xml::string("Pong").c_str()));
-    xbemsg::message_t msg(hdr, body);
+    body.any().push_back(body.dom_document().createElementNS(xml::string("http://www.xenbee.net/schema/2008/02/xbetest").c_str(),
+                xml::string("xbetest:Pong").c_str()));
 
-    seda::ForwardStrategy::perform(seda::IEvent::Ptr(new ::xbe::XMLMessageEvent(msg)));
+    std::auto_ptr<xbemsg::message_t> msg(new xbemsg::message_t(hdr, body));
+    seda::ForwardStrategy::perform(seda::IEvent::Ptr(new ::xbe::XbeMessageEvent(_to, _from, msg)));
     incSentMessages();
 }
 
@@ -104,10 +104,10 @@ void PingPong::sendPing(const tests::xbe::PongEvent& m) {
     // generate a new PingEvent and send it to 'out'
     xbemsg::header_t hdr(_to, _from);
     xbemsg::body_t body;
-    body.any().push_back(body.dom_document().createElementNS(xml::string("http://www.xenbee.net/schema/2008/02/pingpong").c_str(),
-                                                             xml::string("Ping").c_str()));
-    xbemsg::message_t msg(hdr, body);
+    body.any().push_back(body.dom_document().createElementNS(xml::string("http://www.xenbee.net/schema/2008/02/xbetest").c_str(),
+                xml::string("xbetest:Ping").c_str()));
 
-    seda::ForwardStrategy::perform(seda::IEvent::Ptr(new ::xbe::XMLMessageEvent(msg)));
+    std::auto_ptr<xbemsg::message_t> msg(new xbemsg::message_t(hdr, body));
+    seda::ForwardStrategy::perform(seda::IEvent::Ptr(new ::xbe::XbeMessageEvent(_to, _from, msg)));
     incSentMessages();
 }

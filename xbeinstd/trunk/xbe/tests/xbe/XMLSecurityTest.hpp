@@ -2,7 +2,7 @@
 #define XBE_TESTS_XML_SECURITY_TEST_HPP 1
 
 #include <cppunit/extensions/HelperMacros.h>
-#include <xbe/logging.hpp>
+#include <xbe/common.hpp>
 
 namespace xbe {
   namespace tests {

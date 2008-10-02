@@ -21,8 +21,8 @@ namespace seda {
         typedef std::tr1::shared_ptr<Stage> Ptr;
         typedef std::list<StageWorker*> ThreadPool;
     
-        Stage(const std::string& name, Strategy::Ptr strategy, std::size_t maxPoolSize=1, std::size_t maxQueueSize=SEDA_MAX_QUEUE_SIZE);
-        Stage(const std::string& name, IEventQueue::Ptr queue, Strategy::Ptr strategy, std::size_t maxPoolSize=1);
+        Stage(const std::string& name, Strategy::Ptr strategy, std::size_t maxPoolSize=1, std::size_t maxQueueSize=SEDA_MAX_QUEUE_SIZE, const std::string& errorHandler="system-event-handler");
+        Stage(const std::string& name, IEventQueue::Ptr queue, Strategy::Ptr strategy, std::size_t maxPoolSize=1, const std::string& errorHandler="system-event-handler");
     
         virtual ~Stage();
 
@@ -50,6 +50,8 @@ namespace seda {
             return queue()->pop(millis);
         }
 
+        void setErrorHandler(const std::string& eh) { _error_handler = eh; }
+        const std::string& getErrorHandler() const { return _error_handler; }
         unsigned long timeout() const { return _timeout; }
         void timeout(unsigned long millis) { _timeout = millis; }
     private:
@@ -57,6 +59,7 @@ namespace seda {
         IEventQueue::Ptr _queue;
         Strategy::Ptr _strategy;
         std::string _name;
+        std::string _error_handler;
         std::size_t _maxPoolSize;
         unsigned long _timeout;
         ThreadPool _threadPool;

@@ -303,6 +303,21 @@ namespace xbemsg
     void
     body (::std::auto_ptr< body_type > p);
 
+    // any
+    // 
+    typedef ::xsd::cxx::tree::element_sequence any_sequence;
+    typedef any_sequence::iterator any_iterator;
+    typedef any_sequence::const_iterator any_const_iterator;
+
+    const any_sequence&
+    any () const;
+
+    any_sequence&
+    any ();
+
+    void
+    any (const any_sequence& s);
+
     // any_attribute
     // 
     typedef ::xsd::cxx::tree::attribute_set< char > any_attribute_set;
@@ -358,6 +373,7 @@ namespace xbemsg
 
     ::xsd::cxx::tree::one< header_type > header_;
     ::xsd::cxx::tree::one< body_type > body_;
+    any_sequence any_;
     any_attribute_set any_attribute_;
   };
 

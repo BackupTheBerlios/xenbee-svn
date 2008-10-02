@@ -4,6 +4,8 @@
 /* Logging */
 #if ENABLE_LOGGING
 
+#include <mqs/LoggingConfigurator.hpp>
+
 #if HAVE_LOG4CXX
 #include <log4cxx/logger.h>
 

@@ -19,7 +19,8 @@ namespace seda {
 
         /* TODO:  introduce a notation  for maximum  number of  threads this
            strategy supports.  It may be that particular  strategies must be
-           executed sequentially. */
+           executed sequentially. Can also be solved by acquiring a mutex from
+           withing the perform method. */
     protected:
         explicit
         Strategy(const std::string& name) 

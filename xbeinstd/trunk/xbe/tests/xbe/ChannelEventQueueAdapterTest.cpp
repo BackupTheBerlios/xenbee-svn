@@ -41,6 +41,7 @@ ChannelEventQueueAdapterTest::testSendViaChannelText() {
   seda::Stage::Ptr stage(new seda::Stage("net", queue, discard));
 
   channel->start();
+  channel->flushMessages();
   stage->start();
   
   channel->send("testSendViaChannelText"); // message will be consumed by discard strategy
@@ -67,6 +68,7 @@ ChannelEventQueueAdapterTest::testSendViaChannelNoneText() {
   seda::Stage::Ptr stage(new seda::Stage("net", queue, discard));
 
   channel->start();
+  channel->flushMessages();
   stage->start();
 
   cms::BytesMessage *bmsg = channel->createBytesMessage();
@@ -97,6 +99,7 @@ ChannelEventQueueAdapterTest::testSendViaStageMessage() {
   seda::Stage::Ptr stage(new seda::Stage("net", queue, discard));
 
   channel->start();
+  channel->flushMessages();
   stage->start();
   
   stage->send(seda::IEvent::Ptr(new xbe::MessageEvent("testSendViaStageMessage")));
@@ -124,6 +127,7 @@ ChannelEventQueueAdapterTest::testSendViaStageNoneMessage() {
   seda::Stage::Ptr stage(new seda::Stage("net", queue, discard));
 
   channel->start();
+  channel->flushMessages();
   stage->start();
   
   stage->send(seda::IEvent::Ptr(new seda::StringEvent("testSendViaStageNoneMessage")));

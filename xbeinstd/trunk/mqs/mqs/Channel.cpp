@@ -29,7 +29,7 @@ using namespace cms;
 using namespace activemq::core;
 using namespace activemq::concurrent;
 
-Channel::Channel(const mqs::BrokerURI& broker, const mqs::Destination& inout)
+Channel::Channel(const mqs::BrokerURI &broker, const mqs::Destination &inout)
     : MQS_INIT_LOGGER("mqs.channel"),
       _broker(broker),
       _inQueue(inout),
@@ -37,19 +37,21 @@ Channel::Channel(const mqs::BrokerURI& broker, const mqs::Destination& inout)
       _messageListener(0),
       _exceptionListener(0),
       _started(false),
-      _blocked_receivers(0)
+      _blocked_receivers(0),
+      _state(DISCONNECTED)
 {
   
 }
 
-Channel::Channel(const mqs::BrokerURI& broker, const mqs::Destination& in, const mqs::Destination& out)
+Channel::Channel(const mqs::BrokerURI &broker, const mqs::Destination &in, const mqs::Destination &out)
     : MQS_INIT_LOGGER("mqs.channel"),
       _broker(broker),
       _inQueue(in),
       _outQueue(out),
       _messageListener(0),
       _started(false),
-      _blocked_receivers(0)
+      _blocked_receivers(0),
+      _state(DISCONNECTED)
 {
   
 }
@@ -67,7 +69,7 @@ Channel::~Channel() {
 }
 
 void
-Channel::start() {
+Channel::start(bool doFlush) {
     Lock channelLock(&_mtx);
 
     if (_started)
@@ -108,9 +110,13 @@ Channel::start() {
     _producer->setTimeToLive(_outQueue.getLongLongProperty("timeToLive", 0));
   
     _started = true;
-
+    _state = CONNECTED;
     addIncomingQueue(_inQueue);
-    flushMessages();
+    notify();
+
+    if (doFlush) {
+        flushMessages();
+    }
 }
 
 void
@@ -121,25 +127,18 @@ Channel::stop() {
         Lock consumerLock(&_consumerMtx);
         while (!_consumer.empty()) {
             struct Consumer c = _consumer.front(); _consumer.pop_front();
-            if (c.mqs_destination) {
-                delete c.mqs_destination;
-                c.mqs_destination = 0;
-            }
-            if (c.destination) {
-                delete c.destination;
-                c.destination = 0;
-            }
+            c.mqs_destination.reset();
+            c.destination.reset();
             if (c.consumer) {
-                c.consumer->setMessageListener( this );
-                delete c.consumer;
-                c.consumer = 0;
+                c.consumer->setMessageListener( NULL );
+                c.consumer->close();
+                c.consumer.reset();
             }
         }
     }
 
     _producer_destination.reset();
     _producer.reset();
-        
     
     if (_session.get())
         _session->close();
@@ -151,38 +150,75 @@ Channel::stop() {
     _connection.reset();
 
     _started = false;
+    _state = DISCONNECTED;
+    notify();
 }
 
 void
-Channel::addIncomingQueue(const mqs::Destination& dst) {
+Channel::addIncomingQueue(const mqs::Destination &dst) {
     ENSURE_STARTED();
 
     MQS_LOG_DEBUG("adding incoming queue: " << dst.str());
   
     struct Consumer consumer;
-    if (dst.isTopic())
-        consumer.destination = _session->createTopic(dst.str());
-    else
-        consumer.destination = _session->createQueue(dst.str());
-    consumer.mqs_destination = new mqs::Destination(dst);
-    consumer.consumer = _session->createConsumer(consumer.destination);
+    consumer.destination = dst.toCMSDestination(*_session);
+    consumer.mqs_destination = std::tr1::shared_ptr<mqs::Destination>(new mqs::Destination(dst));
+    consumer.consumer = std::tr1::shared_ptr<cms::MessageConsumer>(_session->createConsumer(consumer.destination.get()));
     consumer.consumer->setMessageListener(this);
+
     _consumerMtx.lock();
     _consumer.push_back(consumer);
     _consumerMtx.unlock();
 }
 
 void
-Channel::send(const std::string& text, const mqs::Destination& dst) {
-    ENSURE_STARTED();
-
-    Message *msg(createTextMessage(text));
-    send(msg, dst);
-    delete msg;
+Channel::delIncomingQueue(const mqs::Destination &dst) {
+    // removes all incoming queues with the same name and type, disregarding further options
+    std::list<Consumer>::iterator it(_consumer.begin());
+    while (it != _consumer.end()) {
+        if (it->mqs_destination->name() == dst.name() and it->mqs_destination->type() == dst.type()) {
+            // found a match, remove it
+            struct Consumer c(*it); it = _consumer.erase(it);
+            c.mqs_destination.reset();
+            c.destination.reset();
+            if (c.consumer) {
+                c.consumer->setMessageListener( NULL );
+                c.consumer.reset();
+            }
+            MQS_LOG_DEBUG("removed incoming queue: " << dst.name());
+        } else {
+            ++it;
+        }
+    }
 }
 
-void
-Channel::send(Message* msg, const mqs::Destination& dst) {
+std::string
+Channel::send(const std::string &text, const mqs::Destination &dst) {
+    ENSURE_STARTED();
+
+    MessagePtr msg(createTextMessage(text));
+    send(msg.get(), dst);
+    return msg->getCMSMessageID();
+}
+
+std::string
+Channel::send(const std::string &text, const mqs::Destination &dst, const mqs::Destination &replyTo) {
+    ENSURE_STARTED();
+
+    MessagePtr msg(createTextMessage(text));
+    send(msg.get(), dst, replyTo);
+    return msg->getCMSMessageID();
+}
+
+std::string
+Channel::send(Message *msg, const mqs::Destination &dst, const mqs::Destination &replyTo) {
+    std::tr1::shared_ptr<cms::Destination> d(replyTo.toCMSDestination(*_session));
+    msg->setCMSReplyTo(d.get());
+    return send(msg, dst);
+}
+
+std::string
+Channel::send(Message *msg, const mqs::Destination &dst) {
     ENSURE_STARTED();
 
     int deliveryMode;
@@ -205,40 +241,35 @@ Channel::send(Message* msg, const mqs::Destination& dst) {
     priority = dst.hasProperty("priority") ? dst.getIntProperty("priority") : _producer->getPriority();
     timeToLive = dst.hasProperty("timeToLive") ? dst.getLongLongProperty("timeToLive") : _producer->getTimeToLive();
 
-    cms::Destination* d;
-    if (dst.isTopic()) {
-        d = _session->createTopic(dst.str());
-    } else {
-        d = _session->createQueue(dst.str());
-    }
-
-    send(msg, d, deliveryMode, priority, timeToLive);
-    delete d;
+    std::tr1::shared_ptr<cms::Destination> d(dst.toCMSDestination(*_session));
+    return send(msg, d.get(), deliveryMode, priority, timeToLive);
 }
 
-void
+std::string
 Channel::send(Message *msg) {
     ENSURE_STARTED();
 
-    send(msg, _producer_destination.get(), _producer->getDeliveryMode(), _producer->getPriority(), _producer->getTimeToLive());
+    return send(msg, _producer_destination.get(), _producer->getDeliveryMode(), _producer->getPriority(), _producer->getTimeToLive());
 }
 
-void
-Channel::send(Message *msg, const cms::Destination* d, int deliveryMode, int priority, long long timeToLive) {
+std::string
+Channel::send(Message *msg, const cms::Destination *d, int deliveryMode, int priority, long long timeToLive) {
     ENSURE_STARTED();
     
     _producer->send(d, msg, deliveryMode, priority, timeToLive);
     MQS_LOG_DEBUG("sent message"
                   << " id:"   << msg->getCMSMessageID()
                   << " mode:" << ((deliveryMode == cms::DeliveryMode::PERSISTENT) ? "persistent" : "non-persistent")
+                  << " reply-to:" << mqs::Destination(msg->getCMSReplyTo()).str()
                   << " prio:" << priority
                   << " ttl:"  << timeToLive
                   << " corr:" << msg->getCMSCorrelationID()
                   << " type:" << msg->getCMSType());
+    return msg->getCMSMessageID();
 }
 
 Message*
-Channel::request(const std::string& text, const mqs::Destination& dst, unsigned long millisecs) {
+Channel::request(const std::string &text, const mqs::Destination &dst, unsigned long millisecs) {
     ENSURE_STARTED();
 
     MessagePtr m(createTextMessage(text));
@@ -246,7 +277,7 @@ Channel::request(const std::string& text, const mqs::Destination& dst, unsigned 
 }
 
 Message*
-Channel::request(Message* msg, const mqs::Destination& dst, unsigned long millisecs) {
+Channel::request(Message *msg, const mqs::Destination &dst, unsigned long millisecs) {
     ENSURE_STARTED();
 
     const std::string requestID = async_request(msg, dst);
@@ -254,22 +285,22 @@ Channel::request(Message* msg, const mqs::Destination& dst, unsigned long millis
 }
 
 Message*
-Channel::request(const std::string& text, unsigned long millisecs) {
+Channel::request(const std::string &text, unsigned long millisecs) {
     ENSURE_STARTED();
 
     return request(text, _outQueue, millisecs);
 }
 
-void
-Channel::reply(const Message* msg, const std::string& text) {
+std::string
+Channel::reply(const Message *msg, const std::string &text) {
     ENSURE_STARTED();
 
     MessagePtr r(createTextMessage(text));
-    reply(msg, r.get());
+    return reply(msg, r.get());
 }
 
-void
-Channel::reply(const Message* msg, Message* r) {
+std::string
+Channel::reply(const Message *msg, Message *r) {
     ENSURE_STARTED();
 
     if (msg->getCMSReplyTo() == 0) {
@@ -277,11 +308,11 @@ Channel::reply(const Message* msg, Message* r) {
     }
     r->setCMSCorrelationID(msg->getCMSMessageID());
     MQS_LOG_DEBUG("replying to msg: " << msg->getCMSMessageID());
-    send(r, msg->getCMSReplyTo(), _producer->getDeliveryMode(), _producer->getPriority(), _producer->getTimeToLive());
+    return send(r, msg->getCMSReplyTo(), _producer->getDeliveryMode(), _producer->getPriority(), _producer->getTimeToLive());
 }
 
 std::string
-Channel::async_request(const std::string& text, const mqs::Destination& dst) {
+Channel::async_request(const std::string &text, const mqs::Destination &dst) {
     ENSURE_STARTED();
 
     MessagePtr m(createTextMessage(text));
@@ -289,25 +320,25 @@ Channel::async_request(const std::string& text, const mqs::Destination& dst) {
 }
 
 std::string
-Channel::async_request(Message* msg, const mqs::Destination& dst) {
+Channel::async_request(Message *msg, const mqs::Destination &dst) {
     ENSURE_STARTED();
 
     Lock awaitingResponseLock(&_awaitingResponseMtx);
 
-    msg->setCMSReplyTo(_consumer.front().destination);
+    msg->setCMSReplyTo(_consumer.front().destination.get());
     MQS_LOG_DEBUG("sending async request to " << dst.str());
-    send(msg, dst);
-    assert(!msg->getCMSMessageID().empty());
+    std::string msg_id(send(msg, dst));
+    assert(!msg_id.empty());
   
     // create a response object and put it into the queue (deleted in wait_reply)
-    mqs::Response* response = new Response(msg->getCMSMessageID());
+    mqs::Response* response = new Response(msg_id);
     _awaitingResponse.push_back(response);
   
-    return msg->getCMSMessageID();
+    return msg_id;
 }
 
 Message*
-Channel::wait_reply(const std::string& requestID, unsigned long millisecs) {
+Channel::wait_reply(const std::string &requestID, unsigned long millisecs) {
     ENSURE_STARTED();
 
     MQS_LOG_DEBUG("waiting for reply to: " << requestID);
@@ -356,21 +387,21 @@ Channel::createMessage() const {
 }
 
 TextMessage*
-Channel::createTextMessage(const std::string& text) const {
+Channel::createTextMessage(const std::string &text) const {
     ENSURE_STARTED();
 
     return _session->createTextMessage(text);
 }
 
 BytesMessage*
-Channel::createBytesMessage(const unsigned char* bytes, std::size_t length) const {
+Channel::createBytesMessage(const unsigned char *bytes, std::size_t length) const {
     ENSURE_STARTED();
 
     return _session->createBytesMessage(bytes, length);
 }
 
 void
-Channel::setMessageListener(cms::MessageListener* listener) {
+Channel::setMessageListener(cms::MessageListener *listener) {
     Lock channelLock(&_mtx);
     _messageListener = listener;
 }
@@ -382,7 +413,7 @@ Channel::setExceptionListener(cms::ExceptionListener *listener) {
 }
 
 void
-Channel::onMessage(const cms::Message* msg) {
+Channel::onMessage(const cms::Message *msg) {
     // handle incoming messages
 
     MQS_LOG_DEBUG("got new message: " << msg->getCMSMessageID());
@@ -470,7 +501,7 @@ Channel::flushMessages() {
 }
 
 void
-Channel::onException(const cms::CMSException& ex) {
+Channel::onException(const cms::CMSException &ex) {
     if (_exceptionListener) {
         try {
             _exceptionListener->onException(ex);

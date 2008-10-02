@@ -5,13 +5,13 @@
 
 namespace seda {
     /**
-     * SystemEvents are special events that should be forwarded from stage
-     * to stage until they can be handled.
+     * SystemEvents are special events  that are forwarded on reception to
+     * a special-named stage.
      * 
-     * Strategies must not attempt to transform them in any way, a special
-     * stage may be  registered to handle SystemEvents (the  stage must be
-     * called  "seda.system.stage", if  such  a stage  is registered,  the
-     * event should be passed to that stage.
+     * The   special    stage   can   be   registered    with   the   name
+     * "system-event-handler".   If  such   a  stage  is  registered,  all
+     * system-events  are  passed to  that  stage,  if  no such  stage  is
+     * registered, the event is logged as an fatal error.
      */
     class SystemEvent : public IEvent {
     public:

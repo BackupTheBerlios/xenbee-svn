@@ -93,6 +93,24 @@ namespace xbemsg
     this->body_.set (x);
   }
 
+  const message_t::any_sequence& message_t::
+  any () const
+  {
+    return this->any_;
+  }
+
+  message_t::any_sequence& message_t::
+  any ()
+  {
+    return this->any_;
+  }
+
+  void message_t::
+  any (const any_sequence& s)
+  {
+    this->any_ = s;
+  }
+
   const message_t::any_attribute_set& message_t::
   any_attribute () const
   {
@@ -292,6 +310,7 @@ namespace xbemsg
     dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     header_ (header, ::xml_schema::flags (), this),
     body_ (body, ::xml_schema::flags (), this),
+    any_ (this->dom_document ()),
     any_attribute_ (this->dom_document ())
   {
   }
@@ -304,6 +323,7 @@ namespace xbemsg
     dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     header_ (x.header_, f, this),
     body_ (x.body_, f, this),
+    any_ (x.any_, this->dom_document ()),
     any_attribute_ (x.any_attribute_, this->dom_document ())
   {
   }
@@ -316,6 +336,7 @@ namespace xbemsg
     dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     header_ (f, this),
     body_ (f, this),
+    any_ (this->dom_document ()),
     any_attribute_ (this->dom_document ())
   {
     if ((f & ::xml_schema::flags::base) == 0)
@@ -361,6 +382,18 @@ namespace xbemsg
           this->body (r);
           continue;
         }
+      }
+
+      // any
+      //
+      if ((!n.namespace_ ().empty () && n.namespace_ () != "http://www.xenbee.net/schema/2008/02/xbe-msg"))
+      {
+        ::xercesc::DOMElement* r (
+          static_cast< ::xercesc::DOMElement* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMElement* > (&i), true)));
+        this->any ().push_back (r);
+        continue;
       }
 
       break;
@@ -1542,6 +1575,17 @@ namespace xbemsg
           e));
 
       s << i.body ();
+    }
+
+    // any
+    //
+    for (message_t::any_const_iterator
+         b (i.any ().begin ()), n (i.any ().end ());
+         b != n; ++b)
+    {
+      e.appendChild (
+        e.getOwnerDocument ()->importNode (
+          const_cast< ::xercesc::DOMElement* > (&(*b)), true));
     }
   }
 
