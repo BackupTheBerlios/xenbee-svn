@@ -15,6 +15,7 @@ ChannelAdapterStrategy::ChannelAdapterStrategy(const std::string& name,
       _channel(channel)
 {
     _channel->setMessageListener(this);
+    _channel->setExceptionListener(this);
 }
 
 ChannelAdapterStrategy::~ChannelAdapterStrategy() {}
