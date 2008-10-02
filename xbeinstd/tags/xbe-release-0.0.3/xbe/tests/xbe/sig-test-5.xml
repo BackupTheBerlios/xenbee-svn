@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?><xbe:message xmlns:xbe="http://www.xenbee.net/schema/2008/02/xbe" xmlns:dsig="http://www.w3.org/2000/09/xmldsig#"><xbe:header><xbe:to>foo.bar</xbe:to><xbe:from>foo.bar</xbe:from><dsig:Signature xmlns:dsig="http://www.w3.org/2000/09/xmldsig#">
+<dsig:SignedInfo>
+<dsig:CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/>
+<dsig:SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#hmac-sha1"/>
+<dsig:Reference URI="">
+<dsig:Transforms>
+<dsig:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/>
+</dsig:Transforms>
+<dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"/>
+<dsig:DigestValue>w5viEeiYxDsLXJjLtrD7tSHjOGk=</dsig:DigestValue>
+</dsig:Reference>
+</dsig:SignedInfo>
+<dsig:SignatureValue>/LopBAeKAU0t9eCFIzIFkD1YZI8=</dsig:SignatureValue>
+<dsig:KeyInfo>
+<dsig:KeyName>The secret key is "secret"</dsig:KeyName>
+</dsig:KeyInfo>
+</dsig:Signature></xbe:header><xbe:body><xbe:error><xbe:error-code>ENOERROR</xbe:error-code></xbe:error></xbe:body></xbe:message>

@@ -1,0 +1,40 @@
+%{
+//
+// Finite state machine for the XbeInstd Task
+//
+%}
+
+%package xbe
+%class Task
+%header Task.hpp
+
+%start TaskFSM::Idle
+%map TaskFSM
+
+%%
+Idle
+{
+
+}
+
+Executing
+{
+
+}
+
+Terminated
+{
+
+}
+
+Failed
+{
+
+}
+
+Finished
+{
+
+}
+
+%%

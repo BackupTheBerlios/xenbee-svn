@@ -1,0 +1,73 @@
+%{
+//
+// Copyright (c) 2008 Fraunhofer ITWM
+// Alexander Petry <petry@itmw.fhg.de>
+//
+// Finite state machine for the MessagePingPongTest
+//
+%}
+%include <tests/xbe/PingEvent.hpp>
+%include <tests/xbe/PongEvent.hpp>
+
+%package tests::xbe
+%class PingPong
+%header PingPong.hpp
+
+%start PingPongFSM::Idle
+%map PingPongFSM
+
+%%
+Idle
+{
+    Start
+        Active
+        {
+                start();
+        }
+
+    Stop
+        Idle
+        {}
+                
+    Ping(msg: const tests::xbe::PingEvent&)
+        Idle
+        {}
+
+    Pong(msg: const tests::xbe::PongEvent&)
+        Idle
+        {}
+}
+
+Active
+{
+    Start
+        Active
+        {}
+
+    Ping(msg: const tests::xbe::PingEvent&)
+        Active
+        {
+                sendPong(msg);
+        }
+
+    Pong(msg: const tests::xbe::PongEvent&)
+        [ctxt.sentMessages() < ctxt.maxMessages()]
+        Active
+        {
+                sendPing(msg);
+        }
+    
+    Pong(msg: const tests::xbe::PongEvent&)
+        Idle
+        {
+                stop();
+        }
+
+    Stop
+        Idle
+        {
+                stop();
+        }
+}
+
+%%
