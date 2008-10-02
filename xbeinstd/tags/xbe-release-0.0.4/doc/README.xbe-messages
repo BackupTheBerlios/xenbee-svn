@@ -1,0 +1,126 @@
+This file contains some example messages for the protocol spoken between
+Xbe-Daemon and Xbe-Instance-Daemon:
+
+ *
+ * keep-alive message
+ * 
+
+    <xbe:message>
+        <xbe:header>
+            <xbe:from>instd</xbe:from>
+            <xbe:to>daemon</xbe:to>
+         </xbe:header>
+
+        <xbe:body>
+            <xbe-inst:Alive>
+                <!-- additional information (uptime, ip, load, etc.) -->
+            </xbe-inst:Alive>
+        </xbe:body>
+    </xbe:message>
+
+ *
+ * execution request
+ *
+
+    <xbe:message>
+        <xbe:header>
+            <xbe:from>daemon</xbe:from>
+            <xbe:to>instd</xbe:to>
+        </xbe:header>
+
+        <xbe:body>
+            <xbe-inst:Execute>
+                <!-- Job description document, maybe request-id -->
+            </xbe-insta:Execute>
+        </xbe:body>
+    </xbe:message>
+
+    <xbe:message>                                   <xbe:message>
+        <xbe:header>                                    <xbe:header>
+            <xbe:from>instd</xbe:from>                      <xbe:from>instd</xbe:from>
+            <xbe:to>daemon</xbe:to>                         <xbe:to>daemon</xbe:to>
+         </xbe:header>                                   </xbe:header>
+                                                    
+        <xbe:body>                                      <xbe:body>
+            <xbe-inst:ExecuteAck>                           <xbe-inst:ExecuteFailed>
+                <!-- maybe include request-id -->               <!-- maybe include request-id, and reason (already executing a job) -->
+            </xbe-inst:ExecuteAck>                          </xbe-inst:ExecuteFailed>
+        </xbe:body>                                     </xbe:body>
+    </xbe:message>                                  </xbe:message>
+
+ *
+ * message sent when the execution has finished
+ *
+
+    <xbe:message>
+        <xbe:header>
+            <xbe:from>instd</xbe:from>
+            <xbe:to>daemon</xbe:to>
+         </xbe:header>
+
+        <xbe:body>
+            <xbe-inst:ExecuteFinished>
+                <!-- exitcode -->
+            </xbe-inst:ExecuteFinished>
+        </xbe:body>
+    </xbe:message>
+
+    <xbe:message>                                   <xbe:message>                                    
+        <xbe:header>                                    <xbe:header>
+            <xbe:from>daemon</xbe:from>                     <xbe:from>daemon</xbe:from>
+            <xbe:to>instd</xbe:to>                          <xbe:to>instd</xbe:to>
+         </xbe:header>                                   </xbe:header>
+                                                    
+        <xbe:body>                                      <xbe:body>
+            <xbe-inst:ExecuteFinishedAck/>                  <xbe-inst:ExecuteFinishedRetry/>
+        </xbe:body>                                     </xbe:body>       
+    </xbe:message>                                  </xbe:message>          
+
+ *
+ * clean terminate request
+ *
+
+    <xbe:message>
+        <xbe:header>
+            <xbe:from>daemon</xbe:from>
+            <xbe:to>instd</xbe:to>
+         </xbe:header>
+
+        <xbe:body>
+            <xbe-inst:Terminate/>
+        </xbe:body>
+    </xbe:message>
+
+ *
+ * status request messages
+ *
+
+    <xbe:message>                             
+        <xbe:header>                          
+            <xbe:from>daemon</xbe:from>       
+            <xbe:to>instd</xbe:to>            
+         </xbe:header>                        
+                                              
+        <xbe:body>                            
+            <xbe-inst:StatusRequest/>
+        </xbe:body>                           
+    </xbe:message>                            
+
+    <xbe:message>
+        <xbe:header>
+            <xbe:from>daemon</xbe:from>
+            <xbe:to>instd</xbe:to>
+         </xbe:header>
+
+        <xbe:body>
+            <xbe-inst:StatusReply>
+                <xbe-inst:Status>
+                    <!-- state information etc. -->                    
+                    <xbe-inst:UserData> (cardinality: 0/1)
+                        <!-- base64 encoded output from the user supplied status query function -->
+                    </xbe-inst:UserData>
+                </xbe-inst:Status>
+            </xbe-inst:StatusReply>
+        </xbe:body>
+    </xbe:message>
+
