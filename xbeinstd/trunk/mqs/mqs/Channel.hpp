@@ -2,12 +2,12 @@
 #define MQS_CHANNEL_HPP
 
 #include <mqs/common.hpp>
+#include <mqs/mutex.hpp>
 
 #include <vector>
 #include <list>
 #include <tr1/memory>
 
-#include <activemq/concurrent/Mutex.h>
 #include <cms/ExceptionListener.h>
 #include <cms/DeliveryMode.h>
 #include <cms/Message.h>
@@ -249,7 +249,7 @@ namespace mqs {
         void ensure_started() const throw (ChannelNotStarted);
     
         MQS_DECLARE_LOGGER();
-        activemq::concurrent::Mutex _mtx;
+        Mutex _mtx;
     
         mqs::BrokerURI _broker;
         mqs::Destination _inQueue;
@@ -260,7 +260,7 @@ namespace mqs {
         std::tr1::shared_ptr<cms::MessageProducer> _producer;
         std::tr1::shared_ptr<cms::Destination> _producer_destination;
 
-        activemq::concurrent::Mutex _consumerMtx;
+        Mutex _consumerMtx;
         struct Consumer {
             std::tr1::shared_ptr<mqs::Destination> mqs_destination;
             std::tr1::shared_ptr<cms::Destination> destination;
@@ -271,10 +271,10 @@ namespace mqs {
         cms::MessageListener* _messageListener;
         cms::ExceptionListener* _exceptionListener;
 
-        activemq::concurrent::Mutex _incomingMessagesMtx;
+        Mutex _incomingMessagesMtx;
         std::list<cms::Message*> _incomingMessages;
     
-        activemq::concurrent::Mutex _awaitingResponseMtx;
+        Mutex _awaitingResponseMtx;
         std::vector<mqs::Response*> _awaitingResponse;
 
         // internal state keeper

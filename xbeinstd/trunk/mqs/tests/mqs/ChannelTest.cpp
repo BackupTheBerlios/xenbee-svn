@@ -54,6 +54,7 @@ void ChannelTest::testSendReceiveSimple() {
     msg = dynamic_cast<cms::TextMessage*>(_channel->recv(1000));
     CPPUNIT_ASSERT_MESSAGE("received non-null message", msg != 0);
     CPPUNIT_ASSERT_EQUAL(std::string("hello world!"), msg->getText());
+    delete msg;
 }
 
 void ChannelTest::testSendReply() {
@@ -71,6 +72,7 @@ void ChannelTest::testSendReply() {
     msg = dynamic_cast<cms::TextMessage*>(_channel->wait_reply(id, 1000));
     CPPUNIT_ASSERT_MESSAGE("did not receive a message", msg != 0);
     CPPUNIT_ASSERT_EQUAL(std::string("world!"), msg->getText());
+    delete msg;
 }
 
 void ChannelTest::testStartStopChannel() {
@@ -82,18 +84,20 @@ void ChannelTest::testStartStopChannel() {
     _channel = new mqs::Channel(mqs::BrokerURI(TEST_BROKER_URI), mqs::Destination("tests.mqs?type=queue"));
     CPPUNIT_ASSERT(!_channel->is_started());
 
-    _channel->start();
+    _channel->start(true);
 
     CPPUNIT_ASSERT_MESSAGE("channel could not be started", _channel->is_started());
 
     MQS_LOG_INFO("sending first message");
 
     // send a message
-    cms::TextMessage* msg = _channel->createTextMessage("hello");
+    cms::TextMessage* msg = _channel->createTextMessage("hello 1");
     _channel->send(msg);
     delete msg;
     msg = dynamic_cast<cms::TextMessage*>(_channel->recv(1000));
     CPPUNIT_ASSERT_MESSAGE("did not receive a message", msg != 0);
+    CPPUNIT_ASSERT_EQUAL(std::string("hello 1"), msg->getText());
+    delete msg;
 
     MQS_LOG_INFO("stopping the channel");
 
@@ -103,15 +107,17 @@ void ChannelTest::testStartStopChannel() {
 
     MQS_LOG_INFO("starting the channel again");
     // start it again
-    _channel->start();
+    _channel->start(true);
 
     MQS_LOG_INFO("sending second message");
     // send another message
-    msg = _channel->createTextMessage("hello");
+    msg = _channel->createTextMessage("hello 2");
     _channel->send(msg);
     delete msg;
     msg = dynamic_cast<cms::TextMessage*>(_channel->recv(1000));
     CPPUNIT_ASSERT_MESSAGE("did not receive a message", msg != 0);
+    CPPUNIT_ASSERT_MESSAGE("message content differs", std::string("hello 2") == msg->getText());
+    delete msg;
 }
 
 void ChannelTest::testAddDelIncomingQueue() {
@@ -122,13 +128,14 @@ void ChannelTest::testAddDelIncomingQueue() {
 
     // start the channel
     _channel = new mqs::Channel(mqs::BrokerURI(TEST_BROKER_URI), mqs::Destination("tests.mqs?type=queue"));
-    _channel->start();
+    _channel->start(true);
 
     // send a message to the channel's queue
     msg_id = _channel->send("Hello World!", mqs::Destination("tests.mqs?type=queue&timeToLive=1000"), mqs::Destination("tests.mqs?type=queue"));
     {
         cms::TextMessage *msg(_channel->recv<cms::TextMessage>(1000));
         CPPUNIT_ASSERT_MESSAGE("did not receive a message", msg != 0);
+        CPPUNIT_ASSERT_EQUAL(std::string("Hello World!"), msg->getText());
         CPPUNIT_ASSERT_EQUAL(msg_id, msg->getCMSMessageID());
         delete msg;
     }
@@ -166,8 +173,5 @@ void ChannelTest::doStart(const std::string& uri, const std::string& q) {
         delete _channel;
     }
     _channel = new mqs::Channel(mqs::BrokerURI(uri), mqs::Destination(q));
-    _channel->start();
-
-    // remove possibly old messages
-    _channel->flushMessages();
+    _channel->start(true);
 }

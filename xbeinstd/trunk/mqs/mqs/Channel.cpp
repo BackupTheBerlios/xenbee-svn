@@ -16,7 +16,6 @@
 #include <cms/Topic.h>
 #include <cms/Session.h>
 #include <activemq/core/ActiveMQConnectionFactory.h>
-#include <activemq/concurrent/Lock.h>
 
 #if PERFORM_CHANNEL_IS_STARTED_CHECK
 #define ENSURE_STARTED() ensure_started()
@@ -27,7 +26,6 @@
 using namespace mqs;
 using namespace cms;
 using namespace activemq::core;
-using namespace activemq::concurrent;
 
 Channel::Channel(const mqs::BrokerURI &broker, const mqs::Destination &inout)
     : MQS_INIT_LOGGER("mqs.channel"),
@@ -515,7 +513,7 @@ Channel::onException(const cms::CMSException &ex) {
 
 bool
 Channel::is_started() const {
-    activemq::concurrent::Mutex* _non_const_mtx(const_cast<activemq::concurrent::Mutex*>(&_mtx));
+    Mutex* _non_const_mtx(const_cast<Mutex*>(&_mtx));
     Lock channelLock(_non_const_mtx);
     return _started;
 }

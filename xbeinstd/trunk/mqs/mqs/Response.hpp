@@ -4,7 +4,7 @@
 #include <cassert>
 
 #include <cms/Message.h>
-#include <activemq/concurrent/CountDownLatch.h>
+#include <mqs/mutex.hpp>
 
 namespace mqs {
   /**
@@ -40,7 +40,7 @@ namespace mqs {
   private:
     cms::Message* response;
     const std::string correlationID;
-    activemq::concurrent::CountDownLatch semaphore;
+    Semaphore semaphore;
   };
 }
 

@@ -54,7 +54,7 @@ if ( PKG_CONFIG_FOUND )
    set(LOG4CPP_STATIC_LIBRARIES log4cpp.a)
    message(STATUS "LOG4CPP: ${LOG4CPP_CFLAGS} ${LOG4CPP_LDFLAGS}")
 
-   pkg_check_modules(AMQ REQUIRED activemq-cpp>=2.1.3)
+   pkg_check_modules(AMQ REQUIRED activemq-cpp=2.1.3)
    message(STATUS "ActiveMQ: ${AMQ_CFLAGS} ${AMQ_LDFLAGS}")
 else  ( PKG_CONFIG_FOUND )
   message(FATAL_ERROR "No PKGCONFIG found - hoping for the best.")
