@@ -238,7 +238,7 @@ Destination::parse_destination_descriptor(const std::string& descriptor) {
     std::string::size_type propertiesStart = descr.find("?");
     if (propertiesStart == std::string::npos) { // no properties -> finished parsing descriptor
         _name = descr;
-        _type = UNSPECIFIED;
+        _type = QUEUE; // default type is always QUEUE
         if (_name.size() == 0) {
             throw std::invalid_argument("destination name is empty");
         }
