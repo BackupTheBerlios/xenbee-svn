@@ -39,8 +39,8 @@ namespace seda {
     virtual void waitUntilEmpty(unsigned long millis) const = 0;
     virtual void waitUntilNotEmpty() const = 0;
     virtual void waitUntilNotEmpty(unsigned long millis) const = 0;
-    virtual void notify() = 0;
-    virtual void notifyAll() = 0;
+
+    virtual void wakeUpAll() = 0;
   protected:
     IEventQueue() {}
   };

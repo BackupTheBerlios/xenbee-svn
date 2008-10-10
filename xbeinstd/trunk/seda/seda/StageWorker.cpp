@@ -6,7 +6,6 @@
 
 namespace seda {
     void StageWorker::run() {
-        _id = activemq::concurrent::Thread::getId();
 
         while (!stopped()) {
             try {

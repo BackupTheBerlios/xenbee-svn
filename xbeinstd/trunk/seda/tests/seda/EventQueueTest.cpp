@@ -1,7 +1,7 @@
 #include "EventQueueTest.hpp"
 
 #include <string>
-#include <activemq/concurrent/Thread.h>
+#include <seda/Thread.hpp>
 
 #include <seda/EventQueue.hpp>
 #include <seda/StringEvent.hpp>

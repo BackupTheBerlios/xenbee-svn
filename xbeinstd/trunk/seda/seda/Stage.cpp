@@ -68,12 +68,12 @@ namespace seda {
         for (ThreadPool::iterator it(_threadPool.begin()); it != _threadPool.end(); ++it) {
             (*it)->stop(); // signal threads to stop
         }
-        queue()->notifyAll(); // release blocked threads
+        queue()->wakeUpAll(); // release blocked threads
 
         while (!_threadPool.empty()) {
             StageWorker* w(_threadPool.front()); _threadPool.pop_front();
-            if (w->id() != activemq::concurrent::Thread::getId()) {
-                w->join(); delete w;
+            if (w->id() != seda::Thread::getId()) {
+              w->join(); delete w;
             } else {
                 SEDA_LOG_FATAL("StageWorker performed cleanup of its own stage!!!");
                 exit(EXIT_FAILURE);

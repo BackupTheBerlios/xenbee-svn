@@ -2,12 +2,12 @@
 #define SEDA_STAGE_WORKER_HPP
 
 #include <seda/common.hpp>
-#include <activemq/concurrent/Thread.h>
+#include <seda/Thread.hpp>
 
 namespace seda {
     class Stage;
   
-    class StageWorker : public activemq::concurrent::Thread {
+    class StageWorker : public seda::Thread {
     public:
         StageWorker(const std::string& id, Stage* s) :
             SEDA_INIT_LOGGER(id),

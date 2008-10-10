@@ -3,14 +3,18 @@
 
 #include <list>
 #include <tr1/memory>
-#include <activemq/util/Date.h>
-#include <activemq/concurrent/Mutex.h>
-#include <activemq/concurrent/Lock.h>
+
+#include <seda/util.hpp>
+#include <seda/Lock.hpp>
+#include <seda/Mutex.hpp>
+#include <seda/Condition.hpp>
 
 #include <seda/common.hpp>
 #include <seda/constants.hpp>
 #include <seda/IEventQueue.hpp>
 #include <seda/IEvent.hpp>
+
+#define WAIT_INFINITE 0xFFFFffff
 
 namespace seda {
     class EventQueue : public IEventQueue {
@@ -31,27 +35,22 @@ namespace seda {
             }
 
             virtual IEvent::Ptr pop(unsigned long millis) throw(QueueEmpty) {
-                activemq::concurrent::Lock lock(&_mtx);
-                using activemq::util::Date;
-                unsigned long long now(Date::getCurrentTimeMilliseconds());
+                seda::Lock lock(_mtx);
+                unsigned long long now(seda::getCurrentTimeMilliseconds());
                 while (empty()) {
-                    _mtx.wait(millis);
-                    if (millis != WAIT_INFINITE &&
-                            (Date::getCurrentTimeMilliseconds() - now) > millis)
+                    _notEmptyCond.wait(_mtx, millis);
+                    if (millis != WAIT_INFINITE && (seda::getCurrentTimeMilliseconds() - now) > millis)
                         break;
                 }
                 if (empty()) {
-                    activemq::concurrent::Lock emptyCondLock(&_emptyCond);
                     _emptyCond.notifyAll();
                     throw QueueEmpty();
                 } else {
                     IEvent::Ptr e = _list.front();
                     _list.pop_front();
                     if (empty()) {
-                        activemq::concurrent::Lock emptyCondLock(&_emptyCond);
                         _emptyCond.notifyAll();
                     } else {
-                        activemq::concurrent::Lock notEmptyCondLock(&_notEmptyCond);
                         _notEmptyCond.notifyAll();
                     }
                     return e;
@@ -59,18 +58,13 @@ namespace seda {
             }
 
             virtual void push(const IEvent::Ptr& e) throw(QueueFull) {
-                {
-                    activemq::concurrent::Lock lock(&_mtx);
-                    if (size() >= _maxQueueSize) {
-                        throw QueueFull();
-                    } else {
-                        _list.push_back(e);
-                        _mtx.notify();
-                    }
+                seda::Lock lock(_mtx);
+                if (size() >= _maxQueueSize) {
+                    throw QueueFull();
+                } else {
+                    _list.push_back(e);
+                    _notEmptyCond.notify();
                 }
-
-                activemq::concurrent::Lock notEmptyCondLock(&_notEmptyCond);
-                _notEmptyCond.notifyAll();
             }
 
             virtual void waitUntilEmpty() const {
@@ -78,13 +72,12 @@ namespace seda {
             }
 
             virtual void waitUntilEmpty(unsigned long millis) const {
-                activemq::concurrent::Lock lock(&_emptyCond);
-                using namespace activemq::util;
-                unsigned long long now(Date::getCurrentTimeMilliseconds());
+                seda::Lock lock(_mtx);
+                unsigned long long now(seda::getCurrentTimeMilliseconds());
                 while (!empty()) {
-                    _emptyCond.wait(millis);
+                    _emptyCond.wait(_mtx, millis);
                     if (millis != WAIT_INFINITE &&
-                            (Date::getCurrentTimeMilliseconds() - now) > millis)
+                            (seda::getCurrentTimeMilliseconds() - now) > millis)
                         break;
                 }
             }
@@ -94,13 +87,12 @@ namespace seda {
             }
 
             virtual void waitUntilNotEmpty(unsigned long millis) const {
-                activemq::concurrent::Lock lock(&_notEmptyCond);
-                using namespace activemq::util;
-                unsigned long long now(Date::getCurrentTimeMilliseconds());
+                seda::Lock lock(_mtx);
+                unsigned long long now(seda::getCurrentTimeMilliseconds());
                 while (empty()) {
-                    _notEmptyCond.wait(millis);
+                    _notEmptyCond.wait(_mtx, millis);
                     if (millis != WAIT_INFINITE &&
-                            (Date::getCurrentTimeMilliseconds() - now) > millis)
+                            (seda::getCurrentTimeMilliseconds() - now) > millis)
                         break;
                 }
             }
@@ -108,24 +100,22 @@ namespace seda {
             /**
               Removes all elements from the queue.
 
-              Warning: elements will be deleted!
-            */
+Warning: elements will be deleted!
+*/
             virtual void clear() {
-                activemq::concurrent::Lock lock(&_mtx);
+                seda::Lock lock(_mtx);
                 while (!empty()) {
                     IEvent::Ptr e = _list.front();
                     _list.pop_front();
                 }
             }
 
-            virtual void notify() {
-                activemq::concurrent::Lock lock(&_mtx);
-                _mtx.notify();
+            virtual void wakeUpAll() {
+                seda::Lock lock(_mtx);
+                _notEmptyCond.notifyAll();
+                _emptyCond.notifyAll();
             }
-            virtual void notifyAll() {
-                activemq::concurrent::Lock lock(&_mtx);
-                _mtx.notifyAll();
-            }
+
             virtual std::size_t size() const { return _list.size(); }
             bool empty() const { return _list.empty(); }
 
@@ -133,9 +123,9 @@ namespace seda {
             void maxQueueSize(const std::size_t& max) { _maxQueueSize = max; }
         protected:
             SEDA_DECLARE_LOGGER();
-            mutable activemq::concurrent::Mutex _mtx;
-            mutable activemq::concurrent::Mutex _emptyCond;
-            mutable activemq::concurrent::Mutex _notEmptyCond;
+            mutable seda::Mutex _mtx;
+            mutable seda::Condition _emptyCond;
+            mutable seda::Condition _notEmptyCond;
 
             std::list< IEvent::Ptr > _list;
         private:
