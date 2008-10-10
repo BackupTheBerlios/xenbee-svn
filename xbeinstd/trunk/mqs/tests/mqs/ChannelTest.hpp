@@ -14,10 +14,10 @@ namespace mqs {
             CPPUNIT_TEST( testSendReceiveSimple );
             CPPUNIT_TEST( testStartStopChannel );
             CPPUNIT_TEST( testSendReply );
-            CPPUNIT_TEST( testConnectionLoss );
             CPPUNIT_TEST( testAddDelIncomingQueue );
             CPPUNIT_TEST_EXCEPTION( testStartNoQueueServer_Throws, cms::CMSException );
             //      CPPUNIT_TEST_EXCEPTION( testStart_Timeout_Throws, cms::CMSException );
+            CPPUNIT_TEST( testConnectionLoss ); // this function should be last because the broker server needs to be shut down
             CPPUNIT_TEST_SUITE_END();
 
             private:
