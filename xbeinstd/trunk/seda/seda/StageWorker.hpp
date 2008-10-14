@@ -2,12 +2,11 @@
 #define SEDA_STAGE_WORKER_HPP
 
 #include <seda/common.hpp>
-#include <seda/Thread.hpp>
 
 namespace seda {
     class Stage;
   
-    class StageWorker : public seda::Thread {
+    class StageWorker {
     public:
         StageWorker(const std::string& id, Stage* s) :
             SEDA_INIT_LOGGER(id),

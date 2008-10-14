@@ -1,7 +1,6 @@
 #include "EventQueueTest.hpp"
 
 #include <string>
-#include <seda/Thread.hpp>
 
 #include <seda/EventQueue.hpp>
 #include <seda/StringEvent.hpp>

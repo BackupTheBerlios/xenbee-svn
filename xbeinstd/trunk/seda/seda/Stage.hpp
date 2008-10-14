@@ -5,6 +5,8 @@
 #include <list>
 #include <tr1/memory>
 
+#include <boost/thread.hpp>
+
 #include <seda/common.hpp>
 #include <seda/constants.hpp>
 #include <seda/SedaException.hpp>
@@ -16,9 +18,14 @@
 namespace seda {
     class StageWorker;
     class Stage {
+    private:
+        typedef struct {
+            boost::thread thread;
+            StageWorker  *worker;
+        } ThreadInfo;
+        typedef std::list<ThreadInfo*> ThreadPool;
     public:
         typedef std::tr1::shared_ptr<Stage> Ptr;
-        typedef std::list<StageWorker*> ThreadPool;
     
         Stage(const std::string& name, Strategy::Ptr strategy, std::size_t maxPoolSize=1, std::size_t maxQueueSize=SEDA_MAX_QUEUE_SIZE, const std::string& errorHandler="system-event-handler");
         Stage(const std::string& name, IEventQueue::Ptr queue, Strategy::Ptr strategy, std::size_t maxPoolSize=1, const std::string& errorHandler="system-event-handler");

@@ -57,8 +57,10 @@ namespace seda {
             for (std::size_t tId = 0; tId < _maxPoolSize; ++tId) {
                 std::ostringstream sstr;
                 sstr << "seda.stage." << name() << ".worker." << tId;
-                _threadPool.push_back(new StageWorker(sstr.str(), this));
-                _threadPool.back()->start();
+                ThreadInfo *i = new ThreadInfo;
+                i->worker = new seda::StageWorker(sstr.str(), this);
+                i->thread = boost::thread(boost::ref(*i->worker));
+                _threadPool.push_back(i);
             }
         } // else == noop
     }
@@ -66,19 +68,16 @@ namespace seda {
     void
     Stage::stop() {
         for (ThreadPool::iterator it(_threadPool.begin()); it != _threadPool.end(); ++it) {
-            (*it)->stop(); // signal threads to stop
+            (*it)->worker->stop(); // signal threads to stop
         }
         queue()->wakeUpAll(); // release blocked threads
 
         while (!_threadPool.empty()) {
-            StageWorker* w(_threadPool.front()); _threadPool.pop_front();
-            if (w->id() != seda::Thread::getId()) {
-              w->join(); delete w;
-            } else {
-                SEDA_LOG_FATAL("StageWorker performed cleanup of its own stage!!!");
-                exit(EXIT_FAILURE);
-            }
-        }
+            ThreadInfo *i(_threadPool.front()); _threadPool.pop_front();
+            i->thread.join();
+            delete i->worker;
+            delete i;
+        }            
     }
 
     void
