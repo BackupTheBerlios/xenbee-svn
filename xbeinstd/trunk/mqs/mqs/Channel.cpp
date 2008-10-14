@@ -68,7 +68,7 @@ Channel::~Channel() {
 
 void
 Channel::start(bool doFlush) {
-    Lock channelLock(&_mtx);
+    boost::unique_lock<boost::recursive_mutex> lock(_mtx);
 
     if (_started)
         return;
@@ -119,19 +119,16 @@ Channel::start(bool doFlush) {
 
 void
 Channel::stop() {
-    Lock channelLock(&_mtx);
+    boost::unique_lock<boost::recursive_mutex> lock(_mtx);
 
-    {
-        Lock consumerLock(&_consumerMtx);
-        while (!_consumer.empty()) {
-            struct Consumer c = _consumer.front(); _consumer.pop_front();
-            c.mqs_destination.reset();
-            c.destination.reset();
-            if (c.consumer) {
-                c.consumer->setMessageListener( NULL );
-                c.consumer->close();
-                c.consumer.reset();
-            }
+    while (!_consumer.empty()) {
+        struct Consumer c = _consumer.front(); _consumer.pop_front();
+        c.mqs_destination.reset();
+        c.destination.reset();
+        if (c.consumer) {
+            c.consumer->setMessageListener( NULL );
+            c.consumer->close();
+            c.consumer.reset();
         }
     }
 
@@ -164,14 +161,14 @@ Channel::addIncomingQueue(const mqs::Destination &dst) {
     consumer.consumer = std::tr1::shared_ptr<cms::MessageConsumer>(_session->createConsumer(consumer.destination.get()));
     consumer.consumer->setMessageListener(this);
 
-    _consumerMtx.lock();
+    boost::unique_lock<boost::recursive_mutex> lock(_mtx);
     _consumer.push_back(consumer);
-    _consumerMtx.unlock();
 }
 
 void
 Channel::delIncomingQueue(const mqs::Destination &dst) {
     // removes all incoming queues with the same name and type, disregarding further options
+    boost::unique_lock<boost::recursive_mutex> lock(_mtx);
     std::list<Consumer>::iterator it(_consumer.begin());
     while (it != _consumer.end()) {
         if (it->mqs_destination->name() == dst.name() and it->mqs_destination->type() == dst.type()) {
@@ -321,15 +318,18 @@ std::string
 Channel::async_request(Message *msg, const mqs::Destination &dst) {
     ENSURE_STARTED();
 
-    Lock awaitingResponseLock(&_awaitingResponseMtx);
-
-    msg->setCMSReplyTo(_consumer.front().destination.get());
-    MQS_LOG_DEBUG("sending async request to " << dst.str());
-    std::string msg_id(send(msg, dst));
-    assert(!msg_id.empty());
-  
+    std::string msg_id;
+    {
+        boost::unique_lock<boost::recursive_mutex> lk(_mtx);
+        msg->setCMSReplyTo(_consumer.front().destination.get());
+        MQS_LOG_DEBUG("sending async request to " << dst.str());
+        msg_id = send(msg, dst);
+        assert(!msg_id.empty());
+     }
+ 
     // create a response object and put it into the queue (deleted in wait_reply)
     mqs::Response* response = new Response(msg_id);
+    boost::unique_lock<boost::mutex> lock(_awaitingResponseMtx);
     _awaitingResponse.push_back(response);
   
     return msg_id;
@@ -353,19 +353,20 @@ Channel::wait_reply(const std::string &requestID, unsigned long millisecs) {
             break;
         }
     }
-    if (response == 0)
+    if (response == 0) {
         _awaitingResponseMtx.unlock();
-
-    // remove the response object (iterator position might have changed...)
-    _awaitingResponseMtx.lock();
-    for (it = _awaitingResponse.begin(); it != _awaitingResponse.end(); it++) {
-        if ((*it)->getCorrelationID() == requestID) {
-            // found the response object
-            _awaitingResponse.erase(it);
-            break;
+    } else {
+        // remove the response object (iterator position might have changed...)
+        _awaitingResponseMtx.lock();
+        for (it = _awaitingResponse.begin(); it != _awaitingResponse.end(); it++) {
+            if ((*it)->getCorrelationID() == requestID) {
+                // found the response object
+                _awaitingResponse.erase(it);
+                break;
+            }
         }
+        _awaitingResponseMtx.unlock();
     }
-    _awaitingResponseMtx.unlock();
 
     if (response) {
         Message *reply(response->getResponse());
@@ -400,13 +401,13 @@ Channel::createBytesMessage(const unsigned char *bytes, std::size_t length) cons
 
 void
 Channel::setMessageListener(cms::MessageListener *listener) {
-    Lock channelLock(&_mtx);
+    boost::unique_lock<boost::recursive_mutex> lock(_mtx);
     _messageListener = listener;
 }
 
 void
 Channel::setExceptionListener(cms::ExceptionListener *listener) {
-    Lock channelLock(&_mtx);
+    boost::unique_lock<boost::recursive_mutex> lock(_mtx);
     _exceptionListener = listener;
 }
 
@@ -418,9 +419,9 @@ Channel::onMessage(const cms::Message *msg) {
   
     // 1. check for a thread waiting for a response
     {
-        Lock awaitingResponseLock(&_awaitingResponseMtx);
         const std::string correlationID = msg->getCMSCorrelationID();
         if (!correlationID.empty()) {
+            boost::unique_lock<boost::mutex> lock(_awaitingResponseMtx);
             MQS_LOG_DEBUG("message correlates to: " << correlationID);
             std::vector<mqs::Response*>::iterator it = _awaitingResponse.begin();
             for (; it != _awaitingResponse.end(); it++) {
@@ -440,7 +441,6 @@ Channel::onMessage(const cms::Message *msg) {
 
     // if  we have  a message  listener registered,  let him  handle all
     // incoming messages unless there are blocked receivers
-    Lock incomingMessageLock(&_incomingMessagesMtx);
     if (_messageListener && !_blocked_receivers) {
         MQS_LOG_DEBUG("dispatching message to message listener");
         try {
@@ -451,22 +451,23 @@ Channel::onMessage(const cms::Message *msg) {
             MQS_LOG_WARN("message handling failed: unknown error");
         }
     } else {
+        boost::unique_lock<boost::mutex> lock(_incomingMessagesMutex);
         MQS_LOG_DEBUG("enqueueing message");
         cms::Message* clonedMsg = msg->clone();
         _incomingMessages.push_back(clonedMsg);
-        _incomingMessagesMtx.notify();
+        _incomingMessagesCondition.notify_one();
     }
 }
 
 Message*
-Channel::recv(unsigned long millisecs) {
-    Lock incomingMessageLock(&_incomingMessagesMtx);
+Channel::recv(unsigned long millis) {
+    boost::unique_lock<boost::mutex> lock(_incomingMessagesMutex);
     _blocked_receivers++;
     // wait until a message is available
     while(_incomingMessages.empty()) {
         MQS_LOG_DEBUG("waiting for new messages");
-        _incomingMessagesMtx.wait(millisecs);
-        if (millisecs != WAIT_INFINITE)
+        boost::system_time const timeout=boost::get_system_time() + boost::posix_time::milliseconds(millis);
+        if (!_incomingMessagesCondition.timed_wait(lock, timeout))
             break;
     }
     if (_incomingMessages.empty()) {
@@ -474,9 +475,8 @@ Channel::recv(unsigned long millisecs) {
         _blocked_receivers--;
         return 0;
     } else {
-        Message* msg(_incomingMessages.front());
+        Message* msg(_incomingMessages.front()); _incomingMessages.pop_front();
         MQS_LOG_DEBUG("received message: " << msg->getCMSMessageID());
-        _incomingMessages.pop_front();
         _blocked_receivers--;
         return msg;
     }
@@ -484,9 +484,10 @@ Channel::recv(unsigned long millisecs) {
 
 std::size_t
 Channel::flushMessages() {
+    MQS_LOG_DEBUG("flushing old messages...");
     std::size_t count(0);
     for (;;) {
-        Message *m = recv(50);
+        Message *m = recv(1000);
         if (m) {
             MQS_LOG_DEBUG("flushed message ("<< m->getCMSMessageID() <<")...");
             count++;
@@ -513,8 +514,6 @@ Channel::onException(const cms::CMSException &ex) {
 
 bool
 Channel::is_started() const {
-    Mutex* _non_const_mtx(const_cast<Mutex*>(&_mtx));
-    Lock channelLock(_non_const_mtx);
     return _started;
 }
 

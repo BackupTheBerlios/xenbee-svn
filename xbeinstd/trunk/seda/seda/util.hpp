@@ -3,6 +3,7 @@
 
 namespace seda {
     unsigned long long getCurrentTimeMilliseconds();
+    extern const unsigned long INFINITE_WAITTIME;
 }
 
 #endif

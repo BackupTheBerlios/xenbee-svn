@@ -2,11 +2,12 @@
 #define MQS_CHANNEL_HPP
 
 #include <mqs/common.hpp>
-#include <mqs/mutex.hpp>
 
 #include <vector>
 #include <list>
 #include <tr1/memory>
+
+#include <boost/thread.hpp>
 
 #include <cms/ExceptionListener.h>
 #include <cms/DeliveryMode.h>
@@ -104,7 +105,7 @@ namespace mqs {
            @param timeout specifies how long to wait for a reply (milliseconds)
            @return cms::Message pointer to the reply or NULL
         */
-        cms::Message* request(cms::Message* msg, const mqs::Destination& dst, unsigned long millisecs = INFINITE_WAITTIME);
+        cms::Message* request(cms::Message* msg, const mqs::Destination& dst, unsigned long millisecs);
 
         /**
            Convenience function for request(cms::Message).
@@ -114,8 +115,8 @@ namespace mqs {
 
            @see request(cms::Message*, mqs::Destination, long long)
         */
-        cms::Message* request(const std::string& msg, const mqs::Destination& dst, unsigned long millisecs = INFINITE_WAITTIME);
-        cms::Message* request(const std::string& msg, unsigned long millisecs = INFINITE_WAITTIME);
+        cms::Message* request(const std::string& msg, const mqs::Destination& dst, unsigned long millisecs);
+        cms::Message* request(const std::string& msg, unsigned long millisecs);
 
         /**
            Place an asynchronous request.
@@ -139,7 +140,7 @@ namespace mqs {
            @param requestID the unique identifier for a request
            @param timeout number of milliseconds to wait or 0 for infinity
         */
-        cms::Message* wait_reply(const std::string& requestID, unsigned long millisecs = INFINITE_WAITTIME);
+        cms::Message* wait_reply(const std::string& requestID, unsigned long millisecs);
 
         /**
            Send (and forget) a pregenerated message.
@@ -171,8 +172,8 @@ namespace mqs {
            @param timeout wait for timeout milliseconds
            @return the message or NULL
         */
-        cms::Message* recv(unsigned long millisecs = INFINITE_WAITTIME);
-        template <class T> T* recv(unsigned long millisecs = INFINITE_WAITTIME) {
+        cms::Message* recv(unsigned long millisecs);
+        template <class T> T* recv(unsigned long millisecs) {
             cms::Message *m(recv(millisecs));
             T *t_msg(dynamic_cast<T*>(m));
             if (t_msg) {
@@ -249,7 +250,7 @@ namespace mqs {
         void ensure_started() const throw (ChannelNotStarted);
     
         MQS_DECLARE_LOGGER();
-        Mutex _mtx;
+        boost::recursive_mutex _mtx;
     
         mqs::BrokerURI _broker;
         mqs::Destination _inQueue;
@@ -260,7 +261,6 @@ namespace mqs {
         std::tr1::shared_ptr<cms::MessageProducer> _producer;
         std::tr1::shared_ptr<cms::Destination> _producer_destination;
 
-        Mutex _consumerMtx;
         struct Consumer {
             std::tr1::shared_ptr<mqs::Destination> mqs_destination;
             std::tr1::shared_ptr<cms::Destination> destination;
@@ -271,10 +271,11 @@ namespace mqs {
         cms::MessageListener* _messageListener;
         cms::ExceptionListener* _exceptionListener;
 
-        Mutex _incomingMessagesMtx;
+        boost::mutex _incomingMessagesMutex;
+        boost::condition_variable _incomingMessagesCondition;
         std::list<cms::Message*> _incomingMessages;
     
-        Mutex _awaitingResponseMtx;
+        boost::mutex _awaitingResponseMtx;
         std::vector<mqs::Response*> _awaitingResponse;
 
         // internal state keeper

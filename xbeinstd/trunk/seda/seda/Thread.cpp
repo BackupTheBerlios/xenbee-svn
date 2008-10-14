@@ -1,7 +1,6 @@
 #include "Thread.hpp"
-#include "Mutex.hpp"
-#include "Condition.hpp"
 
+#include <boost/thread.hpp>
 #include <stdexcept>
 #include <assert.h>
 
@@ -36,7 +35,9 @@ int Thread::getId() {
 }
 
 void Thread::sleep(unsigned long long ms) {
-    seda::Mutex mtx;
-    seda::Condition cond;
-    mtx.acquire(); cond.wait(mtx, ms); mtx.release();
+    boost::mutex mtx;
+    boost::unique_lock<boost::mutex> lock(mtx);
+    boost::condition_variable cond;
+    boost::system_time const timeout=boost::get_system_time() + boost::posix_time::milliseconds(ms);
+    cond.timed_wait(lock, timeout);
 }

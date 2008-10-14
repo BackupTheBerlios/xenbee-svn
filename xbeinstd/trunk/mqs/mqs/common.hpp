@@ -63,7 +63,7 @@ extern int errno;
 #  define EXIT_FAILURE 1
 #endif
 
-extern unsigned long INFINITE_WAITTIME;
+//extern unsigned long INFINITE_WAITTIME;
 
 #include <mqs/logging.hpp>
 

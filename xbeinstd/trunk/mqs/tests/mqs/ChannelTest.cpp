@@ -17,6 +17,7 @@ void ChannelTest::setUp() {
     MQS_LOG_DEBUG("setup");
     _awaitingException = false;
     _exceptionArrived = false;
+    _channel = 0;
 }
 
 void ChannelTest::tearDown() {
@@ -31,32 +32,34 @@ void ChannelTest::tearDown() {
 void ChannelTest::testStart_illegal_URI_Throws() {
     MQS_LOG_INFO("**** TEST: testStart_illegal_URI_Throws");
 
-    doStart("foo://blahblub:61617", "mqs.tests?type=queue");
+    doStart("foo://blahblub:61617", "tests.mqs?type=queue");
 }
 
 void ChannelTest::testStartNoQueueServer_Throws() {
     MQS_LOG_INFO("**** TEST: testStartNoQueueServer_Throws");
 
-    doStart("tcp://127.0.0.1:56565", "mqs.tests?type=queue");
+    doStart("tcp://127.0.0.1:56565", "tests.mqs?type=queue");
 }
 
 void ChannelTest::testStart_Timeout_Throws() {
     MQS_LOG_INFO("**** TEST: testStart_Timeout_Throws");
 
     std::cerr << "I: testing connection timeout" << std::endl;
-    doStart("tcp://localhost:61617?transport.ResponseCorrelator.maxResponseWaitTime=100", "mqs.tests?type=queue");
+    doStart("tcp://localhost:61617?transport.ResponseCorrelator.maxResponseWaitTime=100", "tests.mqs?type=queue");
 }
 
 void ChannelTest::testSendReceiveSimple() {
     MQS_LOG_INFO("**** TEST: testSendReceiveSimple");
 
-    doStart("mqs.test?type=queue");
+    doStart("tests.mqs?type=queue");
+    MQS_LOG_INFO("sending message");
     cms::TextMessage* msg = _channel->createTextMessage("hello world!");
-    *_channel << msg;
     _channel->send(msg);
+    MQS_LOG_INFO("message sent");
     delete msg;
+    MQS_LOG_INFO("waiting for message");
     msg = dynamic_cast<cms::TextMessage*>(_channel->recv(1000));
-    CPPUNIT_ASSERT_MESSAGE("received non-null message", msg != 0);
+    CPPUNIT_ASSERT_MESSAGE("received null message", msg != 0);
     CPPUNIT_ASSERT_EQUAL(std::string("hello world!"), msg->getText());
     delete msg;
 }
@@ -64,9 +67,9 @@ void ChannelTest::testSendReceiveSimple() {
 void ChannelTest::testSendReply() {
     MQS_LOG_INFO("**** TEST: testSendReply");
 
-    doStart("mqs.test?type=queue");
+    doStart("tests.mqs?type=queue");
     cms::TextMessage* msg = _channel->createTextMessage("hello");
-    std::string id = _channel->async_request(msg, mqs::Destination("mqs.test"));
+    std::string id = _channel->async_request(msg, mqs::Destination("tests.mqs?type=queue"));
     delete msg;
     msg = dynamic_cast<cms::TextMessage*>(_channel->recv(1000));
     CPPUNIT_ASSERT_MESSAGE("did not receive a message", msg != 0);
@@ -94,7 +97,7 @@ void ChannelTest::testStartStopChannel() {
     cms::TextMessage* msg = _channel->createTextMessage("hello 1");
     _channel->send(msg);
     delete msg;
-    msg = dynamic_cast<cms::TextMessage*>(_channel->recv(1000));
+    msg = dynamic_cast<cms::TextMessage*>(_channel->recv(5000));
     CPPUNIT_ASSERT_MESSAGE("did not receive a message", msg != 0);
     CPPUNIT_ASSERT_EQUAL(std::string("hello 1"), msg->getText());
     delete msg;

@@ -40,7 +40,7 @@ XMLParserPool::XMLParserPool(std::size_t maxPoolSize)
 
 XMLParserPool::~XMLParserPool() {
     try {
-        activemq::concurrent::Lock monitorLock(&_mtx);
+        boost::unique_lock<boost::mutex> lock(_mtx);
         while (!_pool.empty()) {
             XMLParser* p(_pool.front()); _pool.pop_front();
             delete p;
@@ -51,7 +51,7 @@ XMLParserPool::~XMLParserPool() {
 }
 
 std::auto_ptr<XMLParserManager> XMLParserPool::allocate() {
-    activemq::concurrent::Lock monitorLock(&_mtx);
+    boost::unique_lock<boost::mutex> lock(_mtx);
 
     // check if a free parser is available
     if (_pool.size()) {
@@ -65,7 +65,7 @@ std::auto_ptr<XMLParserManager> XMLParserPool::allocate() {
     } else {
         // all parsers are in use and pool-size has been reached, so wait until a parser is gets freed
         while (_pool.empty()) {
-            _mtx.wait();
+            _free.wait(lock);
         }
         XMLParser* parser(_pool.front()); _pool.pop_front();
         return std::auto_ptr<XMLParserManager>(new XMLParserManager(parser, this));
@@ -73,9 +73,9 @@ std::auto_ptr<XMLParserManager> XMLParserPool::allocate() {
 }
 
 void XMLParserPool::release(XMLParser* parser) {
-    activemq::concurrent::Lock monitorLock(&_mtx);
+    boost::unique_lock<boost::mutex> lock(_mtx);
     _pool.push_back(parser);
-    _mtx.notify();
+    _free.notify_one();
 }
 
 XMLParser* XMLParserPool::initializeNewParser() const {

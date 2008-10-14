@@ -3,8 +3,6 @@
 
 #include <cms/MessageListener.h>
 #include <cms/ExceptionListener.h>
-#include <activemq/concurrent/Lock.h>
-#include <activemq/concurrent/Mutex.h>
 
 #include <mqs/Channel.hpp>
 

@@ -13,15 +13,14 @@ namespace seda {
             SEDA_INIT_LOGGER(id),
             _stage(s),
             _busy(false),
-            _stopped(false),
-            _id(0)
+            _stopped(false)
         { }
         ~StageWorker() {}
 
         void stop() { _stopped = true; }
+        void operator()() { run(); }
         void run();
         bool busy() const { return _busy; }
-        unsigned long id() const { return _id; }
 
     private:
         SEDA_DECLARE_LOGGER();
@@ -30,7 +29,6 @@ namespace seda {
         Stage* _stage;
         bool _busy;
         bool _stopped;
-        unsigned long _id;
     };
 }
 

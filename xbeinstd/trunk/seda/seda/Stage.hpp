@@ -15,7 +15,6 @@
 
 namespace seda {
     class StageWorker;
-
     class Stage {
     public:
         typedef std::tr1::shared_ptr<Stage> Ptr;

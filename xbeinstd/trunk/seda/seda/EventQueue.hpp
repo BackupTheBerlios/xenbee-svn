@@ -3,11 +3,9 @@
 
 #include <list>
 #include <tr1/memory>
+#include <assert.h>
 
-#include <seda/util.hpp>
-#include <seda/Lock.hpp>
-#include <seda/Mutex.hpp>
-#include <seda/Condition.hpp>
+#include <boost/thread.hpp>
 
 #include <seda/common.hpp>
 #include <seda/constants.hpp>
@@ -31,89 +29,111 @@ namespace seda {
             const std::string& name() { return _name; }
 
             virtual IEvent::Ptr pop() throw(QueueEmpty) {
-                return pop(WAIT_INFINITE);
+                boost::unique_lock<boost::mutex> lock(_mtx);
+
+                while (empty()) {
+                    _notEmptyCond.wait(lock);
+                }
+                assert(! empty());
+
+                IEvent::Ptr e = _list.front(); _list.pop_front();
+                if (empty()) {
+                    _emptyCond.notify_one();
+                } else {
+                    _notEmptyCond.notify_one();
+                }
+                return e;
             }
 
             virtual IEvent::Ptr pop(unsigned long millis) throw(QueueEmpty) {
-                seda::Lock lock(_mtx);
-                unsigned long long now(seda::getCurrentTimeMilliseconds());
+                boost::unique_lock<boost::mutex> lock(_mtx);
+
                 while (empty()) {
-                    _notEmptyCond.wait(_mtx, millis);
-                    if (millis != WAIT_INFINITE && (seda::getCurrentTimeMilliseconds() - now) > millis)
-                        break;
-                }
-                if (empty()) {
-                    _emptyCond.notifyAll();
-                    throw QueueEmpty();
-                } else {
-                    IEvent::Ptr e = _list.front();
-                    _list.pop_front();
-                    if (empty()) {
-                        _emptyCond.notifyAll();
-                    } else {
-                        _notEmptyCond.notifyAll();
+                    boost::system_time const timeout=boost::get_system_time() + boost::posix_time::milliseconds(millis);
+                    if (! _notEmptyCond.timed_wait(lock, timeout)) {
+                        _emptyCond.notify_one();
+                        throw QueueEmpty();
                     }
-                    return e;
                 }
+                assert(! empty());
+
+                IEvent::Ptr e = _list.front(); _list.pop_front();
+                if (empty()) {
+                    _emptyCond.notify_one();
+                } else {
+                    _notEmptyCond.notify_one();
+                }
+                return e;
             }
 
             virtual void push(const IEvent::Ptr& e) throw(QueueFull) {
-                seda::Lock lock(_mtx);
+                boost::unique_lock<boost::mutex> lock(_mtx);
+               
                 if (size() >= _maxQueueSize) {
                     throw QueueFull();
                 } else {
                     _list.push_back(e);
-                    _notEmptyCond.notify();
+                    _notEmptyCond.notify_one();
                 }
             }
 
-            virtual void waitUntilEmpty() const {
-                waitUntilEmpty(WAIT_INFINITE);
-            }
-
-            virtual void waitUntilEmpty(unsigned long millis) const {
-                seda::Lock lock(_mtx);
-                unsigned long long now(seda::getCurrentTimeMilliseconds());
-                while (!empty()) {
-                    _emptyCond.wait(_mtx, millis);
-                    if (millis != WAIT_INFINITE &&
-                            (seda::getCurrentTimeMilliseconds() - now) > millis)
-                        break;
+            virtual bool waitUntilEmpty() {
+                boost::unique_lock<boost::mutex> lock(_mtx);
+                while (! empty()) {
+                    _emptyCond.wait(lock);
                 }
+                return true;
             }
 
-            virtual void waitUntilNotEmpty() const {
-                waitUntilNotEmpty(WAIT_INFINITE);
+            virtual bool waitUntilEmpty(unsigned long millis) {
+                boost::unique_lock<boost::mutex> lock(_mtx);
+
+                while (! empty()) {
+                    boost::system_time const timeout=boost::get_system_time() + boost::posix_time::milliseconds(millis);
+                    if (!_emptyCond.timed_wait(lock, timeout)) {
+                        return false;
+                    }
+                }
+                return true;
             }
 
-            virtual void waitUntilNotEmpty(unsigned long millis) const {
-                seda::Lock lock(_mtx);
-                unsigned long long now(seda::getCurrentTimeMilliseconds());
+            virtual bool waitUntilNotEmpty() {
+                boost::unique_lock<boost::mutex> lock(_mtx);
                 while (empty()) {
-                    _notEmptyCond.wait(_mtx, millis);
-                    if (millis != WAIT_INFINITE &&
-                            (seda::getCurrentTimeMilliseconds() - now) > millis)
-                        break;
+                    _notEmptyCond.wait(lock);
                 }
+                return true;
+            }
+
+            virtual bool waitUntilNotEmpty(unsigned long millis) {
+                boost::unique_lock<boost::mutex> lock(_mtx);
+
+                while (empty()) {
+                    boost::system_time const timeout=boost::get_system_time() + boost::posix_time::milliseconds(millis);
+                    if (!_notEmptyCond.timed_wait(lock, timeout)) {
+                        return false;
+                    }
+                }
+                return true;
             }
 
             /**
-              Removes all elements from the queue.
-
-Warning: elements will be deleted!
-*/
+             * Removes all elements from the queue.
+             * Warning: elements will be deleted!
+             */
             virtual void clear() {
-                seda::Lock lock(_mtx);
+                boost::unique_lock<boost::mutex> lock(_mtx);
                 while (!empty()) {
                     IEvent::Ptr e = _list.front();
                     _list.pop_front();
                 }
+                _emptyCond.notify_one();
             }
 
             virtual void wakeUpAll() {
-                seda::Lock lock(_mtx);
-                _notEmptyCond.notifyAll();
-                _emptyCond.notifyAll();
+                boost::unique_lock<boost::mutex> lock(_mtx);
+                _notEmptyCond.notify_all();
+                _emptyCond.notify_all();
             }
 
             virtual std::size_t size() const { return _list.size(); }
@@ -123,9 +143,9 @@ Warning: elements will be deleted!
             void maxQueueSize(const std::size_t& max) { _maxQueueSize = max; }
         protected:
             SEDA_DECLARE_LOGGER();
-            mutable seda::Mutex _mtx;
-            mutable seda::Condition _emptyCond;
-            mutable seda::Condition _notEmptyCond;
+            boost::mutex _mtx;
+            boost::condition_variable _emptyCond;
+            boost::condition_variable _notEmptyCond;
 
             std::list< IEvent::Ptr > _list;
         private:

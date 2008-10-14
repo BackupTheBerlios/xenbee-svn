@@ -1,10 +1,7 @@
 #ifndef SEDA_EVENT_COUNT_STRATEGY_HPP
 #define SEDA_EVENT_COUNT_STRATEGY_HPP 1
 
-#include <seda/util.hpp>
-#include <seda/Mutex.hpp>
-#include <seda/Condition.hpp>
-#include <seda/Lock.hpp>
+#include <boost/thread.hpp>
 
 #include <seda/StrategyDecorator.hpp>
 
@@ -21,45 +18,45 @@ namespace seda {
             ~EventCountStrategy() {}
 
             void perform(const IEvent::Ptr& e) const {
-                inc();
+                const_cast<EventCountStrategy*>(this)->inc();
                 StrategyDecorator::perform(e);
             }
 
             std::size_t count() const { return _count; }
             void reset() {
-                seda::Lock lock(_mtx);
+                boost::unique_lock<boost::mutex> lock(_mtx);
                 _count=0;
             }
-            void inc() const {
-                seda::Lock lock(_mtx);
+            void inc() {
+                boost::unique_lock<boost::mutex> lock(_mtx);
                 _count++;
-                _cond.notifyAll();
+                _cond.notify_all();
             }
-            void wait(std::size_t targetValue, unsigned long millis=WAIT_INFINITE) const {
-                seda::Lock lock(_mtx);
-                unsigned long long now(seda::getCurrentTimeMilliseconds());
+            bool wait(std::size_t targetValue) {
+                boost::unique_lock<boost::mutex> lock(_mtx);
                 while (count() < targetValue) {
-                    _cond.wait(_mtx, millis);
-                    if (millis != WAIT_INFINITE &&
-                            (seda::getCurrentTimeMilliseconds() - now) > millis)
-                        break;
+                    _cond.wait(lock);
                 }
+                return true;
+            }
+            bool wait(std::size_t targetValue, unsigned long millis) {
+                boost::unique_lock<boost::mutex> lock(_mtx);
+
+                while (count() < targetValue) {
+                    boost::system_time const timeout=boost::get_system_time() + boost::posix_time::milliseconds(millis);
+                    if (!_cond.timed_wait(lock, timeout)) {
+                        return false;
+                    }
+                }
+                return true;
             }
 
-            void waitNoneZero(unsigned long millis=WAIT_INFINITE) const {
-                seda::Lock lock(_mtx);
-                unsigned long long now(seda::getCurrentTimeMilliseconds());
-                while (count() == 0) {
-                    _cond.wait(_mtx, millis);
-                    if (millis != WAIT_INFINITE &&
-                            (seda::getCurrentTimeMilliseconds() - now) > millis)
-                        break;
-                }
-            }
+            bool waitNoneZero() { return wait(1); }
+            bool waitNoneZero(unsigned long millis) { return wait(1, millis); }
         private:
-            mutable std::size_t _count;
-            mutable seda::Mutex _mtx;
-            mutable seda::Condition _cond;
+            std::size_t _count;
+            boost::mutex _mtx;
+            boost::condition_variable _cond;
     };
 }
 

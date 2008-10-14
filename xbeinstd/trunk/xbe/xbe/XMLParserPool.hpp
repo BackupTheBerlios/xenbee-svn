@@ -7,7 +7,7 @@
 #include <iostream>
 #include <string>
 
-#include <activemq/concurrent/Mutex.h>
+#include <boost/thread.hpp>
 
 #include <xsd/cxx/xml/dom/auto-ptr.hxx>
 #include <xercesc/dom/DOM.hpp>
@@ -57,7 +57,8 @@ namespace xbe {
             XBE_DECLARE_LOGGER();
             std::size_t _poolSize;
             std::size_t _maxPoolSize;
-            activemq::concurrent::Mutex _mtx;
+            boost::mutex _mtx;
+            boost::condition_variable _free;
             container_type _pool;
 
             XMLParser* initializeNewParser() const;
