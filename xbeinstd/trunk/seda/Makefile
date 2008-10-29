@@ -13,7 +13,7 @@ config: $(BUILD_DIR) CMakeLists.txt
 	cd $(BUILD_DIR) && $(CMAKE) $(top_srcdir)
 
 distclean:
-	@-rm -r $(BUILD_DIR) 2>/dev/null
+	@-rm -rf $(BUILD_DIR)
 	@-find . -name "*~" -delete
 
 .DEFAULT:
