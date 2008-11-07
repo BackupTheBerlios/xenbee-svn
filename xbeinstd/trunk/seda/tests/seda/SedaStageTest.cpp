@@ -9,6 +9,7 @@
 #include <seda/StageRegistry.hpp>
 #include <seda/EventCountStrategy.hpp>
 #include <seda/CompositeStrategy.hpp>
+#include <seda/AccumulateStrategy.hpp>
 #include <seda/DiscardStrategy.hpp>
 #include <seda/CoutStrategy.hpp>
 #include <seda/ForwardStrategy.hpp>
@@ -19,7 +20,6 @@ using namespace seda::tests;
 
 CPPUNIT_TEST_SUITE_REGISTRATION( SedaStageTest );
 
-SedaStageTest::SedaStageTest() {}
 
 void
 SedaStageTest::setUp() {}
@@ -153,5 +153,37 @@ SedaStageTest::testCompositeStrategy() {
   CPPUNIT_ASSERT_EQUAL((std::size_t)2, ecs->count());
 
   final->stop();
+  first->stop();
+}
+
+void SedaStageTest::testAccumulateStrategy() {
+  SEDA_LOG_DEBUG("Testing AccumulateStrategy");
+  seda::AccumulateStrategy::Ptr accumulate(new seda::AccumulateStrategy("accumulate"));
+  seda::EventCountStrategy::Ptr ecs(new seda::EventCountStrategy(accumulate));
+  seda::Stage::Ptr first(new seda::Stage("accumulate", ecs));
+
+  // register the stages
+  StageRegistry::instance().insert(first);
+
+  first->start();
+
+  seda::IEvent::Ptr sendEvent(new seda::StringEvent("foo"));
+  first->send(sendEvent);
+
+  first->waitUntilEmpty(100);
+  ecs->wait(1, 1000); 
+
+  CPPUNIT_ASSERT(first->queue()->empty());
+  CPPUNIT_ASSERT_EQUAL((std::size_t)1, ecs->count());
+  
+  // Now, check what we have accumulated in our strategy.
+  SEDA_LOG_DEBUG("Expected event: " << sendEvent->str());
+  seda::AccumulateStrategy::iterator_type it;
+  for (it = accumulate->getIEventIteratorBegin(); it != accumulate->getIEventIteratorEnd(); *it++) {
+    SEDA_LOG_DEBUG("Found event: " << (*it)->str());
+    if ((*it)->str().compare(sendEvent->str()) != 0) 
+      CPPUNIT_FAIL("Expected and actual event differ!");
+  }
+
   first->stop();
 }

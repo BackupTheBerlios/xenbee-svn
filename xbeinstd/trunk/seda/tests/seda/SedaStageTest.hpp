@@ -1,6 +1,7 @@
 #ifndef SEDA_TESTS_STAGE_TEST_HPP
 #define SEDA_TESTS_STAGE_TEST_HPP 1
 
+#include <seda/common.hpp>
 #include <cppunit/extensions/HelperMacros.h>
 
 namespace seda {
@@ -12,14 +13,16 @@ namespace seda {
       CPPUNIT_TEST( testStartStop );
       CPPUNIT_TEST( testForwardEvents );
       CPPUNIT_TEST( testCompositeStrategy );
+      CPPUNIT_TEST( testAccumulateStrategy );
       //      CPPUNIT_TEST( testSendReply );
       //      CPPUNIT_TEST_EXCEPTION( testStart_Timeout_Throws, cms::CMSException );
       CPPUNIT_TEST_SUITE_END();
 
     private:
+      SEDA_DECLARE_LOGGER();
 
     public:
-      SedaStageTest();
+      SedaStageTest() : SEDA_INIT_LOGGER("SedaStageTest") {};
       void setUp();
       void tearDown();
 
@@ -28,6 +31,7 @@ namespace seda {
       void testStartStop();
       void testForwardEvents();
       void testCompositeStrategy();
+      void testAccumulateStrategy();
     };
   }
 }
