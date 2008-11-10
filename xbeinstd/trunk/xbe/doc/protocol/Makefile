@@ -8,8 +8,8 @@ run: $(PRM).trail
 $(PRM).trail: pan
 	./pan
 
-pan: pan.c
-	gcc -o $@ $<
+pan: pan.c Makefile
+	gcc -o $@ pan.c
 
 pan.c: $(PRM)
 	spin -a $<

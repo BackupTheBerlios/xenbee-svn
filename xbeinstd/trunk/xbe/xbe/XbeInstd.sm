@@ -1,0 +1,88 @@
+%{
+//
+// Finite state machine for the XbeInstd
+//
+%}
+
+%include <xbe/ExecuteEvent.hpp>
+%include <xbe/LifeSignEvent.hpp>
+%include <xbe/StatusReqEvent.hpp>
+%include <xbe/TerminateEvent.hpp>
+%include <xbe/FinishedEvent.hpp>
+%include <xbe/FailedEvent.hpp>
+
+%package xbe
+%class XbeInstd
+%header XbeInstd.hpp
+
+%start XbeInstdFSM::Idle
+%map XbeInstdFSM
+
+%%
+Idle
+{
+    Execute(msg: const xbe::ExecuteEvent&)
+        Executing
+        {
+            do_execute(msg);
+        }
+
+    LifeSign(msg: const xbe::LifeSignEvent&)
+        Idle
+        {
+            do_send_lifesign(msg);
+        }
+
+    StatusReq(msg: const xbe::StatusReqEvent&)
+        Idle
+        {
+            do_send_status(msg);
+        }
+
+    Terminate(msg: const xbe::TerminateEvent&)
+        Terminated
+        {
+            do_terminate(msg);
+        }
+}
+
+Executing
+{
+    Finished(msg: const xbe::FinishedEvent&)
+        Idle
+        {
+            do_finished(msg);
+        }
+
+    Failed(msg: const xbe::FailedEvent&)
+        Idle
+        {
+            do_failed(msg);
+        }
+
+    StatusReq(msg: const xbe::StatusReqEvent&)
+        Executing
+        {
+            do_send_status(msg);
+        }
+
+    LifeSign(msg: const xbe::LifeSignEvent&)
+        Executing
+        {
+            do_send_lifesign(msg);
+        }
+
+    Terminate(msg: const xbe::TerminateEvent&)
+        Terminated
+        {
+            do_terminate_job();
+            do_terminate(msg);
+        }
+}
+
+Terminated
+{
+
+}
+
+%%

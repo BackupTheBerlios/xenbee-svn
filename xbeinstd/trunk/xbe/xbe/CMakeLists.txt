@@ -19,9 +19,9 @@ list(APPEND hdrs "${CMAKE_CURRENT_SOURCE_DIR}/dsig.hpp")
 list(APPEND srcs "${CMAKE_CURRENT_SOURCE_DIR}/xenc.cpp")
 list(APPEND hdrs "${CMAKE_CURRENT_SOURCE_DIR}/xenc.hpp")
 
-add_state_machine(Task srcs hdrs)
-list(APPEND srcs "${CMAKE_CURRENT_SOURCE_DIR}/Task_sm.cpp")
-list(APPEND hdrs "${CMAKE_CURRENT_SOURCE_DIR}/Task_sm.h")
+add_state_machine(XbeInstd srcs hdrs)
+list(APPEND srcs "${CMAKE_CURRENT_SOURCE_DIR}/XbeInstd_sm.cpp")
+list(APPEND hdrs "${CMAKE_CURRENT_SOURCE_DIR}/XbeInstd_sm.h")
 
 list(REMOVE_DUPLICATES hdrs)
 list(REMOVE_DUPLICATES srcs)
