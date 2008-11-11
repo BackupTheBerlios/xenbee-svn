@@ -158,7 +158,8 @@ SedaStageTest::testCompositeStrategy() {
 
 void SedaStageTest::testAccumulateStrategy() {
   SEDA_LOG_DEBUG("Testing AccumulateStrategy");
-  seda::AccumulateStrategy::Ptr accumulate(new seda::AccumulateStrategy("accumulate"));
+  seda::Strategy::Ptr discard(new seda::DiscardStrategy());
+  seda::AccumulateStrategy::Ptr accumulate(new seda::AccumulateStrategy(discard));
   seda::EventCountStrategy::Ptr ecs(new seda::EventCountStrategy(accumulate));
   seda::Stage::Ptr first(new seda::Stage("accumulate", ecs));
 
