@@ -39,9 +39,9 @@ set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/modules")
 # Definitions for different compilations.
 # Debug is the default development mode. Warn as much as possible, but
 # CPPUnit raises some errors about virtual functions - suppress them.
-set(CMAKE_CXX_FLAGS_DEBUG "-Wall -Wno-non-virtual-dtor")
+set(CMAKE_CXX_FLAGS_DEBUG "-Wall -Werror -Wno-non-virtual-dtor")
 # Releases are made with the release build. Optimize code.
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Wno-non-virtual-dtor")
+set(CMAKE_CXX_FLAGS_RELEASE "-Wall -Werror -O3 -Wno-non-virtual-dtor")
 
 ## PkgConfig is helpful
 include(FindPkgConfig)
