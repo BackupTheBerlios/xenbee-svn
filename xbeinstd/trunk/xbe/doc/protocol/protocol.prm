@@ -62,6 +62,13 @@ StFailed:
      InstFailed = true;
 StTerminated:
 end:
+    do
+    :: in ? _ -> printf("inst: flushing pending message\n"); skip;
+    :: timeout ->
+       if
+       :: empty(in) -> break;
+       fi;
+    od;
     atomic { done = done + 1; }
     printf("inst: done\n");
 }
@@ -181,6 +188,13 @@ StFailed:
     printf("xbed: failed\n");
 StShutdown:
 end:
+    do
+    :: in ? _ -> skip;
+    :: timeout ->
+       if
+       :: empty(in) -> break;
+       fi;
+    od;
     atomic { done = done + 1; }
     printf("xbed: done\n");
 }
@@ -208,4 +222,6 @@ init {
     do 
         :: (done == 2) -> break;
     od;
+    assert(empty(x2i));
+    assert(empty(i2x));
 }
