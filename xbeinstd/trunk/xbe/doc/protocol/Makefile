@@ -3,7 +3,7 @@ PRM=protocol.prm
 default: run
 
 run: $(PRM).trail
-	spin -m -t -r -s -c $(PRM)
+	if test -f $(PRM).trail ; then spin -m -t -r -s -c $(PRM) ; else echo "No errors found."; fi
 
 $(PRM).trail: pan
 	./pan

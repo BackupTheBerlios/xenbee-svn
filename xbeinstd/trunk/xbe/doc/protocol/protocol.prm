@@ -1,4 +1,4 @@
-#define CHAN_SIZE 1
+#define CHAN_SIZE 3
 #define MAX_RETRIES 5
 
 mtype = {LifeSign, Execute, ExecuteAck, ExecuteNAck, Terminate, TerminateAck, Finished, FinishedAck, StatusReq, Status, Start, Shutdown, ShutdownAck};
@@ -7,12 +7,19 @@ byte done = 0;
 
 /* define outcomes */
 bit InstExecutedJob = false;
+bit XbedExecutedJob = false;
+bit ExecutedJob = false;
+
 bit XbedSentJob = false;
+bit InstGotJob = false;
+
 bit InstFailed = false;
+bit XbedFailed = false;
 
 proctype Inst(chan in, out)
 {
     byte retryCount = 0;
+    bit lifeSignalSent = false;
 
 StIdle:
     /* accept new jobs, status requests and send life signals,
@@ -20,14 +27,17 @@ StIdle:
        handled as no ops */
     printf("inst: state idle\n");
     if
-        :: in ? Execute -> printf("inst: got execute request\n"); out ! ExecuteAck; goto StBusy;
+        :: in ? Execute -> printf("inst: got execute request\n"); lifeSignalSent=false; InstGotJob = true; out ! ExecuteAck; goto StBusy;
         :: in ? Shutdown -> printf("inst: got shutdown request\n"); out ! ShutdownAck; goto StTerminated;
-        :: timeout -> goto StFailed;
+        :: in ? StatusReq -> printf("inst: got status request\n"); lifeSignalSent=false; out ! Status; goto StIdle;
+        :: empty(in) -> goto StFailed;
+        :: (! lifeSignalSent) -> lifeSignalSent = true; out ! LifeSign; goto StIdle;
     fi;
 
 WaitForFinishedAck:
     if
     :: in ? FinishedAck -> goto StIdle;
+    :: in ? Shutdown -> out ! ShutdownAck; goto StTerminated;
     :: timeout ->
         do
         :: (retryCount < MAX_RETRIES) ->
@@ -42,12 +52,14 @@ StBusy:
     printf("inst: state busy\n");
     if
         :: in ? Shutdown -> printf("inst: got shutdown request\n"); out ! ShutdownAck; goto StTerminated;
+        :: in ? Terminate -> printf("inst: got terminate request\n"); out ! TerminateAck; goto StIdle;
+        :: in ? StatusReq -> printf("inst: got status request\n"); out ! Status; goto StBusy;
         /* spontaneously mark the job as finished */
-        :: true -> out ! Finished; printf("inst: execution finished\n"); goto WaitForFinishedAck;
-        :: true -> goto StBusy;
+        :: true -> InstExecutedJob = true; out ! Finished; printf("inst: execution finished\n"); goto WaitForFinishedAck;
     fi;
 
 StFailed:
+     InstFailed = true;
 StTerminated:
 end:
     atomic { done = done + 1; }
@@ -57,12 +69,14 @@ end:
 proctype Xbed(chan in, out)
 {
     byte retryCounter = 0;
-
+    bit statusRequestSent = false;
 StIdle:
     printf("xbed: state idle\n");
     if
-        :: true -> out ! Execute; goto WaitForExecuteAck;
-        :: true -> out ! Shutdown; goto WaitForShutdownAck;
+        :: in ? LifeSign -> goto StIdle;
+        :: true -> out ! Execute; XbedSentJob=true; statusRequestSent = false; goto WaitForExecuteAck;
+        :: true -> out ! Shutdown; statusRequestSent = false; goto WaitForShutdownAck;
+        :: (! statusRequestSent) -> out ! StatusReq; statusRequestSent = true; goto WaitForStatusIdle;
     fi;
 
 WaitForExecuteAck:
@@ -70,6 +84,7 @@ WaitForExecuteAck:
     /* XbedSentJob = true; */
     retryCounter = 0;
     do
+    :: in ? LifeSign -> skip;
     :: in ? ExecuteAck ->
         printf("xbed: got ack\n");
 progress_execute:
@@ -89,6 +104,8 @@ WaitForShutdownAck:
     retryCounter = 0;
     do
     :: in ? ShutdownAck -> goto StShutdown;
+    :: in ? Finished -> out ! FinishedAck;
+    :: in ? LifeSign -> skip;
     :: timeout ->
         if
         :: (retryCounter < MAX_RETRIES) ->
@@ -104,6 +121,8 @@ WaitForTerminateAck:
     retryCounter = 0;
     do
     :: in ? TerminateAck -> goto StIdle;
+    :: in ? Finished -> out ! FinishedAck;
+    :: in ? LifeSign -> skip;
     :: timeout ->
         if
         :: (retryCounter < MAX_RETRIES) ->
@@ -114,22 +133,51 @@ WaitForTerminateAck:
         fi;
     od;
 
+WaitForStatusIdle:
+    printf("xbed: waiting for status message (idle)\n");
+    retryCounter = 0;
+    do
+    :: in ? Status -> goto StIdle;
+    :: in ? LifeSign -> skip;
+    :: timeout ->
+        if
+        :: (retryCounter < MAX_RETRIES) ->
+            out ! StatusReq;
+            retryCounter++;
+        :: else ->
+            goto StFailed;
+        fi;
+    od;
+WaitForStatusBusy:
+    printf("xbed: waiting for status message (busy)\n");
+    retryCounter = 0;
+    do
+    :: in ? Status -> goto StBusy;
+    :: in ? LifeSign -> skip;
+    :: in ? Finished -> XbedExecutedJob = true; out ! FinishedAck;
+    :: timeout ->
+        if
+        :: (retryCounter < MAX_RETRIES) ->
+            out ! StatusReq;
+            retryCounter++;
+        :: else ->
+            goto StFailed;
+        fi;
+    od;
+
+
 StBusy:
     printf("xbed: state busy\n");
     if
         :: in ? Finished -> out ! FinishedAck; goto StIdle;
-        :: true -> out ! Terminate; goto WaitForTerminateAck;
-        :: true -> out ! Shutdown; goto WaitForShutdownAck;
-/*
-        :: timeout ->
-            if
-                :: true -> out ! Terminate; goto WaitForTerminateAck;
-                :: true -> out ! Shutdown; goto WaitForShutdownAck;
-            fi;
-*/
+        :: in ? LifeSign -> goto StBusy;
+           :: true -> statusRequestSent = false; out ! Terminate; goto WaitForTerminateAck;
+           :: true -> statusRequestSent = false; out ! Shutdown; goto WaitForShutdownAck;
+           :: (! statusRequestSent) -> statusRequestSent = true; out ! StatusReq; goto WaitForStatusBusy;
     fi;
 
 StFailed:
+    XbedFailed = true;
     printf("xbed: failed\n");
 StShutdown:
 end:
@@ -154,11 +202,10 @@ init {
     atomic {
         run Xbed(i2x, x2i);
         run Inst(x2i, i2x);
-//        run lossy_daemon(i2x, x2i);
+        run lossy_daemon(i2x, x2i);
     }
 
     do 
         :: (done == 2) -> break;
     od;
 }
-
