@@ -1,7 +1,7 @@
 #include "MessageEvent.hpp"
 #include <sstream>
 
-using namespace xbe;
+using namespace xbe::event;
 
 MessageEvent::MessageEvent(const std::string& msg)
   : _msg(msg) {}

@@ -1,6 +1,3 @@
-#include "XMLSigner.hpp"
-#include "XMLEvent.hpp"
-#include "XbeLibUtils.hpp"
 #include <sstream>
 
 #include <xsec/framework/XSECProvider.hpp>
@@ -12,7 +9,12 @@
 
 #include <xsd/cxx/xml/string.hxx>
 
+#include "XMLSigner.hpp"
+#include "XbeLibUtils.hpp"
+#include "event/XMLEvent.hpp"
+
 using namespace xbe;
+using namespace xbe::event;
 using namespace xercesc;
 namespace xml = xsd::cxx::xml;
 

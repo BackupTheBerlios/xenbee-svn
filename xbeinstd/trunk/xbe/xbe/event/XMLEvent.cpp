@@ -1,6 +1,6 @@
 #include "XMLEvent.hpp"
 
-using namespace xbe;
+using namespace xbe::event;
 using namespace xercesc;
 namespace xml = xsd::cxx::xml;
 

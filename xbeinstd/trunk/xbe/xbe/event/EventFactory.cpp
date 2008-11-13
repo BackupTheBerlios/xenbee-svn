@@ -6,6 +6,7 @@
 #include "ErrorEvent.hpp"
 
 using namespace xbe;
+using namespace xbe::event;
 using namespace seda;
 
 const EventFactory& EventFactory::instance() {

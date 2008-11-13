@@ -4,12 +4,12 @@
 //
 
 
-#include <xbe/ExecuteEvent.hpp>
-#include <xbe/LifeSignEvent.hpp>
-#include <xbe/StatusReqEvent.hpp>
-#include <xbe/TerminateEvent.hpp>
-#include <xbe/FinishedEvent.hpp>
-#include <xbe/FailedEvent.hpp>
+#include <xbe/event/ExecuteEvent.hpp>
+#include <xbe/event/LifeSignEvent.hpp>
+#include <xbe/event/StatusReqEvent.hpp>
+#include <xbe/event/TerminateEvent.hpp>
+#include <xbe/event/FinishedEvent.hpp>
+#include <xbe/event/FailedEvent.hpp>
 #include "XbeInstd.hpp"
 #include "XbeInstd_sm.h"
 
@@ -22,37 +22,37 @@ namespace xbe
     XbeInstdFSM_Executing XbeInstdFSM::Executing("XbeInstdFSM::Executing", 1);
     XbeInstdFSM_Terminated XbeInstdFSM::Terminated("XbeInstdFSM::Terminated", 2);
 
-    void XbeInstdState::Execute(XbeInstdContext& context, const xbe::ExecuteEvent& msg)
+    void XbeInstdState::Execute(XbeInstdContext& context, const xbe::event::ExecuteEvent& msg)
     {
         Default(context);
         return;
     }
 
-    void XbeInstdState::Failed(XbeInstdContext& context, const xbe::FailedEvent& msg)
+    void XbeInstdState::Failed(XbeInstdContext& context, const xbe::event::FailedEvent& msg)
     {
         Default(context);
         return;
     }
 
-    void XbeInstdState::Finished(XbeInstdContext& context, const xbe::FinishedEvent& msg)
+    void XbeInstdState::Finished(XbeInstdContext& context, const xbe::event::FinishedEvent& msg)
     {
         Default(context);
         return;
     }
 
-    void XbeInstdState::LifeSign(XbeInstdContext& context, const xbe::LifeSignEvent& msg)
+    void XbeInstdState::LifeSign(XbeInstdContext& context, const xbe::event::LifeSignEvent& msg)
     {
         Default(context);
         return;
     }
 
-    void XbeInstdState::StatusReq(XbeInstdContext& context, const xbe::StatusReqEvent& msg)
+    void XbeInstdState::StatusReq(XbeInstdContext& context, const xbe::event::StatusReqEvent& msg)
     {
         Default(context);
         return;
     }
 
-    void XbeInstdState::Terminate(XbeInstdContext& context, const xbe::TerminateEvent& msg)
+    void XbeInstdState::Terminate(XbeInstdContext& context, const xbe::event::TerminateEvent& msg)
     {
         Default(context);
         return;
@@ -68,7 +68,7 @@ namespace xbe
         return;
     }
 
-    void XbeInstdFSM_Idle::Execute(XbeInstdContext& context, const xbe::ExecuteEvent& msg)
+    void XbeInstdFSM_Idle::Execute(XbeInstdContext& context, const xbe::event::ExecuteEvent& msg)
     {
         XbeInstd& ctxt(context.getOwner());
 
@@ -89,7 +89,7 @@ namespace xbe
         return;
     }
 
-    void XbeInstdFSM_Idle::LifeSign(XbeInstdContext& context, const xbe::LifeSignEvent& msg)
+    void XbeInstdFSM_Idle::LifeSign(XbeInstdContext& context, const xbe::event::LifeSignEvent& msg)
     {
         XbeInstd& ctxt(context.getOwner());
 
@@ -110,7 +110,7 @@ namespace xbe
         return;
     }
 
-    void XbeInstdFSM_Idle::StatusReq(XbeInstdContext& context, const xbe::StatusReqEvent& msg)
+    void XbeInstdFSM_Idle::StatusReq(XbeInstdContext& context, const xbe::event::StatusReqEvent& msg)
     {
         XbeInstd& ctxt(context.getOwner());
 
@@ -131,7 +131,7 @@ namespace xbe
         return;
     }
 
-    void XbeInstdFSM_Idle::Terminate(XbeInstdContext& context, const xbe::TerminateEvent& msg)
+    void XbeInstdFSM_Idle::Terminate(XbeInstdContext& context, const xbe::event::TerminateEvent& msg)
     {
         XbeInstd& ctxt(context.getOwner());
 
@@ -152,7 +152,7 @@ namespace xbe
         return;
     }
 
-    void XbeInstdFSM_Executing::Failed(XbeInstdContext& context, const xbe::FailedEvent& msg)
+    void XbeInstdFSM_Executing::Failed(XbeInstdContext& context, const xbe::event::FailedEvent& msg)
     {
         XbeInstd& ctxt(context.getOwner());
 
@@ -173,7 +173,7 @@ namespace xbe
         return;
     }
 
-    void XbeInstdFSM_Executing::Finished(XbeInstdContext& context, const xbe::FinishedEvent& msg)
+    void XbeInstdFSM_Executing::Finished(XbeInstdContext& context, const xbe::event::FinishedEvent& msg)
     {
         XbeInstd& ctxt(context.getOwner());
 
@@ -194,7 +194,7 @@ namespace xbe
         return;
     }
 
-    void XbeInstdFSM_Executing::LifeSign(XbeInstdContext& context, const xbe::LifeSignEvent& msg)
+    void XbeInstdFSM_Executing::LifeSign(XbeInstdContext& context, const xbe::event::LifeSignEvent& msg)
     {
         XbeInstd& ctxt(context.getOwner());
 
@@ -215,7 +215,7 @@ namespace xbe
         return;
     }
 
-    void XbeInstdFSM_Executing::StatusReq(XbeInstdContext& context, const xbe::StatusReqEvent& msg)
+    void XbeInstdFSM_Executing::StatusReq(XbeInstdContext& context, const xbe::event::StatusReqEvent& msg)
     {
         XbeInstd& ctxt(context.getOwner());
 
@@ -236,7 +236,7 @@ namespace xbe
         return;
     }
 
-    void XbeInstdFSM_Executing::Terminate(XbeInstdContext& context, const xbe::TerminateEvent& msg)
+    void XbeInstdFSM_Executing::Terminate(XbeInstdContext& context, const xbe::event::TerminateEvent& msg)
     {
         XbeInstd& ctxt(context.getOwner());
 

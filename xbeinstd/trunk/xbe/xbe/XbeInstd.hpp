@@ -1,28 +1,28 @@
 #ifndef XBE_XBEINSTD_HPP
 #define XBE_XBEINSTD_HPP 1
 
-#include <xbe/ExecuteEvent.hpp>
-#include <xbe/LifeSignEvent.hpp>
-#include <xbe/StatusReqEvent.hpp>
-#include <xbe/TerminateEvent.hpp>
-#include <xbe/FinishedEvent.hpp>
-#include <xbe/FailedEvent.hpp>
+#include <xbe/event/ExecuteEvent.hpp>
+#include <xbe/event/LifeSignEvent.hpp>
+#include <xbe/event/StatusReqEvent.hpp>
+#include <xbe/event/TerminateEvent.hpp>
+#include <xbe/event/FinishedEvent.hpp>
+#include <xbe/event/FailedEvent.hpp>
 
 namespace xbe {
     class XbeInstd {
         public:
             /* events from the xbed */
-            void do_execute(const xbe::ExecuteEvent&);
-            void do_terminate(const xbe::TerminateEvent&);
+            void do_execute(const xbe::event::ExecuteEvent&);
+            void do_terminate(const xbe::event::TerminateEvent&);
             void do_terminate_job();
-            void do_send_status(const xbe::StatusReqEvent&);
+            void do_send_status(const xbe::event::StatusReqEvent&);
 
             /* regular events */
-            void do_send_lifesign(const xbe::LifeSignEvent&);
+            void do_send_lifesign(const xbe::event::LifeSignEvent&);
 
             /* events coming from the executed job */
-            void do_finished(const xbe::FinishedEvent&);
-            void do_failed(const xbe::FailedEvent&);
+            void do_finished(const xbe::event::FinishedEvent&);
+            void do_failed(const xbe::event::FailedEvent&);
     };
 }
 

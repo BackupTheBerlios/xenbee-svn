@@ -1,7 +1,7 @@
 #include "XMLMessageEvent.hpp"
 #include <sstream>
 
-using namespace xbe;
+using namespace xbe::event;
 
 XMLMessageEvent::XMLMessageEvent(const xbemsg::message_t& xbemsg)
   : _msg(xbemsg._clone()) {}

@@ -1,6 +1,6 @@
 #include "ErrorEvent.hpp"
 
-using namespace xbe;
+using namespace xbe::event;
 
 ErrorEvent::ErrorEvent(const std::string& reason, const std::string& additionalData)
   : _reason(reason), _additionalData(additionalData) {}

@@ -1,11 +1,12 @@
 #include <seda/SystemEvent.hpp>
+#include "event/MessageEvent.hpp"
+#include "event/EventFactory.hpp"
+#include "event/ChannelCommandEvent.hpp"
 
 #include "ChannelAdapterStrategy.hpp"
-#include "MessageEvent.hpp"
-#include "EventFactory.hpp"
-#include "ChannelCommandEvent.hpp"
 
 using namespace xbe;
+using namespace xbe::event;
 
 ChannelAdapterStrategy::ChannelAdapterStrategy(const std::string& name,
                                                const seda::Strategy::Ptr& decorated,
@@ -24,7 +25,7 @@ void ChannelAdapterStrategy::onMessage(const cms::Message *m) {
     try {
         XBE_LOG_INFO("got new message from the network");
         StrategyDecorator::perform(EventFactory::instance().newEvent(m));
-    } catch (const xbe::UnknownConversion& ex) {
+    } catch (const xbe::event::UnknownConversion& ex) {
         XBE_LOG_DEBUG("cms::Message could not be converted to Event: " << ex.what());
     } catch (const std::exception& ex) {
         XBE_LOG_WARN("message lost due to error during push: " << ex.what());
@@ -44,7 +45,7 @@ void ChannelAdapterStrategy::onException(const cms::CMSException& ex) {
 void ChannelAdapterStrategy::perform(const seda::IEvent::Ptr& e) const {
     XBE_LOG_DEBUG("handling event: " << e->str());
     // handle messages
-    if (xbe::MessageEvent *msgEvent = dynamic_cast<xbe::MessageEvent*>(e.get())) {
+    if (xbe::event::MessageEvent *msgEvent = dynamic_cast<xbe::event::MessageEvent*>(e.get())) {
         try {
             if (msgEvent->destination().isValid()) {
                 XBE_LOG_DEBUG("sending message `"<< msgEvent->message() << "' to " << msgEvent->destination().str());
@@ -61,7 +62,7 @@ void ChannelAdapterStrategy::perform(const seda::IEvent::Ptr& e) const {
             StrategyDecorator::perform(EventFactory::instance().newErrorEvent("unknown error during message sending"));
         }
     } else if (seda::SystemEvent *systemEvent = dynamic_cast<seda::SystemEvent*>(e.get())) {
-        if (xbe::ChannelCommandEvent *channelCommand = dynamic_cast<xbe::ChannelCommandEvent*>(systemEvent)) {
+        if (xbe::event::ChannelCommandEvent *channelCommand = dynamic_cast<xbe::event::ChannelCommandEvent*>(systemEvent)) {
             XBE_LOG_DEBUG("got command for channel: " << channelCommand->str());
             channelCommand->execute(_channel);
         } else {

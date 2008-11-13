@@ -1,12 +1,13 @@
 #include <fstream>
 #include <sstream>
 
-#include "XMLEvent.hpp"
+#include "event/XMLEvent.hpp"
+#include "event/MessageEvent.hpp"
 #include "XMLSerializeStrategy.hpp"
 #include "XbeLibUtils.hpp"
-#include "MessageEvent.hpp"
 
 using namespace xbe;
+using namespace xbe::event;
 
 void XMLSerializeStrategy::perform(const seda::IEvent::Ptr& e) const {
     const XMLEvent* xmlEvent(dynamic_cast<const XMLEvent*>(e.get()));

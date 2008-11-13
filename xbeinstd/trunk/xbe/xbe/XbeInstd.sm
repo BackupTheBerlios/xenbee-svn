@@ -4,12 +4,12 @@
 //
 %}
 
-%include <xbe/ExecuteEvent.hpp>
-%include <xbe/LifeSignEvent.hpp>
-%include <xbe/StatusReqEvent.hpp>
-%include <xbe/TerminateEvent.hpp>
-%include <xbe/FinishedEvent.hpp>
-%include <xbe/FailedEvent.hpp>
+%include <xbe/event/ExecuteEvent.hpp>
+%include <xbe/event/LifeSignEvent.hpp>
+%include <xbe/event/StatusReqEvent.hpp>
+%include <xbe/event/TerminateEvent.hpp>
+%include <xbe/event/FinishedEvent.hpp>
+%include <xbe/event/FailedEvent.hpp>
 
 %package xbe
 %class XbeInstd
@@ -21,25 +21,25 @@
 %%
 Idle
 {
-    Execute(msg: const xbe::ExecuteEvent&)
+    Execute(msg: const xbe::event::ExecuteEvent&)
         Executing
         {
             do_execute(msg);
         }
 
-    LifeSign(msg: const xbe::LifeSignEvent&)
+    LifeSign(msg: const xbe::event::LifeSignEvent&)
         Idle
         {
             do_send_lifesign(msg);
         }
 
-    StatusReq(msg: const xbe::StatusReqEvent&)
+    StatusReq(msg: const xbe::event::StatusReqEvent&)
         Idle
         {
             do_send_status(msg);
         }
 
-    Terminate(msg: const xbe::TerminateEvent&)
+    Terminate(msg: const xbe::event::TerminateEvent&)
         Terminated
         {
             do_terminate(msg);
@@ -48,31 +48,31 @@ Idle
 
 Executing
 {
-    Finished(msg: const xbe::FinishedEvent&)
+    Finished(msg: const xbe::event::FinishedEvent&)
         Idle
         {
             do_finished(msg);
         }
 
-    Failed(msg: const xbe::FailedEvent&)
+    Failed(msg: const xbe::event::FailedEvent&)
         Idle
         {
             do_failed(msg);
         }
 
-    StatusReq(msg: const xbe::StatusReqEvent&)
+    StatusReq(msg: const xbe::event::StatusReqEvent&)
         Executing
         {
             do_send_status(msg);
         }
 
-    LifeSign(msg: const xbe::LifeSignEvent&)
+    LifeSign(msg: const xbe::event::LifeSignEvent&)
         Executing
         {
             do_send_lifesign(msg);
         }
 
-    Terminate(msg: const xbe::TerminateEvent&)
+    Terminate(msg: const xbe::event::TerminateEvent&)
         Terminated
         {
             do_terminate_job();

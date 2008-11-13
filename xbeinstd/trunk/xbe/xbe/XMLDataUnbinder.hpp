@@ -3,8 +3,8 @@
 
 #include <xbe/common.hpp>
 #include <seda/StrategyDecorator.hpp>
-#include <xbe/ObjectEvent.hpp>
-#include <xbe/XMLEvent.hpp>
+#include <xbe/event/ObjectEvent.hpp>
+#include <xbe/event/XMLEvent.hpp>
 
 namespace xbe {
     /** Transforms xbe-msg objects back to DOMDocuments. */
@@ -20,11 +20,11 @@ namespace xbe {
                 virtual ~XMLDataUnbinder() {}
 
                 virtual void perform(const seda::IEvent::Ptr& e) const {
-                    ObjectEvent<xml_object_type>* objectEvent(dynamic_cast<ObjectEvent<xml_object_type>* >(e.get()));
+                    xbe::event::ObjectEvent<xml_object_type>* objectEvent(dynamic_cast<xbe::event::ObjectEvent<xml_object_type>* >(e.get()));
                     if (objectEvent) {
                         ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > doc(xml_object_serializer()(objectEvent->object(), XbeLibUtils::namespace_infomap(), 0));
                         seda::StrategyDecorator::perform(seda::IEvent::Ptr(
-                                    new XMLEvent(objectEvent->to(),
+                                    new xbe::event::XMLEvent(objectEvent->to(),
                                         objectEvent->from(),
                                         doc)
                                     ));

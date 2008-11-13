@@ -1,6 +1,6 @@
 #include "ChannelDelIncoming.hpp"
 
-using namespace xbe;
+using namespace xbe::event;
 
 void
 ChannelDelIncoming::execute(mqs::Channel::Ptr channel) {

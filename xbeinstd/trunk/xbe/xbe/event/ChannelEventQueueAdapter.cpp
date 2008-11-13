@@ -3,6 +3,7 @@
 #include "EventFactory.hpp"
 
 using namespace xbe;
+using namespace xbe::event;
 
 ChannelEventQueueAdapter::ChannelEventQueueAdapter(const mqs::Channel::Ptr& channel, std::size_t maxQueueSize)
     : seda::EventQueue("channeladapter", maxQueueSize),

@@ -29,12 +29,12 @@ namespace xbe
         virtual void Entry(XbeInstdContext&) {};
         virtual void Exit(XbeInstdContext&) {};
 
-        virtual void Execute(XbeInstdContext& context, const xbe::ExecuteEvent& msg);
-        virtual void Failed(XbeInstdContext& context, const xbe::FailedEvent& msg);
-        virtual void Finished(XbeInstdContext& context, const xbe::FinishedEvent& msg);
-        virtual void LifeSign(XbeInstdContext& context, const xbe::LifeSignEvent& msg);
-        virtual void StatusReq(XbeInstdContext& context, const xbe::StatusReqEvent& msg);
-        virtual void Terminate(XbeInstdContext& context, const xbe::TerminateEvent& msg);
+        virtual void Execute(XbeInstdContext& context, const xbe::event::ExecuteEvent& msg);
+        virtual void Failed(XbeInstdContext& context, const xbe::event::FailedEvent& msg);
+        virtual void Finished(XbeInstdContext& context, const xbe::event::FinishedEvent& msg);
+        virtual void LifeSign(XbeInstdContext& context, const xbe::event::LifeSignEvent& msg);
+        virtual void StatusReq(XbeInstdContext& context, const xbe::event::StatusReqEvent& msg);
+        virtual void Terminate(XbeInstdContext& context, const xbe::event::TerminateEvent& msg);
 
     protected:
 
@@ -69,10 +69,10 @@ namespace xbe
         : XbeInstdFSM_Default(name, stateId)
         {};
 
-        void Execute(XbeInstdContext& context, const xbe::ExecuteEvent& msg);
-        void LifeSign(XbeInstdContext& context, const xbe::LifeSignEvent& msg);
-        void StatusReq(XbeInstdContext& context, const xbe::StatusReqEvent& msg);
-        void Terminate(XbeInstdContext& context, const xbe::TerminateEvent& msg);
+        void Execute(XbeInstdContext& context, const xbe::event::ExecuteEvent& msg);
+        void LifeSign(XbeInstdContext& context, const xbe::event::LifeSignEvent& msg);
+        void StatusReq(XbeInstdContext& context, const xbe::event::StatusReqEvent& msg);
+        void Terminate(XbeInstdContext& context, const xbe::event::TerminateEvent& msg);
     };
 
     class XbeInstdFSM_Executing :
@@ -83,11 +83,11 @@ namespace xbe
         : XbeInstdFSM_Default(name, stateId)
         {};
 
-        void Failed(XbeInstdContext& context, const xbe::FailedEvent& msg);
-        void Finished(XbeInstdContext& context, const xbe::FinishedEvent& msg);
-        void LifeSign(XbeInstdContext& context, const xbe::LifeSignEvent& msg);
-        void StatusReq(XbeInstdContext& context, const xbe::StatusReqEvent& msg);
-        void Terminate(XbeInstdContext& context, const xbe::TerminateEvent& msg);
+        void Failed(XbeInstdContext& context, const xbe::event::FailedEvent& msg);
+        void Finished(XbeInstdContext& context, const xbe::event::FinishedEvent& msg);
+        void LifeSign(XbeInstdContext& context, const xbe::event::LifeSignEvent& msg);
+        void StatusReq(XbeInstdContext& context, const xbe::event::StatusReqEvent& msg);
+        void Terminate(XbeInstdContext& context, const xbe::event::TerminateEvent& msg);
     };
 
     class XbeInstdFSM_Terminated :
@@ -127,32 +127,32 @@ namespace xbe
             return (dynamic_cast<XbeInstdState&>(*_state));
         };
 
-        void Execute(const xbe::ExecuteEvent& msg)
+        void Execute(const xbe::event::ExecuteEvent& msg)
         {
             (getState()).Execute(*this, msg);
         };
 
-        void Failed(const xbe::FailedEvent& msg)
+        void Failed(const xbe::event::FailedEvent& msg)
         {
             (getState()).Failed(*this, msg);
         };
 
-        void Finished(const xbe::FinishedEvent& msg)
+        void Finished(const xbe::event::FinishedEvent& msg)
         {
             (getState()).Finished(*this, msg);
         };
 
-        void LifeSign(const xbe::LifeSignEvent& msg)
+        void LifeSign(const xbe::event::LifeSignEvent& msg)
         {
             (getState()).LifeSign(*this, msg);
         };
 
-        void StatusReq(const xbe::StatusReqEvent& msg)
+        void StatusReq(const xbe::event::StatusReqEvent& msg)
         {
             (getState()).StatusReq(*this, msg);
         };
 
-        void Terminate(const xbe::TerminateEvent& msg)
+        void Terminate(const xbe::event::TerminateEvent& msg)
         {
             (getState()).Terminate(*this, msg);
         };

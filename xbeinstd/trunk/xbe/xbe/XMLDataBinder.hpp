@@ -6,8 +6,8 @@
 
 #include <xbe/common.hpp>
 #include <xbe/XbeLibUtils.hpp>
-#include <xbe/ObjectEvent.hpp>
-#include <xbe/XMLEvent.hpp>
+#include <xbe/event/ObjectEvent.hpp>
+#include <xbe/event/XMLEvent.hpp>
 
 namespace xbe {
     /** Transforms xml messages into xml-object messages using xsd's generated classes. */
@@ -23,10 +23,10 @@ namespace xbe {
             virtual ~XMLDataBinder() {}
 
             virtual void perform(const seda::IEvent::Ptr& e) const {
-                const XMLEvent* xmlEvent(dynamic_cast<const XMLEvent*>(e.get()));
+                const xbe::event::XMLEvent* xmlEvent(dynamic_cast<const xbe::event::XMLEvent*>(e.get()));
                 if (xmlEvent) {
                     seda::StrategyDecorator::perform(seda::IEvent::Ptr(
-                                new ObjectEvent<xml_object_type>(xmlEvent->to(),
+                                new xbe::event::ObjectEvent<xml_object_type>(xmlEvent->to(),
                                     xmlEvent->from(),
                                     xml_object_parser()(xmlEvent->payload(), (xml_schema::flags)0, XbeLibUtils::schema_properties())
                                 )));

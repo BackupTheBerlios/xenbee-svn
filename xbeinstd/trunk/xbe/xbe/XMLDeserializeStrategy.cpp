@@ -6,10 +6,11 @@
 
 #include "XbeLibUtils.hpp"
 #include "XMLDeserializeStrategy.hpp"
-#include "MessageEvent.hpp"
-#include "XMLEvent.hpp"
+#include "event/MessageEvent.hpp"
+#include "event/XMLEvent.hpp"
 
 using namespace xbe;
+using namespace xbe::event;
 
 void XMLDeserializeStrategy::perform(const seda::IEvent::Ptr& e) const {
     const MessageEvent* msgEvent(dynamic_cast<const MessageEvent*>(e.get()));

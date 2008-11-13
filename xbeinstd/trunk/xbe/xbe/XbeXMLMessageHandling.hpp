@@ -2,7 +2,7 @@
 #define XBE_XBE_XML_MESSAGE_HANDLING_HPP 1
 
 #include <xbe/XbeLibUtils.hpp>
-#include <xbe/ObjectEvent.hpp>
+#include <xbe/event/ObjectEvent.hpp>
 #include <xbe/xbe-msg.hpp>
 #include <xbe/XMLDataBinder.hpp>
 #include <xbe/XMLDataUnbinder.hpp>
@@ -32,7 +32,7 @@ namespace xbe {
         }
     };
 
-    typedef ObjectEvent< xbemsg::message_t > XbeMessageEvent;
+    typedef xbe::event::ObjectEvent< xbemsg::message_t > XbeMessageEvent;
     typedef XMLDataBinder< xbemsg::message_t, XbeXMLObjectParser > XbeXMLDataBinder;
     typedef XMLDataUnbinder< xbemsg::message_t, XbeXMLObjectSerializer > XbeXMLDataUnbinder;
 }

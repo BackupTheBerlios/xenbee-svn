@@ -1,6 +1,6 @@
 #include "ChannelReconnect.hpp"
 
-using namespace xbe;
+using namespace xbe::event;
 
 void
 ChannelReconnect::execute(mqs::Channel::Ptr channel) {
