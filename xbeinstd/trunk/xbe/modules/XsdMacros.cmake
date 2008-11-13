@@ -12,6 +12,7 @@ macro(add_xsd_schema BASE_NAME PATH_TO_SCHEMA)
           COMMAND ${XSD_EXECUTABLE}
           ARGS ${XSD_ARGS} --reserved-name "LINUX=LINUX_OS"
           --namespace-map "http://www.xenbee.net/schema/2008/02/xbe-msg=xbemsg"
+          --namespace-map "http://www.xenbee.net/schema/2008/02/xbe-instd=xbeinstd"
           --namespace-map "http://schemas.ggf.org/jsdl/2005/11/jsdl-posix=jsdlPosix"
           --namespace-map "http://www.w3.org/2000/09/xmldsig#=dsig"
           --namespace-map "http://www.w3.org/2001/04/xmlenc#=xenc"

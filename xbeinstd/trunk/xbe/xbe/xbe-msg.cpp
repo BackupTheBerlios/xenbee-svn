@@ -193,6 +193,36 @@ namespace xbemsg
     this->from_.set (x);
   }
 
+  const header_t::conversation_id_type& header_t::
+  conversation_id () const
+  {
+    return this->conversation_id_.get ();
+  }
+
+  header_t::conversation_id_type& header_t::
+  conversation_id ()
+  {
+    return this->conversation_id_.get ();
+  }
+
+  void header_t::
+  conversation_id (const conversation_id_type& x)
+  {
+    this->conversation_id_.set (x);
+  }
+
+  void header_t::
+  conversation_id (::std::auto_ptr< conversation_id_type > x)
+  {
+    this->conversation_id_.set (x);
+  }
+
+  const header_t::conversation_id_type& header_t::
+  conversation_id_default_value ()
+  {
+    return conversation_id_default_value_;
+  }
+
   const header_t::any_sequence& header_t::
   any () const
   {
@@ -451,13 +481,18 @@ namespace xbemsg
   // header_t
   //
 
+  const header_t::conversation_id_type header_t::conversation_id_default_value_ (
+    ::std::string (""), 0, 0, 0);
+
   header_t::
   header_t (const to_type& to,
-            const from_type& from)
+            const from_type& from,
+            const conversation_id_type& conversation_id)
   : ::xml_schema::type (),
     dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     to_ (to, ::xml_schema::flags (), this),
     from_ (from, ::xml_schema::flags (), this),
+    conversation_id_ (conversation_id, ::xml_schema::flags (), this),
     any_ (this->dom_document ()),
     any_attribute_ (this->dom_document ())
   {
@@ -471,6 +506,7 @@ namespace xbemsg
     dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     to_ (x.to_, f, this),
     from_ (x.from_, f, this),
+    conversation_id_ (x.conversation_id_, f, this),
     any_ (x.any_, this->dom_document ()),
     any_attribute_ (x.any_attribute_, this->dom_document ())
   {
@@ -484,6 +520,7 @@ namespace xbemsg
     dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     to_ (f, this),
     from_ (f, this),
+    conversation_id_ (f, this),
     any_ (this->dom_document ()),
     any_attribute_ (this->dom_document ())
   {
@@ -532,6 +569,20 @@ namespace xbemsg
         }
       }
 
+      // conversation-id
+      //
+      if (n.name () == "conversation-id" && n.namespace_ () == "http://www.xenbee.net/schema/2008/02/xbe-msg")
+      {
+        ::std::auto_ptr< conversation_id_type > r (
+          conversation_id_traits::create (i, f, this));
+
+        if (!conversation_id_.present ())
+        {
+          this->conversation_id (r);
+          continue;
+        }
+      }
+
       // any
       //
       if ((!n.namespace_ ().empty () && n.namespace_ () != "http://www.xenbee.net/schema/2008/02/xbe-msg"))
@@ -558,6 +609,13 @@ namespace xbemsg
     {
       throw ::xsd::cxx::tree::expected_element< char > (
         "from",
+        "http://www.xenbee.net/schema/2008/02/xbe-msg");
+    }
+
+    if (!conversation_id_.present ())
+    {
+      throw ::xsd::cxx::tree::expected_element< char > (
+        "conversation-id",
         "http://www.xenbee.net/schema/2008/02/xbe-msg");
     }
 
@@ -1633,6 +1691,18 @@ namespace xbemsg
           e));
 
       s << i.from ();
+    }
+
+    // conversation-id
+    //
+    {
+      ::xercesc::DOMElement& s (
+        ::xsd::cxx::xml::dom::create_element (
+          "conversation-id",
+          "http://www.xenbee.net/schema/2008/02/xbe-msg",
+          e));
+
+      s << i.conversation_id ();
     }
 
     // any

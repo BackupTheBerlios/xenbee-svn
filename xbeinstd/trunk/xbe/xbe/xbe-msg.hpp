@@ -414,6 +414,26 @@ namespace xbemsg
     void
     from (::std::auto_ptr< from_type > p);
 
+    // conversation-id
+    // 
+    typedef ::xml_schema::string conversation_id_type;
+    typedef ::xsd::cxx::tree::traits< conversation_id_type, char > conversation_id_traits;
+
+    const conversation_id_type&
+    conversation_id () const;
+
+    conversation_id_type&
+    conversation_id ();
+
+    void
+    conversation_id (const conversation_id_type& x);
+
+    void
+    conversation_id (::std::auto_ptr< conversation_id_type > p);
+
+    static const conversation_id_type&
+    conversation_id_default_value ();
+
     // any
     // 
     typedef ::xsd::cxx::tree::element_sequence any_sequence;
@@ -455,7 +475,8 @@ namespace xbemsg
     // Constructors.
     //
     header_t (const to_type&,
-              const from_type&);
+              const from_type&,
+              const conversation_id_type&);
 
     header_t (const ::xercesc::DOMElement& e,
               ::xml_schema::flags f = 0,
@@ -484,6 +505,8 @@ namespace xbemsg
 
     ::xsd::cxx::tree::one< to_type > to_;
     ::xsd::cxx::tree::one< from_type > from_;
+    ::xsd::cxx::tree::one< conversation_id_type > conversation_id_;
+    static const conversation_id_type conversation_id_default_value_;
     any_sequence any_;
     any_attribute_set any_attribute_;
   };

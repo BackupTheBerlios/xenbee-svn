@@ -1,11 +1,11 @@
 #ifndef XBE_FINISHED_EVENT_HPP
 #define XBE_FINISHED_EVENT_HPP 1
 
-#include <seda/UserEvent.hpp>
+#include <xbe/event/XbeInstdEvent.hpp>
 
 namespace xbe {
     namespace event {
-        class FinishedEvent : public seda::UserEvent {
+        class FinishedEvent : public xbe::event::XbeInstdEvent {
             public:
                 FinishedEvent() {}
                 virtual ~FinishedEvent() {}

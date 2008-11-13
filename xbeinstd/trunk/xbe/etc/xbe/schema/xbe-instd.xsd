@@ -36,6 +36,20 @@
         <xs:anyAttribute namespace="##other" processContents="lax"/>
     </xs:complexType>
 
+    <xs:complexType name="finished_ack_t">
+        <xs:sequence>
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:anyAttribute namespace="##other" processContents="lax"/>
+    </xs:complexType>
+
+    <xs:complexType name="failed_ack_t">
+        <xs:sequence>
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:anyAttribute namespace="##other" processContents="lax"/>
+    </xs:complexType>
+
 
     <!-- Messages from the XbeInstDaemon to the XbeDaemon -->
     <xs:complexType name="life_sign_t">
@@ -53,6 +67,13 @@
     </xs:complexType>
 
     <xs:complexType name="terminate_ack_t">
+        <xs:sequence>
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:anyAttribute namespace="##other" processContents="lax"/>
+    </xs:complexType>
+
+    <xs:complexType name="shutdown_ack_t">
         <xs:sequence>
             <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
         </xs:sequence>
@@ -90,6 +111,7 @@
 
     <xs:element name="execute_ack"   type="xbe-instd:execute_ack_t"/>
     <xs:element name="terminate_ack" type="xbe-instd:terminate_ack_t"/>
+    <xs:element name="shutdown_ack"   type="xbe-instd:shutdown_ack_t"/>
     <xs:element name="status"        type="xbe-instd:status_t"/>
     <xs:element name="finished"      type="xbe-instd:finished_t"/>
     <xs:element name="failed"        type="xbe-instd:failed_t"/>

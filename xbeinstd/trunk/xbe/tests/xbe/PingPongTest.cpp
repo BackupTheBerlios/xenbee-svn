@@ -8,11 +8,11 @@
 #include <xbe/XMLSigner.hpp>
 #include <xbe/XMLSerializeStrategy.hpp>
 #include <xbe/XMLDeserializeStrategy.hpp>
-#include <xbe/XMLEvent.hpp>
 #include <xbe/XMLDataBinder.hpp>
 #include <xbe/XMLDataUnbinder.hpp>
 #include <xbe/XbeXMLMessageHandling.hpp>
-#include <xbe/XMLMessageEvent.hpp>
+#include <xbe/event/XMLMessageEvent.hpp>
+#include <xbe/event/XMLEvent.hpp>
 
 #include <seda/Stage.hpp>
 #include <seda/IEvent.hpp>

@@ -5,7 +5,7 @@
 
 #include <xbe/common.hpp>
 #include <xbe/ChannelAdapterStrategy.hpp>
-#include <xbe/MessageEvent.hpp>
+#include <xbe/event/MessageEvent.hpp>
 
 #include <seda/Stage.hpp>
 #include <seda/EventQueue.hpp>
@@ -97,7 +97,7 @@ ChannelAdapterStrategyTest::testSendViaStageMessage() {
   channel->flushMessages();
   stage->start();
   
-  stage->send(seda::IEvent::Ptr(new xbe::MessageEvent("testSendViaStageMessage")));
+  stage->send(seda::IEvent::Ptr(new xbe::event::MessageEvent("testSendViaStageMessage")));
 
   XBE_LOG_INFO("waiting at most 2s for message arival");
   ecs->wait(1, 2000);

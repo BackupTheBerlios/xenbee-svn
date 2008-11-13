@@ -1,11 +1,11 @@
 #ifndef XBE_STATUS_REQ_EVENT_HPP
 #define XBE_STATUS_REQ_EVENT_HPP 1
 
-#include <seda/UserEvent.hpp>
+#include <xbe/event/XbeInstdEvent.hpp>
 
 namespace xbe {
     namespace event {
-        class StatusReqEvent : public seda::UserEvent {
+        class StatusReqEvent : public xbe::event::XbeInstdEvent {
             public:
                 StatusReqEvent() {}
                 virtual ~StatusReqEvent() {}

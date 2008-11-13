@@ -448,7 +448,7 @@ void
 XMLSecurityLibraryTest::testValidateXbeMessage() {
     XBE_LOG_DEBUG("**** Test: testValidateXbeMessage ****");
 
-    xbemsg::header_t hdr("test.xbe.to", "tests.xbe.from");
+    xbemsg::header_t hdr("test.xbe.to", "tests.xbe.from", "");
     xbemsg::body_t body;
     body.any().push_back(body.dom_document().createElementNS(xml::string("http://www.xenbee.net/schema/2008/02/xbetest").c_str(),
                 xml::string("xbetest:Ping").c_str()));

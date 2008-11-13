@@ -23,7 +23,7 @@ namespace xbe {
             virtual ~XMLDataBinder() {}
 
             virtual void perform(const seda::IEvent::Ptr& e) const {
-                const xbe::event::XMLEvent* xmlEvent(dynamic_cast<const xbe::event::XMLEvent*>(e.get()));
+                const xbe::event::XMLEvent *xmlEvent(dynamic_cast<const xbe::event::XMLEvent*>(e.get()));
                 if (xmlEvent) {
                     seda::StrategyDecorator::perform(seda::IEvent::Ptr(
                                 new xbe::event::ObjectEvent<xml_object_type>(xmlEvent->to(),

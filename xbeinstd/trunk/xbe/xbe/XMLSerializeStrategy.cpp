@@ -9,13 +9,11 @@
 using namespace xbe;
 using namespace xbe::event;
 
-void XMLSerializeStrategy::perform(const seda::IEvent::Ptr& e) const {
+void XMLSerializeStrategy::perform(const seda::IEvent::Ptr &e) const {
     const XMLEvent* xmlEvent(dynamic_cast<const XMLEvent*>(e.get()));
     if (xmlEvent) {
         std::ostringstream oss;
         XbeLibUtils::serialize(oss, xmlEvent->payload());
-        std::ofstream out("resources/test1.xml");
-        XbeLibUtils::serialize(out, xmlEvent->payload());
 
         MessageEvent *msgEvent(new MessageEvent(oss.str(),
                                                 mqs::Destination(xmlEvent->to()),

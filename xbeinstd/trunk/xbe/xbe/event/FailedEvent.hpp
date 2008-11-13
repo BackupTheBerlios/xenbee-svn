@@ -1,11 +1,11 @@
 #ifndef XBE_FAILED_EVENT_HPP
 #define XBE_FAILED_EVENT_HPP 1
 
-#include <seda/UserEvent.hpp>
+#include <xbe/event/XbeInstdEvent.hpp>
 
 namespace xbe {
     namespace event {
-        class FailedEvent : public seda::UserEvent {
+        class FailedEvent : public xbe::event::XbeInstdEvent {
             public:
                 FailedEvent() {}
                 virtual ~FailedEvent() {}

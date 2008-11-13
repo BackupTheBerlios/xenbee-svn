@@ -1,11 +1,11 @@
 #ifndef XBE_LIFE_SIGN_EVENT_HPP
 #define XBE_LIFE_SIGN_EVENT_HPP 1
 
-#include <seda/UserEvent.hpp>
+#include <xbe/event/XbeInstdEvent.hpp>
 
 namespace xbe {
     namespace event {
-        class LifeSignEvent : public seda::UserEvent {
+        class LifeSignEvent : public xbe::event::XbeInstdEvent {
             public:
                 LifeSignEvent() {}
                 virtual ~LifeSignEvent() {}

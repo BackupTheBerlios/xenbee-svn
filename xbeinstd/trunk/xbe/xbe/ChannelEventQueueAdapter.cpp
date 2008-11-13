@@ -1,6 +1,6 @@
 #include "ChannelEventQueueAdapter.hpp"
-#include "MessageEvent.hpp"
-#include "EventFactory.hpp"
+#include "event/MessageEvent.hpp"
+#include "event/EventFactory.hpp"
 
 using namespace xbe;
 using namespace xbe::event;
@@ -17,7 +17,7 @@ ChannelEventQueueAdapter::~ChannelEventQueueAdapter() {}
 void ChannelEventQueueAdapter::onMessage(const cms::Message *m) {
     try {
         EventQueue::push(EventFactory::instance().newEvent(m));
-    } catch (const xbe::UnknownConversion& ex) {
+    } catch (const xbe::event::UnknownConversion& ex) {
         XBE_LOG_DEBUG("cms::Message could not be converted to Event: " << ex.what());
     } catch (const std::exception& ex) {
         XBE_LOG_WARN("message lost due to error during push: " << ex.what());
@@ -35,7 +35,7 @@ void ChannelEventQueueAdapter::onException(const cms::CMSException& ex) {
 }
 
 void ChannelEventQueueAdapter::push(const seda::IEvent::Ptr& e) throw (seda::QueueFull) {
-    xbe::MessageEvent *msgEvent(dynamic_cast<xbe::MessageEvent*>(e.get()));
+    xbe::event::MessageEvent *msgEvent(dynamic_cast<xbe::event::MessageEvent*>(e.get()));
     if (msgEvent) {
         try {
             if (msgEvent->destination().isValid()) {

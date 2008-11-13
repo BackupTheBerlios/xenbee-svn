@@ -20,6 +20,7 @@
     <xs:sequence>
       <xs:element name="to"   type="xs:string"/>
       <xs:element name="from" type="xs:string"/>
+      <xs:element name="conversation-id" type="xs:string" default=""/>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
     </xs:sequence>
     <xs:anyAttribute namespace="##other" processContents="lax"/>

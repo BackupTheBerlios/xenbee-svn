@@ -1,14 +1,14 @@
 #ifndef TESTS_XBE_PING_EVENT_HPP
 #define TESTS_XBE_PING_EVENT_HPP 1
 
-#include <xbe/XMLMessageEvent.hpp>
+#include <xbe/event/XMLMessageEvent.hpp>
 
 namespace tests {
     namespace xbe {
-        class PingEvent : public ::xbe::XMLMessageEvent {
+        class PingEvent : public ::xbe::event::XMLMessageEvent {
         public:
             PingEvent(const xbemsg::message_t& m) :
-                ::xbe::XMLMessageEvent(m) {}
+                ::xbe::event::XMLMessageEvent(m) {}
             virtual ~PingEvent() {}
         };
     }

@@ -39,6 +39,7 @@ set(CMAKE_CXX_FLAGS_DEBUG "-Wall -Werror -Wno-non-virtual-dtor")
 # Releases are made with the release build. Optimize code.
 set(CMAKE_CXX_FLAGS_RELEASE "-Wall -Werror -O3 -Wno-non-virtual-dtor")
 #set(LINK_FLAGS "-Wl,-Bdynamic")
+set(USE_STATIC ON)
 
 ## PkgConfig is helpful
 include(FindPkgConfig)
