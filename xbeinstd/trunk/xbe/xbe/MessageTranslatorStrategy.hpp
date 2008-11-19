@@ -14,11 +14,8 @@ namespace xbe {
     */
     class MessageTranslatorStrategy : public seda::StrategyDecorator {
     public:
-        XMLSerializeStrategy(const seda::Strategy::Ptr& decorated)
-            : seda::StrategyDecorator(decorated->name()+".msg-translator", decorated),
-              XBE_INIT_LOGGER(decorated->name()+".msg-translator")
-        {}
-        virtual ~XMLSerializeStrategy() {}
+        MessageTranslatorStrategy(const std::string &name, const seda::Strategy::Ptr &decorated);
+        virtual ~MessageTranslatorStrategy() {}
 
         virtual void perform(const seda::IEvent::Ptr&) const;
     private:

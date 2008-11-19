@@ -7,7 +7,8 @@ namespace xbe {
     namespace event {
         class ShutdownAckEvent : public xbe::event::XbeInstdEvent {
             public:
-                ShutdownAckEvent() {}
+                ShutdownAckEvent(const std::string &to, const std::string &from, const std::string &conversationID)
+                : XbeInstdEvent(to, from, conversationID) {}
                 virtual ~ShutdownAckEvent() {}
 
                 virtual std::string str() const {return "dummy";}

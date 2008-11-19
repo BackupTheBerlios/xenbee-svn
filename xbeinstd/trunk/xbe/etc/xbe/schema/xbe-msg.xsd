@@ -6,35 +6,147 @@
     targetNamespace="http://www.xenbee.net/schema/2008/02/xbe-msg"
     elementFormDefault="qualified">
 
-  <!-- Message and content types -->
-  <xs:complexType name="message_t">
-    <xs:sequence>
-      <xs:element ref="xbemsg:header"/>
-      <xs:element ref="xbemsg:body"/>
-      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
-    </xs:sequence>
-    <xs:anyAttribute namespace="##other" processContents="lax"/>
-  </xs:complexType>
+    <!-- Message and content types -->
+    <xs:complexType name="message_t">
+        <xs:sequence>
+            <xs:element name="header" type="xbemsg:header_t"/>
+            <xs:element name="body"   type="xbemsg:body_t"/>
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:anyAttribute namespace="##other" processContents="lax"/>
+    </xs:complexType>
 
-  <xs:complexType name="header_t">
-    <xs:sequence>
-      <xs:element name="to"   type="xs:string"/>
-      <xs:element name="from" type="xs:string"/>
-      <xs:element name="conversation-id" type="xs:string" default=""/>
-      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
-    </xs:sequence>
-    <xs:anyAttribute namespace="##other" processContents="lax"/>
-  </xs:complexType>
+    <xs:complexType name="header_t">
+        <xs:sequence>
+            <xs:element name="to"   type="xs:string"/>
+            <xs:element name="from" type="xs:string"/>
+            <xs:element name="conversation-id" type="xs:string" default=""/>
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:anyAttribute namespace="##other" processContents="lax"/>
+    </xs:complexType>
 
-  <xs:complexType name="body_t">
-    <xs:sequence>
-      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
-    </xs:sequence>
-    <xs:anyAttribute namespace="##other" processContents="lax"/>
-  </xs:complexType>
+    <xs:complexType name="body_t">
+        <xs:sequence>
+            <xs:element name="execute"   type="xbemsg:execute_t" minOccurs="0"/>
+            <xs:element name="terminate" type="xbemsg:terminate_t" minOccurs="0"/>
+            <xs:element name="status-req" type="xbemsg:status_req_t" minOccurs="0"/>
+            <xs:element name="shutdown" type="xbemsg:shutdown_t" minOccurs="0"/>
 
-  <!-- valid root elements -->
-  <xs:element name="message" type="xbemsg:message_t"/>
-  <xs:element name="body" type="xbemsg:body_t"/>
-  <xs:element name="header" type="xbemsg:header_t"/>
+            <xs:element name="finished-ack" type="xbemsg:finished_ack_t" minOccurs="0"/>
+            <xs:element name="failed-ack" type="xbemsg:failed_ack_t" minOccurs="0"/>
+            <xs:element name="life-sign" type="xbemsg:life_sign_t" minOccurs="0"/>
+            <xs:element name="execute-ack" type="xbemsg:execute_ack_t" minOccurs="0"/>
+            <xs:element name="terminate-ack" type="xbemsg:terminate_ack_t" minOccurs="0"/>
+            <xs:element name="shutdown-ack" type="xbemsg:shutdown_ack_t" minOccurs="0"/>
+            <xs:element name="status" type="xbemsg:status_t" minOccurs="0"/>
+            <xs:element name="finished" type="xbemsg:finished_t" minOccurs="0"/>
+            <xs:element name="failed" type="xbemsg:failed_t" minOccurs="0"/>
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:anyAttribute namespace="##other" processContents="lax"/>
+    </xs:complexType>
+
+
+    <!-- Messages from the XbeDaemon to the XbeInstDaemon -->
+    <xs:complexType name="execute_t">
+        <xs:sequence>
+            <xs:any namespace="##other" processContents="lax" minOccurs="0"
+                maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:anyAttribute namespace="##other" processContents="lax"/>
+    </xs:complexType>
+
+    <xs:complexType name="terminate_t">
+        <xs:sequence>
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:anyAttribute namespace="##other" processContents="lax"/>
+    </xs:complexType>
+
+    <xs:complexType name="status_req_t">
+        <xs:sequence>
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:anyAttribute namespace="##other" processContents="lax"/>
+    </xs:complexType>
+
+    <xs:complexType name="shutdown_t">
+        <xs:sequence>
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:anyAttribute namespace="##other" processContents="lax"/>
+    </xs:complexType>
+
+    <xs:complexType name="finished_ack_t">
+        <xs:sequence>
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:anyAttribute namespace="##other" processContents="lax"/>
+    </xs:complexType>
+
+    <xs:complexType name="failed_ack_t">
+        <xs:sequence>
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:anyAttribute namespace="##other" processContents="lax"/>
+    </xs:complexType>
+
+
+    <!-- Messages from the XbeInstDaemon to the XbeDaemon -->
+    <xs:complexType name="life_sign_t">
+        <xs:sequence>
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:anyAttribute namespace="##other" processContents="lax"/>
+    </xs:complexType>
+
+    <xs:complexType name="execute_ack_t">
+        <xs:sequence>
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:anyAttribute namespace="##other" processContents="lax"/>
+    </xs:complexType>
+
+    <xs:complexType name="terminate_ack_t">
+        <xs:sequence>
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:anyAttribute namespace="##other" processContents="lax"/>
+    </xs:complexType>
+
+    <xs:complexType name="shutdown_ack_t">
+        <xs:sequence>
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:anyAttribute namespace="##other" processContents="lax"/>
+    </xs:complexType>
+
+    <xs:complexType name="status_t">
+        <xs:sequence>
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:anyAttribute namespace="##other" processContents="lax"/>
+    </xs:complexType>
+
+    <xs:complexType name="finished_t">
+        <xs:sequence>
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:anyAttribute namespace="##other" processContents="lax"/>
+    </xs:complexType>
+
+    <xs:complexType name="failed_t">
+        <xs:sequence>
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:anyAttribute namespace="##other" processContents="lax"/>
+    </xs:complexType>
+
+    <!-- valid root elements -->
+    <xs:element name="message" type="xbemsg:message_t"/>
+    <!--
+    <xs:element name="body" type="xbemsg:body_t"/>
+    <xs:element name="header" type="xbemsg:header_t"/>
+    -->
 </xs:schema>

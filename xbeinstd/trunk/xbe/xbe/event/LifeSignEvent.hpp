@@ -7,7 +7,8 @@ namespace xbe {
     namespace event {
         class LifeSignEvent : public xbe::event::XbeInstdEvent {
             public:
-                LifeSignEvent() {}
+                LifeSignEvent(const std::string &to, const std::string &from, const std::string &conversationID)
+                : xbe::event::XbeInstdEvent(to, from, conversationID) {}
                 virtual ~LifeSignEvent() {}
 
                 virtual std::string str() const {return "dummy";}

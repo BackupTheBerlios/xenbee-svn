@@ -99,7 +99,7 @@ set(Boost_ADDITIONAL_VERSIONS "1.36.0" "1.36")
 set(Boost_FIND_QUIETLY false)
 set(Boost_USE_STATIC_LIBS ON)
 include(FindBoost)
-find_package(Boost 1.36 REQUIRED COMPONENTS thread)
+find_package(Boost 1.36 REQUIRED COMPONENTS thread system filesystem)
 message(STATUS "Boost: -I${Boost_INCLUDE_DIRS} -L${Boost_LIBRARY_DIRS} -l${Boost_LIBRARIES}")
 
 # Deal with logging

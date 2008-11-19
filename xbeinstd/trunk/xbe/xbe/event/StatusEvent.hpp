@@ -7,7 +7,8 @@ namespace xbe {
     namespace event {
         class StatusEvent : public xbe::event::XbeInstdEvent {
             public:
-                StatusEvent() {}
+                StatusEvent(const std::string &to, const std::string &from, const std::string &conversationID)
+                : xbe::event::XbeInstdEvent(to, from, conversationID) {}
                 virtual ~StatusEvent() {}
 
                 virtual std::string str() const {return "dummy";}

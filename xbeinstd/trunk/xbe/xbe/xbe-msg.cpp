@@ -275,6 +275,396 @@ namespace xbemsg
   // body_t
   // 
 
+  const body_t::execute_optional& body_t::
+  execute () const
+  {
+    return this->execute_;
+  }
+
+  body_t::execute_optional& body_t::
+  execute ()
+  {
+    return this->execute_;
+  }
+
+  void body_t::
+  execute (const execute_type& x)
+  {
+    this->execute_.set (x);
+  }
+
+  void body_t::
+  execute (const execute_optional& x)
+  {
+    this->execute_ = x;
+  }
+
+  void body_t::
+  execute (::std::auto_ptr< execute_type > x)
+  {
+    this->execute_.set (x);
+  }
+
+  const body_t::terminate_optional& body_t::
+  terminate () const
+  {
+    return this->terminate_;
+  }
+
+  body_t::terminate_optional& body_t::
+  terminate ()
+  {
+    return this->terminate_;
+  }
+
+  void body_t::
+  terminate (const terminate_type& x)
+  {
+    this->terminate_.set (x);
+  }
+
+  void body_t::
+  terminate (const terminate_optional& x)
+  {
+    this->terminate_ = x;
+  }
+
+  void body_t::
+  terminate (::std::auto_ptr< terminate_type > x)
+  {
+    this->terminate_.set (x);
+  }
+
+  const body_t::status_req_optional& body_t::
+  status_req () const
+  {
+    return this->status_req_;
+  }
+
+  body_t::status_req_optional& body_t::
+  status_req ()
+  {
+    return this->status_req_;
+  }
+
+  void body_t::
+  status_req (const status_req_type& x)
+  {
+    this->status_req_.set (x);
+  }
+
+  void body_t::
+  status_req (const status_req_optional& x)
+  {
+    this->status_req_ = x;
+  }
+
+  void body_t::
+  status_req (::std::auto_ptr< status_req_type > x)
+  {
+    this->status_req_.set (x);
+  }
+
+  const body_t::shutdown_optional& body_t::
+  shutdown () const
+  {
+    return this->shutdown_;
+  }
+
+  body_t::shutdown_optional& body_t::
+  shutdown ()
+  {
+    return this->shutdown_;
+  }
+
+  void body_t::
+  shutdown (const shutdown_type& x)
+  {
+    this->shutdown_.set (x);
+  }
+
+  void body_t::
+  shutdown (const shutdown_optional& x)
+  {
+    this->shutdown_ = x;
+  }
+
+  void body_t::
+  shutdown (::std::auto_ptr< shutdown_type > x)
+  {
+    this->shutdown_.set (x);
+  }
+
+  const body_t::finished_ack_optional& body_t::
+  finished_ack () const
+  {
+    return this->finished_ack_;
+  }
+
+  body_t::finished_ack_optional& body_t::
+  finished_ack ()
+  {
+    return this->finished_ack_;
+  }
+
+  void body_t::
+  finished_ack (const finished_ack_type& x)
+  {
+    this->finished_ack_.set (x);
+  }
+
+  void body_t::
+  finished_ack (const finished_ack_optional& x)
+  {
+    this->finished_ack_ = x;
+  }
+
+  void body_t::
+  finished_ack (::std::auto_ptr< finished_ack_type > x)
+  {
+    this->finished_ack_.set (x);
+  }
+
+  const body_t::failed_ack_optional& body_t::
+  failed_ack () const
+  {
+    return this->failed_ack_;
+  }
+
+  body_t::failed_ack_optional& body_t::
+  failed_ack ()
+  {
+    return this->failed_ack_;
+  }
+
+  void body_t::
+  failed_ack (const failed_ack_type& x)
+  {
+    this->failed_ack_.set (x);
+  }
+
+  void body_t::
+  failed_ack (const failed_ack_optional& x)
+  {
+    this->failed_ack_ = x;
+  }
+
+  void body_t::
+  failed_ack (::std::auto_ptr< failed_ack_type > x)
+  {
+    this->failed_ack_.set (x);
+  }
+
+  const body_t::life_sign_optional& body_t::
+  life_sign () const
+  {
+    return this->life_sign_;
+  }
+
+  body_t::life_sign_optional& body_t::
+  life_sign ()
+  {
+    return this->life_sign_;
+  }
+
+  void body_t::
+  life_sign (const life_sign_type& x)
+  {
+    this->life_sign_.set (x);
+  }
+
+  void body_t::
+  life_sign (const life_sign_optional& x)
+  {
+    this->life_sign_ = x;
+  }
+
+  void body_t::
+  life_sign (::std::auto_ptr< life_sign_type > x)
+  {
+    this->life_sign_.set (x);
+  }
+
+  const body_t::execute_ack_optional& body_t::
+  execute_ack () const
+  {
+    return this->execute_ack_;
+  }
+
+  body_t::execute_ack_optional& body_t::
+  execute_ack ()
+  {
+    return this->execute_ack_;
+  }
+
+  void body_t::
+  execute_ack (const execute_ack_type& x)
+  {
+    this->execute_ack_.set (x);
+  }
+
+  void body_t::
+  execute_ack (const execute_ack_optional& x)
+  {
+    this->execute_ack_ = x;
+  }
+
+  void body_t::
+  execute_ack (::std::auto_ptr< execute_ack_type > x)
+  {
+    this->execute_ack_.set (x);
+  }
+
+  const body_t::terminate_ack_optional& body_t::
+  terminate_ack () const
+  {
+    return this->terminate_ack_;
+  }
+
+  body_t::terminate_ack_optional& body_t::
+  terminate_ack ()
+  {
+    return this->terminate_ack_;
+  }
+
+  void body_t::
+  terminate_ack (const terminate_ack_type& x)
+  {
+    this->terminate_ack_.set (x);
+  }
+
+  void body_t::
+  terminate_ack (const terminate_ack_optional& x)
+  {
+    this->terminate_ack_ = x;
+  }
+
+  void body_t::
+  terminate_ack (::std::auto_ptr< terminate_ack_type > x)
+  {
+    this->terminate_ack_.set (x);
+  }
+
+  const body_t::shutdown_ack_optional& body_t::
+  shutdown_ack () const
+  {
+    return this->shutdown_ack_;
+  }
+
+  body_t::shutdown_ack_optional& body_t::
+  shutdown_ack ()
+  {
+    return this->shutdown_ack_;
+  }
+
+  void body_t::
+  shutdown_ack (const shutdown_ack_type& x)
+  {
+    this->shutdown_ack_.set (x);
+  }
+
+  void body_t::
+  shutdown_ack (const shutdown_ack_optional& x)
+  {
+    this->shutdown_ack_ = x;
+  }
+
+  void body_t::
+  shutdown_ack (::std::auto_ptr< shutdown_ack_type > x)
+  {
+    this->shutdown_ack_.set (x);
+  }
+
+  const body_t::status_optional& body_t::
+  status () const
+  {
+    return this->status_;
+  }
+
+  body_t::status_optional& body_t::
+  status ()
+  {
+    return this->status_;
+  }
+
+  void body_t::
+  status (const status_type& x)
+  {
+    this->status_.set (x);
+  }
+
+  void body_t::
+  status (const status_optional& x)
+  {
+    this->status_ = x;
+  }
+
+  void body_t::
+  status (::std::auto_ptr< status_type > x)
+  {
+    this->status_.set (x);
+  }
+
+  const body_t::finished_optional& body_t::
+  finished () const
+  {
+    return this->finished_;
+  }
+
+  body_t::finished_optional& body_t::
+  finished ()
+  {
+    return this->finished_;
+  }
+
+  void body_t::
+  finished (const finished_type& x)
+  {
+    this->finished_.set (x);
+  }
+
+  void body_t::
+  finished (const finished_optional& x)
+  {
+    this->finished_ = x;
+  }
+
+  void body_t::
+  finished (::std::auto_ptr< finished_type > x)
+  {
+    this->finished_.set (x);
+  }
+
+  const body_t::failed_optional& body_t::
+  failed () const
+  {
+    return this->failed_;
+  }
+
+  body_t::failed_optional& body_t::
+  failed ()
+  {
+    return this->failed_;
+  }
+
+  void body_t::
+  failed (const failed_type& x)
+  {
+    this->failed_.set (x);
+  }
+
+  void body_t::
+  failed (const failed_optional& x)
+  {
+    this->failed_ = x;
+  }
+
+  void body_t::
+  failed (::std::auto_ptr< failed_type > x)
+  {
+    this->failed_.set (x);
+  }
+
   const body_t::any_sequence& body_t::
   any () const
   {
@@ -318,6 +708,682 @@ namespace xbemsg
   }
 
   ::xercesc::DOMDocument& body_t::
+  dom_document ()
+  {
+    return *dom_document_;
+  }
+
+
+  // execute_t
+  // 
+
+  const execute_t::any_sequence& execute_t::
+  any () const
+  {
+    return this->any_;
+  }
+
+  execute_t::any_sequence& execute_t::
+  any ()
+  {
+    return this->any_;
+  }
+
+  void execute_t::
+  any (const any_sequence& s)
+  {
+    this->any_ = s;
+  }
+
+  const execute_t::any_attribute_set& execute_t::
+  any_attribute () const
+  {
+    return this->any_attribute_;
+  }
+
+  execute_t::any_attribute_set& execute_t::
+  any_attribute ()
+  {
+    return this->any_attribute_;
+  }
+
+  void execute_t::
+  any_attribute (const any_attribute_set& s)
+  {
+    this->any_attribute_ = s;
+  }
+
+  const ::xercesc::DOMDocument& execute_t::
+  dom_document () const
+  {
+    return *dom_document_;
+  }
+
+  ::xercesc::DOMDocument& execute_t::
+  dom_document ()
+  {
+    return *dom_document_;
+  }
+
+
+  // terminate_t
+  // 
+
+  const terminate_t::any_sequence& terminate_t::
+  any () const
+  {
+    return this->any_;
+  }
+
+  terminate_t::any_sequence& terminate_t::
+  any ()
+  {
+    return this->any_;
+  }
+
+  void terminate_t::
+  any (const any_sequence& s)
+  {
+    this->any_ = s;
+  }
+
+  const terminate_t::any_attribute_set& terminate_t::
+  any_attribute () const
+  {
+    return this->any_attribute_;
+  }
+
+  terminate_t::any_attribute_set& terminate_t::
+  any_attribute ()
+  {
+    return this->any_attribute_;
+  }
+
+  void terminate_t::
+  any_attribute (const any_attribute_set& s)
+  {
+    this->any_attribute_ = s;
+  }
+
+  const ::xercesc::DOMDocument& terminate_t::
+  dom_document () const
+  {
+    return *dom_document_;
+  }
+
+  ::xercesc::DOMDocument& terminate_t::
+  dom_document ()
+  {
+    return *dom_document_;
+  }
+
+
+  // status_req_t
+  // 
+
+  const status_req_t::any_sequence& status_req_t::
+  any () const
+  {
+    return this->any_;
+  }
+
+  status_req_t::any_sequence& status_req_t::
+  any ()
+  {
+    return this->any_;
+  }
+
+  void status_req_t::
+  any (const any_sequence& s)
+  {
+    this->any_ = s;
+  }
+
+  const status_req_t::any_attribute_set& status_req_t::
+  any_attribute () const
+  {
+    return this->any_attribute_;
+  }
+
+  status_req_t::any_attribute_set& status_req_t::
+  any_attribute ()
+  {
+    return this->any_attribute_;
+  }
+
+  void status_req_t::
+  any_attribute (const any_attribute_set& s)
+  {
+    this->any_attribute_ = s;
+  }
+
+  const ::xercesc::DOMDocument& status_req_t::
+  dom_document () const
+  {
+    return *dom_document_;
+  }
+
+  ::xercesc::DOMDocument& status_req_t::
+  dom_document ()
+  {
+    return *dom_document_;
+  }
+
+
+  // shutdown_t
+  // 
+
+  const shutdown_t::any_sequence& shutdown_t::
+  any () const
+  {
+    return this->any_;
+  }
+
+  shutdown_t::any_sequence& shutdown_t::
+  any ()
+  {
+    return this->any_;
+  }
+
+  void shutdown_t::
+  any (const any_sequence& s)
+  {
+    this->any_ = s;
+  }
+
+  const shutdown_t::any_attribute_set& shutdown_t::
+  any_attribute () const
+  {
+    return this->any_attribute_;
+  }
+
+  shutdown_t::any_attribute_set& shutdown_t::
+  any_attribute ()
+  {
+    return this->any_attribute_;
+  }
+
+  void shutdown_t::
+  any_attribute (const any_attribute_set& s)
+  {
+    this->any_attribute_ = s;
+  }
+
+  const ::xercesc::DOMDocument& shutdown_t::
+  dom_document () const
+  {
+    return *dom_document_;
+  }
+
+  ::xercesc::DOMDocument& shutdown_t::
+  dom_document ()
+  {
+    return *dom_document_;
+  }
+
+
+  // finished_ack_t
+  // 
+
+  const finished_ack_t::any_sequence& finished_ack_t::
+  any () const
+  {
+    return this->any_;
+  }
+
+  finished_ack_t::any_sequence& finished_ack_t::
+  any ()
+  {
+    return this->any_;
+  }
+
+  void finished_ack_t::
+  any (const any_sequence& s)
+  {
+    this->any_ = s;
+  }
+
+  const finished_ack_t::any_attribute_set& finished_ack_t::
+  any_attribute () const
+  {
+    return this->any_attribute_;
+  }
+
+  finished_ack_t::any_attribute_set& finished_ack_t::
+  any_attribute ()
+  {
+    return this->any_attribute_;
+  }
+
+  void finished_ack_t::
+  any_attribute (const any_attribute_set& s)
+  {
+    this->any_attribute_ = s;
+  }
+
+  const ::xercesc::DOMDocument& finished_ack_t::
+  dom_document () const
+  {
+    return *dom_document_;
+  }
+
+  ::xercesc::DOMDocument& finished_ack_t::
+  dom_document ()
+  {
+    return *dom_document_;
+  }
+
+
+  // failed_ack_t
+  // 
+
+  const failed_ack_t::any_sequence& failed_ack_t::
+  any () const
+  {
+    return this->any_;
+  }
+
+  failed_ack_t::any_sequence& failed_ack_t::
+  any ()
+  {
+    return this->any_;
+  }
+
+  void failed_ack_t::
+  any (const any_sequence& s)
+  {
+    this->any_ = s;
+  }
+
+  const failed_ack_t::any_attribute_set& failed_ack_t::
+  any_attribute () const
+  {
+    return this->any_attribute_;
+  }
+
+  failed_ack_t::any_attribute_set& failed_ack_t::
+  any_attribute ()
+  {
+    return this->any_attribute_;
+  }
+
+  void failed_ack_t::
+  any_attribute (const any_attribute_set& s)
+  {
+    this->any_attribute_ = s;
+  }
+
+  const ::xercesc::DOMDocument& failed_ack_t::
+  dom_document () const
+  {
+    return *dom_document_;
+  }
+
+  ::xercesc::DOMDocument& failed_ack_t::
+  dom_document ()
+  {
+    return *dom_document_;
+  }
+
+
+  // life_sign_t
+  // 
+
+  const life_sign_t::any_sequence& life_sign_t::
+  any () const
+  {
+    return this->any_;
+  }
+
+  life_sign_t::any_sequence& life_sign_t::
+  any ()
+  {
+    return this->any_;
+  }
+
+  void life_sign_t::
+  any (const any_sequence& s)
+  {
+    this->any_ = s;
+  }
+
+  const life_sign_t::any_attribute_set& life_sign_t::
+  any_attribute () const
+  {
+    return this->any_attribute_;
+  }
+
+  life_sign_t::any_attribute_set& life_sign_t::
+  any_attribute ()
+  {
+    return this->any_attribute_;
+  }
+
+  void life_sign_t::
+  any_attribute (const any_attribute_set& s)
+  {
+    this->any_attribute_ = s;
+  }
+
+  const ::xercesc::DOMDocument& life_sign_t::
+  dom_document () const
+  {
+    return *dom_document_;
+  }
+
+  ::xercesc::DOMDocument& life_sign_t::
+  dom_document ()
+  {
+    return *dom_document_;
+  }
+
+
+  // execute_ack_t
+  // 
+
+  const execute_ack_t::any_sequence& execute_ack_t::
+  any () const
+  {
+    return this->any_;
+  }
+
+  execute_ack_t::any_sequence& execute_ack_t::
+  any ()
+  {
+    return this->any_;
+  }
+
+  void execute_ack_t::
+  any (const any_sequence& s)
+  {
+    this->any_ = s;
+  }
+
+  const execute_ack_t::any_attribute_set& execute_ack_t::
+  any_attribute () const
+  {
+    return this->any_attribute_;
+  }
+
+  execute_ack_t::any_attribute_set& execute_ack_t::
+  any_attribute ()
+  {
+    return this->any_attribute_;
+  }
+
+  void execute_ack_t::
+  any_attribute (const any_attribute_set& s)
+  {
+    this->any_attribute_ = s;
+  }
+
+  const ::xercesc::DOMDocument& execute_ack_t::
+  dom_document () const
+  {
+    return *dom_document_;
+  }
+
+  ::xercesc::DOMDocument& execute_ack_t::
+  dom_document ()
+  {
+    return *dom_document_;
+  }
+
+
+  // terminate_ack_t
+  // 
+
+  const terminate_ack_t::any_sequence& terminate_ack_t::
+  any () const
+  {
+    return this->any_;
+  }
+
+  terminate_ack_t::any_sequence& terminate_ack_t::
+  any ()
+  {
+    return this->any_;
+  }
+
+  void terminate_ack_t::
+  any (const any_sequence& s)
+  {
+    this->any_ = s;
+  }
+
+  const terminate_ack_t::any_attribute_set& terminate_ack_t::
+  any_attribute () const
+  {
+    return this->any_attribute_;
+  }
+
+  terminate_ack_t::any_attribute_set& terminate_ack_t::
+  any_attribute ()
+  {
+    return this->any_attribute_;
+  }
+
+  void terminate_ack_t::
+  any_attribute (const any_attribute_set& s)
+  {
+    this->any_attribute_ = s;
+  }
+
+  const ::xercesc::DOMDocument& terminate_ack_t::
+  dom_document () const
+  {
+    return *dom_document_;
+  }
+
+  ::xercesc::DOMDocument& terminate_ack_t::
+  dom_document ()
+  {
+    return *dom_document_;
+  }
+
+
+  // shutdown_ack_t
+  // 
+
+  const shutdown_ack_t::any_sequence& shutdown_ack_t::
+  any () const
+  {
+    return this->any_;
+  }
+
+  shutdown_ack_t::any_sequence& shutdown_ack_t::
+  any ()
+  {
+    return this->any_;
+  }
+
+  void shutdown_ack_t::
+  any (const any_sequence& s)
+  {
+    this->any_ = s;
+  }
+
+  const shutdown_ack_t::any_attribute_set& shutdown_ack_t::
+  any_attribute () const
+  {
+    return this->any_attribute_;
+  }
+
+  shutdown_ack_t::any_attribute_set& shutdown_ack_t::
+  any_attribute ()
+  {
+    return this->any_attribute_;
+  }
+
+  void shutdown_ack_t::
+  any_attribute (const any_attribute_set& s)
+  {
+    this->any_attribute_ = s;
+  }
+
+  const ::xercesc::DOMDocument& shutdown_ack_t::
+  dom_document () const
+  {
+    return *dom_document_;
+  }
+
+  ::xercesc::DOMDocument& shutdown_ack_t::
+  dom_document ()
+  {
+    return *dom_document_;
+  }
+
+
+  // status_t
+  // 
+
+  const status_t::any_sequence& status_t::
+  any () const
+  {
+    return this->any_;
+  }
+
+  status_t::any_sequence& status_t::
+  any ()
+  {
+    return this->any_;
+  }
+
+  void status_t::
+  any (const any_sequence& s)
+  {
+    this->any_ = s;
+  }
+
+  const status_t::any_attribute_set& status_t::
+  any_attribute () const
+  {
+    return this->any_attribute_;
+  }
+
+  status_t::any_attribute_set& status_t::
+  any_attribute ()
+  {
+    return this->any_attribute_;
+  }
+
+  void status_t::
+  any_attribute (const any_attribute_set& s)
+  {
+    this->any_attribute_ = s;
+  }
+
+  const ::xercesc::DOMDocument& status_t::
+  dom_document () const
+  {
+    return *dom_document_;
+  }
+
+  ::xercesc::DOMDocument& status_t::
+  dom_document ()
+  {
+    return *dom_document_;
+  }
+
+
+  // finished_t
+  // 
+
+  const finished_t::any_sequence& finished_t::
+  any () const
+  {
+    return this->any_;
+  }
+
+  finished_t::any_sequence& finished_t::
+  any ()
+  {
+    return this->any_;
+  }
+
+  void finished_t::
+  any (const any_sequence& s)
+  {
+    this->any_ = s;
+  }
+
+  const finished_t::any_attribute_set& finished_t::
+  any_attribute () const
+  {
+    return this->any_attribute_;
+  }
+
+  finished_t::any_attribute_set& finished_t::
+  any_attribute ()
+  {
+    return this->any_attribute_;
+  }
+
+  void finished_t::
+  any_attribute (const any_attribute_set& s)
+  {
+    this->any_attribute_ = s;
+  }
+
+  const ::xercesc::DOMDocument& finished_t::
+  dom_document () const
+  {
+    return *dom_document_;
+  }
+
+  ::xercesc::DOMDocument& finished_t::
+  dom_document ()
+  {
+    return *dom_document_;
+  }
+
+
+  // failed_t
+  // 
+
+  const failed_t::any_sequence& failed_t::
+  any () const
+  {
+    return this->any_;
+  }
+
+  failed_t::any_sequence& failed_t::
+  any ()
+  {
+    return this->any_;
+  }
+
+  void failed_t::
+  any (const any_sequence& s)
+  {
+    this->any_ = s;
+  }
+
+  const failed_t::any_attribute_set& failed_t::
+  any_attribute () const
+  {
+    return this->any_attribute_;
+  }
+
+  failed_t::any_attribute_set& failed_t::
+  any_attribute ()
+  {
+    return this->any_attribute_;
+  }
+
+  void failed_t::
+  any_attribute (const any_attribute_set& s)
+  {
+    this->any_attribute_ = s;
+  }
+
+  const ::xercesc::DOMDocument& failed_t::
+  dom_document () const
+  {
+    return *dom_document_;
+  }
+
+  ::xercesc::DOMDocument& failed_t::
   dom_document ()
   {
     return *dom_document_;
@@ -661,6 +1727,19 @@ namespace xbemsg
   body_t ()
   : ::xml_schema::type (),
     dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    execute_ (::xml_schema::flags (), this),
+    terminate_ (::xml_schema::flags (), this),
+    status_req_ (::xml_schema::flags (), this),
+    shutdown_ (::xml_schema::flags (), this),
+    finished_ack_ (::xml_schema::flags (), this),
+    failed_ack_ (::xml_schema::flags (), this),
+    life_sign_ (::xml_schema::flags (), this),
+    execute_ack_ (::xml_schema::flags (), this),
+    terminate_ack_ (::xml_schema::flags (), this),
+    shutdown_ack_ (::xml_schema::flags (), this),
+    status_ (::xml_schema::flags (), this),
+    finished_ (::xml_schema::flags (), this),
+    failed_ (::xml_schema::flags (), this),
     any_ (this->dom_document ()),
     any_attribute_ (this->dom_document ())
   {
@@ -672,6 +1751,19 @@ namespace xbemsg
           ::xml_schema::container* c)
   : ::xml_schema::type (x, f, c),
     dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    execute_ (x.execute_, f, this),
+    terminate_ (x.terminate_, f, this),
+    status_req_ (x.status_req_, f, this),
+    shutdown_ (x.shutdown_, f, this),
+    finished_ack_ (x.finished_ack_, f, this),
+    failed_ack_ (x.failed_ack_, f, this),
+    life_sign_ (x.life_sign_, f, this),
+    execute_ack_ (x.execute_ack_, f, this),
+    terminate_ack_ (x.terminate_ack_, f, this),
+    shutdown_ack_ (x.shutdown_ack_, f, this),
+    status_ (x.status_, f, this),
+    finished_ (x.finished_, f, this),
+    failed_ (x.failed_, f, this),
     any_ (x.any_, this->dom_document ()),
     any_attribute_ (x.any_attribute_, this->dom_document ())
   {
@@ -683,6 +1775,19 @@ namespace xbemsg
           ::xml_schema::container* c)
   : ::xml_schema::type (e, f | ::xml_schema::flags::base, c),
     dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    execute_ (f, this),
+    terminate_ (f, this),
+    status_req_ (f, this),
+    shutdown_ (f, this),
+    finished_ack_ (f, this),
+    failed_ack_ (f, this),
+    life_sign_ (f, this),
+    execute_ack_ (f, this),
+    terminate_ack_ (f, this),
+    shutdown_ack_ (f, this),
+    status_ (f, this),
+    finished_ (f, this),
+    failed_ (f, this),
     any_ (this->dom_document ()),
     any_attribute_ (this->dom_document ())
   {
@@ -695,13 +1800,195 @@ namespace xbemsg
 
   void body_t::
   parse (::xsd::cxx::xml::dom::parser< char >& p,
-         ::xml_schema::flags)
+         ::xml_schema::flags f)
   {
     for (; p.more_elements (); p.next_element ())
     {
       const ::xercesc::DOMElement& i (p.cur_element ());
       const ::xsd::cxx::xml::qualified_name< char > n (
         ::xsd::cxx::xml::dom::name< char > (i));
+
+      // execute
+      //
+      if (n.name () == "execute" && n.namespace_ () == "http://www.xenbee.net/schema/2008/02/xbe-msg")
+      {
+        ::std::auto_ptr< execute_type > r (
+          execute_traits::create (i, f, this));
+
+        if (!this->execute ())
+        {
+          this->execute (r);
+          continue;
+        }
+      }
+
+      // terminate
+      //
+      if (n.name () == "terminate" && n.namespace_ () == "http://www.xenbee.net/schema/2008/02/xbe-msg")
+      {
+        ::std::auto_ptr< terminate_type > r (
+          terminate_traits::create (i, f, this));
+
+        if (!this->terminate ())
+        {
+          this->terminate (r);
+          continue;
+        }
+      }
+
+      // status-req
+      //
+      if (n.name () == "status-req" && n.namespace_ () == "http://www.xenbee.net/schema/2008/02/xbe-msg")
+      {
+        ::std::auto_ptr< status_req_type > r (
+          status_req_traits::create (i, f, this));
+
+        if (!this->status_req ())
+        {
+          this->status_req (r);
+          continue;
+        }
+      }
+
+      // shutdown
+      //
+      if (n.name () == "shutdown" && n.namespace_ () == "http://www.xenbee.net/schema/2008/02/xbe-msg")
+      {
+        ::std::auto_ptr< shutdown_type > r (
+          shutdown_traits::create (i, f, this));
+
+        if (!this->shutdown ())
+        {
+          this->shutdown (r);
+          continue;
+        }
+      }
+
+      // finished-ack
+      //
+      if (n.name () == "finished-ack" && n.namespace_ () == "http://www.xenbee.net/schema/2008/02/xbe-msg")
+      {
+        ::std::auto_ptr< finished_ack_type > r (
+          finished_ack_traits::create (i, f, this));
+
+        if (!this->finished_ack ())
+        {
+          this->finished_ack (r);
+          continue;
+        }
+      }
+
+      // failed-ack
+      //
+      if (n.name () == "failed-ack" && n.namespace_ () == "http://www.xenbee.net/schema/2008/02/xbe-msg")
+      {
+        ::std::auto_ptr< failed_ack_type > r (
+          failed_ack_traits::create (i, f, this));
+
+        if (!this->failed_ack ())
+        {
+          this->failed_ack (r);
+          continue;
+        }
+      }
+
+      // life-sign
+      //
+      if (n.name () == "life-sign" && n.namespace_ () == "http://www.xenbee.net/schema/2008/02/xbe-msg")
+      {
+        ::std::auto_ptr< life_sign_type > r (
+          life_sign_traits::create (i, f, this));
+
+        if (!this->life_sign ())
+        {
+          this->life_sign (r);
+          continue;
+        }
+      }
+
+      // execute-ack
+      //
+      if (n.name () == "execute-ack" && n.namespace_ () == "http://www.xenbee.net/schema/2008/02/xbe-msg")
+      {
+        ::std::auto_ptr< execute_ack_type > r (
+          execute_ack_traits::create (i, f, this));
+
+        if (!this->execute_ack ())
+        {
+          this->execute_ack (r);
+          continue;
+        }
+      }
+
+      // terminate-ack
+      //
+      if (n.name () == "terminate-ack" && n.namespace_ () == "http://www.xenbee.net/schema/2008/02/xbe-msg")
+      {
+        ::std::auto_ptr< terminate_ack_type > r (
+          terminate_ack_traits::create (i, f, this));
+
+        if (!this->terminate_ack ())
+        {
+          this->terminate_ack (r);
+          continue;
+        }
+      }
+
+      // shutdown-ack
+      //
+      if (n.name () == "shutdown-ack" && n.namespace_ () == "http://www.xenbee.net/schema/2008/02/xbe-msg")
+      {
+        ::std::auto_ptr< shutdown_ack_type > r (
+          shutdown_ack_traits::create (i, f, this));
+
+        if (!this->shutdown_ack ())
+        {
+          this->shutdown_ack (r);
+          continue;
+        }
+      }
+
+      // status
+      //
+      if (n.name () == "status" && n.namespace_ () == "http://www.xenbee.net/schema/2008/02/xbe-msg")
+      {
+        ::std::auto_ptr< status_type > r (
+          status_traits::create (i, f, this));
+
+        if (!this->status ())
+        {
+          this->status (r);
+          continue;
+        }
+      }
+
+      // finished
+      //
+      if (n.name () == "finished" && n.namespace_ () == "http://www.xenbee.net/schema/2008/02/xbe-msg")
+      {
+        ::std::auto_ptr< finished_type > r (
+          finished_traits::create (i, f, this));
+
+        if (!this->finished ())
+        {
+          this->finished (r);
+          continue;
+        }
+      }
+
+      // failed
+      //
+      if (n.name () == "failed" && n.namespace_ () == "http://www.xenbee.net/schema/2008/02/xbe-msg")
+      {
+        ::std::auto_ptr< failed_type > r (
+          failed_traits::create (i, f, this));
+
+        if (!this->failed ())
+        {
+          this->failed (r);
+          continue;
+        }
+      }
 
       // any
       //
@@ -750,6 +2037,1293 @@ namespace xbemsg
 
   body_t::
   ~body_t ()
+  {
+  }
+
+  // execute_t
+  //
+
+  execute_t::
+  execute_t ()
+  : ::xml_schema::type (),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (this->dom_document ()),
+    any_attribute_ (this->dom_document ())
+  {
+  }
+
+  execute_t::
+  execute_t (const execute_t& x,
+             ::xml_schema::flags f,
+             ::xml_schema::container* c)
+  : ::xml_schema::type (x, f, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (x.any_, this->dom_document ()),
+    any_attribute_ (x.any_attribute_, this->dom_document ())
+  {
+  }
+
+  execute_t::
+  execute_t (const ::xercesc::DOMElement& e,
+             ::xml_schema::flags f,
+             ::xml_schema::container* c)
+  : ::xml_schema::type (e, f | ::xml_schema::flags::base, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (this->dom_document ()),
+    any_attribute_ (this->dom_document ())
+  {
+    if ((f & ::xml_schema::flags::base) == 0)
+    {
+      ::xsd::cxx::xml::dom::parser< char > p (e);
+      this->parse (p, f);
+    }
+  }
+
+  void execute_t::
+  parse (::xsd::cxx::xml::dom::parser< char >& p,
+         ::xml_schema::flags)
+  {
+    for (; p.more_elements (); p.next_element ())
+    {
+      const ::xercesc::DOMElement& i (p.cur_element ());
+      const ::xsd::cxx::xml::qualified_name< char > n (
+        ::xsd::cxx::xml::dom::name< char > (i));
+
+      // any
+      //
+      if ((!n.namespace_ ().empty () && n.namespace_ () != "http://www.xenbee.net/schema/2008/02/xbe-msg"))
+      {
+        ::xercesc::DOMElement* r (
+          static_cast< ::xercesc::DOMElement* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMElement* > (&i), true)));
+        this->any ().push_back (r);
+        continue;
+      }
+
+      break;
+    }
+
+    while (p.more_attributes ())
+    {
+      const ::xercesc::DOMAttr& i (p.next_attribute ());
+      const ::xsd::cxx::xml::qualified_name< char > n (
+        ::xsd::cxx::xml::dom::name< char > (i));
+
+      // any_attribute
+      //
+      if ((!n.namespace_ ().empty () &&
+           n.namespace_ () != "http://www.xenbee.net/schema/2008/02/xbe-msg" &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xmlns_namespace< char > () &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xsi_namespace< char > ()))
+      {
+        ::xercesc::DOMAttr* r (
+          static_cast< ::xercesc::DOMAttr* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMAttr* > (&i), true)));
+        this->any_attribute ().insert (r);
+        continue;
+      }
+    }
+  }
+
+  execute_t* execute_t::
+  _clone (::xml_schema::flags f,
+          ::xml_schema::container* c) const
+  {
+    return new execute_t (*this, f, c);
+  }
+
+  execute_t::
+  ~execute_t ()
+  {
+  }
+
+  // terminate_t
+  //
+
+  terminate_t::
+  terminate_t ()
+  : ::xml_schema::type (),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (this->dom_document ()),
+    any_attribute_ (this->dom_document ())
+  {
+  }
+
+  terminate_t::
+  terminate_t (const terminate_t& x,
+               ::xml_schema::flags f,
+               ::xml_schema::container* c)
+  : ::xml_schema::type (x, f, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (x.any_, this->dom_document ()),
+    any_attribute_ (x.any_attribute_, this->dom_document ())
+  {
+  }
+
+  terminate_t::
+  terminate_t (const ::xercesc::DOMElement& e,
+               ::xml_schema::flags f,
+               ::xml_schema::container* c)
+  : ::xml_schema::type (e, f | ::xml_schema::flags::base, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (this->dom_document ()),
+    any_attribute_ (this->dom_document ())
+  {
+    if ((f & ::xml_schema::flags::base) == 0)
+    {
+      ::xsd::cxx::xml::dom::parser< char > p (e);
+      this->parse (p, f);
+    }
+  }
+
+  void terminate_t::
+  parse (::xsd::cxx::xml::dom::parser< char >& p,
+         ::xml_schema::flags)
+  {
+    for (; p.more_elements (); p.next_element ())
+    {
+      const ::xercesc::DOMElement& i (p.cur_element ());
+      const ::xsd::cxx::xml::qualified_name< char > n (
+        ::xsd::cxx::xml::dom::name< char > (i));
+
+      // any
+      //
+      if ((!n.namespace_ ().empty () && n.namespace_ () != "http://www.xenbee.net/schema/2008/02/xbe-msg"))
+      {
+        ::xercesc::DOMElement* r (
+          static_cast< ::xercesc::DOMElement* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMElement* > (&i), true)));
+        this->any ().push_back (r);
+        continue;
+      }
+
+      break;
+    }
+
+    while (p.more_attributes ())
+    {
+      const ::xercesc::DOMAttr& i (p.next_attribute ());
+      const ::xsd::cxx::xml::qualified_name< char > n (
+        ::xsd::cxx::xml::dom::name< char > (i));
+
+      // any_attribute
+      //
+      if ((!n.namespace_ ().empty () &&
+           n.namespace_ () != "http://www.xenbee.net/schema/2008/02/xbe-msg" &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xmlns_namespace< char > () &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xsi_namespace< char > ()))
+      {
+        ::xercesc::DOMAttr* r (
+          static_cast< ::xercesc::DOMAttr* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMAttr* > (&i), true)));
+        this->any_attribute ().insert (r);
+        continue;
+      }
+    }
+  }
+
+  terminate_t* terminate_t::
+  _clone (::xml_schema::flags f,
+          ::xml_schema::container* c) const
+  {
+    return new terminate_t (*this, f, c);
+  }
+
+  terminate_t::
+  ~terminate_t ()
+  {
+  }
+
+  // status_req_t
+  //
+
+  status_req_t::
+  status_req_t ()
+  : ::xml_schema::type (),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (this->dom_document ()),
+    any_attribute_ (this->dom_document ())
+  {
+  }
+
+  status_req_t::
+  status_req_t (const status_req_t& x,
+                ::xml_schema::flags f,
+                ::xml_schema::container* c)
+  : ::xml_schema::type (x, f, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (x.any_, this->dom_document ()),
+    any_attribute_ (x.any_attribute_, this->dom_document ())
+  {
+  }
+
+  status_req_t::
+  status_req_t (const ::xercesc::DOMElement& e,
+                ::xml_schema::flags f,
+                ::xml_schema::container* c)
+  : ::xml_schema::type (e, f | ::xml_schema::flags::base, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (this->dom_document ()),
+    any_attribute_ (this->dom_document ())
+  {
+    if ((f & ::xml_schema::flags::base) == 0)
+    {
+      ::xsd::cxx::xml::dom::parser< char > p (e);
+      this->parse (p, f);
+    }
+  }
+
+  void status_req_t::
+  parse (::xsd::cxx::xml::dom::parser< char >& p,
+         ::xml_schema::flags)
+  {
+    for (; p.more_elements (); p.next_element ())
+    {
+      const ::xercesc::DOMElement& i (p.cur_element ());
+      const ::xsd::cxx::xml::qualified_name< char > n (
+        ::xsd::cxx::xml::dom::name< char > (i));
+
+      // any
+      //
+      if ((!n.namespace_ ().empty () && n.namespace_ () != "http://www.xenbee.net/schema/2008/02/xbe-msg"))
+      {
+        ::xercesc::DOMElement* r (
+          static_cast< ::xercesc::DOMElement* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMElement* > (&i), true)));
+        this->any ().push_back (r);
+        continue;
+      }
+
+      break;
+    }
+
+    while (p.more_attributes ())
+    {
+      const ::xercesc::DOMAttr& i (p.next_attribute ());
+      const ::xsd::cxx::xml::qualified_name< char > n (
+        ::xsd::cxx::xml::dom::name< char > (i));
+
+      // any_attribute
+      //
+      if ((!n.namespace_ ().empty () &&
+           n.namespace_ () != "http://www.xenbee.net/schema/2008/02/xbe-msg" &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xmlns_namespace< char > () &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xsi_namespace< char > ()))
+      {
+        ::xercesc::DOMAttr* r (
+          static_cast< ::xercesc::DOMAttr* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMAttr* > (&i), true)));
+        this->any_attribute ().insert (r);
+        continue;
+      }
+    }
+  }
+
+  status_req_t* status_req_t::
+  _clone (::xml_schema::flags f,
+          ::xml_schema::container* c) const
+  {
+    return new status_req_t (*this, f, c);
+  }
+
+  status_req_t::
+  ~status_req_t ()
+  {
+  }
+
+  // shutdown_t
+  //
+
+  shutdown_t::
+  shutdown_t ()
+  : ::xml_schema::type (),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (this->dom_document ()),
+    any_attribute_ (this->dom_document ())
+  {
+  }
+
+  shutdown_t::
+  shutdown_t (const shutdown_t& x,
+              ::xml_schema::flags f,
+              ::xml_schema::container* c)
+  : ::xml_schema::type (x, f, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (x.any_, this->dom_document ()),
+    any_attribute_ (x.any_attribute_, this->dom_document ())
+  {
+  }
+
+  shutdown_t::
+  shutdown_t (const ::xercesc::DOMElement& e,
+              ::xml_schema::flags f,
+              ::xml_schema::container* c)
+  : ::xml_schema::type (e, f | ::xml_schema::flags::base, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (this->dom_document ()),
+    any_attribute_ (this->dom_document ())
+  {
+    if ((f & ::xml_schema::flags::base) == 0)
+    {
+      ::xsd::cxx::xml::dom::parser< char > p (e);
+      this->parse (p, f);
+    }
+  }
+
+  void shutdown_t::
+  parse (::xsd::cxx::xml::dom::parser< char >& p,
+         ::xml_schema::flags)
+  {
+    for (; p.more_elements (); p.next_element ())
+    {
+      const ::xercesc::DOMElement& i (p.cur_element ());
+      const ::xsd::cxx::xml::qualified_name< char > n (
+        ::xsd::cxx::xml::dom::name< char > (i));
+
+      // any
+      //
+      if ((!n.namespace_ ().empty () && n.namespace_ () != "http://www.xenbee.net/schema/2008/02/xbe-msg"))
+      {
+        ::xercesc::DOMElement* r (
+          static_cast< ::xercesc::DOMElement* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMElement* > (&i), true)));
+        this->any ().push_back (r);
+        continue;
+      }
+
+      break;
+    }
+
+    while (p.more_attributes ())
+    {
+      const ::xercesc::DOMAttr& i (p.next_attribute ());
+      const ::xsd::cxx::xml::qualified_name< char > n (
+        ::xsd::cxx::xml::dom::name< char > (i));
+
+      // any_attribute
+      //
+      if ((!n.namespace_ ().empty () &&
+           n.namespace_ () != "http://www.xenbee.net/schema/2008/02/xbe-msg" &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xmlns_namespace< char > () &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xsi_namespace< char > ()))
+      {
+        ::xercesc::DOMAttr* r (
+          static_cast< ::xercesc::DOMAttr* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMAttr* > (&i), true)));
+        this->any_attribute ().insert (r);
+        continue;
+      }
+    }
+  }
+
+  shutdown_t* shutdown_t::
+  _clone (::xml_schema::flags f,
+          ::xml_schema::container* c) const
+  {
+    return new shutdown_t (*this, f, c);
+  }
+
+  shutdown_t::
+  ~shutdown_t ()
+  {
+  }
+
+  // finished_ack_t
+  //
+
+  finished_ack_t::
+  finished_ack_t ()
+  : ::xml_schema::type (),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (this->dom_document ()),
+    any_attribute_ (this->dom_document ())
+  {
+  }
+
+  finished_ack_t::
+  finished_ack_t (const finished_ack_t& x,
+                  ::xml_schema::flags f,
+                  ::xml_schema::container* c)
+  : ::xml_schema::type (x, f, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (x.any_, this->dom_document ()),
+    any_attribute_ (x.any_attribute_, this->dom_document ())
+  {
+  }
+
+  finished_ack_t::
+  finished_ack_t (const ::xercesc::DOMElement& e,
+                  ::xml_schema::flags f,
+                  ::xml_schema::container* c)
+  : ::xml_schema::type (e, f | ::xml_schema::flags::base, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (this->dom_document ()),
+    any_attribute_ (this->dom_document ())
+  {
+    if ((f & ::xml_schema::flags::base) == 0)
+    {
+      ::xsd::cxx::xml::dom::parser< char > p (e);
+      this->parse (p, f);
+    }
+  }
+
+  void finished_ack_t::
+  parse (::xsd::cxx::xml::dom::parser< char >& p,
+         ::xml_schema::flags)
+  {
+    for (; p.more_elements (); p.next_element ())
+    {
+      const ::xercesc::DOMElement& i (p.cur_element ());
+      const ::xsd::cxx::xml::qualified_name< char > n (
+        ::xsd::cxx::xml::dom::name< char > (i));
+
+      // any
+      //
+      if ((!n.namespace_ ().empty () && n.namespace_ () != "http://www.xenbee.net/schema/2008/02/xbe-msg"))
+      {
+        ::xercesc::DOMElement* r (
+          static_cast< ::xercesc::DOMElement* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMElement* > (&i), true)));
+        this->any ().push_back (r);
+        continue;
+      }
+
+      break;
+    }
+
+    while (p.more_attributes ())
+    {
+      const ::xercesc::DOMAttr& i (p.next_attribute ());
+      const ::xsd::cxx::xml::qualified_name< char > n (
+        ::xsd::cxx::xml::dom::name< char > (i));
+
+      // any_attribute
+      //
+      if ((!n.namespace_ ().empty () &&
+           n.namespace_ () != "http://www.xenbee.net/schema/2008/02/xbe-msg" &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xmlns_namespace< char > () &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xsi_namespace< char > ()))
+      {
+        ::xercesc::DOMAttr* r (
+          static_cast< ::xercesc::DOMAttr* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMAttr* > (&i), true)));
+        this->any_attribute ().insert (r);
+        continue;
+      }
+    }
+  }
+
+  finished_ack_t* finished_ack_t::
+  _clone (::xml_schema::flags f,
+          ::xml_schema::container* c) const
+  {
+    return new finished_ack_t (*this, f, c);
+  }
+
+  finished_ack_t::
+  ~finished_ack_t ()
+  {
+  }
+
+  // failed_ack_t
+  //
+
+  failed_ack_t::
+  failed_ack_t ()
+  : ::xml_schema::type (),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (this->dom_document ()),
+    any_attribute_ (this->dom_document ())
+  {
+  }
+
+  failed_ack_t::
+  failed_ack_t (const failed_ack_t& x,
+                ::xml_schema::flags f,
+                ::xml_schema::container* c)
+  : ::xml_schema::type (x, f, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (x.any_, this->dom_document ()),
+    any_attribute_ (x.any_attribute_, this->dom_document ())
+  {
+  }
+
+  failed_ack_t::
+  failed_ack_t (const ::xercesc::DOMElement& e,
+                ::xml_schema::flags f,
+                ::xml_schema::container* c)
+  : ::xml_schema::type (e, f | ::xml_schema::flags::base, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (this->dom_document ()),
+    any_attribute_ (this->dom_document ())
+  {
+    if ((f & ::xml_schema::flags::base) == 0)
+    {
+      ::xsd::cxx::xml::dom::parser< char > p (e);
+      this->parse (p, f);
+    }
+  }
+
+  void failed_ack_t::
+  parse (::xsd::cxx::xml::dom::parser< char >& p,
+         ::xml_schema::flags)
+  {
+    for (; p.more_elements (); p.next_element ())
+    {
+      const ::xercesc::DOMElement& i (p.cur_element ());
+      const ::xsd::cxx::xml::qualified_name< char > n (
+        ::xsd::cxx::xml::dom::name< char > (i));
+
+      // any
+      //
+      if ((!n.namespace_ ().empty () && n.namespace_ () != "http://www.xenbee.net/schema/2008/02/xbe-msg"))
+      {
+        ::xercesc::DOMElement* r (
+          static_cast< ::xercesc::DOMElement* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMElement* > (&i), true)));
+        this->any ().push_back (r);
+        continue;
+      }
+
+      break;
+    }
+
+    while (p.more_attributes ())
+    {
+      const ::xercesc::DOMAttr& i (p.next_attribute ());
+      const ::xsd::cxx::xml::qualified_name< char > n (
+        ::xsd::cxx::xml::dom::name< char > (i));
+
+      // any_attribute
+      //
+      if ((!n.namespace_ ().empty () &&
+           n.namespace_ () != "http://www.xenbee.net/schema/2008/02/xbe-msg" &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xmlns_namespace< char > () &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xsi_namespace< char > ()))
+      {
+        ::xercesc::DOMAttr* r (
+          static_cast< ::xercesc::DOMAttr* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMAttr* > (&i), true)));
+        this->any_attribute ().insert (r);
+        continue;
+      }
+    }
+  }
+
+  failed_ack_t* failed_ack_t::
+  _clone (::xml_schema::flags f,
+          ::xml_schema::container* c) const
+  {
+    return new failed_ack_t (*this, f, c);
+  }
+
+  failed_ack_t::
+  ~failed_ack_t ()
+  {
+  }
+
+  // life_sign_t
+  //
+
+  life_sign_t::
+  life_sign_t ()
+  : ::xml_schema::type (),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (this->dom_document ()),
+    any_attribute_ (this->dom_document ())
+  {
+  }
+
+  life_sign_t::
+  life_sign_t (const life_sign_t& x,
+               ::xml_schema::flags f,
+               ::xml_schema::container* c)
+  : ::xml_schema::type (x, f, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (x.any_, this->dom_document ()),
+    any_attribute_ (x.any_attribute_, this->dom_document ())
+  {
+  }
+
+  life_sign_t::
+  life_sign_t (const ::xercesc::DOMElement& e,
+               ::xml_schema::flags f,
+               ::xml_schema::container* c)
+  : ::xml_schema::type (e, f | ::xml_schema::flags::base, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (this->dom_document ()),
+    any_attribute_ (this->dom_document ())
+  {
+    if ((f & ::xml_schema::flags::base) == 0)
+    {
+      ::xsd::cxx::xml::dom::parser< char > p (e);
+      this->parse (p, f);
+    }
+  }
+
+  void life_sign_t::
+  parse (::xsd::cxx::xml::dom::parser< char >& p,
+         ::xml_schema::flags)
+  {
+    for (; p.more_elements (); p.next_element ())
+    {
+      const ::xercesc::DOMElement& i (p.cur_element ());
+      const ::xsd::cxx::xml::qualified_name< char > n (
+        ::xsd::cxx::xml::dom::name< char > (i));
+
+      // any
+      //
+      if ((!n.namespace_ ().empty () && n.namespace_ () != "http://www.xenbee.net/schema/2008/02/xbe-msg"))
+      {
+        ::xercesc::DOMElement* r (
+          static_cast< ::xercesc::DOMElement* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMElement* > (&i), true)));
+        this->any ().push_back (r);
+        continue;
+      }
+
+      break;
+    }
+
+    while (p.more_attributes ())
+    {
+      const ::xercesc::DOMAttr& i (p.next_attribute ());
+      const ::xsd::cxx::xml::qualified_name< char > n (
+        ::xsd::cxx::xml::dom::name< char > (i));
+
+      // any_attribute
+      //
+      if ((!n.namespace_ ().empty () &&
+           n.namespace_ () != "http://www.xenbee.net/schema/2008/02/xbe-msg" &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xmlns_namespace< char > () &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xsi_namespace< char > ()))
+      {
+        ::xercesc::DOMAttr* r (
+          static_cast< ::xercesc::DOMAttr* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMAttr* > (&i), true)));
+        this->any_attribute ().insert (r);
+        continue;
+      }
+    }
+  }
+
+  life_sign_t* life_sign_t::
+  _clone (::xml_schema::flags f,
+          ::xml_schema::container* c) const
+  {
+    return new life_sign_t (*this, f, c);
+  }
+
+  life_sign_t::
+  ~life_sign_t ()
+  {
+  }
+
+  // execute_ack_t
+  //
+
+  execute_ack_t::
+  execute_ack_t ()
+  : ::xml_schema::type (),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (this->dom_document ()),
+    any_attribute_ (this->dom_document ())
+  {
+  }
+
+  execute_ack_t::
+  execute_ack_t (const execute_ack_t& x,
+                 ::xml_schema::flags f,
+                 ::xml_schema::container* c)
+  : ::xml_schema::type (x, f, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (x.any_, this->dom_document ()),
+    any_attribute_ (x.any_attribute_, this->dom_document ())
+  {
+  }
+
+  execute_ack_t::
+  execute_ack_t (const ::xercesc::DOMElement& e,
+                 ::xml_schema::flags f,
+                 ::xml_schema::container* c)
+  : ::xml_schema::type (e, f | ::xml_schema::flags::base, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (this->dom_document ()),
+    any_attribute_ (this->dom_document ())
+  {
+    if ((f & ::xml_schema::flags::base) == 0)
+    {
+      ::xsd::cxx::xml::dom::parser< char > p (e);
+      this->parse (p, f);
+    }
+  }
+
+  void execute_ack_t::
+  parse (::xsd::cxx::xml::dom::parser< char >& p,
+         ::xml_schema::flags)
+  {
+    for (; p.more_elements (); p.next_element ())
+    {
+      const ::xercesc::DOMElement& i (p.cur_element ());
+      const ::xsd::cxx::xml::qualified_name< char > n (
+        ::xsd::cxx::xml::dom::name< char > (i));
+
+      // any
+      //
+      if ((!n.namespace_ ().empty () && n.namespace_ () != "http://www.xenbee.net/schema/2008/02/xbe-msg"))
+      {
+        ::xercesc::DOMElement* r (
+          static_cast< ::xercesc::DOMElement* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMElement* > (&i), true)));
+        this->any ().push_back (r);
+        continue;
+      }
+
+      break;
+    }
+
+    while (p.more_attributes ())
+    {
+      const ::xercesc::DOMAttr& i (p.next_attribute ());
+      const ::xsd::cxx::xml::qualified_name< char > n (
+        ::xsd::cxx::xml::dom::name< char > (i));
+
+      // any_attribute
+      //
+      if ((!n.namespace_ ().empty () &&
+           n.namespace_ () != "http://www.xenbee.net/schema/2008/02/xbe-msg" &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xmlns_namespace< char > () &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xsi_namespace< char > ()))
+      {
+        ::xercesc::DOMAttr* r (
+          static_cast< ::xercesc::DOMAttr* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMAttr* > (&i), true)));
+        this->any_attribute ().insert (r);
+        continue;
+      }
+    }
+  }
+
+  execute_ack_t* execute_ack_t::
+  _clone (::xml_schema::flags f,
+          ::xml_schema::container* c) const
+  {
+    return new execute_ack_t (*this, f, c);
+  }
+
+  execute_ack_t::
+  ~execute_ack_t ()
+  {
+  }
+
+  // terminate_ack_t
+  //
+
+  terminate_ack_t::
+  terminate_ack_t ()
+  : ::xml_schema::type (),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (this->dom_document ()),
+    any_attribute_ (this->dom_document ())
+  {
+  }
+
+  terminate_ack_t::
+  terminate_ack_t (const terminate_ack_t& x,
+                   ::xml_schema::flags f,
+                   ::xml_schema::container* c)
+  : ::xml_schema::type (x, f, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (x.any_, this->dom_document ()),
+    any_attribute_ (x.any_attribute_, this->dom_document ())
+  {
+  }
+
+  terminate_ack_t::
+  terminate_ack_t (const ::xercesc::DOMElement& e,
+                   ::xml_schema::flags f,
+                   ::xml_schema::container* c)
+  : ::xml_schema::type (e, f | ::xml_schema::flags::base, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (this->dom_document ()),
+    any_attribute_ (this->dom_document ())
+  {
+    if ((f & ::xml_schema::flags::base) == 0)
+    {
+      ::xsd::cxx::xml::dom::parser< char > p (e);
+      this->parse (p, f);
+    }
+  }
+
+  void terminate_ack_t::
+  parse (::xsd::cxx::xml::dom::parser< char >& p,
+         ::xml_schema::flags)
+  {
+    for (; p.more_elements (); p.next_element ())
+    {
+      const ::xercesc::DOMElement& i (p.cur_element ());
+      const ::xsd::cxx::xml::qualified_name< char > n (
+        ::xsd::cxx::xml::dom::name< char > (i));
+
+      // any
+      //
+      if ((!n.namespace_ ().empty () && n.namespace_ () != "http://www.xenbee.net/schema/2008/02/xbe-msg"))
+      {
+        ::xercesc::DOMElement* r (
+          static_cast< ::xercesc::DOMElement* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMElement* > (&i), true)));
+        this->any ().push_back (r);
+        continue;
+      }
+
+      break;
+    }
+
+    while (p.more_attributes ())
+    {
+      const ::xercesc::DOMAttr& i (p.next_attribute ());
+      const ::xsd::cxx::xml::qualified_name< char > n (
+        ::xsd::cxx::xml::dom::name< char > (i));
+
+      // any_attribute
+      //
+      if ((!n.namespace_ ().empty () &&
+           n.namespace_ () != "http://www.xenbee.net/schema/2008/02/xbe-msg" &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xmlns_namespace< char > () &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xsi_namespace< char > ()))
+      {
+        ::xercesc::DOMAttr* r (
+          static_cast< ::xercesc::DOMAttr* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMAttr* > (&i), true)));
+        this->any_attribute ().insert (r);
+        continue;
+      }
+    }
+  }
+
+  terminate_ack_t* terminate_ack_t::
+  _clone (::xml_schema::flags f,
+          ::xml_schema::container* c) const
+  {
+    return new terminate_ack_t (*this, f, c);
+  }
+
+  terminate_ack_t::
+  ~terminate_ack_t ()
+  {
+  }
+
+  // shutdown_ack_t
+  //
+
+  shutdown_ack_t::
+  shutdown_ack_t ()
+  : ::xml_schema::type (),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (this->dom_document ()),
+    any_attribute_ (this->dom_document ())
+  {
+  }
+
+  shutdown_ack_t::
+  shutdown_ack_t (const shutdown_ack_t& x,
+                  ::xml_schema::flags f,
+                  ::xml_schema::container* c)
+  : ::xml_schema::type (x, f, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (x.any_, this->dom_document ()),
+    any_attribute_ (x.any_attribute_, this->dom_document ())
+  {
+  }
+
+  shutdown_ack_t::
+  shutdown_ack_t (const ::xercesc::DOMElement& e,
+                  ::xml_schema::flags f,
+                  ::xml_schema::container* c)
+  : ::xml_schema::type (e, f | ::xml_schema::flags::base, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (this->dom_document ()),
+    any_attribute_ (this->dom_document ())
+  {
+    if ((f & ::xml_schema::flags::base) == 0)
+    {
+      ::xsd::cxx::xml::dom::parser< char > p (e);
+      this->parse (p, f);
+    }
+  }
+
+  void shutdown_ack_t::
+  parse (::xsd::cxx::xml::dom::parser< char >& p,
+         ::xml_schema::flags)
+  {
+    for (; p.more_elements (); p.next_element ())
+    {
+      const ::xercesc::DOMElement& i (p.cur_element ());
+      const ::xsd::cxx::xml::qualified_name< char > n (
+        ::xsd::cxx::xml::dom::name< char > (i));
+
+      // any
+      //
+      if ((!n.namespace_ ().empty () && n.namespace_ () != "http://www.xenbee.net/schema/2008/02/xbe-msg"))
+      {
+        ::xercesc::DOMElement* r (
+          static_cast< ::xercesc::DOMElement* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMElement* > (&i), true)));
+        this->any ().push_back (r);
+        continue;
+      }
+
+      break;
+    }
+
+    while (p.more_attributes ())
+    {
+      const ::xercesc::DOMAttr& i (p.next_attribute ());
+      const ::xsd::cxx::xml::qualified_name< char > n (
+        ::xsd::cxx::xml::dom::name< char > (i));
+
+      // any_attribute
+      //
+      if ((!n.namespace_ ().empty () &&
+           n.namespace_ () != "http://www.xenbee.net/schema/2008/02/xbe-msg" &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xmlns_namespace< char > () &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xsi_namespace< char > ()))
+      {
+        ::xercesc::DOMAttr* r (
+          static_cast< ::xercesc::DOMAttr* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMAttr* > (&i), true)));
+        this->any_attribute ().insert (r);
+        continue;
+      }
+    }
+  }
+
+  shutdown_ack_t* shutdown_ack_t::
+  _clone (::xml_schema::flags f,
+          ::xml_schema::container* c) const
+  {
+    return new shutdown_ack_t (*this, f, c);
+  }
+
+  shutdown_ack_t::
+  ~shutdown_ack_t ()
+  {
+  }
+
+  // status_t
+  //
+
+  status_t::
+  status_t ()
+  : ::xml_schema::type (),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (this->dom_document ()),
+    any_attribute_ (this->dom_document ())
+  {
+  }
+
+  status_t::
+  status_t (const status_t& x,
+            ::xml_schema::flags f,
+            ::xml_schema::container* c)
+  : ::xml_schema::type (x, f, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (x.any_, this->dom_document ()),
+    any_attribute_ (x.any_attribute_, this->dom_document ())
+  {
+  }
+
+  status_t::
+  status_t (const ::xercesc::DOMElement& e,
+            ::xml_schema::flags f,
+            ::xml_schema::container* c)
+  : ::xml_schema::type (e, f | ::xml_schema::flags::base, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (this->dom_document ()),
+    any_attribute_ (this->dom_document ())
+  {
+    if ((f & ::xml_schema::flags::base) == 0)
+    {
+      ::xsd::cxx::xml::dom::parser< char > p (e);
+      this->parse (p, f);
+    }
+  }
+
+  void status_t::
+  parse (::xsd::cxx::xml::dom::parser< char >& p,
+         ::xml_schema::flags)
+  {
+    for (; p.more_elements (); p.next_element ())
+    {
+      const ::xercesc::DOMElement& i (p.cur_element ());
+      const ::xsd::cxx::xml::qualified_name< char > n (
+        ::xsd::cxx::xml::dom::name< char > (i));
+
+      // any
+      //
+      if ((!n.namespace_ ().empty () && n.namespace_ () != "http://www.xenbee.net/schema/2008/02/xbe-msg"))
+      {
+        ::xercesc::DOMElement* r (
+          static_cast< ::xercesc::DOMElement* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMElement* > (&i), true)));
+        this->any ().push_back (r);
+        continue;
+      }
+
+      break;
+    }
+
+    while (p.more_attributes ())
+    {
+      const ::xercesc::DOMAttr& i (p.next_attribute ());
+      const ::xsd::cxx::xml::qualified_name< char > n (
+        ::xsd::cxx::xml::dom::name< char > (i));
+
+      // any_attribute
+      //
+      if ((!n.namespace_ ().empty () &&
+           n.namespace_ () != "http://www.xenbee.net/schema/2008/02/xbe-msg" &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xmlns_namespace< char > () &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xsi_namespace< char > ()))
+      {
+        ::xercesc::DOMAttr* r (
+          static_cast< ::xercesc::DOMAttr* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMAttr* > (&i), true)));
+        this->any_attribute ().insert (r);
+        continue;
+      }
+    }
+  }
+
+  status_t* status_t::
+  _clone (::xml_schema::flags f,
+          ::xml_schema::container* c) const
+  {
+    return new status_t (*this, f, c);
+  }
+
+  status_t::
+  ~status_t ()
+  {
+  }
+
+  // finished_t
+  //
+
+  finished_t::
+  finished_t ()
+  : ::xml_schema::type (),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (this->dom_document ()),
+    any_attribute_ (this->dom_document ())
+  {
+  }
+
+  finished_t::
+  finished_t (const finished_t& x,
+              ::xml_schema::flags f,
+              ::xml_schema::container* c)
+  : ::xml_schema::type (x, f, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (x.any_, this->dom_document ()),
+    any_attribute_ (x.any_attribute_, this->dom_document ())
+  {
+  }
+
+  finished_t::
+  finished_t (const ::xercesc::DOMElement& e,
+              ::xml_schema::flags f,
+              ::xml_schema::container* c)
+  : ::xml_schema::type (e, f | ::xml_schema::flags::base, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (this->dom_document ()),
+    any_attribute_ (this->dom_document ())
+  {
+    if ((f & ::xml_schema::flags::base) == 0)
+    {
+      ::xsd::cxx::xml::dom::parser< char > p (e);
+      this->parse (p, f);
+    }
+  }
+
+  void finished_t::
+  parse (::xsd::cxx::xml::dom::parser< char >& p,
+         ::xml_schema::flags)
+  {
+    for (; p.more_elements (); p.next_element ())
+    {
+      const ::xercesc::DOMElement& i (p.cur_element ());
+      const ::xsd::cxx::xml::qualified_name< char > n (
+        ::xsd::cxx::xml::dom::name< char > (i));
+
+      // any
+      //
+      if ((!n.namespace_ ().empty () && n.namespace_ () != "http://www.xenbee.net/schema/2008/02/xbe-msg"))
+      {
+        ::xercesc::DOMElement* r (
+          static_cast< ::xercesc::DOMElement* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMElement* > (&i), true)));
+        this->any ().push_back (r);
+        continue;
+      }
+
+      break;
+    }
+
+    while (p.more_attributes ())
+    {
+      const ::xercesc::DOMAttr& i (p.next_attribute ());
+      const ::xsd::cxx::xml::qualified_name< char > n (
+        ::xsd::cxx::xml::dom::name< char > (i));
+
+      // any_attribute
+      //
+      if ((!n.namespace_ ().empty () &&
+           n.namespace_ () != "http://www.xenbee.net/schema/2008/02/xbe-msg" &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xmlns_namespace< char > () &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xsi_namespace< char > ()))
+      {
+        ::xercesc::DOMAttr* r (
+          static_cast< ::xercesc::DOMAttr* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMAttr* > (&i), true)));
+        this->any_attribute ().insert (r);
+        continue;
+      }
+    }
+  }
+
+  finished_t* finished_t::
+  _clone (::xml_schema::flags f,
+          ::xml_schema::container* c) const
+  {
+    return new finished_t (*this, f, c);
+  }
+
+  finished_t::
+  ~finished_t ()
+  {
+  }
+
+  // failed_t
+  //
+
+  failed_t::
+  failed_t ()
+  : ::xml_schema::type (),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (this->dom_document ()),
+    any_attribute_ (this->dom_document ())
+  {
+  }
+
+  failed_t::
+  failed_t (const failed_t& x,
+            ::xml_schema::flags f,
+            ::xml_schema::container* c)
+  : ::xml_schema::type (x, f, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (x.any_, this->dom_document ()),
+    any_attribute_ (x.any_attribute_, this->dom_document ())
+  {
+  }
+
+  failed_t::
+  failed_t (const ::xercesc::DOMElement& e,
+            ::xml_schema::flags f,
+            ::xml_schema::container* c)
+  : ::xml_schema::type (e, f | ::xml_schema::flags::base, c),
+    dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    any_ (this->dom_document ()),
+    any_attribute_ (this->dom_document ())
+  {
+    if ((f & ::xml_schema::flags::base) == 0)
+    {
+      ::xsd::cxx::xml::dom::parser< char > p (e);
+      this->parse (p, f);
+    }
+  }
+
+  void failed_t::
+  parse (::xsd::cxx::xml::dom::parser< char >& p,
+         ::xml_schema::flags)
+  {
+    for (; p.more_elements (); p.next_element ())
+    {
+      const ::xercesc::DOMElement& i (p.cur_element ());
+      const ::xsd::cxx::xml::qualified_name< char > n (
+        ::xsd::cxx::xml::dom::name< char > (i));
+
+      // any
+      //
+      if ((!n.namespace_ ().empty () && n.namespace_ () != "http://www.xenbee.net/schema/2008/02/xbe-msg"))
+      {
+        ::xercesc::DOMElement* r (
+          static_cast< ::xercesc::DOMElement* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMElement* > (&i), true)));
+        this->any ().push_back (r);
+        continue;
+      }
+
+      break;
+    }
+
+    while (p.more_attributes ())
+    {
+      const ::xercesc::DOMAttr& i (p.next_attribute ());
+      const ::xsd::cxx::xml::qualified_name< char > n (
+        ::xsd::cxx::xml::dom::name< char > (i));
+
+      // any_attribute
+      //
+      if ((!n.namespace_ ().empty () &&
+           n.namespace_ () != "http://www.xenbee.net/schema/2008/02/xbe-msg" &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xmlns_namespace< char > () &&
+           n.namespace_ () != ::xsd::cxx::xml::bits::xsi_namespace< char > ()))
+      {
+        ::xercesc::DOMAttr* r (
+          static_cast< ::xercesc::DOMAttr* > (
+            this->dom_document ().importNode (
+              const_cast< ::xercesc::DOMAttr* > (&i), true)));
+        this->any_attribute ().insert (r);
+        continue;
+      }
+    }
+  }
+
+  failed_t* failed_t::
+  _clone (::xml_schema::flags f,
+          ::xml_schema::container* c) const
+  {
+    return new failed_t (*this, f, c);
+  }
+
+  failed_t::
+  ~failed_t ()
   {
   }
 }
@@ -1033,554 +3607,6 @@ namespace xbemsg
       "message",
       "http://www.xenbee.net/schema/2008/02/xbe-msg");
   }
-
-  ::std::auto_ptr< ::xbemsg::body_t >
-  body (const ::std::string& u,
-        ::xml_schema::flags f,
-        const ::xml_schema::properties& p)
-  {
-    ::xsd::cxx::xml::auto_initializer i (
-      (f & ::xml_schema::flags::dont_initialize) == 0,
-      (f & ::xml_schema::flags::keep_dom) == 0);
-
-    ::xsd::cxx::tree::error_handler< char > h;
-
-    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > d (
-      ::xsd::cxx::xml::dom::parse< char > (u, h, p, f));
-
-    h.throw_if_failed< ::xsd::cxx::tree::parsing< char > > ();
-
-    ::std::auto_ptr< ::xbemsg::body_t > r (
-      ::xbemsg::body (
-        d, f | ::xml_schema::flags::own_dom, p));
-
-    return r;
-  }
-
-  ::std::auto_ptr< ::xbemsg::body_t >
-  body (const ::std::string& u,
-        ::xml_schema::error_handler& h,
-        ::xml_schema::flags f,
-        const ::xml_schema::properties& p)
-  {
-    ::xsd::cxx::xml::auto_initializer i (
-      (f & ::xml_schema::flags::dont_initialize) == 0,
-      (f & ::xml_schema::flags::keep_dom) == 0);
-
-    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > d (
-      ::xsd::cxx::xml::dom::parse< char > (u, h, p, f));
-
-    if (!d.get ())
-      throw ::xsd::cxx::tree::parsing< char > ();
-
-    ::std::auto_ptr< ::xbemsg::body_t > r (
-      ::xbemsg::body (
-        d, f | ::xml_schema::flags::own_dom, p));
-
-    return r;
-  }
-
-  ::std::auto_ptr< ::xbemsg::body_t >
-  body (const ::std::string& u,
-        ::xercesc::DOMErrorHandler& h,
-        ::xml_schema::flags f,
-        const ::xml_schema::properties& p)
-  {
-    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > d (
-      ::xsd::cxx::xml::dom::parse< char > (u, h, p, f));
-
-    if (!d.get ())
-      throw ::xsd::cxx::tree::parsing< char > ();
-
-    ::std::auto_ptr< ::xbemsg::body_t > r (
-      ::xbemsg::body (
-        d, f | ::xml_schema::flags::own_dom, p));
-
-    return r;
-  }
-
-  ::std::auto_ptr< ::xbemsg::body_t >
-  body (::std::istream& is,
-        ::xml_schema::flags f,
-        const ::xml_schema::properties& p)
-  {
-    ::xsd::cxx::xml::auto_initializer i (
-      (f & ::xml_schema::flags::dont_initialize) == 0,
-      (f & ::xml_schema::flags::keep_dom) == 0);
-
-    ::xsd::cxx::xml::sax::std_input_source isrc (is);
-    return ::xbemsg::body (isrc, f, p);
-  }
-
-  ::std::auto_ptr< ::xbemsg::body_t >
-  body (::std::istream& is,
-        ::xml_schema::error_handler& h,
-        ::xml_schema::flags f,
-        const ::xml_schema::properties& p)
-  {
-    ::xsd::cxx::xml::auto_initializer i (
-      (f & ::xml_schema::flags::dont_initialize) == 0,
-      (f & ::xml_schema::flags::keep_dom) == 0);
-
-    ::xsd::cxx::xml::sax::std_input_source isrc (is);
-    return ::xbemsg::body (isrc, h, f, p);
-  }
-
-  ::std::auto_ptr< ::xbemsg::body_t >
-  body (::std::istream& is,
-        ::xercesc::DOMErrorHandler& h,
-        ::xml_schema::flags f,
-        const ::xml_schema::properties& p)
-  {
-    ::xsd::cxx::xml::sax::std_input_source isrc (is);
-    return ::xbemsg::body (isrc, h, f, p);
-  }
-
-  ::std::auto_ptr< ::xbemsg::body_t >
-  body (::std::istream& is,
-        const ::std::string& sid,
-        ::xml_schema::flags f,
-        const ::xml_schema::properties& p)
-  {
-    ::xsd::cxx::xml::auto_initializer i (
-      (f & ::xml_schema::flags::dont_initialize) == 0,
-      (f & ::xml_schema::flags::keep_dom) == 0);
-
-    ::xsd::cxx::xml::sax::std_input_source isrc (is, sid);
-    return ::xbemsg::body (isrc, f, p);
-  }
-
-  ::std::auto_ptr< ::xbemsg::body_t >
-  body (::std::istream& is,
-        const ::std::string& sid,
-        ::xml_schema::error_handler& h,
-        ::xml_schema::flags f,
-        const ::xml_schema::properties& p)
-  {
-    ::xsd::cxx::xml::auto_initializer i (
-      (f & ::xml_schema::flags::dont_initialize) == 0,
-      (f & ::xml_schema::flags::keep_dom) == 0);
-
-    ::xsd::cxx::xml::sax::std_input_source isrc (is, sid);
-    return ::xbemsg::body (isrc, h, f, p);
-  }
-
-  ::std::auto_ptr< ::xbemsg::body_t >
-  body (::std::istream& is,
-        const ::std::string& sid,
-        ::xercesc::DOMErrorHandler& h,
-        ::xml_schema::flags f,
-        const ::xml_schema::properties& p)
-  {
-    ::xsd::cxx::xml::sax::std_input_source isrc (is, sid);
-    return ::xbemsg::body (isrc, h, f, p);
-  }
-
-  ::std::auto_ptr< ::xbemsg::body_t >
-  body (::xercesc::InputSource& i,
-        ::xml_schema::flags f,
-        const ::xml_schema::properties& p)
-  {
-    ::xsd::cxx::tree::error_handler< char > h;
-
-    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > d (
-      ::xsd::cxx::xml::dom::parse< char > (i, h, p, f));
-
-    h.throw_if_failed< ::xsd::cxx::tree::parsing< char > > ();
-
-    ::std::auto_ptr< ::xbemsg::body_t > r (
-      ::xbemsg::body (
-        d, f | ::xml_schema::flags::own_dom, p));
-
-    return r;
-  }
-
-  ::std::auto_ptr< ::xbemsg::body_t >
-  body (::xercesc::InputSource& i,
-        ::xml_schema::error_handler& h,
-        ::xml_schema::flags f,
-        const ::xml_schema::properties& p)
-  {
-    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > d (
-      ::xsd::cxx::xml::dom::parse< char > (i, h, p, f));
-
-    if (!d.get ())
-      throw ::xsd::cxx::tree::parsing< char > ();
-
-    ::std::auto_ptr< ::xbemsg::body_t > r (
-      ::xbemsg::body (
-        d, f | ::xml_schema::flags::own_dom, p));
-
-    return r;
-  }
-
-  ::std::auto_ptr< ::xbemsg::body_t >
-  body (::xercesc::InputSource& i,
-        ::xercesc::DOMErrorHandler& h,
-        ::xml_schema::flags f,
-        const ::xml_schema::properties& p)
-  {
-    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > d (
-      ::xsd::cxx::xml::dom::parse< char > (i, h, p, f));
-
-    if (!d.get ())
-      throw ::xsd::cxx::tree::parsing< char > ();
-
-    ::std::auto_ptr< ::xbemsg::body_t > r (
-      ::xbemsg::body (
-        d, f | ::xml_schema::flags::own_dom, p));
-
-    return r;
-  }
-
-  ::std::auto_ptr< ::xbemsg::body_t >
-  body (const ::xercesc::DOMDocument& d,
-        ::xml_schema::flags f,
-        const ::xml_schema::properties& p)
-  {
-    if (f & ::xml_schema::flags::keep_dom)
-    {
-      ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > c (
-        static_cast< ::xercesc::DOMDocument* > (d.cloneNode (true)));
-
-      ::std::auto_ptr< ::xbemsg::body_t > r (
-        ::xbemsg::body (
-          c, f | ::xml_schema::flags::own_dom, p));
-
-      return r;
-    }
-
-    const ::xercesc::DOMElement& e (*d.getDocumentElement ());
-    const ::xsd::cxx::xml::qualified_name< char > n (
-      ::xsd::cxx::xml::dom::name< char > (e));
-
-    if (n.name () == "body" &&
-        n.namespace_ () == "http://www.xenbee.net/schema/2008/02/xbe-msg")
-    {
-      ::std::auto_ptr< ::xbemsg::body_t > r (
-        ::xsd::cxx::tree::traits< ::xbemsg::body_t, char >::create (
-          e, f, 0));
-      return r;
-    }
-
-    throw ::xsd::cxx::tree::unexpected_element < char > (
-      n.name (),
-      n.namespace_ (),
-      "body",
-      "http://www.xenbee.net/schema/2008/02/xbe-msg");
-  }
-
-  ::std::auto_ptr< ::xbemsg::body_t >
-  body (::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument >& d,
-        ::xml_schema::flags f,
-        const ::xml_schema::properties&)
-  {
-    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > c (
-      ((f & ::xml_schema::flags::keep_dom) &&
-       !(f & ::xml_schema::flags::own_dom))
-      ? static_cast< ::xercesc::DOMDocument* > (d->cloneNode (true))
-      : 0);
-
-    ::xercesc::DOMDocument& doc (c.get () ? *c : *d);
-    const ::xercesc::DOMElement& e (*doc.getDocumentElement ());
-
-    const ::xsd::cxx::xml::qualified_name< char > n (
-      ::xsd::cxx::xml::dom::name< char > (e));
-
-    if (f & ::xml_schema::flags::keep_dom)
-      doc.setUserData (::xml_schema::dom::tree_node_key,
-                       (c.get () ? &c : &d),
-                       0);
-
-    if (n.name () == "body" &&
-        n.namespace_ () == "http://www.xenbee.net/schema/2008/02/xbe-msg")
-    {
-      ::std::auto_ptr< ::xbemsg::body_t > r (
-        ::xsd::cxx::tree::traits< ::xbemsg::body_t, char >::create (
-          e, f, 0));
-      return r;
-    }
-
-    throw ::xsd::cxx::tree::unexpected_element < char > (
-      n.name (),
-      n.namespace_ (),
-      "body",
-      "http://www.xenbee.net/schema/2008/02/xbe-msg");
-  }
-
-  ::std::auto_ptr< ::xbemsg::header_t >
-  header (const ::std::string& u,
-          ::xml_schema::flags f,
-          const ::xml_schema::properties& p)
-  {
-    ::xsd::cxx::xml::auto_initializer i (
-      (f & ::xml_schema::flags::dont_initialize) == 0,
-      (f & ::xml_schema::flags::keep_dom) == 0);
-
-    ::xsd::cxx::tree::error_handler< char > h;
-
-    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > d (
-      ::xsd::cxx::xml::dom::parse< char > (u, h, p, f));
-
-    h.throw_if_failed< ::xsd::cxx::tree::parsing< char > > ();
-
-    ::std::auto_ptr< ::xbemsg::header_t > r (
-      ::xbemsg::header (
-        d, f | ::xml_schema::flags::own_dom, p));
-
-    return r;
-  }
-
-  ::std::auto_ptr< ::xbemsg::header_t >
-  header (const ::std::string& u,
-          ::xml_schema::error_handler& h,
-          ::xml_schema::flags f,
-          const ::xml_schema::properties& p)
-  {
-    ::xsd::cxx::xml::auto_initializer i (
-      (f & ::xml_schema::flags::dont_initialize) == 0,
-      (f & ::xml_schema::flags::keep_dom) == 0);
-
-    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > d (
-      ::xsd::cxx::xml::dom::parse< char > (u, h, p, f));
-
-    if (!d.get ())
-      throw ::xsd::cxx::tree::parsing< char > ();
-
-    ::std::auto_ptr< ::xbemsg::header_t > r (
-      ::xbemsg::header (
-        d, f | ::xml_schema::flags::own_dom, p));
-
-    return r;
-  }
-
-  ::std::auto_ptr< ::xbemsg::header_t >
-  header (const ::std::string& u,
-          ::xercesc::DOMErrorHandler& h,
-          ::xml_schema::flags f,
-          const ::xml_schema::properties& p)
-  {
-    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > d (
-      ::xsd::cxx::xml::dom::parse< char > (u, h, p, f));
-
-    if (!d.get ())
-      throw ::xsd::cxx::tree::parsing< char > ();
-
-    ::std::auto_ptr< ::xbemsg::header_t > r (
-      ::xbemsg::header (
-        d, f | ::xml_schema::flags::own_dom, p));
-
-    return r;
-  }
-
-  ::std::auto_ptr< ::xbemsg::header_t >
-  header (::std::istream& is,
-          ::xml_schema::flags f,
-          const ::xml_schema::properties& p)
-  {
-    ::xsd::cxx::xml::auto_initializer i (
-      (f & ::xml_schema::flags::dont_initialize) == 0,
-      (f & ::xml_schema::flags::keep_dom) == 0);
-
-    ::xsd::cxx::xml::sax::std_input_source isrc (is);
-    return ::xbemsg::header (isrc, f, p);
-  }
-
-  ::std::auto_ptr< ::xbemsg::header_t >
-  header (::std::istream& is,
-          ::xml_schema::error_handler& h,
-          ::xml_schema::flags f,
-          const ::xml_schema::properties& p)
-  {
-    ::xsd::cxx::xml::auto_initializer i (
-      (f & ::xml_schema::flags::dont_initialize) == 0,
-      (f & ::xml_schema::flags::keep_dom) == 0);
-
-    ::xsd::cxx::xml::sax::std_input_source isrc (is);
-    return ::xbemsg::header (isrc, h, f, p);
-  }
-
-  ::std::auto_ptr< ::xbemsg::header_t >
-  header (::std::istream& is,
-          ::xercesc::DOMErrorHandler& h,
-          ::xml_schema::flags f,
-          const ::xml_schema::properties& p)
-  {
-    ::xsd::cxx::xml::sax::std_input_source isrc (is);
-    return ::xbemsg::header (isrc, h, f, p);
-  }
-
-  ::std::auto_ptr< ::xbemsg::header_t >
-  header (::std::istream& is,
-          const ::std::string& sid,
-          ::xml_schema::flags f,
-          const ::xml_schema::properties& p)
-  {
-    ::xsd::cxx::xml::auto_initializer i (
-      (f & ::xml_schema::flags::dont_initialize) == 0,
-      (f & ::xml_schema::flags::keep_dom) == 0);
-
-    ::xsd::cxx::xml::sax::std_input_source isrc (is, sid);
-    return ::xbemsg::header (isrc, f, p);
-  }
-
-  ::std::auto_ptr< ::xbemsg::header_t >
-  header (::std::istream& is,
-          const ::std::string& sid,
-          ::xml_schema::error_handler& h,
-          ::xml_schema::flags f,
-          const ::xml_schema::properties& p)
-  {
-    ::xsd::cxx::xml::auto_initializer i (
-      (f & ::xml_schema::flags::dont_initialize) == 0,
-      (f & ::xml_schema::flags::keep_dom) == 0);
-
-    ::xsd::cxx::xml::sax::std_input_source isrc (is, sid);
-    return ::xbemsg::header (isrc, h, f, p);
-  }
-
-  ::std::auto_ptr< ::xbemsg::header_t >
-  header (::std::istream& is,
-          const ::std::string& sid,
-          ::xercesc::DOMErrorHandler& h,
-          ::xml_schema::flags f,
-          const ::xml_schema::properties& p)
-  {
-    ::xsd::cxx::xml::sax::std_input_source isrc (is, sid);
-    return ::xbemsg::header (isrc, h, f, p);
-  }
-
-  ::std::auto_ptr< ::xbemsg::header_t >
-  header (::xercesc::InputSource& i,
-          ::xml_schema::flags f,
-          const ::xml_schema::properties& p)
-  {
-    ::xsd::cxx::tree::error_handler< char > h;
-
-    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > d (
-      ::xsd::cxx::xml::dom::parse< char > (i, h, p, f));
-
-    h.throw_if_failed< ::xsd::cxx::tree::parsing< char > > ();
-
-    ::std::auto_ptr< ::xbemsg::header_t > r (
-      ::xbemsg::header (
-        d, f | ::xml_schema::flags::own_dom, p));
-
-    return r;
-  }
-
-  ::std::auto_ptr< ::xbemsg::header_t >
-  header (::xercesc::InputSource& i,
-          ::xml_schema::error_handler& h,
-          ::xml_schema::flags f,
-          const ::xml_schema::properties& p)
-  {
-    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > d (
-      ::xsd::cxx::xml::dom::parse< char > (i, h, p, f));
-
-    if (!d.get ())
-      throw ::xsd::cxx::tree::parsing< char > ();
-
-    ::std::auto_ptr< ::xbemsg::header_t > r (
-      ::xbemsg::header (
-        d, f | ::xml_schema::flags::own_dom, p));
-
-    return r;
-  }
-
-  ::std::auto_ptr< ::xbemsg::header_t >
-  header (::xercesc::InputSource& i,
-          ::xercesc::DOMErrorHandler& h,
-          ::xml_schema::flags f,
-          const ::xml_schema::properties& p)
-  {
-    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > d (
-      ::xsd::cxx::xml::dom::parse< char > (i, h, p, f));
-
-    if (!d.get ())
-      throw ::xsd::cxx::tree::parsing< char > ();
-
-    ::std::auto_ptr< ::xbemsg::header_t > r (
-      ::xbemsg::header (
-        d, f | ::xml_schema::flags::own_dom, p));
-
-    return r;
-  }
-
-  ::std::auto_ptr< ::xbemsg::header_t >
-  header (const ::xercesc::DOMDocument& d,
-          ::xml_schema::flags f,
-          const ::xml_schema::properties& p)
-  {
-    if (f & ::xml_schema::flags::keep_dom)
-    {
-      ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > c (
-        static_cast< ::xercesc::DOMDocument* > (d.cloneNode (true)));
-
-      ::std::auto_ptr< ::xbemsg::header_t > r (
-        ::xbemsg::header (
-          c, f | ::xml_schema::flags::own_dom, p));
-
-      return r;
-    }
-
-    const ::xercesc::DOMElement& e (*d.getDocumentElement ());
-    const ::xsd::cxx::xml::qualified_name< char > n (
-      ::xsd::cxx::xml::dom::name< char > (e));
-
-    if (n.name () == "header" &&
-        n.namespace_ () == "http://www.xenbee.net/schema/2008/02/xbe-msg")
-    {
-      ::std::auto_ptr< ::xbemsg::header_t > r (
-        ::xsd::cxx::tree::traits< ::xbemsg::header_t, char >::create (
-          e, f, 0));
-      return r;
-    }
-
-    throw ::xsd::cxx::tree::unexpected_element < char > (
-      n.name (),
-      n.namespace_ (),
-      "header",
-      "http://www.xenbee.net/schema/2008/02/xbe-msg");
-  }
-
-  ::std::auto_ptr< ::xbemsg::header_t >
-  header (::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument >& d,
-          ::xml_schema::flags f,
-          const ::xml_schema::properties&)
-  {
-    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > c (
-      ((f & ::xml_schema::flags::keep_dom) &&
-       !(f & ::xml_schema::flags::own_dom))
-      ? static_cast< ::xercesc::DOMDocument* > (d->cloneNode (true))
-      : 0);
-
-    ::xercesc::DOMDocument& doc (c.get () ? *c : *d);
-    const ::xercesc::DOMElement& e (*doc.getDocumentElement ());
-
-    const ::xsd::cxx::xml::qualified_name< char > n (
-      ::xsd::cxx::xml::dom::name< char > (e));
-
-    if (f & ::xml_schema::flags::keep_dom)
-      doc.setUserData (::xml_schema::dom::tree_node_key,
-                       (c.get () ? &c : &d),
-                       0);
-
-    if (n.name () == "header" &&
-        n.namespace_ () == "http://www.xenbee.net/schema/2008/02/xbe-msg")
-    {
-      ::std::auto_ptr< ::xbemsg::header_t > r (
-        ::xsd::cxx::tree::traits< ::xbemsg::header_t, char >::create (
-          e, f, 0));
-      return r;
-    }
-
-    throw ::xsd::cxx::tree::unexpected_element < char > (
-      n.name (),
-      n.namespace_ (),
-      "header",
-      "http://www.xenbee.net/schema/2008/02/xbe-msg");
-  }
 }
 
 #include <ostream>
@@ -1739,9 +3765,620 @@ namespace xbemsg
         e.setAttributeNodeNS (a);
     }
 
+    // execute
+    //
+    if (i.execute ())
+    {
+      ::xercesc::DOMElement& s (
+        ::xsd::cxx::xml::dom::create_element (
+          "execute",
+          "http://www.xenbee.net/schema/2008/02/xbe-msg",
+          e));
+
+      s << *i.execute ();
+    }
+
+    // terminate
+    //
+    if (i.terminate ())
+    {
+      ::xercesc::DOMElement& s (
+        ::xsd::cxx::xml::dom::create_element (
+          "terminate",
+          "http://www.xenbee.net/schema/2008/02/xbe-msg",
+          e));
+
+      s << *i.terminate ();
+    }
+
+    // status-req
+    //
+    if (i.status_req ())
+    {
+      ::xercesc::DOMElement& s (
+        ::xsd::cxx::xml::dom::create_element (
+          "status-req",
+          "http://www.xenbee.net/schema/2008/02/xbe-msg",
+          e));
+
+      s << *i.status_req ();
+    }
+
+    // shutdown
+    //
+    if (i.shutdown ())
+    {
+      ::xercesc::DOMElement& s (
+        ::xsd::cxx::xml::dom::create_element (
+          "shutdown",
+          "http://www.xenbee.net/schema/2008/02/xbe-msg",
+          e));
+
+      s << *i.shutdown ();
+    }
+
+    // finished-ack
+    //
+    if (i.finished_ack ())
+    {
+      ::xercesc::DOMElement& s (
+        ::xsd::cxx::xml::dom::create_element (
+          "finished-ack",
+          "http://www.xenbee.net/schema/2008/02/xbe-msg",
+          e));
+
+      s << *i.finished_ack ();
+    }
+
+    // failed-ack
+    //
+    if (i.failed_ack ())
+    {
+      ::xercesc::DOMElement& s (
+        ::xsd::cxx::xml::dom::create_element (
+          "failed-ack",
+          "http://www.xenbee.net/schema/2008/02/xbe-msg",
+          e));
+
+      s << *i.failed_ack ();
+    }
+
+    // life-sign
+    //
+    if (i.life_sign ())
+    {
+      ::xercesc::DOMElement& s (
+        ::xsd::cxx::xml::dom::create_element (
+          "life-sign",
+          "http://www.xenbee.net/schema/2008/02/xbe-msg",
+          e));
+
+      s << *i.life_sign ();
+    }
+
+    // execute-ack
+    //
+    if (i.execute_ack ())
+    {
+      ::xercesc::DOMElement& s (
+        ::xsd::cxx::xml::dom::create_element (
+          "execute-ack",
+          "http://www.xenbee.net/schema/2008/02/xbe-msg",
+          e));
+
+      s << *i.execute_ack ();
+    }
+
+    // terminate-ack
+    //
+    if (i.terminate_ack ())
+    {
+      ::xercesc::DOMElement& s (
+        ::xsd::cxx::xml::dom::create_element (
+          "terminate-ack",
+          "http://www.xenbee.net/schema/2008/02/xbe-msg",
+          e));
+
+      s << *i.terminate_ack ();
+    }
+
+    // shutdown-ack
+    //
+    if (i.shutdown_ack ())
+    {
+      ::xercesc::DOMElement& s (
+        ::xsd::cxx::xml::dom::create_element (
+          "shutdown-ack",
+          "http://www.xenbee.net/schema/2008/02/xbe-msg",
+          e));
+
+      s << *i.shutdown_ack ();
+    }
+
+    // status
+    //
+    if (i.status ())
+    {
+      ::xercesc::DOMElement& s (
+        ::xsd::cxx::xml::dom::create_element (
+          "status",
+          "http://www.xenbee.net/schema/2008/02/xbe-msg",
+          e));
+
+      s << *i.status ();
+    }
+
+    // finished
+    //
+    if (i.finished ())
+    {
+      ::xercesc::DOMElement& s (
+        ::xsd::cxx::xml::dom::create_element (
+          "finished",
+          "http://www.xenbee.net/schema/2008/02/xbe-msg",
+          e));
+
+      s << *i.finished ();
+    }
+
+    // failed
+    //
+    if (i.failed ())
+    {
+      ::xercesc::DOMElement& s (
+        ::xsd::cxx::xml::dom::create_element (
+          "failed",
+          "http://www.xenbee.net/schema/2008/02/xbe-msg",
+          e));
+
+      s << *i.failed ();
+    }
+
     // any
     //
     for (body_t::any_const_iterator
+         b (i.any ().begin ()), n (i.any ().end ());
+         b != n; ++b)
+    {
+      e.appendChild (
+        e.getOwnerDocument ()->importNode (
+          const_cast< ::xercesc::DOMElement* > (&(*b)), true));
+    }
+  }
+
+  void
+  operator<< (::xercesc::DOMElement& e, const execute_t& i)
+  {
+    e << static_cast< const ::xml_schema::type& > (i);
+
+    // any_attribute
+    //
+    for (execute_t::any_attribute_const_iterator
+         b (i.any_attribute ().begin ()), n (i.any_attribute ().end ());
+         b != n; ++b)
+    {
+      ::xercesc::DOMAttr* a (
+        static_cast< ::xercesc::DOMAttr* > (
+          e.getOwnerDocument ()->importNode (
+            const_cast< ::xercesc::DOMAttr* > (&(*b)), true)));
+
+      if (a->getLocalName () == 0)
+        e.setAttributeNode (a);
+      else
+        e.setAttributeNodeNS (a);
+    }
+
+    // any
+    //
+    for (execute_t::any_const_iterator
+         b (i.any ().begin ()), n (i.any ().end ());
+         b != n; ++b)
+    {
+      e.appendChild (
+        e.getOwnerDocument ()->importNode (
+          const_cast< ::xercesc::DOMElement* > (&(*b)), true));
+    }
+  }
+
+  void
+  operator<< (::xercesc::DOMElement& e, const terminate_t& i)
+  {
+    e << static_cast< const ::xml_schema::type& > (i);
+
+    // any_attribute
+    //
+    for (terminate_t::any_attribute_const_iterator
+         b (i.any_attribute ().begin ()), n (i.any_attribute ().end ());
+         b != n; ++b)
+    {
+      ::xercesc::DOMAttr* a (
+        static_cast< ::xercesc::DOMAttr* > (
+          e.getOwnerDocument ()->importNode (
+            const_cast< ::xercesc::DOMAttr* > (&(*b)), true)));
+
+      if (a->getLocalName () == 0)
+        e.setAttributeNode (a);
+      else
+        e.setAttributeNodeNS (a);
+    }
+
+    // any
+    //
+    for (terminate_t::any_const_iterator
+         b (i.any ().begin ()), n (i.any ().end ());
+         b != n; ++b)
+    {
+      e.appendChild (
+        e.getOwnerDocument ()->importNode (
+          const_cast< ::xercesc::DOMElement* > (&(*b)), true));
+    }
+  }
+
+  void
+  operator<< (::xercesc::DOMElement& e, const status_req_t& i)
+  {
+    e << static_cast< const ::xml_schema::type& > (i);
+
+    // any_attribute
+    //
+    for (status_req_t::any_attribute_const_iterator
+         b (i.any_attribute ().begin ()), n (i.any_attribute ().end ());
+         b != n; ++b)
+    {
+      ::xercesc::DOMAttr* a (
+        static_cast< ::xercesc::DOMAttr* > (
+          e.getOwnerDocument ()->importNode (
+            const_cast< ::xercesc::DOMAttr* > (&(*b)), true)));
+
+      if (a->getLocalName () == 0)
+        e.setAttributeNode (a);
+      else
+        e.setAttributeNodeNS (a);
+    }
+
+    // any
+    //
+    for (status_req_t::any_const_iterator
+         b (i.any ().begin ()), n (i.any ().end ());
+         b != n; ++b)
+    {
+      e.appendChild (
+        e.getOwnerDocument ()->importNode (
+          const_cast< ::xercesc::DOMElement* > (&(*b)), true));
+    }
+  }
+
+  void
+  operator<< (::xercesc::DOMElement& e, const shutdown_t& i)
+  {
+    e << static_cast< const ::xml_schema::type& > (i);
+
+    // any_attribute
+    //
+    for (shutdown_t::any_attribute_const_iterator
+         b (i.any_attribute ().begin ()), n (i.any_attribute ().end ());
+         b != n; ++b)
+    {
+      ::xercesc::DOMAttr* a (
+        static_cast< ::xercesc::DOMAttr* > (
+          e.getOwnerDocument ()->importNode (
+            const_cast< ::xercesc::DOMAttr* > (&(*b)), true)));
+
+      if (a->getLocalName () == 0)
+        e.setAttributeNode (a);
+      else
+        e.setAttributeNodeNS (a);
+    }
+
+    // any
+    //
+    for (shutdown_t::any_const_iterator
+         b (i.any ().begin ()), n (i.any ().end ());
+         b != n; ++b)
+    {
+      e.appendChild (
+        e.getOwnerDocument ()->importNode (
+          const_cast< ::xercesc::DOMElement* > (&(*b)), true));
+    }
+  }
+
+  void
+  operator<< (::xercesc::DOMElement& e, const finished_ack_t& i)
+  {
+    e << static_cast< const ::xml_schema::type& > (i);
+
+    // any_attribute
+    //
+    for (finished_ack_t::any_attribute_const_iterator
+         b (i.any_attribute ().begin ()), n (i.any_attribute ().end ());
+         b != n; ++b)
+    {
+      ::xercesc::DOMAttr* a (
+        static_cast< ::xercesc::DOMAttr* > (
+          e.getOwnerDocument ()->importNode (
+            const_cast< ::xercesc::DOMAttr* > (&(*b)), true)));
+
+      if (a->getLocalName () == 0)
+        e.setAttributeNode (a);
+      else
+        e.setAttributeNodeNS (a);
+    }
+
+    // any
+    //
+    for (finished_ack_t::any_const_iterator
+         b (i.any ().begin ()), n (i.any ().end ());
+         b != n; ++b)
+    {
+      e.appendChild (
+        e.getOwnerDocument ()->importNode (
+          const_cast< ::xercesc::DOMElement* > (&(*b)), true));
+    }
+  }
+
+  void
+  operator<< (::xercesc::DOMElement& e, const failed_ack_t& i)
+  {
+    e << static_cast< const ::xml_schema::type& > (i);
+
+    // any_attribute
+    //
+    for (failed_ack_t::any_attribute_const_iterator
+         b (i.any_attribute ().begin ()), n (i.any_attribute ().end ());
+         b != n; ++b)
+    {
+      ::xercesc::DOMAttr* a (
+        static_cast< ::xercesc::DOMAttr* > (
+          e.getOwnerDocument ()->importNode (
+            const_cast< ::xercesc::DOMAttr* > (&(*b)), true)));
+
+      if (a->getLocalName () == 0)
+        e.setAttributeNode (a);
+      else
+        e.setAttributeNodeNS (a);
+    }
+
+    // any
+    //
+    for (failed_ack_t::any_const_iterator
+         b (i.any ().begin ()), n (i.any ().end ());
+         b != n; ++b)
+    {
+      e.appendChild (
+        e.getOwnerDocument ()->importNode (
+          const_cast< ::xercesc::DOMElement* > (&(*b)), true));
+    }
+  }
+
+  void
+  operator<< (::xercesc::DOMElement& e, const life_sign_t& i)
+  {
+    e << static_cast< const ::xml_schema::type& > (i);
+
+    // any_attribute
+    //
+    for (life_sign_t::any_attribute_const_iterator
+         b (i.any_attribute ().begin ()), n (i.any_attribute ().end ());
+         b != n; ++b)
+    {
+      ::xercesc::DOMAttr* a (
+        static_cast< ::xercesc::DOMAttr* > (
+          e.getOwnerDocument ()->importNode (
+            const_cast< ::xercesc::DOMAttr* > (&(*b)), true)));
+
+      if (a->getLocalName () == 0)
+        e.setAttributeNode (a);
+      else
+        e.setAttributeNodeNS (a);
+    }
+
+    // any
+    //
+    for (life_sign_t::any_const_iterator
+         b (i.any ().begin ()), n (i.any ().end ());
+         b != n; ++b)
+    {
+      e.appendChild (
+        e.getOwnerDocument ()->importNode (
+          const_cast< ::xercesc::DOMElement* > (&(*b)), true));
+    }
+  }
+
+  void
+  operator<< (::xercesc::DOMElement& e, const execute_ack_t& i)
+  {
+    e << static_cast< const ::xml_schema::type& > (i);
+
+    // any_attribute
+    //
+    for (execute_ack_t::any_attribute_const_iterator
+         b (i.any_attribute ().begin ()), n (i.any_attribute ().end ());
+         b != n; ++b)
+    {
+      ::xercesc::DOMAttr* a (
+        static_cast< ::xercesc::DOMAttr* > (
+          e.getOwnerDocument ()->importNode (
+            const_cast< ::xercesc::DOMAttr* > (&(*b)), true)));
+
+      if (a->getLocalName () == 0)
+        e.setAttributeNode (a);
+      else
+        e.setAttributeNodeNS (a);
+    }
+
+    // any
+    //
+    for (execute_ack_t::any_const_iterator
+         b (i.any ().begin ()), n (i.any ().end ());
+         b != n; ++b)
+    {
+      e.appendChild (
+        e.getOwnerDocument ()->importNode (
+          const_cast< ::xercesc::DOMElement* > (&(*b)), true));
+    }
+  }
+
+  void
+  operator<< (::xercesc::DOMElement& e, const terminate_ack_t& i)
+  {
+    e << static_cast< const ::xml_schema::type& > (i);
+
+    // any_attribute
+    //
+    for (terminate_ack_t::any_attribute_const_iterator
+         b (i.any_attribute ().begin ()), n (i.any_attribute ().end ());
+         b != n; ++b)
+    {
+      ::xercesc::DOMAttr* a (
+        static_cast< ::xercesc::DOMAttr* > (
+          e.getOwnerDocument ()->importNode (
+            const_cast< ::xercesc::DOMAttr* > (&(*b)), true)));
+
+      if (a->getLocalName () == 0)
+        e.setAttributeNode (a);
+      else
+        e.setAttributeNodeNS (a);
+    }
+
+    // any
+    //
+    for (terminate_ack_t::any_const_iterator
+         b (i.any ().begin ()), n (i.any ().end ());
+         b != n; ++b)
+    {
+      e.appendChild (
+        e.getOwnerDocument ()->importNode (
+          const_cast< ::xercesc::DOMElement* > (&(*b)), true));
+    }
+  }
+
+  void
+  operator<< (::xercesc::DOMElement& e, const shutdown_ack_t& i)
+  {
+    e << static_cast< const ::xml_schema::type& > (i);
+
+    // any_attribute
+    //
+    for (shutdown_ack_t::any_attribute_const_iterator
+         b (i.any_attribute ().begin ()), n (i.any_attribute ().end ());
+         b != n; ++b)
+    {
+      ::xercesc::DOMAttr* a (
+        static_cast< ::xercesc::DOMAttr* > (
+          e.getOwnerDocument ()->importNode (
+            const_cast< ::xercesc::DOMAttr* > (&(*b)), true)));
+
+      if (a->getLocalName () == 0)
+        e.setAttributeNode (a);
+      else
+        e.setAttributeNodeNS (a);
+    }
+
+    // any
+    //
+    for (shutdown_ack_t::any_const_iterator
+         b (i.any ().begin ()), n (i.any ().end ());
+         b != n; ++b)
+    {
+      e.appendChild (
+        e.getOwnerDocument ()->importNode (
+          const_cast< ::xercesc::DOMElement* > (&(*b)), true));
+    }
+  }
+
+  void
+  operator<< (::xercesc::DOMElement& e, const status_t& i)
+  {
+    e << static_cast< const ::xml_schema::type& > (i);
+
+    // any_attribute
+    //
+    for (status_t::any_attribute_const_iterator
+         b (i.any_attribute ().begin ()), n (i.any_attribute ().end ());
+         b != n; ++b)
+    {
+      ::xercesc::DOMAttr* a (
+        static_cast< ::xercesc::DOMAttr* > (
+          e.getOwnerDocument ()->importNode (
+            const_cast< ::xercesc::DOMAttr* > (&(*b)), true)));
+
+      if (a->getLocalName () == 0)
+        e.setAttributeNode (a);
+      else
+        e.setAttributeNodeNS (a);
+    }
+
+    // any
+    //
+    for (status_t::any_const_iterator
+         b (i.any ().begin ()), n (i.any ().end ());
+         b != n; ++b)
+    {
+      e.appendChild (
+        e.getOwnerDocument ()->importNode (
+          const_cast< ::xercesc::DOMElement* > (&(*b)), true));
+    }
+  }
+
+  void
+  operator<< (::xercesc::DOMElement& e, const finished_t& i)
+  {
+    e << static_cast< const ::xml_schema::type& > (i);
+
+    // any_attribute
+    //
+    for (finished_t::any_attribute_const_iterator
+         b (i.any_attribute ().begin ()), n (i.any_attribute ().end ());
+         b != n; ++b)
+    {
+      ::xercesc::DOMAttr* a (
+        static_cast< ::xercesc::DOMAttr* > (
+          e.getOwnerDocument ()->importNode (
+            const_cast< ::xercesc::DOMAttr* > (&(*b)), true)));
+
+      if (a->getLocalName () == 0)
+        e.setAttributeNode (a);
+      else
+        e.setAttributeNodeNS (a);
+    }
+
+    // any
+    //
+    for (finished_t::any_const_iterator
+         b (i.any ().begin ()), n (i.any ().end ());
+         b != n; ++b)
+    {
+      e.appendChild (
+        e.getOwnerDocument ()->importNode (
+          const_cast< ::xercesc::DOMElement* > (&(*b)), true));
+    }
+  }
+
+  void
+  operator<< (::xercesc::DOMElement& e, const failed_t& i)
+  {
+    e << static_cast< const ::xml_schema::type& > (i);
+
+    // any_attribute
+    //
+    for (failed_t::any_attribute_const_iterator
+         b (i.any_attribute ().begin ()), n (i.any_attribute ().end ());
+         b != n; ++b)
+    {
+      ::xercesc::DOMAttr* a (
+        static_cast< ::xercesc::DOMAttr* > (
+          e.getOwnerDocument ()->importNode (
+            const_cast< ::xercesc::DOMAttr* > (&(*b)), true)));
+
+      if (a->getLocalName () == 0)
+        e.setAttributeNode (a);
+      else
+        e.setAttributeNodeNS (a);
+    }
+
+    // any
+    //
+    for (failed_t::any_const_iterator
          b (i.any ().begin ()), n (i.any ().end ());
          b != n; ++b)
     {
@@ -1898,324 +4535,6 @@ namespace xbemsg
           m, f));
 
       ::xbemsg::message (*d, s, f);
-      return d;
-    }
-    catch (const ::xsd::cxx::xml::dom::mapping< char >& e)
-    {
-      throw ::xsd::cxx::tree::no_namespace_mapping< char > (e.name ());
-    }
-    catch (const ::xsd::cxx::xml::dom::xsi_already_in_use&)
-    {
-      throw ::xsd::cxx::tree::xsi_already_in_use< char > ();
-    }
-  }
-
-  void
-  body (::std::ostream& o,
-        const ::xbemsg::body_t& s,
-        const ::xml_schema::namespace_infomap& m,
-        const ::std::string& e,
-        ::xml_schema::flags f)
-  {
-    ::xsd::cxx::xml::auto_initializer i (
-      (f & ::xml_schema::flags::dont_initialize) == 0);
-
-    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > d (
-      ::xbemsg::body (s, m, f));
-
-    ::xsd::cxx::tree::error_handler< char > h;
-
-    ::xsd::cxx::xml::dom::ostream_format_target t (o);
-    if (!::xsd::cxx::xml::dom::serialize (t, *d, e, h, f))
-    {
-      h.throw_if_failed< ::xsd::cxx::tree::serialization< char > > ();
-    }
-  }
-
-  void
-  body (::std::ostream& o,
-        const ::xbemsg::body_t& s,
-        const ::xml_schema::namespace_infomap& m,
-        ::xml_schema::error_handler& h,
-        const ::std::string& e,
-        ::xml_schema::flags f)
-  {
-    ::xsd::cxx::xml::auto_initializer i (
-      (f & ::xml_schema::flags::dont_initialize) == 0);
-
-    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > d (
-      ::xbemsg::body (s, m, f));
-    ::xsd::cxx::xml::dom::ostream_format_target t (o);
-    if (!::xsd::cxx::xml::dom::serialize (t, *d, e, h, f))
-    {
-      throw ::xsd::cxx::tree::serialization< char > ();
-    }
-  }
-
-  void
-  body (::std::ostream& o,
-        const ::xbemsg::body_t& s,
-        const ::xml_schema::namespace_infomap& m,
-        ::xercesc::DOMErrorHandler& h,
-        const ::std::string& e,
-        ::xml_schema::flags f)
-  {
-    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > d (
-      ::xbemsg::body (s, m, f));
-    ::xsd::cxx::xml::dom::ostream_format_target t (o);
-    if (!::xsd::cxx::xml::dom::serialize (t, *d, e, h, f))
-    {
-      throw ::xsd::cxx::tree::serialization< char > ();
-    }
-  }
-
-  void
-  body (::xercesc::XMLFormatTarget& t,
-        const ::xbemsg::body_t& s,
-        const ::xml_schema::namespace_infomap& m,
-        const ::std::string& e,
-        ::xml_schema::flags f)
-  {
-    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > d (
-      ::xbemsg::body (s, m, f));
-
-    ::xsd::cxx::tree::error_handler< char > h;
-
-    if (!::xsd::cxx::xml::dom::serialize (t, *d, e, h, f))
-    {
-      h.throw_if_failed< ::xsd::cxx::tree::serialization< char > > ();
-    }
-  }
-
-  void
-  body (::xercesc::XMLFormatTarget& t,
-        const ::xbemsg::body_t& s,
-        const ::xml_schema::namespace_infomap& m,
-        ::xml_schema::error_handler& h,
-        const ::std::string& e,
-        ::xml_schema::flags f)
-  {
-    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > d (
-      ::xbemsg::body (s, m, f));
-    if (!::xsd::cxx::xml::dom::serialize (t, *d, e, h, f))
-    {
-      throw ::xsd::cxx::tree::serialization< char > ();
-    }
-  }
-
-  void
-  body (::xercesc::XMLFormatTarget& t,
-        const ::xbemsg::body_t& s,
-        const ::xml_schema::namespace_infomap& m,
-        ::xercesc::DOMErrorHandler& h,
-        const ::std::string& e,
-        ::xml_schema::flags f)
-  {
-    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > d (
-      ::xbemsg::body (s, m, f));
-    if (!::xsd::cxx::xml::dom::serialize (t, *d, e, h, f))
-    {
-      throw ::xsd::cxx::tree::serialization< char > ();
-    }
-  }
-
-  void
-  body (::xercesc::DOMDocument& d,
-        const ::xbemsg::body_t& s,
-        ::xml_schema::flags)
-  {
-    ::xercesc::DOMElement& e (*d.getDocumentElement ());
-    const ::xsd::cxx::xml::qualified_name< char > n (
-      ::xsd::cxx::xml::dom::name< char > (e));
-
-    if (n.name () == "body" &&
-        n.namespace_ () == "http://www.xenbee.net/schema/2008/02/xbe-msg")
-    {
-      e << s;
-    }
-    else
-    {
-      throw ::xsd::cxx::tree::unexpected_element < char > (
-        n.name (),
-        n.namespace_ (),
-        "body",
-        "http://www.xenbee.net/schema/2008/02/xbe-msg");
-    }
-  }
-
-  ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument >
-  body (const ::xbemsg::body_t& s,
-        const ::xml_schema::namespace_infomap& m,
-        ::xml_schema::flags f)
-  {
-    try
-    {
-      ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > d (
-        ::xsd::cxx::xml::dom::serialize< char > (
-          "body",
-          "http://www.xenbee.net/schema/2008/02/xbe-msg",
-          m, f));
-
-      ::xbemsg::body (*d, s, f);
-      return d;
-    }
-    catch (const ::xsd::cxx::xml::dom::mapping< char >& e)
-    {
-      throw ::xsd::cxx::tree::no_namespace_mapping< char > (e.name ());
-    }
-    catch (const ::xsd::cxx::xml::dom::xsi_already_in_use&)
-    {
-      throw ::xsd::cxx::tree::xsi_already_in_use< char > ();
-    }
-  }
-
-  void
-  header (::std::ostream& o,
-          const ::xbemsg::header_t& s,
-          const ::xml_schema::namespace_infomap& m,
-          const ::std::string& e,
-          ::xml_schema::flags f)
-  {
-    ::xsd::cxx::xml::auto_initializer i (
-      (f & ::xml_schema::flags::dont_initialize) == 0);
-
-    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > d (
-      ::xbemsg::header (s, m, f));
-
-    ::xsd::cxx::tree::error_handler< char > h;
-
-    ::xsd::cxx::xml::dom::ostream_format_target t (o);
-    if (!::xsd::cxx::xml::dom::serialize (t, *d, e, h, f))
-    {
-      h.throw_if_failed< ::xsd::cxx::tree::serialization< char > > ();
-    }
-  }
-
-  void
-  header (::std::ostream& o,
-          const ::xbemsg::header_t& s,
-          const ::xml_schema::namespace_infomap& m,
-          ::xml_schema::error_handler& h,
-          const ::std::string& e,
-          ::xml_schema::flags f)
-  {
-    ::xsd::cxx::xml::auto_initializer i (
-      (f & ::xml_schema::flags::dont_initialize) == 0);
-
-    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > d (
-      ::xbemsg::header (s, m, f));
-    ::xsd::cxx::xml::dom::ostream_format_target t (o);
-    if (!::xsd::cxx::xml::dom::serialize (t, *d, e, h, f))
-    {
-      throw ::xsd::cxx::tree::serialization< char > ();
-    }
-  }
-
-  void
-  header (::std::ostream& o,
-          const ::xbemsg::header_t& s,
-          const ::xml_schema::namespace_infomap& m,
-          ::xercesc::DOMErrorHandler& h,
-          const ::std::string& e,
-          ::xml_schema::flags f)
-  {
-    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > d (
-      ::xbemsg::header (s, m, f));
-    ::xsd::cxx::xml::dom::ostream_format_target t (o);
-    if (!::xsd::cxx::xml::dom::serialize (t, *d, e, h, f))
-    {
-      throw ::xsd::cxx::tree::serialization< char > ();
-    }
-  }
-
-  void
-  header (::xercesc::XMLFormatTarget& t,
-          const ::xbemsg::header_t& s,
-          const ::xml_schema::namespace_infomap& m,
-          const ::std::string& e,
-          ::xml_schema::flags f)
-  {
-    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > d (
-      ::xbemsg::header (s, m, f));
-
-    ::xsd::cxx::tree::error_handler< char > h;
-
-    if (!::xsd::cxx::xml::dom::serialize (t, *d, e, h, f))
-    {
-      h.throw_if_failed< ::xsd::cxx::tree::serialization< char > > ();
-    }
-  }
-
-  void
-  header (::xercesc::XMLFormatTarget& t,
-          const ::xbemsg::header_t& s,
-          const ::xml_schema::namespace_infomap& m,
-          ::xml_schema::error_handler& h,
-          const ::std::string& e,
-          ::xml_schema::flags f)
-  {
-    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > d (
-      ::xbemsg::header (s, m, f));
-    if (!::xsd::cxx::xml::dom::serialize (t, *d, e, h, f))
-    {
-      throw ::xsd::cxx::tree::serialization< char > ();
-    }
-  }
-
-  void
-  header (::xercesc::XMLFormatTarget& t,
-          const ::xbemsg::header_t& s,
-          const ::xml_schema::namespace_infomap& m,
-          ::xercesc::DOMErrorHandler& h,
-          const ::std::string& e,
-          ::xml_schema::flags f)
-  {
-    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > d (
-      ::xbemsg::header (s, m, f));
-    if (!::xsd::cxx::xml::dom::serialize (t, *d, e, h, f))
-    {
-      throw ::xsd::cxx::tree::serialization< char > ();
-    }
-  }
-
-  void
-  header (::xercesc::DOMDocument& d,
-          const ::xbemsg::header_t& s,
-          ::xml_schema::flags)
-  {
-    ::xercesc::DOMElement& e (*d.getDocumentElement ());
-    const ::xsd::cxx::xml::qualified_name< char > n (
-      ::xsd::cxx::xml::dom::name< char > (e));
-
-    if (n.name () == "header" &&
-        n.namespace_ () == "http://www.xenbee.net/schema/2008/02/xbe-msg")
-    {
-      e << s;
-    }
-    else
-    {
-      throw ::xsd::cxx::tree::unexpected_element < char > (
-        n.name (),
-        n.namespace_ (),
-        "header",
-        "http://www.xenbee.net/schema/2008/02/xbe-msg");
-    }
-  }
-
-  ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument >
-  header (const ::xbemsg::header_t& s,
-          const ::xml_schema::namespace_infomap& m,
-          ::xml_schema::flags f)
-  {
-    try
-    {
-      ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > d (
-        ::xsd::cxx::xml::dom::serialize< char > (
-          "header",
-          "http://www.xenbee.net/schema/2008/02/xbe-msg",
-          m, f));
-
-      ::xbemsg::header (*d, s, f);
       return d;
     }
     catch (const ::xsd::cxx::xml::dom::mapping< char >& e)

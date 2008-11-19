@@ -249,6 +249,19 @@ namespace xbemsg
   class message_t;
   class header_t;
   class body_t;
+  class execute_t;
+  class terminate_t;
+  class status_req_t;
+  class shutdown_t;
+  class finished_ack_t;
+  class failed_ack_t;
+  class life_sign_t;
+  class execute_ack_t;
+  class terminate_ack_t;
+  class shutdown_ack_t;
+  class status_t;
+  class finished_t;
+  class failed_t;
 }
 
 
@@ -514,6 +527,279 @@ namespace xbemsg
   class body_t: public ::xml_schema::type
   {
     public:
+    // execute
+    // 
+    typedef ::xbemsg::execute_t execute_type;
+    typedef ::xsd::cxx::tree::optional< execute_type > execute_optional;
+    typedef ::xsd::cxx::tree::traits< execute_type, char > execute_traits;
+
+    const execute_optional&
+    execute () const;
+
+    execute_optional&
+    execute ();
+
+    void
+    execute (const execute_type& x);
+
+    void
+    execute (const execute_optional& x);
+
+    void
+    execute (::std::auto_ptr< execute_type > p);
+
+    // terminate
+    // 
+    typedef ::xbemsg::terminate_t terminate_type;
+    typedef ::xsd::cxx::tree::optional< terminate_type > terminate_optional;
+    typedef ::xsd::cxx::tree::traits< terminate_type, char > terminate_traits;
+
+    const terminate_optional&
+    terminate () const;
+
+    terminate_optional&
+    terminate ();
+
+    void
+    terminate (const terminate_type& x);
+
+    void
+    terminate (const terminate_optional& x);
+
+    void
+    terminate (::std::auto_ptr< terminate_type > p);
+
+    // status-req
+    // 
+    typedef ::xbemsg::status_req_t status_req_type;
+    typedef ::xsd::cxx::tree::optional< status_req_type > status_req_optional;
+    typedef ::xsd::cxx::tree::traits< status_req_type, char > status_req_traits;
+
+    const status_req_optional&
+    status_req () const;
+
+    status_req_optional&
+    status_req ();
+
+    void
+    status_req (const status_req_type& x);
+
+    void
+    status_req (const status_req_optional& x);
+
+    void
+    status_req (::std::auto_ptr< status_req_type > p);
+
+    // shutdown
+    // 
+    typedef ::xbemsg::shutdown_t shutdown_type;
+    typedef ::xsd::cxx::tree::optional< shutdown_type > shutdown_optional;
+    typedef ::xsd::cxx::tree::traits< shutdown_type, char > shutdown_traits;
+
+    const shutdown_optional&
+    shutdown () const;
+
+    shutdown_optional&
+    shutdown ();
+
+    void
+    shutdown (const shutdown_type& x);
+
+    void
+    shutdown (const shutdown_optional& x);
+
+    void
+    shutdown (::std::auto_ptr< shutdown_type > p);
+
+    // finished-ack
+    // 
+    typedef ::xbemsg::finished_ack_t finished_ack_type;
+    typedef ::xsd::cxx::tree::optional< finished_ack_type > finished_ack_optional;
+    typedef ::xsd::cxx::tree::traits< finished_ack_type, char > finished_ack_traits;
+
+    const finished_ack_optional&
+    finished_ack () const;
+
+    finished_ack_optional&
+    finished_ack ();
+
+    void
+    finished_ack (const finished_ack_type& x);
+
+    void
+    finished_ack (const finished_ack_optional& x);
+
+    void
+    finished_ack (::std::auto_ptr< finished_ack_type > p);
+
+    // failed-ack
+    // 
+    typedef ::xbemsg::failed_ack_t failed_ack_type;
+    typedef ::xsd::cxx::tree::optional< failed_ack_type > failed_ack_optional;
+    typedef ::xsd::cxx::tree::traits< failed_ack_type, char > failed_ack_traits;
+
+    const failed_ack_optional&
+    failed_ack () const;
+
+    failed_ack_optional&
+    failed_ack ();
+
+    void
+    failed_ack (const failed_ack_type& x);
+
+    void
+    failed_ack (const failed_ack_optional& x);
+
+    void
+    failed_ack (::std::auto_ptr< failed_ack_type > p);
+
+    // life-sign
+    // 
+    typedef ::xbemsg::life_sign_t life_sign_type;
+    typedef ::xsd::cxx::tree::optional< life_sign_type > life_sign_optional;
+    typedef ::xsd::cxx::tree::traits< life_sign_type, char > life_sign_traits;
+
+    const life_sign_optional&
+    life_sign () const;
+
+    life_sign_optional&
+    life_sign ();
+
+    void
+    life_sign (const life_sign_type& x);
+
+    void
+    life_sign (const life_sign_optional& x);
+
+    void
+    life_sign (::std::auto_ptr< life_sign_type > p);
+
+    // execute-ack
+    // 
+    typedef ::xbemsg::execute_ack_t execute_ack_type;
+    typedef ::xsd::cxx::tree::optional< execute_ack_type > execute_ack_optional;
+    typedef ::xsd::cxx::tree::traits< execute_ack_type, char > execute_ack_traits;
+
+    const execute_ack_optional&
+    execute_ack () const;
+
+    execute_ack_optional&
+    execute_ack ();
+
+    void
+    execute_ack (const execute_ack_type& x);
+
+    void
+    execute_ack (const execute_ack_optional& x);
+
+    void
+    execute_ack (::std::auto_ptr< execute_ack_type > p);
+
+    // terminate-ack
+    // 
+    typedef ::xbemsg::terminate_ack_t terminate_ack_type;
+    typedef ::xsd::cxx::tree::optional< terminate_ack_type > terminate_ack_optional;
+    typedef ::xsd::cxx::tree::traits< terminate_ack_type, char > terminate_ack_traits;
+
+    const terminate_ack_optional&
+    terminate_ack () const;
+
+    terminate_ack_optional&
+    terminate_ack ();
+
+    void
+    terminate_ack (const terminate_ack_type& x);
+
+    void
+    terminate_ack (const terminate_ack_optional& x);
+
+    void
+    terminate_ack (::std::auto_ptr< terminate_ack_type > p);
+
+    // shutdown-ack
+    // 
+    typedef ::xbemsg::shutdown_ack_t shutdown_ack_type;
+    typedef ::xsd::cxx::tree::optional< shutdown_ack_type > shutdown_ack_optional;
+    typedef ::xsd::cxx::tree::traits< shutdown_ack_type, char > shutdown_ack_traits;
+
+    const shutdown_ack_optional&
+    shutdown_ack () const;
+
+    shutdown_ack_optional&
+    shutdown_ack ();
+
+    void
+    shutdown_ack (const shutdown_ack_type& x);
+
+    void
+    shutdown_ack (const shutdown_ack_optional& x);
+
+    void
+    shutdown_ack (::std::auto_ptr< shutdown_ack_type > p);
+
+    // status
+    // 
+    typedef ::xbemsg::status_t status_type;
+    typedef ::xsd::cxx::tree::optional< status_type > status_optional;
+    typedef ::xsd::cxx::tree::traits< status_type, char > status_traits;
+
+    const status_optional&
+    status () const;
+
+    status_optional&
+    status ();
+
+    void
+    status (const status_type& x);
+
+    void
+    status (const status_optional& x);
+
+    void
+    status (::std::auto_ptr< status_type > p);
+
+    // finished
+    // 
+    typedef ::xbemsg::finished_t finished_type;
+    typedef ::xsd::cxx::tree::optional< finished_type > finished_optional;
+    typedef ::xsd::cxx::tree::traits< finished_type, char > finished_traits;
+
+    const finished_optional&
+    finished () const;
+
+    finished_optional&
+    finished ();
+
+    void
+    finished (const finished_type& x);
+
+    void
+    finished (const finished_optional& x);
+
+    void
+    finished (::std::auto_ptr< finished_type > p);
+
+    // failed
+    // 
+    typedef ::xbemsg::failed_t failed_type;
+    typedef ::xsd::cxx::tree::optional< failed_type > failed_optional;
+    typedef ::xsd::cxx::tree::traits< failed_type, char > failed_traits;
+
+    const failed_optional&
+    failed () const;
+
+    failed_optional&
+    failed ();
+
+    void
+    failed (const failed_type& x);
+
+    void
+    failed (const failed_optional& x);
+
+    void
+    failed (::std::auto_ptr< failed_type > p);
+
     // any
     // 
     typedef ::xsd::cxx::tree::element_sequence any_sequence;
@@ -570,6 +856,981 @@ namespace xbemsg
 
     virtual 
     ~body_t ();
+
+    // Implementation.
+    //
+    protected:
+    void
+    parse (::xsd::cxx::xml::dom::parser< char >&,
+           ::xml_schema::flags);
+
+    protected:
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
+    execute_optional execute_;
+    terminate_optional terminate_;
+    status_req_optional status_req_;
+    shutdown_optional shutdown_;
+    finished_ack_optional finished_ack_;
+    failed_ack_optional failed_ack_;
+    life_sign_optional life_sign_;
+    execute_ack_optional execute_ack_;
+    terminate_ack_optional terminate_ack_;
+    shutdown_ack_optional shutdown_ack_;
+    status_optional status_;
+    finished_optional finished_;
+    failed_optional failed_;
+    any_sequence any_;
+    any_attribute_set any_attribute_;
+  };
+
+  class execute_t: public ::xml_schema::type
+  {
+    public:
+    // any
+    // 
+    typedef ::xsd::cxx::tree::element_sequence any_sequence;
+    typedef any_sequence::iterator any_iterator;
+    typedef any_sequence::const_iterator any_const_iterator;
+
+    const any_sequence&
+    any () const;
+
+    any_sequence&
+    any ();
+
+    void
+    any (const any_sequence& s);
+
+    // any_attribute
+    // 
+    typedef ::xsd::cxx::tree::attribute_set< char > any_attribute_set;
+    typedef any_attribute_set::iterator any_attribute_iterator;
+    typedef any_attribute_set::const_iterator any_attribute_const_iterator;
+
+    const any_attribute_set&
+    any_attribute () const;
+
+    any_attribute_set&
+    any_attribute ();
+
+    void
+    any_attribute (const any_attribute_set& s);
+
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
+
+    // Constructors.
+    //
+    execute_t ();
+
+    execute_t (const ::xercesc::DOMElement& e,
+               ::xml_schema::flags f = 0,
+               ::xml_schema::container* c = 0);
+
+    execute_t (const execute_t& x,
+               ::xml_schema::flags f = 0,
+               ::xml_schema::container* c = 0);
+
+    virtual execute_t*
+    _clone (::xml_schema::flags f = 0,
+            ::xml_schema::container* c = 0) const;
+
+    virtual 
+    ~execute_t ();
+
+    // Implementation.
+    //
+    protected:
+    void
+    parse (::xsd::cxx::xml::dom::parser< char >&,
+           ::xml_schema::flags);
+
+    protected:
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
+    any_sequence any_;
+    any_attribute_set any_attribute_;
+  };
+
+  class terminate_t: public ::xml_schema::type
+  {
+    public:
+    // any
+    // 
+    typedef ::xsd::cxx::tree::element_sequence any_sequence;
+    typedef any_sequence::iterator any_iterator;
+    typedef any_sequence::const_iterator any_const_iterator;
+
+    const any_sequence&
+    any () const;
+
+    any_sequence&
+    any ();
+
+    void
+    any (const any_sequence& s);
+
+    // any_attribute
+    // 
+    typedef ::xsd::cxx::tree::attribute_set< char > any_attribute_set;
+    typedef any_attribute_set::iterator any_attribute_iterator;
+    typedef any_attribute_set::const_iterator any_attribute_const_iterator;
+
+    const any_attribute_set&
+    any_attribute () const;
+
+    any_attribute_set&
+    any_attribute ();
+
+    void
+    any_attribute (const any_attribute_set& s);
+
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
+
+    // Constructors.
+    //
+    terminate_t ();
+
+    terminate_t (const ::xercesc::DOMElement& e,
+                 ::xml_schema::flags f = 0,
+                 ::xml_schema::container* c = 0);
+
+    terminate_t (const terminate_t& x,
+                 ::xml_schema::flags f = 0,
+                 ::xml_schema::container* c = 0);
+
+    virtual terminate_t*
+    _clone (::xml_schema::flags f = 0,
+            ::xml_schema::container* c = 0) const;
+
+    virtual 
+    ~terminate_t ();
+
+    // Implementation.
+    //
+    protected:
+    void
+    parse (::xsd::cxx::xml::dom::parser< char >&,
+           ::xml_schema::flags);
+
+    protected:
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
+    any_sequence any_;
+    any_attribute_set any_attribute_;
+  };
+
+  class status_req_t: public ::xml_schema::type
+  {
+    public:
+    // any
+    // 
+    typedef ::xsd::cxx::tree::element_sequence any_sequence;
+    typedef any_sequence::iterator any_iterator;
+    typedef any_sequence::const_iterator any_const_iterator;
+
+    const any_sequence&
+    any () const;
+
+    any_sequence&
+    any ();
+
+    void
+    any (const any_sequence& s);
+
+    // any_attribute
+    // 
+    typedef ::xsd::cxx::tree::attribute_set< char > any_attribute_set;
+    typedef any_attribute_set::iterator any_attribute_iterator;
+    typedef any_attribute_set::const_iterator any_attribute_const_iterator;
+
+    const any_attribute_set&
+    any_attribute () const;
+
+    any_attribute_set&
+    any_attribute ();
+
+    void
+    any_attribute (const any_attribute_set& s);
+
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
+
+    // Constructors.
+    //
+    status_req_t ();
+
+    status_req_t (const ::xercesc::DOMElement& e,
+                  ::xml_schema::flags f = 0,
+                  ::xml_schema::container* c = 0);
+
+    status_req_t (const status_req_t& x,
+                  ::xml_schema::flags f = 0,
+                  ::xml_schema::container* c = 0);
+
+    virtual status_req_t*
+    _clone (::xml_schema::flags f = 0,
+            ::xml_schema::container* c = 0) const;
+
+    virtual 
+    ~status_req_t ();
+
+    // Implementation.
+    //
+    protected:
+    void
+    parse (::xsd::cxx::xml::dom::parser< char >&,
+           ::xml_schema::flags);
+
+    protected:
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
+    any_sequence any_;
+    any_attribute_set any_attribute_;
+  };
+
+  class shutdown_t: public ::xml_schema::type
+  {
+    public:
+    // any
+    // 
+    typedef ::xsd::cxx::tree::element_sequence any_sequence;
+    typedef any_sequence::iterator any_iterator;
+    typedef any_sequence::const_iterator any_const_iterator;
+
+    const any_sequence&
+    any () const;
+
+    any_sequence&
+    any ();
+
+    void
+    any (const any_sequence& s);
+
+    // any_attribute
+    // 
+    typedef ::xsd::cxx::tree::attribute_set< char > any_attribute_set;
+    typedef any_attribute_set::iterator any_attribute_iterator;
+    typedef any_attribute_set::const_iterator any_attribute_const_iterator;
+
+    const any_attribute_set&
+    any_attribute () const;
+
+    any_attribute_set&
+    any_attribute ();
+
+    void
+    any_attribute (const any_attribute_set& s);
+
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
+
+    // Constructors.
+    //
+    shutdown_t ();
+
+    shutdown_t (const ::xercesc::DOMElement& e,
+                ::xml_schema::flags f = 0,
+                ::xml_schema::container* c = 0);
+
+    shutdown_t (const shutdown_t& x,
+                ::xml_schema::flags f = 0,
+                ::xml_schema::container* c = 0);
+
+    virtual shutdown_t*
+    _clone (::xml_schema::flags f = 0,
+            ::xml_schema::container* c = 0) const;
+
+    virtual 
+    ~shutdown_t ();
+
+    // Implementation.
+    //
+    protected:
+    void
+    parse (::xsd::cxx::xml::dom::parser< char >&,
+           ::xml_schema::flags);
+
+    protected:
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
+    any_sequence any_;
+    any_attribute_set any_attribute_;
+  };
+
+  class finished_ack_t: public ::xml_schema::type
+  {
+    public:
+    // any
+    // 
+    typedef ::xsd::cxx::tree::element_sequence any_sequence;
+    typedef any_sequence::iterator any_iterator;
+    typedef any_sequence::const_iterator any_const_iterator;
+
+    const any_sequence&
+    any () const;
+
+    any_sequence&
+    any ();
+
+    void
+    any (const any_sequence& s);
+
+    // any_attribute
+    // 
+    typedef ::xsd::cxx::tree::attribute_set< char > any_attribute_set;
+    typedef any_attribute_set::iterator any_attribute_iterator;
+    typedef any_attribute_set::const_iterator any_attribute_const_iterator;
+
+    const any_attribute_set&
+    any_attribute () const;
+
+    any_attribute_set&
+    any_attribute ();
+
+    void
+    any_attribute (const any_attribute_set& s);
+
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
+
+    // Constructors.
+    //
+    finished_ack_t ();
+
+    finished_ack_t (const ::xercesc::DOMElement& e,
+                    ::xml_schema::flags f = 0,
+                    ::xml_schema::container* c = 0);
+
+    finished_ack_t (const finished_ack_t& x,
+                    ::xml_schema::flags f = 0,
+                    ::xml_schema::container* c = 0);
+
+    virtual finished_ack_t*
+    _clone (::xml_schema::flags f = 0,
+            ::xml_schema::container* c = 0) const;
+
+    virtual 
+    ~finished_ack_t ();
+
+    // Implementation.
+    //
+    protected:
+    void
+    parse (::xsd::cxx::xml::dom::parser< char >&,
+           ::xml_schema::flags);
+
+    protected:
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
+    any_sequence any_;
+    any_attribute_set any_attribute_;
+  };
+
+  class failed_ack_t: public ::xml_schema::type
+  {
+    public:
+    // any
+    // 
+    typedef ::xsd::cxx::tree::element_sequence any_sequence;
+    typedef any_sequence::iterator any_iterator;
+    typedef any_sequence::const_iterator any_const_iterator;
+
+    const any_sequence&
+    any () const;
+
+    any_sequence&
+    any ();
+
+    void
+    any (const any_sequence& s);
+
+    // any_attribute
+    // 
+    typedef ::xsd::cxx::tree::attribute_set< char > any_attribute_set;
+    typedef any_attribute_set::iterator any_attribute_iterator;
+    typedef any_attribute_set::const_iterator any_attribute_const_iterator;
+
+    const any_attribute_set&
+    any_attribute () const;
+
+    any_attribute_set&
+    any_attribute ();
+
+    void
+    any_attribute (const any_attribute_set& s);
+
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
+
+    // Constructors.
+    //
+    failed_ack_t ();
+
+    failed_ack_t (const ::xercesc::DOMElement& e,
+                  ::xml_schema::flags f = 0,
+                  ::xml_schema::container* c = 0);
+
+    failed_ack_t (const failed_ack_t& x,
+                  ::xml_schema::flags f = 0,
+                  ::xml_schema::container* c = 0);
+
+    virtual failed_ack_t*
+    _clone (::xml_schema::flags f = 0,
+            ::xml_schema::container* c = 0) const;
+
+    virtual 
+    ~failed_ack_t ();
+
+    // Implementation.
+    //
+    protected:
+    void
+    parse (::xsd::cxx::xml::dom::parser< char >&,
+           ::xml_schema::flags);
+
+    protected:
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
+    any_sequence any_;
+    any_attribute_set any_attribute_;
+  };
+
+  class life_sign_t: public ::xml_schema::type
+  {
+    public:
+    // any
+    // 
+    typedef ::xsd::cxx::tree::element_sequence any_sequence;
+    typedef any_sequence::iterator any_iterator;
+    typedef any_sequence::const_iterator any_const_iterator;
+
+    const any_sequence&
+    any () const;
+
+    any_sequence&
+    any ();
+
+    void
+    any (const any_sequence& s);
+
+    // any_attribute
+    // 
+    typedef ::xsd::cxx::tree::attribute_set< char > any_attribute_set;
+    typedef any_attribute_set::iterator any_attribute_iterator;
+    typedef any_attribute_set::const_iterator any_attribute_const_iterator;
+
+    const any_attribute_set&
+    any_attribute () const;
+
+    any_attribute_set&
+    any_attribute ();
+
+    void
+    any_attribute (const any_attribute_set& s);
+
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
+
+    // Constructors.
+    //
+    life_sign_t ();
+
+    life_sign_t (const ::xercesc::DOMElement& e,
+                 ::xml_schema::flags f = 0,
+                 ::xml_schema::container* c = 0);
+
+    life_sign_t (const life_sign_t& x,
+                 ::xml_schema::flags f = 0,
+                 ::xml_schema::container* c = 0);
+
+    virtual life_sign_t*
+    _clone (::xml_schema::flags f = 0,
+            ::xml_schema::container* c = 0) const;
+
+    virtual 
+    ~life_sign_t ();
+
+    // Implementation.
+    //
+    protected:
+    void
+    parse (::xsd::cxx::xml::dom::parser< char >&,
+           ::xml_schema::flags);
+
+    protected:
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
+    any_sequence any_;
+    any_attribute_set any_attribute_;
+  };
+
+  class execute_ack_t: public ::xml_schema::type
+  {
+    public:
+    // any
+    // 
+    typedef ::xsd::cxx::tree::element_sequence any_sequence;
+    typedef any_sequence::iterator any_iterator;
+    typedef any_sequence::const_iterator any_const_iterator;
+
+    const any_sequence&
+    any () const;
+
+    any_sequence&
+    any ();
+
+    void
+    any (const any_sequence& s);
+
+    // any_attribute
+    // 
+    typedef ::xsd::cxx::tree::attribute_set< char > any_attribute_set;
+    typedef any_attribute_set::iterator any_attribute_iterator;
+    typedef any_attribute_set::const_iterator any_attribute_const_iterator;
+
+    const any_attribute_set&
+    any_attribute () const;
+
+    any_attribute_set&
+    any_attribute ();
+
+    void
+    any_attribute (const any_attribute_set& s);
+
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
+
+    // Constructors.
+    //
+    execute_ack_t ();
+
+    execute_ack_t (const ::xercesc::DOMElement& e,
+                   ::xml_schema::flags f = 0,
+                   ::xml_schema::container* c = 0);
+
+    execute_ack_t (const execute_ack_t& x,
+                   ::xml_schema::flags f = 0,
+                   ::xml_schema::container* c = 0);
+
+    virtual execute_ack_t*
+    _clone (::xml_schema::flags f = 0,
+            ::xml_schema::container* c = 0) const;
+
+    virtual 
+    ~execute_ack_t ();
+
+    // Implementation.
+    //
+    protected:
+    void
+    parse (::xsd::cxx::xml::dom::parser< char >&,
+           ::xml_schema::flags);
+
+    protected:
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
+    any_sequence any_;
+    any_attribute_set any_attribute_;
+  };
+
+  class terminate_ack_t: public ::xml_schema::type
+  {
+    public:
+    // any
+    // 
+    typedef ::xsd::cxx::tree::element_sequence any_sequence;
+    typedef any_sequence::iterator any_iterator;
+    typedef any_sequence::const_iterator any_const_iterator;
+
+    const any_sequence&
+    any () const;
+
+    any_sequence&
+    any ();
+
+    void
+    any (const any_sequence& s);
+
+    // any_attribute
+    // 
+    typedef ::xsd::cxx::tree::attribute_set< char > any_attribute_set;
+    typedef any_attribute_set::iterator any_attribute_iterator;
+    typedef any_attribute_set::const_iterator any_attribute_const_iterator;
+
+    const any_attribute_set&
+    any_attribute () const;
+
+    any_attribute_set&
+    any_attribute ();
+
+    void
+    any_attribute (const any_attribute_set& s);
+
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
+
+    // Constructors.
+    //
+    terminate_ack_t ();
+
+    terminate_ack_t (const ::xercesc::DOMElement& e,
+                     ::xml_schema::flags f = 0,
+                     ::xml_schema::container* c = 0);
+
+    terminate_ack_t (const terminate_ack_t& x,
+                     ::xml_schema::flags f = 0,
+                     ::xml_schema::container* c = 0);
+
+    virtual terminate_ack_t*
+    _clone (::xml_schema::flags f = 0,
+            ::xml_schema::container* c = 0) const;
+
+    virtual 
+    ~terminate_ack_t ();
+
+    // Implementation.
+    //
+    protected:
+    void
+    parse (::xsd::cxx::xml::dom::parser< char >&,
+           ::xml_schema::flags);
+
+    protected:
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
+    any_sequence any_;
+    any_attribute_set any_attribute_;
+  };
+
+  class shutdown_ack_t: public ::xml_schema::type
+  {
+    public:
+    // any
+    // 
+    typedef ::xsd::cxx::tree::element_sequence any_sequence;
+    typedef any_sequence::iterator any_iterator;
+    typedef any_sequence::const_iterator any_const_iterator;
+
+    const any_sequence&
+    any () const;
+
+    any_sequence&
+    any ();
+
+    void
+    any (const any_sequence& s);
+
+    // any_attribute
+    // 
+    typedef ::xsd::cxx::tree::attribute_set< char > any_attribute_set;
+    typedef any_attribute_set::iterator any_attribute_iterator;
+    typedef any_attribute_set::const_iterator any_attribute_const_iterator;
+
+    const any_attribute_set&
+    any_attribute () const;
+
+    any_attribute_set&
+    any_attribute ();
+
+    void
+    any_attribute (const any_attribute_set& s);
+
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
+
+    // Constructors.
+    //
+    shutdown_ack_t ();
+
+    shutdown_ack_t (const ::xercesc::DOMElement& e,
+                    ::xml_schema::flags f = 0,
+                    ::xml_schema::container* c = 0);
+
+    shutdown_ack_t (const shutdown_ack_t& x,
+                    ::xml_schema::flags f = 0,
+                    ::xml_schema::container* c = 0);
+
+    virtual shutdown_ack_t*
+    _clone (::xml_schema::flags f = 0,
+            ::xml_schema::container* c = 0) const;
+
+    virtual 
+    ~shutdown_ack_t ();
+
+    // Implementation.
+    //
+    protected:
+    void
+    parse (::xsd::cxx::xml::dom::parser< char >&,
+           ::xml_schema::flags);
+
+    protected:
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
+    any_sequence any_;
+    any_attribute_set any_attribute_;
+  };
+
+  class status_t: public ::xml_schema::type
+  {
+    public:
+    // any
+    // 
+    typedef ::xsd::cxx::tree::element_sequence any_sequence;
+    typedef any_sequence::iterator any_iterator;
+    typedef any_sequence::const_iterator any_const_iterator;
+
+    const any_sequence&
+    any () const;
+
+    any_sequence&
+    any ();
+
+    void
+    any (const any_sequence& s);
+
+    // any_attribute
+    // 
+    typedef ::xsd::cxx::tree::attribute_set< char > any_attribute_set;
+    typedef any_attribute_set::iterator any_attribute_iterator;
+    typedef any_attribute_set::const_iterator any_attribute_const_iterator;
+
+    const any_attribute_set&
+    any_attribute () const;
+
+    any_attribute_set&
+    any_attribute ();
+
+    void
+    any_attribute (const any_attribute_set& s);
+
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
+
+    // Constructors.
+    //
+    status_t ();
+
+    status_t (const ::xercesc::DOMElement& e,
+              ::xml_schema::flags f = 0,
+              ::xml_schema::container* c = 0);
+
+    status_t (const status_t& x,
+              ::xml_schema::flags f = 0,
+              ::xml_schema::container* c = 0);
+
+    virtual status_t*
+    _clone (::xml_schema::flags f = 0,
+            ::xml_schema::container* c = 0) const;
+
+    virtual 
+    ~status_t ();
+
+    // Implementation.
+    //
+    protected:
+    void
+    parse (::xsd::cxx::xml::dom::parser< char >&,
+           ::xml_schema::flags);
+
+    protected:
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
+    any_sequence any_;
+    any_attribute_set any_attribute_;
+  };
+
+  class finished_t: public ::xml_schema::type
+  {
+    public:
+    // any
+    // 
+    typedef ::xsd::cxx::tree::element_sequence any_sequence;
+    typedef any_sequence::iterator any_iterator;
+    typedef any_sequence::const_iterator any_const_iterator;
+
+    const any_sequence&
+    any () const;
+
+    any_sequence&
+    any ();
+
+    void
+    any (const any_sequence& s);
+
+    // any_attribute
+    // 
+    typedef ::xsd::cxx::tree::attribute_set< char > any_attribute_set;
+    typedef any_attribute_set::iterator any_attribute_iterator;
+    typedef any_attribute_set::const_iterator any_attribute_const_iterator;
+
+    const any_attribute_set&
+    any_attribute () const;
+
+    any_attribute_set&
+    any_attribute ();
+
+    void
+    any_attribute (const any_attribute_set& s);
+
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
+
+    // Constructors.
+    //
+    finished_t ();
+
+    finished_t (const ::xercesc::DOMElement& e,
+                ::xml_schema::flags f = 0,
+                ::xml_schema::container* c = 0);
+
+    finished_t (const finished_t& x,
+                ::xml_schema::flags f = 0,
+                ::xml_schema::container* c = 0);
+
+    virtual finished_t*
+    _clone (::xml_schema::flags f = 0,
+            ::xml_schema::container* c = 0) const;
+
+    virtual 
+    ~finished_t ();
+
+    // Implementation.
+    //
+    protected:
+    void
+    parse (::xsd::cxx::xml::dom::parser< char >&,
+           ::xml_schema::flags);
+
+    protected:
+    ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
+
+    any_sequence any_;
+    any_attribute_set any_attribute_;
+  };
+
+  class failed_t: public ::xml_schema::type
+  {
+    public:
+    // any
+    // 
+    typedef ::xsd::cxx::tree::element_sequence any_sequence;
+    typedef any_sequence::iterator any_iterator;
+    typedef any_sequence::const_iterator any_const_iterator;
+
+    const any_sequence&
+    any () const;
+
+    any_sequence&
+    any ();
+
+    void
+    any (const any_sequence& s);
+
+    // any_attribute
+    // 
+    typedef ::xsd::cxx::tree::attribute_set< char > any_attribute_set;
+    typedef any_attribute_set::iterator any_attribute_iterator;
+    typedef any_attribute_set::const_iterator any_attribute_const_iterator;
+
+    const any_attribute_set&
+    any_attribute () const;
+
+    any_attribute_set&
+    any_attribute ();
+
+    void
+    any_attribute (const any_attribute_set& s);
+
+    // DOMDocument for wildcard content.
+    //
+    const ::xercesc::DOMDocument&
+    dom_document () const;
+
+    ::xercesc::DOMDocument&
+    dom_document ();
+
+    // Constructors.
+    //
+    failed_t ();
+
+    failed_t (const ::xercesc::DOMElement& e,
+              ::xml_schema::flags f = 0,
+              ::xml_schema::container* c = 0);
+
+    failed_t (const failed_t& x,
+              ::xml_schema::flags f = 0,
+              ::xml_schema::container* c = 0);
+
+    virtual failed_t*
+    _clone (::xml_schema::flags f = 0,
+            ::xml_schema::container* c = 0) const;
+
+    virtual 
+    ~failed_t ();
 
     // Implementation.
     //
@@ -686,192 +1947,6 @@ namespace xbemsg
   message (::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument >& d,
            ::xml_schema::flags f = 0,
            const ::xml_schema::properties& p = ::xml_schema::properties ());
-
-  // Parse a URI or a local file.
-  //
-
-  ::std::auto_ptr< ::xbemsg::body_t >
-  body (const ::std::string& uri,
-        ::xml_schema::flags f = 0,
-        const ::xml_schema::properties& p = ::xml_schema::properties ());
-
-  ::std::auto_ptr< ::xbemsg::body_t >
-  body (const ::std::string& uri,
-        ::xml_schema::error_handler& eh,
-        ::xml_schema::flags f = 0,
-        const ::xml_schema::properties& p = ::xml_schema::properties ());
-
-  ::std::auto_ptr< ::xbemsg::body_t >
-  body (const ::std::string& uri,
-        ::xercesc::DOMErrorHandler& eh,
-        ::xml_schema::flags f = 0,
-        const ::xml_schema::properties& p = ::xml_schema::properties ());
-
-  // Parse std::istream.
-  //
-
-  ::std::auto_ptr< ::xbemsg::body_t >
-  body (::std::istream& is,
-        ::xml_schema::flags f = 0,
-        const ::xml_schema::properties& p = ::xml_schema::properties ());
-
-  ::std::auto_ptr< ::xbemsg::body_t >
-  body (::std::istream& is,
-        ::xml_schema::error_handler& eh,
-        ::xml_schema::flags f = 0,
-        const ::xml_schema::properties& p = ::xml_schema::properties ());
-
-  ::std::auto_ptr< ::xbemsg::body_t >
-  body (::std::istream& is,
-        ::xercesc::DOMErrorHandler& eh,
-        ::xml_schema::flags f = 0,
-        const ::xml_schema::properties& p = ::xml_schema::properties ());
-
-  ::std::auto_ptr< ::xbemsg::body_t >
-  body (::std::istream& is,
-        const ::std::string& id,
-        ::xml_schema::flags f = 0,
-        const ::xml_schema::properties& p = ::xml_schema::properties ());
-
-  ::std::auto_ptr< ::xbemsg::body_t >
-  body (::std::istream& is,
-        const ::std::string& id,
-        ::xml_schema::error_handler& eh,
-        ::xml_schema::flags f = 0,
-        const ::xml_schema::properties& p = ::xml_schema::properties ());
-
-  ::std::auto_ptr< ::xbemsg::body_t >
-  body (::std::istream& is,
-        const ::std::string& id,
-        ::xercesc::DOMErrorHandler& eh,
-        ::xml_schema::flags f = 0,
-        const ::xml_schema::properties& p = ::xml_schema::properties ());
-
-  // Parse xercesc::InputSource.
-  //
-
-  ::std::auto_ptr< ::xbemsg::body_t >
-  body (::xercesc::InputSource& is,
-        ::xml_schema::flags f = 0,
-        const ::xml_schema::properties& p = ::xml_schema::properties ());
-
-  ::std::auto_ptr< ::xbemsg::body_t >
-  body (::xercesc::InputSource& is,
-        ::xml_schema::error_handler& eh,
-        ::xml_schema::flags f = 0,
-        const ::xml_schema::properties& p = ::xml_schema::properties ());
-
-  ::std::auto_ptr< ::xbemsg::body_t >
-  body (::xercesc::InputSource& is,
-        ::xercesc::DOMErrorHandler& eh,
-        ::xml_schema::flags f = 0,
-        const ::xml_schema::properties& p = ::xml_schema::properties ());
-
-  // Parse xercesc::DOMDocument.
-  //
-
-  ::std::auto_ptr< ::xbemsg::body_t >
-  body (const ::xercesc::DOMDocument& d,
-        ::xml_schema::flags f = 0,
-        const ::xml_schema::properties& p = ::xml_schema::properties ());
-
-  ::std::auto_ptr< ::xbemsg::body_t >
-  body (::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument >& d,
-        ::xml_schema::flags f = 0,
-        const ::xml_schema::properties& p = ::xml_schema::properties ());
-
-  // Parse a URI or a local file.
-  //
-
-  ::std::auto_ptr< ::xbemsg::header_t >
-  header (const ::std::string& uri,
-          ::xml_schema::flags f = 0,
-          const ::xml_schema::properties& p = ::xml_schema::properties ());
-
-  ::std::auto_ptr< ::xbemsg::header_t >
-  header (const ::std::string& uri,
-          ::xml_schema::error_handler& eh,
-          ::xml_schema::flags f = 0,
-          const ::xml_schema::properties& p = ::xml_schema::properties ());
-
-  ::std::auto_ptr< ::xbemsg::header_t >
-  header (const ::std::string& uri,
-          ::xercesc::DOMErrorHandler& eh,
-          ::xml_schema::flags f = 0,
-          const ::xml_schema::properties& p = ::xml_schema::properties ());
-
-  // Parse std::istream.
-  //
-
-  ::std::auto_ptr< ::xbemsg::header_t >
-  header (::std::istream& is,
-          ::xml_schema::flags f = 0,
-          const ::xml_schema::properties& p = ::xml_schema::properties ());
-
-  ::std::auto_ptr< ::xbemsg::header_t >
-  header (::std::istream& is,
-          ::xml_schema::error_handler& eh,
-          ::xml_schema::flags f = 0,
-          const ::xml_schema::properties& p = ::xml_schema::properties ());
-
-  ::std::auto_ptr< ::xbemsg::header_t >
-  header (::std::istream& is,
-          ::xercesc::DOMErrorHandler& eh,
-          ::xml_schema::flags f = 0,
-          const ::xml_schema::properties& p = ::xml_schema::properties ());
-
-  ::std::auto_ptr< ::xbemsg::header_t >
-  header (::std::istream& is,
-          const ::std::string& id,
-          ::xml_schema::flags f = 0,
-          const ::xml_schema::properties& p = ::xml_schema::properties ());
-
-  ::std::auto_ptr< ::xbemsg::header_t >
-  header (::std::istream& is,
-          const ::std::string& id,
-          ::xml_schema::error_handler& eh,
-          ::xml_schema::flags f = 0,
-          const ::xml_schema::properties& p = ::xml_schema::properties ());
-
-  ::std::auto_ptr< ::xbemsg::header_t >
-  header (::std::istream& is,
-          const ::std::string& id,
-          ::xercesc::DOMErrorHandler& eh,
-          ::xml_schema::flags f = 0,
-          const ::xml_schema::properties& p = ::xml_schema::properties ());
-
-  // Parse xercesc::InputSource.
-  //
-
-  ::std::auto_ptr< ::xbemsg::header_t >
-  header (::xercesc::InputSource& is,
-          ::xml_schema::flags f = 0,
-          const ::xml_schema::properties& p = ::xml_schema::properties ());
-
-  ::std::auto_ptr< ::xbemsg::header_t >
-  header (::xercesc::InputSource& is,
-          ::xml_schema::error_handler& eh,
-          ::xml_schema::flags f = 0,
-          const ::xml_schema::properties& p = ::xml_schema::properties ());
-
-  ::std::auto_ptr< ::xbemsg::header_t >
-  header (::xercesc::InputSource& is,
-          ::xercesc::DOMErrorHandler& eh,
-          ::xml_schema::flags f = 0,
-          const ::xml_schema::properties& p = ::xml_schema::properties ());
-
-  // Parse xercesc::DOMDocument.
-  //
-
-  ::std::auto_ptr< ::xbemsg::header_t >
-  header (const ::xercesc::DOMDocument& d,
-          ::xml_schema::flags f = 0,
-          const ::xml_schema::properties& p = ::xml_schema::properties ());
-
-  ::std::auto_ptr< ::xbemsg::header_t >
-  header (::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument >& d,
-          ::xml_schema::flags f = 0,
-          const ::xml_schema::properties& p = ::xml_schema::properties ());
 }
 
 #include <iosfwd>
@@ -892,6 +1967,45 @@ namespace xbemsg
 
   void
   operator<< (::xercesc::DOMElement&, const body_t&);
+
+  void
+  operator<< (::xercesc::DOMElement&, const execute_t&);
+
+  void
+  operator<< (::xercesc::DOMElement&, const terminate_t&);
+
+  void
+  operator<< (::xercesc::DOMElement&, const status_req_t&);
+
+  void
+  operator<< (::xercesc::DOMElement&, const shutdown_t&);
+
+  void
+  operator<< (::xercesc::DOMElement&, const finished_ack_t&);
+
+  void
+  operator<< (::xercesc::DOMElement&, const failed_ack_t&);
+
+  void
+  operator<< (::xercesc::DOMElement&, const life_sign_t&);
+
+  void
+  operator<< (::xercesc::DOMElement&, const execute_ack_t&);
+
+  void
+  operator<< (::xercesc::DOMElement&, const terminate_ack_t&);
+
+  void
+  operator<< (::xercesc::DOMElement&, const shutdown_ack_t&);
+
+  void
+  operator<< (::xercesc::DOMElement&, const status_t&);
+
+  void
+  operator<< (::xercesc::DOMElement&, const finished_t&);
+
+  void
+  operator<< (::xercesc::DOMElement&, const failed_t&);
 
   // Serialize to std::ostream.
   //
@@ -960,142 +2074,6 @@ namespace xbemsg
   message (const ::xbemsg::message_t& x, 
            const ::xml_schema::namespace_infomap& m,
            ::xml_schema::flags f = 0);
-
-  // Serialize to std::ostream.
-  //
-
-  void
-  body (::std::ostream& os,
-        const ::xbemsg::body_t& x, 
-        const ::xml_schema::namespace_infomap& m,
-        const ::std::string& e = "UTF-8",
-        ::xml_schema::flags f = 0);
-
-  void
-  body (::std::ostream& os,
-        const ::xbemsg::body_t& x, 
-        const ::xml_schema::namespace_infomap& m,
-        ::xml_schema::error_handler& eh,
-        const ::std::string& e = "UTF-8",
-        ::xml_schema::flags f = 0);
-
-  void
-  body (::std::ostream& os,
-        const ::xbemsg::body_t& x, 
-        const ::xml_schema::namespace_infomap& m,
-        ::xercesc::DOMErrorHandler& eh,
-        const ::std::string& e = "UTF-8",
-        ::xml_schema::flags f = 0);
-
-  // Serialize to xercesc::XMLFormatTarget.
-  //
-
-  void
-  body (::xercesc::XMLFormatTarget& ft,
-        const ::xbemsg::body_t& x, 
-        const ::xml_schema::namespace_infomap& m,
-        const ::std::string& e = "UTF-8",
-        ::xml_schema::flags f = 0);
-
-  void
-  body (::xercesc::XMLFormatTarget& ft,
-        const ::xbemsg::body_t& x, 
-        const ::xml_schema::namespace_infomap& m,
-        ::xml_schema::error_handler& eh,
-        const ::std::string& e = "UTF-8",
-        ::xml_schema::flags f = 0);
-
-  void
-  body (::xercesc::XMLFormatTarget& ft,
-        const ::xbemsg::body_t& x, 
-        const ::xml_schema::namespace_infomap& m,
-        ::xercesc::DOMErrorHandler& eh,
-        const ::std::string& e = "UTF-8",
-        ::xml_schema::flags f = 0);
-
-  // Serialize to an existing xercesc::DOMDocument.
-  //
-
-  void
-  body (::xercesc::DOMDocument& d,
-        const ::xbemsg::body_t& x,
-        ::xml_schema::flags f = 0);
-
-  // Serialize to a new xercesc::DOMDocument.
-  //
-
-  ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument >
-  body (const ::xbemsg::body_t& x, 
-        const ::xml_schema::namespace_infomap& m,
-        ::xml_schema::flags f = 0);
-
-  // Serialize to std::ostream.
-  //
-
-  void
-  header (::std::ostream& os,
-          const ::xbemsg::header_t& x, 
-          const ::xml_schema::namespace_infomap& m,
-          const ::std::string& e = "UTF-8",
-          ::xml_schema::flags f = 0);
-
-  void
-  header (::std::ostream& os,
-          const ::xbemsg::header_t& x, 
-          const ::xml_schema::namespace_infomap& m,
-          ::xml_schema::error_handler& eh,
-          const ::std::string& e = "UTF-8",
-          ::xml_schema::flags f = 0);
-
-  void
-  header (::std::ostream& os,
-          const ::xbemsg::header_t& x, 
-          const ::xml_schema::namespace_infomap& m,
-          ::xercesc::DOMErrorHandler& eh,
-          const ::std::string& e = "UTF-8",
-          ::xml_schema::flags f = 0);
-
-  // Serialize to xercesc::XMLFormatTarget.
-  //
-
-  void
-  header (::xercesc::XMLFormatTarget& ft,
-          const ::xbemsg::header_t& x, 
-          const ::xml_schema::namespace_infomap& m,
-          const ::std::string& e = "UTF-8",
-          ::xml_schema::flags f = 0);
-
-  void
-  header (::xercesc::XMLFormatTarget& ft,
-          const ::xbemsg::header_t& x, 
-          const ::xml_schema::namespace_infomap& m,
-          ::xml_schema::error_handler& eh,
-          const ::std::string& e = "UTF-8",
-          ::xml_schema::flags f = 0);
-
-  void
-  header (::xercesc::XMLFormatTarget& ft,
-          const ::xbemsg::header_t& x, 
-          const ::xml_schema::namespace_infomap& m,
-          ::xercesc::DOMErrorHandler& eh,
-          const ::std::string& e = "UTF-8",
-          ::xml_schema::flags f = 0);
-
-  // Serialize to an existing xercesc::DOMDocument.
-  //
-
-  void
-  header (::xercesc::DOMDocument& d,
-          const ::xbemsg::header_t& x,
-          ::xml_schema::flags f = 0);
-
-  // Serialize to a new xercesc::DOMDocument.
-  //
-
-  ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument >
-  header (const ::xbemsg::header_t& x, 
-          const ::xml_schema::namespace_infomap& m,
-          ::xml_schema::flags f = 0);
 }
 
 #include <xsd/cxx/post.hxx>

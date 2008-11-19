@@ -7,7 +7,8 @@ namespace xbe {
     namespace event {
         class TerminateEvent : public xbe::event::XbeInstdEvent {
             public:
-                TerminateEvent() {}
+                TerminateEvent(const std::string &to, const std::string &from, const std::string &conversationID)
+                : xbe::event::XbeInstdEvent(to, from, conversationID) {}
                 virtual ~TerminateEvent() {}
 
                 virtual std::string str() const {return "dummy";}
