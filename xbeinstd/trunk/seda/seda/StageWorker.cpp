@@ -1,6 +1,7 @@
 #include "StageWorker.hpp"
 #include "Stage.hpp"
 #include "IEvent.hpp"
+#include "EventNotSupported.hpp"
 #include "SystemEvent.hpp"
 #include "StageRegistry.hpp"
 
@@ -11,29 +12,25 @@ namespace seda {
             try {
                 IEvent::Ptr e = _stage->queue()->pop(_stage->timeout());
                 _busy = true; SEDA_LOG_DEBUG("got work: " << e->str());
-                
-                // handle system events:
-                if (SystemEvent *se = dynamic_cast<SystemEvent*>(e.get())) {
-                    // check if there is a system-event-handler stage
-                    Stage::Ptr systemEventHandler(StageRegistry::instance().lookup(_stage->getErrorHandler()));
-                    if (systemEventHandler) {
-                        // is our own stage the system-event-handler?
-                        if (systemEventHandler.get() == _stage) {
-                            _stage->strategy()->perform(e);
-                        } else {
-                            systemEventHandler->send(e);
-                        }
-                    } else {
-                        SEDA_LOG_FATAL("received a SystemEvent, but no system-event-handler has been registered!");
-                    }
-                } else {
+
+                try {
                     _stage->strategy()->perform(e);
+                } catch (const seda::EventNotSupported&) {
+                    Stage::Ptr systemEventHandler(StageRegistry::instance().lookup(_stage->getErrorHandler()));
+                    if (systemEventHandler.get() != _stage) {
+                        systemEventHandler->send(e);
+                    } else {
+                        SEDA_LOG_FATAL("received a SystemEvent, but it could not be handled!");
+                    }
                 }
+
                 _busy = false; SEDA_LOG_DEBUG("done");
             } catch (const seda::QueueEmpty&) {
                 // ignore
             } catch (const seda::QueueFull& qf) {
                 SEDA_LOG_ERROR("event discarded due to overflow protection");
+            } catch (const seda::StageNotFound& snf) {
+                SEDA_LOG_ERROR("event not handled, stage `" << snf.stageName() << "' could not be found!");
             } catch (const std::exception& ex) {
                 SEDA_LOG_ERROR("strategy execution failed: " << ex.what());
             } catch (...) {
