@@ -3,6 +3,7 @@
 
 #include <tr1/memory>
 #include <seda/common.hpp>
+#include <seda/EventNotSupported.hpp>
 
 #include <seda/IEvent.hpp>
 
@@ -14,7 +15,7 @@ namespace seda {
         typedef std::tr1::shared_ptr<Strategy> Ptr;
     
         virtual ~Strategy() {}
-        virtual void perform(const IEvent::Ptr&) const = 0;
+        virtual void perform(const IEvent::Ptr& e) const { throw seda::EventNotSupported(e); }
         const std::string& name() const { return _name; }
 
         /* TODO:  introduce a notation  for maximum  number of  threads this
