@@ -5,11 +5,14 @@
 %}
 
 %include <xbe/event/ExecuteEvent.hpp>
+%include <xbe/event/ShutdownEvent.hpp>
 %include <xbe/event/LifeSignEvent.hpp>
 %include <xbe/event/StatusReqEvent.hpp>
 %include <xbe/event/TerminateEvent.hpp>
 %include <xbe/event/FinishedEvent.hpp>
+%include <xbe/event/FinishedAckEvent.hpp>
 %include <xbe/event/FailedEvent.hpp>
+%include <xbe/event/FailedAckEvent.hpp>
 
 %package xbe
 %class XbeInstd
@@ -21,68 +24,162 @@
 %%
 Idle
 {
-    Execute(msg: const xbe::event::ExecuteEvent&)
-        Executing
+    Execute(msg: xbe::event::ExecuteEvent&)
+        Busy
         {
             do_execute(msg);
         }
 
-    LifeSign(msg: const xbe::event::LifeSignEvent&)
-        Idle
+    Shutdown(msg: xbe::event::ShutdownEvent&)
+        Shutdown
         {
-            do_send_lifesign(msg);
+            do_shutdown(msg);
         }
 
-    StatusReq(msg: const xbe::event::StatusReqEvent&)
+    Terminate(msg: xbe::event::TerminateEvent&)
         Idle
-        {
-            do_send_status(msg);
-        }
-
-    Terminate(msg: const xbe::event::TerminateEvent&)
-        Terminated
         {
             do_terminate(msg);
         }
 }
 
-Executing
+Busy
 {
-    Finished(msg: const xbe::event::FinishedEvent&)
+    Finished
+        WaitForFinishedAck
+        {
+            do_task_finished();
+        }
+
+/*
+    Failed
+        WaitForFailedAck
+        {
+            do_task_failed();
+        }
+*/
+
+    Terminate(msg: xbe::event::TerminateEvent&)
         Idle
-        {
-            do_finished(msg);
-        }
-
-    Failed(msg: const xbe::event::FailedEvent&)
-        Idle
-        {
-            do_failed(msg);
-        }
-
-    StatusReq(msg: const xbe::event::StatusReqEvent&)
-        Executing
-        {
-            do_send_status(msg);
-        }
-
-    LifeSign(msg: const xbe::event::LifeSignEvent&)
-        Executing
-        {
-            do_send_lifesign(msg);
-        }
-
-    Terminate(msg: const xbe::event::TerminateEvent&)
-        Terminated
         {
             do_terminate_job();
             do_terminate(msg);
         }
+
+    Shutdown(msg: xbe::event::ShutdownEvent&)
+        Shutdown
+        {
+            do_terminate_job();
+            do_shutdown(msg);
+        }
 }
 
-Terminated
+WaitForFinishedAck
 {
+    FinishedAck(msg: xbe::event::FinishedAckEvent&)
+        Idle
+        {
+            do_stop_timer();
+            do_finished_ack(msg);
+        }
 
+    Timeout
+        [ctxt.retryCounter() < ctxt.maxRetries()]
+        WaitForFinishedAck
+        {
+            do_task_finished();
+        }
+    Timeout
+        Failed
+        {
+            do_failed();
+        }
+
+    Shutdown(msg: xbe::event::ShutdownEvent&)
+        Shutdown
+        {
+            do_shutdown(msg);
+        }
+
+    Terminate(msg: xbe::event::TerminateEvent&)
+        Idle
+        {
+            do_terminate(msg);
+        }
+}
+
+/*
+WaitForFailedAck
+{
+    FailedAck(msg: xbe::event::FailedAckEvent&)
+        Idle
+        {
+            do_stop_timer();
+            do_failed_ack(msg);
+        }
+
+    Timeout
+        [ctxt.retryCounter() < ctxt.maxRetries()]
+        WaitForFailedAck
+        {
+            do_task_failed();
+        }
+    Timeout
+        Failed
+        {
+            do_failed();
+        }
+
+    Shutdown(msg: xbe::event::ShutdownEvent&)
+        Shutdown
+        {
+            do_shutdown(msg);
+        }
+    Terminate(msg: xbe::event::TerminateEvent&)
+        Idle
+        {
+        }
+}
+*/
+
+Shutdown
+{
+    // don't send life signals
+    LifeSign
+        nil
+        { }
+}
+
+Failed
+{
+    // don't send life signals
+    LifeSign
+        nil
+        { }
+}
+
+Default
+{
+    Execute(msg: xbe::event::ExecuteEvent&)
+        nil
+        {
+            // ignore further execute requests
+            // only state Idle provides Execute
+        }
+
+    // status requests should always be handled
+    StatusReq(msg: xbe::event::StatusReqEvent&)
+        nil
+        {
+            do_send_status(msg);
+        }
+
+    // life signals should always be handled
+    LifeSign
+        nil
+        {
+            do_send_lifesign();
+        }
 }
 
 %%

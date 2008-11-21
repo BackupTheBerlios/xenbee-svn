@@ -10,8 +10,10 @@ namespace xbe
     // Forward declarations.
     class XbeInstdFSM;
     class XbeInstdFSM_Idle;
-    class XbeInstdFSM_Executing;
-    class XbeInstdFSM_Terminated;
+    class XbeInstdFSM_Busy;
+    class XbeInstdFSM_WaitForFinishedAck;
+    class XbeInstdFSM_Shutdown;
+    class XbeInstdFSM_Failed;
     class XbeInstdFSM_Default;
     class XbeInstdState;
     class XbeInstdContext;
@@ -29,12 +31,14 @@ namespace xbe
         virtual void Entry(XbeInstdContext&) {};
         virtual void Exit(XbeInstdContext&) {};
 
-        virtual void Execute(XbeInstdContext& context, const xbe::event::ExecuteEvent& msg);
-        virtual void Failed(XbeInstdContext& context, const xbe::event::FailedEvent& msg);
-        virtual void Finished(XbeInstdContext& context, const xbe::event::FinishedEvent& msg);
-        virtual void LifeSign(XbeInstdContext& context, const xbe::event::LifeSignEvent& msg);
-        virtual void StatusReq(XbeInstdContext& context, const xbe::event::StatusReqEvent& msg);
-        virtual void Terminate(XbeInstdContext& context, const xbe::event::TerminateEvent& msg);
+        virtual void Execute(XbeInstdContext& context, xbe::event::ExecuteEvent& msg);
+        virtual void Finished(XbeInstdContext& context);
+        virtual void FinishedAck(XbeInstdContext& context, xbe::event::FinishedAckEvent& msg);
+        virtual void LifeSign(XbeInstdContext& context);
+        virtual void Shutdown(XbeInstdContext& context, xbe::event::ShutdownEvent& msg);
+        virtual void StatusReq(XbeInstdContext& context, xbe::event::StatusReqEvent& msg);
+        virtual void Terminate(XbeInstdContext& context, xbe::event::TerminateEvent& msg);
+        virtual void Timeout(XbeInstdContext& context);
 
     protected:
 
@@ -46,8 +50,10 @@ namespace xbe
     public:
 
         static XbeInstdFSM_Idle Idle;
-        static XbeInstdFSM_Executing Executing;
-        static XbeInstdFSM_Terminated Terminated;
+        static XbeInstdFSM_Busy Busy;
+        static XbeInstdFSM_WaitForFinishedAck WaitForFinishedAck;
+        static XbeInstdFSM_Shutdown Shutdown;
+        static XbeInstdFSM_Failed Failed;
     };
 
     class XbeInstdFSM_Default :
@@ -59,6 +65,9 @@ namespace xbe
         : XbeInstdState(name, stateId)
         {};
 
+        virtual void Execute(XbeInstdContext& context, xbe::event::ExecuteEvent& msg);
+        virtual void StatusReq(XbeInstdContext& context, xbe::event::StatusReqEvent& msg);
+        virtual void LifeSign(XbeInstdContext& context);
     };
 
     class XbeInstdFSM_Idle :
@@ -69,35 +78,58 @@ namespace xbe
         : XbeInstdFSM_Default(name, stateId)
         {};
 
-        void Execute(XbeInstdContext& context, const xbe::event::ExecuteEvent& msg);
-        void LifeSign(XbeInstdContext& context, const xbe::event::LifeSignEvent& msg);
-        void StatusReq(XbeInstdContext& context, const xbe::event::StatusReqEvent& msg);
-        void Terminate(XbeInstdContext& context, const xbe::event::TerminateEvent& msg);
+        void Execute(XbeInstdContext& context, xbe::event::ExecuteEvent& msg);
+        void Shutdown(XbeInstdContext& context, xbe::event::ShutdownEvent& msg);
+        void Terminate(XbeInstdContext& context, xbe::event::TerminateEvent& msg);
     };
 
-    class XbeInstdFSM_Executing :
+    class XbeInstdFSM_Busy :
         public XbeInstdFSM_Default
     {
     public:
-        XbeInstdFSM_Executing(const char *name, int stateId)
+        XbeInstdFSM_Busy(const char *name, int stateId)
         : XbeInstdFSM_Default(name, stateId)
         {};
 
-        void Failed(XbeInstdContext& context, const xbe::event::FailedEvent& msg);
-        void Finished(XbeInstdContext& context, const xbe::event::FinishedEvent& msg);
-        void LifeSign(XbeInstdContext& context, const xbe::event::LifeSignEvent& msg);
-        void StatusReq(XbeInstdContext& context, const xbe::event::StatusReqEvent& msg);
-        void Terminate(XbeInstdContext& context, const xbe::event::TerminateEvent& msg);
+        void Finished(XbeInstdContext& context);
+        void Shutdown(XbeInstdContext& context, xbe::event::ShutdownEvent& msg);
+        void Terminate(XbeInstdContext& context, xbe::event::TerminateEvent& msg);
     };
 
-    class XbeInstdFSM_Terminated :
+    class XbeInstdFSM_WaitForFinishedAck :
         public XbeInstdFSM_Default
     {
     public:
-        XbeInstdFSM_Terminated(const char *name, int stateId)
+        XbeInstdFSM_WaitForFinishedAck(const char *name, int stateId)
         : XbeInstdFSM_Default(name, stateId)
         {};
 
+        void FinishedAck(XbeInstdContext& context, xbe::event::FinishedAckEvent& msg);
+        void Shutdown(XbeInstdContext& context, xbe::event::ShutdownEvent& msg);
+        void Terminate(XbeInstdContext& context, xbe::event::TerminateEvent& msg);
+        void Timeout(XbeInstdContext& context);
+    };
+
+    class XbeInstdFSM_Shutdown :
+        public XbeInstdFSM_Default
+    {
+    public:
+        XbeInstdFSM_Shutdown(const char *name, int stateId)
+        : XbeInstdFSM_Default(name, stateId)
+        {};
+
+        void LifeSign(XbeInstdContext& context);
+    };
+
+    class XbeInstdFSM_Failed :
+        public XbeInstdFSM_Default
+    {
+    public:
+        XbeInstdFSM_Failed(const char *name, int stateId)
+        : XbeInstdFSM_Default(name, stateId)
+        {};
+
+        void LifeSign(XbeInstdContext& context);
     };
 
     class XbeInstdContext :
@@ -127,34 +159,44 @@ namespace xbe
             return (dynamic_cast<XbeInstdState&>(*_state));
         };
 
-        void Execute(const xbe::event::ExecuteEvent& msg)
+        void Execute(xbe::event::ExecuteEvent& msg)
         {
             (getState()).Execute(*this, msg);
         };
 
-        void Failed(const xbe::event::FailedEvent& msg)
+        void Finished()
         {
-            (getState()).Failed(*this, msg);
+            (getState()).Finished(*this);
         };
 
-        void Finished(const xbe::event::FinishedEvent& msg)
+        void FinishedAck(xbe::event::FinishedAckEvent& msg)
         {
-            (getState()).Finished(*this, msg);
+            (getState()).FinishedAck(*this, msg);
         };
 
-        void LifeSign(const xbe::event::LifeSignEvent& msg)
+        void LifeSign()
         {
-            (getState()).LifeSign(*this, msg);
+            (getState()).LifeSign(*this);
         };
 
-        void StatusReq(const xbe::event::StatusReqEvent& msg)
+        void Shutdown(xbe::event::ShutdownEvent& msg)
+        {
+            (getState()).Shutdown(*this, msg);
+        };
+
+        void StatusReq(xbe::event::StatusReqEvent& msg)
         {
             (getState()).StatusReq(*this, msg);
         };
 
-        void Terminate(const xbe::event::TerminateEvent& msg)
+        void Terminate(xbe::event::TerminateEvent& msg)
         {
             (getState()).Terminate(*this, msg);
+        };
+
+        void Timeout()
+        {
+            (getState()).Timeout(*this);
         };
 
     private:
