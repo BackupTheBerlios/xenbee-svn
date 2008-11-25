@@ -17,8 +17,8 @@ namespace xbe {
     class Task;
     class TaskListener {
         public:
-            virtual void onTaskExit(const Task &);
-            virtual void onTaskFailure(const Task &);
+            virtual void onTaskExit(const Task *) = 0;
+            virtual void onTaskFailure(const Task *) = 0;
     };
 
     class Task {

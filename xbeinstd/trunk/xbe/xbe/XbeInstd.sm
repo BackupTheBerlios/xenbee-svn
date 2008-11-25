@@ -18,10 +18,19 @@
 %class XbeInstd
 %header XbeInstd.hpp
 
-%start XbeInstdFSM::Idle
+%start XbeInstdFSM::Init
 %map XbeInstdFSM
 
 %%
+Init
+{
+    Start
+        Idle
+        {
+            do_start_lifesign();
+        }
+}
+
 Idle
 {
     Execute(msg: xbe::event::ExecuteEvent&)
@@ -37,7 +46,7 @@ Idle
         }
 
     Terminate(msg: xbe::event::TerminateEvent&)
-        Idle
+        nil
         {
             do_terminate(msg);
         }
@@ -75,17 +84,18 @@ Busy
 }
 
 WaitForFinishedAck
+Entry { do_start_timer(); }
+Exit  { do_stop_timer();  }
 {
     FinishedAck(msg: xbe::event::FinishedAckEvent&)
         Idle
         {
-            do_stop_timer();
             do_finished_ack(msg);
         }
 
     Timeout
         [ctxt.retryCounter() < ctxt.maxRetries()]
-        WaitForFinishedAck
+        nil
         {
             do_task_finished();
         }
@@ -110,6 +120,8 @@ WaitForFinishedAck
 
 /*
 WaitForFailedAck
+Entry { do_start_timer(); }
+Exit  { do_stop_timer();  }
 {
     FailedAck(msg: xbe::event::FailedAckEvent&)
         Idle
@@ -143,17 +155,27 @@ WaitForFailedAck
 */
 
 Shutdown
+Entry { do_stop_lifesign(); do_stop_timer(); }
 {
     // don't send life signals
     LifeSign
         nil
         { }
+
+    StatusReq(msg: xbe::event::StatusReqEvent&)
+        nil
+        { }
 }
 
 Failed
+Entry { do_stop_lifesign(); do_stop_timer(); }
 {
     // don't send life signals
     LifeSign
+        nil
+        { }
+
+    StatusReq(msg: xbe::event::StatusReqEvent&)
         nil
         { }
 }

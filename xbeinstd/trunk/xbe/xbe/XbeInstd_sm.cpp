@@ -21,11 +21,12 @@ using namespace statemap;
 namespace xbe
 {
     // Static class declarations.
-    XbeInstdFSM_Idle XbeInstdFSM::Idle("XbeInstdFSM::Idle", 0);
-    XbeInstdFSM_Busy XbeInstdFSM::Busy("XbeInstdFSM::Busy", 1);
-    XbeInstdFSM_WaitForFinishedAck XbeInstdFSM::WaitForFinishedAck("XbeInstdFSM::WaitForFinishedAck", 2);
-    XbeInstdFSM_Shutdown XbeInstdFSM::Shutdown("XbeInstdFSM::Shutdown", 3);
-    XbeInstdFSM_Failed XbeInstdFSM::Failed("XbeInstdFSM::Failed", 4);
+    XbeInstdFSM_Init XbeInstdFSM::Init("XbeInstdFSM::Init", 0);
+    XbeInstdFSM_Idle XbeInstdFSM::Idle("XbeInstdFSM::Idle", 1);
+    XbeInstdFSM_Busy XbeInstdFSM::Busy("XbeInstdFSM::Busy", 2);
+    XbeInstdFSM_WaitForFinishedAck XbeInstdFSM::WaitForFinishedAck("XbeInstdFSM::WaitForFinishedAck", 3);
+    XbeInstdFSM_Shutdown XbeInstdFSM::Shutdown("XbeInstdFSM::Shutdown", 4);
+    XbeInstdFSM_Failed XbeInstdFSM::Failed("XbeInstdFSM::Failed", 5);
 
     void XbeInstdState::Execute(XbeInstdContext& context, xbe::event::ExecuteEvent& msg)
     {
@@ -52,6 +53,12 @@ namespace xbe
     }
 
     void XbeInstdState::Shutdown(XbeInstdContext& context, xbe::event::ShutdownEvent& msg)
+    {
+        Default(context);
+        return;
+    }
+
+    void XbeInstdState::Start(XbeInstdContext& context)
     {
         Default(context);
         return;
@@ -130,6 +137,27 @@ namespace xbe
             context.setState(EndStateName);
             throw;
         }
+
+        return;
+    }
+
+    void XbeInstdFSM_Init::Start(XbeInstdContext& context)
+    {
+        XbeInstd& ctxt(context.getOwner());
+
+        (context.getState()).Exit(context);
+        context.clearState();
+        try
+        {
+            ctxt.do_start_lifesign();
+            context.setState(XbeInstdFSM::Idle);
+        }
+        catch (...)
+        {
+            context.setState(XbeInstdFSM::Idle);
+            throw;
+        }
+        (context.getState()).Entry(context);
 
         return;
     }
@@ -262,6 +290,24 @@ namespace xbe
         return;
     }
 
+    void XbeInstdFSM_WaitForFinishedAck::Entry(XbeInstdContext& context)
+
+{
+        XbeInstd& ctxt(context.getOwner());
+
+        ctxt.do_start_timer();
+        return;
+    }
+
+    void XbeInstdFSM_WaitForFinishedAck::Exit(XbeInstdContext& context)
+
+{
+        XbeInstd& ctxt(context.getOwner());
+
+        ctxt.do_stop_timer();
+        return;
+    }
+
     void XbeInstdFSM_WaitForFinishedAck::FinishedAck(XbeInstdContext& context, xbe::event::FinishedAckEvent& msg)
     {
         XbeInstd& ctxt(context.getOwner());
@@ -270,7 +316,6 @@ namespace xbe
         context.clearState();
         try
         {
-            ctxt.do_stop_timer();
             ctxt.do_finished_ack(msg);
             context.setState(XbeInstdFSM::Idle);
         }
@@ -366,6 +411,16 @@ namespace xbe
         return;
     }
 
+    void XbeInstdFSM_Shutdown::Entry(XbeInstdContext& context)
+
+{
+        XbeInstd& ctxt(context.getOwner());
+
+        ctxt.do_stop_lifesign();
+        ctxt.do_stop_timer();
+        return;
+    }
+
     void XbeInstdFSM_Shutdown::LifeSign(XbeInstdContext& context)
     {
 
@@ -373,7 +428,31 @@ namespace xbe
         return;
     }
 
+    void XbeInstdFSM_Shutdown::StatusReq(XbeInstdContext& context, xbe::event::StatusReqEvent& msg)
+    {
+
+
+        return;
+    }
+
+    void XbeInstdFSM_Failed::Entry(XbeInstdContext& context)
+
+{
+        XbeInstd& ctxt(context.getOwner());
+
+        ctxt.do_stop_lifesign();
+        ctxt.do_stop_timer();
+        return;
+    }
+
     void XbeInstdFSM_Failed::LifeSign(XbeInstdContext& context)
+    {
+
+
+        return;
+    }
+
+    void XbeInstdFSM_Failed::StatusReq(XbeInstdContext& context, xbe::event::StatusReqEvent& msg)
     {
 
 

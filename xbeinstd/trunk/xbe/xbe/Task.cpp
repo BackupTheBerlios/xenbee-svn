@@ -44,7 +44,7 @@ void Task::operator()() {
         }
 
         if (_taskListener) {
-            _taskListener->onTaskExit(*this);
+            _taskListener->onTaskExit(this);
         }
     } else if (pid() < 0) {
         {
@@ -54,7 +54,7 @@ void Task::operator()() {
         }
 
         if (_taskListener) {
-            _taskListener->onTaskFailure(*this);
+            _taskListener->onTaskFailure(this);
         }
     }
     _thread.detach();

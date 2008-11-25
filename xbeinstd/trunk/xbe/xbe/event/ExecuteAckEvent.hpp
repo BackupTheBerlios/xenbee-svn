@@ -11,7 +11,7 @@ namespace xbe {
                 : xbe::event::XbeInstdEvent(to, from, conversationID) {}
                 virtual ~ExecuteAckEvent() {}
 
-                virtual std::string str() const {return "dummy";}
+                virtual std::string str() const {return "execute-ack";}
         };
     }
 }

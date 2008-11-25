@@ -12,7 +12,7 @@ namespace xbe {
 
                 virtual ~StatusReqEvent() {}
 
-                virtual std::string str() const {return "dummy";}
+                virtual std::string str() const {return "status-req";}
         };
     }
 }

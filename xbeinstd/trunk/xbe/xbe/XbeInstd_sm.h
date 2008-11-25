@@ -9,6 +9,7 @@ namespace xbe
 {
     // Forward declarations.
     class XbeInstdFSM;
+    class XbeInstdFSM_Init;
     class XbeInstdFSM_Idle;
     class XbeInstdFSM_Busy;
     class XbeInstdFSM_WaitForFinishedAck;
@@ -36,6 +37,7 @@ namespace xbe
         virtual void FinishedAck(XbeInstdContext& context, xbe::event::FinishedAckEvent& msg);
         virtual void LifeSign(XbeInstdContext& context);
         virtual void Shutdown(XbeInstdContext& context, xbe::event::ShutdownEvent& msg);
+        virtual void Start(XbeInstdContext& context);
         virtual void StatusReq(XbeInstdContext& context, xbe::event::StatusReqEvent& msg);
         virtual void Terminate(XbeInstdContext& context, xbe::event::TerminateEvent& msg);
         virtual void Timeout(XbeInstdContext& context);
@@ -49,6 +51,7 @@ namespace xbe
     {
     public:
 
+        static XbeInstdFSM_Init Init;
         static XbeInstdFSM_Idle Idle;
         static XbeInstdFSM_Busy Busy;
         static XbeInstdFSM_WaitForFinishedAck WaitForFinishedAck;
@@ -68,6 +71,17 @@ namespace xbe
         virtual void Execute(XbeInstdContext& context, xbe::event::ExecuteEvent& msg);
         virtual void StatusReq(XbeInstdContext& context, xbe::event::StatusReqEvent& msg);
         virtual void LifeSign(XbeInstdContext& context);
+    };
+
+    class XbeInstdFSM_Init :
+        public XbeInstdFSM_Default
+    {
+    public:
+        XbeInstdFSM_Init(const char *name, int stateId)
+        : XbeInstdFSM_Default(name, stateId)
+        {};
+
+        void Start(XbeInstdContext& context);
     };
 
     class XbeInstdFSM_Idle :
@@ -104,6 +118,8 @@ namespace xbe
         : XbeInstdFSM_Default(name, stateId)
         {};
 
+        void Entry(XbeInstdContext&);
+        void Exit(XbeInstdContext&);
         void FinishedAck(XbeInstdContext& context, xbe::event::FinishedAckEvent& msg);
         void Shutdown(XbeInstdContext& context, xbe::event::ShutdownEvent& msg);
         void Terminate(XbeInstdContext& context, xbe::event::TerminateEvent& msg);
@@ -118,7 +134,9 @@ namespace xbe
         : XbeInstdFSM_Default(name, stateId)
         {};
 
+        void Entry(XbeInstdContext&);
         void LifeSign(XbeInstdContext& context);
+        void StatusReq(XbeInstdContext& context, xbe::event::StatusReqEvent& msg);
     };
 
     class XbeInstdFSM_Failed :
@@ -129,7 +147,9 @@ namespace xbe
         : XbeInstdFSM_Default(name, stateId)
         {};
 
+        void Entry(XbeInstdContext&);
         void LifeSign(XbeInstdContext& context);
+        void StatusReq(XbeInstdContext& context, xbe::event::StatusReqEvent& msg);
     };
 
     class XbeInstdContext :
@@ -140,8 +160,8 @@ namespace xbe
         XbeInstdContext(XbeInstd& owner)
         : _owner(owner)
         {
-            setState(XbeInstdFSM::Idle);
-            XbeInstdFSM::Idle.Entry(*this);
+            setState(XbeInstdFSM::Init);
+            XbeInstdFSM::Init.Entry(*this);
         };
 
         XbeInstd& getOwner() const
@@ -182,6 +202,11 @@ namespace xbe
         void Shutdown(xbe::event::ShutdownEvent& msg)
         {
             (getState()).Shutdown(*this, msg);
+        };
+
+        void Start()
+        {
+            (getState()).Start(*this);
         };
 
         void StatusReq(xbe::event::StatusReqEvent& msg)
