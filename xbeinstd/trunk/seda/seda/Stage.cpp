@@ -53,6 +53,8 @@ namespace seda {
     void
     Stage::start() {
         if (_threadPool.empty()) {
+            _strategy->onStageStart();
+
             // initialize and start worker threads
             for (std::size_t tId = 0; tId < _maxPoolSize; ++tId) {
                 std::ostringstream sstr;
@@ -67,6 +69,10 @@ namespace seda {
 
     void
     Stage::stop() {
+        if (_threadPool.empty()) {
+            return;
+        }
+
         for (ThreadPool::iterator it(_threadPool.begin()); it != _threadPool.end(); ++it) {
             (*it)->worker->stop(); // signal threads to stop
         }
@@ -78,6 +84,7 @@ namespace seda {
             delete i->worker;
             delete i;
         }            
+        _strategy->onStageStop();
     }
 
     void
