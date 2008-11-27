@@ -17,7 +17,7 @@ namespace xbe {
         MessageTranslatorStrategy(const std::string &name, const seda::Strategy::Ptr &decorated);
         virtual ~MessageTranslatorStrategy() {}
 
-        virtual void perform(const seda::IEvent::Ptr&) const;
+        virtual void perform(const seda::IEvent::Ptr&);
     private:
         XBE_DECLARE_LOGGER();
     };

@@ -11,7 +11,7 @@ namespace xbe {
                 : XbeInstdEvent(to, from, conversationID) {}
                 virtual ~FinishedAckEvent() {}
 
-                virtual std::string str() const {return "dummy";}
+                virtual std::string str() const {return "finished-ack";}
         };
     }
 }

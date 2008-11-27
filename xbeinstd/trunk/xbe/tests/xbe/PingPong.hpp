@@ -24,7 +24,7 @@ namespace tests {
             ~PingPong();
 
         public:
-            void perform(const seda::IEvent::Ptr& e) const;
+            void perform(const seda::IEvent::Ptr& e);
 
             void doStart();
             void doStop();

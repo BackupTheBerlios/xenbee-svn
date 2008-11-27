@@ -12,7 +12,7 @@
 using namespace xbe;
 using namespace xbe::event;
 
-void XMLDeserializeStrategy::perform(const seda::IEvent::Ptr &e) const {
+void XMLDeserializeStrategy::perform(const seda::IEvent::Ptr &e) {
     const MessageEvent *msgEvent(dynamic_cast<const MessageEvent*>(e.get()));
     if (msgEvent) {
         std::istringstream is(msgEvent->message());

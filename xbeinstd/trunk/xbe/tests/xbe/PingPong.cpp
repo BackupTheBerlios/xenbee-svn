@@ -32,9 +32,9 @@ PingPong::~PingPong() {}
 
 
 
-void PingPong::perform(const seda::IEvent::Ptr& e) const {
+void PingPong::perform(const seda::IEvent::Ptr& e) {
     if (const ::xbe::XbeMessageEvent* const xmlEvent = dynamic_cast<const ::xbe::XbeMessageEvent* const>(e.get())) {
-        const_cast<PingPong*>(this)->dispatch(xmlEvent->const_payload());
+        dispatch(xmlEvent->const_payload());
     }
 }
 

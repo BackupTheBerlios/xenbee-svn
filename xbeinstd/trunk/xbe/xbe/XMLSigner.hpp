@@ -14,7 +14,7 @@ namespace xbe {
         {}
         virtual ~XMLSigner() {}
 
-        virtual void perform(const seda::IEvent::Ptr&) const;
+        virtual void perform(const seda::IEvent::Ptr&);
     private:
         XBE_DECLARE_LOGGER();
     };

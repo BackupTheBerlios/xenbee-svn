@@ -12,14 +12,13 @@ using namespace xbe;
 
 Task::Task(const boost::filesystem::path &path)
     : XBE_INIT_LOGGER("xbe.task:"+path.string()), _path(path), _workingDir(),
-    _uid(getuid()), _gid(getgid()),
+    _params(1, path.string()), _uid(getuid()), _gid(getgid()),
     _pid(0), _status(UNKNOWN), _exitCode(0), _taskListener(0), _barrier(2)
 
 {
     char buf[PATH_MAX];
     getcwd(buf, sizeof(buf));
     _workingDir = buf;
-    _params.push_back(path.string());
 }
 
 Task::~Task() {}
@@ -30,6 +29,7 @@ void Task::operator()() {
     _barrier.wait();
     if (pid() > 0) {
         waitpid(pid(), &_exitCode, 0);
+        XBE_LOG_DEBUG("task finished");
         {
             boost::unique_lock<boost::recursive_mutex> lock(_mtx);
             if (WIFEXITED(_exitCode)) {
@@ -47,6 +47,7 @@ void Task::operator()() {
             _taskListener->onTaskExit(this);
         }
     } else if (pid() < 0) {
+        XBE_LOG_DEBUG("task failed");
         {
             boost::unique_lock<boost::recursive_mutex> lock(_mtx);
             _status = FAILED;
@@ -62,12 +63,22 @@ void Task::operator()() {
 }
 
 void Task::wait() {
+    XBE_LOG_DEBUG("waiting for subprocess to finish");
     boost::unique_lock<boost::recursive_mutex> lock(_mtx);
     if (running()) {
         while (status() == UNKNOWN )
             _cond.wait(lock);
     }
 }
+
+void Task::wait(const boost::posix_time::time_duration &timeout) {
+    boost::unique_lock<boost::recursive_mutex> lock(_mtx);
+    if (running()) {
+        if (status() == UNKNOWN )
+            _cond.timed_wait(lock, timeout);
+    }
+}
+
 
 int Task::kill(int signal) {
     boost::unique_lock<boost::recursive_mutex> lock(_mtx);
@@ -90,6 +101,8 @@ void Task::run() {
 
         // no thread running, create it
         _thread = boost::thread(boost::ref(*this));
+
+        XBE_LOG_DEBUG("forking");
 
         _pid = fork();
         if (_pid == 0) {

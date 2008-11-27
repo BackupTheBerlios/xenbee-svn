@@ -1,8 +1,11 @@
 #include "XbeInstd.hpp"
+#include <signal.h>
 #include <seda/TimerEvent.hpp>
+#include <seda/StageRegistry.hpp>
 #include "xbe/event/ShutdownAckEvent.hpp"
 #include "xbe/event/StatusEvent.hpp"
 #include "xbe/event/TerminateAckEvent.hpp"
+#include "xbe/event/TaskFinishedEvent.hpp"
 
 using namespace xbe;
 
@@ -21,43 +24,53 @@ XbeInstd::XbeInstd(const std::string &name, const std::string &nextStage,
 {
 }
 
-void XbeInstd::perform(const seda::IEvent::Ptr &e) const {
-    XbeInstd *inst(const_cast<XbeInstd*>(this));
+void XbeInstd::perform(const seda::IEvent::Ptr &e) {
+    boost::unique_lock<boost::recursive_mutex> lock(_mtx);
     if (seda::TimerEvent* evt = dynamic_cast<seda::TimerEvent*>(e.get())) {
         if (evt->tag() == "lifeSign") {
-            inst->_fsm.LifeSign();
+            _fsm.LifeSign();
         } else if (evt->tag() == "timeout") {
-            inst->_fsm.Timeout();
+            _fsm.Timeout();
         }
     } else if (xbe::event::ExecuteEvent* evt = dynamic_cast<xbe::event::ExecuteEvent*>(e.get())) {
-        inst->_fsm.Execute(*evt);
+        _fsm.Execute(*evt);
     } else if (xbe::event::TerminateEvent* evt = dynamic_cast<xbe::event::TerminateEvent*>(e.get())) {
-        inst->_fsm.Terminate(*evt);
+        _fsm.Terminate(*evt);
     } else if (xbe::event::ShutdownEvent* evt = dynamic_cast<xbe::event::ShutdownEvent*>(e.get())) {
-        inst->_fsm.Shutdown(*evt);
+        _fsm.Shutdown(*evt);
     } else if (xbe::event::StatusReqEvent* evt = dynamic_cast<xbe::event::StatusReqEvent*>(e.get())) {
-        inst->_fsm.StatusReq(*evt);
+        _fsm.StatusReq(*evt);
     } else if (xbe::event::FinishedAckEvent* evt = dynamic_cast<xbe::event::FinishedAckEvent*>(e.get())) {
-        inst->_fsm.FinishedAck(*evt);
+        _fsm.FinishedAck(*evt);
+    } else if (xbe::event::TaskFinishedEvent* evt = dynamic_cast<xbe::event::TaskFinishedEvent*>(e.get())) {
+        _fsm.Finished();
 /*
     } else if (xbe::event::FailedAckEvent* evt = dynamic_cast<xbe::event::FailedAckEvent*>(e.get())) {
-        inst->_fsm.FailedAck(*evt);
+        _fsm.FailedAck(*evt);
 */
 
     }
 }
 
 void XbeInstd::do_execute(xbe::event::ExecuteEvent&) {
+    XBE_LOG_DEBUG("executing task");
+    assert(_mainTask.get() == NULL);
+    _mainTask = std::tr1::shared_ptr<xbe::Task>(new xbe::Task("/bin/sleep"));
+    _mainTask->setTaskListener(this);
+    _mainTask->params().push_back("3");
+    _mainTask->run();
 }
 
-void XbeInstd::do_terminate(xbe::event::TerminateEvent&) {
+void XbeInstd::do_terminate() {
     XBE_LOG_DEBUG("sending terminate-ack");
     seda::IEvent::Ptr e(new xbe::event::TerminateAckEvent(_to, _from, "1"));
     ForwardStrategy::perform(e);
 }
 
-void XbeInstd::do_terminate_job() {
+void XbeInstd::do_terminate_job(int signal) {
     XBE_LOG_DEBUG("terminating task");
+    assert(_mainTask.get() != NULL);
+    _mainTask->kill(signal);
 }
 
 void XbeInstd::do_shutdown(xbe::event::ShutdownEvent& shutdownEvent) {
@@ -72,9 +85,15 @@ void XbeInstd::do_send_status(xbe::event::StatusReqEvent&) {
     ForwardStrategy::perform(e);
 }
 
-void XbeInstd::do_finished_ack(xbe::event::FinishedAckEvent&) {}
+void XbeInstd::do_finished_ack(xbe::event::FinishedAckEvent&) {
+    XBE_LOG_DEBUG("got finished-ack");
+    _mainTask.reset();
+}
 
-void XbeInstd::do_failed_ack(xbe::event::FailedAckEvent&) {}
+void XbeInstd::do_failed_ack(xbe::event::FailedAckEvent&) {
+    XBE_LOG_DEBUG("got failed-ack");
+    _mainTask.reset();
+}
 
 /* regular events */
 void XbeInstd::do_send_lifesign() {
@@ -84,7 +103,9 @@ void XbeInstd::do_send_lifesign() {
 
 /* events coming from the executed job */
 void XbeInstd::do_task_finished() {
-
+    XBE_LOG_DEBUG("sending finished event");
+    seda::IEvent::Ptr e(new xbe::event::FinishedEvent(_to, _from, "1"));
+    ForwardStrategy::perform(e);
 }
 void XbeInstd::do_task_failed() {
 
@@ -112,18 +133,28 @@ void XbeInstd::do_stop_lifesign() {
 
 void XbeInstd::onTaskExit(const Task *t) {
     XBE_LOG_INFO("task exited");
+    try {
+        seda::IEvent::Ptr e(new xbe::event::TaskFinishedEvent());
+        seda::StageRegistry::instance().lookup(_stageName)->send(e);
+    } catch (...) {
+        XBE_LOG_ERROR("task exited but event could not be sent to own stage!");
+    }
 }
 void XbeInstd::onTaskFailure(const Task *t) {
     XBE_LOG_INFO("task failed");
 }
 
-void XbeInstd::onStageStart() {
+void XbeInstd::onStageStart(const std::string &stageName) {
+    boost::unique_lock<boost::recursive_mutex> lock(_mtx);
     XBE_LOG_DEBUG("stage started");
+    _stageName = stageName;
     _fsm.Start();
 }
 
-void XbeInstd::onStageStop() {
+void XbeInstd::onStageStop(const std::string &) {
+    boost::unique_lock<boost::recursive_mutex> lock(_mtx);
     XBE_LOG_DEBUG("stage stopped");
     do_stop_lifesign();
+    do_stop_timer();
 }
 

@@ -18,7 +18,7 @@ using namespace xbe::event;
 using namespace xercesc;
 namespace xml = xsd::cxx::xml;
 
-void XMLSigner::perform(const seda::IEvent::Ptr& e) const {
+void XMLSigner::perform(const seda::IEvent::Ptr& e) {
     XMLEvent* xmlEvent(dynamic_cast<XMLEvent*>(e.get()));
     if (xmlEvent) {
 

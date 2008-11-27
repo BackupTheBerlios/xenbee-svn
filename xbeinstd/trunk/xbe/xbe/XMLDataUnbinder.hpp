@@ -19,7 +19,7 @@ namespace xbe {
                     XBE_INIT_LOGGER(decorated->name()+".xml-unbinder") {}
                 virtual ~XMLDataUnbinder() {}
 
-                virtual void perform(const seda::IEvent::Ptr& e) const {
+                virtual void perform(const seda::IEvent::Ptr& e) {
                     xbe::event::ObjectEvent<xml_object_type>* objectEvent(dynamic_cast<xbe::event::ObjectEvent<xml_object_type>* >(e.get()));
                     if (objectEvent) {
                         ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > doc(xml_object_serializer()(objectEvent->object(), XbeLibUtils::namespace_infomap(), 0));

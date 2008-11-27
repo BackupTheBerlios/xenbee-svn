@@ -40,7 +40,7 @@ namespace xbe {
          * Are control flow messages required?
          *     Pause/Resume etc.
          */
-        virtual void perform(const seda::IEvent::Ptr&) const;
+        virtual void perform(const seda::IEvent::Ptr&);
 
         /***********************************
          *  MessageListener interface

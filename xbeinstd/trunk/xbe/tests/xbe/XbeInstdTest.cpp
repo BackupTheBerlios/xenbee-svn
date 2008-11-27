@@ -157,6 +157,9 @@ void XbeInstdTest::testTerminate1() {
 
     _ecs->wait(1, 4000);
 
+    _xbeInstdStage->waitUntilEmpty();
+    _discardStage->waitUntilEmpty();
+
     _xbeInstdStage->stop();
     _discardStage->stop();
 
@@ -165,6 +168,66 @@ void XbeInstdTest::testTerminate1() {
     bool gotAck(false);
     for (seda::AccumulateStrategy::const_iterator it = _acc->begin(); it != _acc->end(); it++) {
         if (dynamic_cast<xbe::event::TerminateAckEvent*>((*it).get()) != NULL)
+            gotAck=true;
+    }
+    CPPUNIT_ASSERT_EQUAL(true, gotAck);
+}
+void XbeInstdTest::testTerminate2() {
+    XBE_LOG_INFO("executing XbeInstdTest::testTerminate2");
+
+    _discardStage->start();
+    _xbeInstdStage->start();
+
+    seda::IEvent::Ptr executeEvent(new xbe::event::ExecuteEvent("from.bar", "to.bar", "1"));
+    _xbeInstdStage->send(executeEvent);
+
+    seda::IEvent::Ptr terminateEvent(new xbe::event::TerminateEvent("from.bar", "to.bar", "1"));
+    _xbeInstdStage->send(terminateEvent);
+
+    // just wait a bit
+    _ecs->wait(5, 3000);
+
+    seda::IEvent::Ptr shutdownEvent(new xbe::event::ShutdownEvent("from.bar", "to.bar", "1"));
+    _xbeInstdStage->send(shutdownEvent);
+
+    _xbeInstdStage->stop();
+    _discardStage->stop();
+
+    CPPUNIT_ASSERT(_ecs->count() > 0);
+
+    bool gotAck(false);
+    for (seda::AccumulateStrategy::const_iterator it = _acc->begin(); it != _acc->end(); it++) {
+        if (dynamic_cast<xbe::event::TerminateAckEvent*>((*it).get()) != NULL)
+            gotAck=true;
+    }
+    CPPUNIT_ASSERT_EQUAL(true, gotAck);
+}
+void XbeInstdTest::testExecute1() {
+    XBE_LOG_INFO("executing XbeInstdTest::testExecute1");
+
+    _discardStage->start();
+    _xbeInstdStage->start();
+
+    seda::IEvent::Ptr executeEvent(new xbe::event::ExecuteEvent("from.bar", "to.bar", "1"));
+    _xbeInstdStage->send(executeEvent);
+
+    // just wait a bit
+    _ecs->wait(10, 7000);
+
+    seda::IEvent::Ptr shutdownEvent(new xbe::event::ShutdownEvent("from.bar", "to.bar", "1"));
+    _xbeInstdStage->send(shutdownEvent);
+
+    _xbeInstdStage->waitUntilEmpty();
+    _discardStage->waitUntilEmpty();
+
+    _xbeInstdStage->stop();
+    _discardStage->stop();
+
+    CPPUNIT_ASSERT(_ecs->count() > 0);
+
+    bool gotAck(false);
+    for (seda::AccumulateStrategy::const_iterator it = _acc->begin(); it != _acc->end(); it++) {
+        if (dynamic_cast<xbe::event::FinishedEvent*>((*it).get()) != NULL)
             gotAck=true;
     }
     CPPUNIT_ASSERT_EQUAL(true, gotAck);

@@ -17,6 +17,8 @@ namespace xbe {
       CPPUNIT_TEST( testShutdown2 );
       CPPUNIT_TEST( testStatus1 );
       CPPUNIT_TEST( testTerminate1 );
+      CPPUNIT_TEST( testTerminate2 );
+      CPPUNIT_TEST( testExecute1 );
       CPPUNIT_TEST_SUITE_END();
 
     public:
@@ -30,6 +32,8 @@ namespace xbe {
       void testShutdown2();
       void testStatus1();
       void testTerminate1();
+      void testTerminate2();
+      void testExecute1();
     private:
       XBE_DECLARE_LOGGER();
       seda::Stage::Ptr _discardStage;

@@ -13,6 +13,7 @@
 %include <xbe/event/FinishedAckEvent.hpp>
 %include <xbe/event/FailedEvent.hpp>
 %include <xbe/event/FailedAckEvent.hpp>
+%include <signal.h>
 
 %package xbe
 %class XbeInstd
@@ -48,7 +49,7 @@ Idle
     Terminate(msg: xbe::event::TerminateEvent&)
         nil
         {
-            do_terminate(msg);
+            do_terminate();
         }
 }
 
@@ -69,18 +70,44 @@ Busy
 */
 
     Terminate(msg: xbe::event::TerminateEvent&)
-        Idle
+        WaitForTaskTermination
         {
-            do_terminate_job();
-            do_terminate(msg);
+            do_terminate_job(SIGTERM);
         }
 
     Shutdown(msg: xbe::event::ShutdownEvent&)
         Shutdown
         {
-            do_terminate_job();
+            do_terminate_job(SIGTERM);
             do_shutdown(msg);
         }
+}
+
+WaitForTaskTermination
+Entry { do_start_timer(); }
+Exit  { do_stop_timer();  }
+{
+    Finished
+        Idle
+        {
+            do_terminate();
+        }
+    Timeout
+        [ctxt.retryCounter() < ctxt.maxRetries()]
+        nil
+        {
+            do_terminate_job(SIGTERM);
+            inc_retryCounter();
+        }
+    Timeout
+        Idle
+        {
+            do_terminate_job(SIGKILL);
+        }
+
+    Terminate
+        nil
+        {}        
 }
 
 WaitForFinishedAck
@@ -98,6 +125,7 @@ Exit  { do_stop_timer();  }
         nil
         {
             do_task_finished();
+            inc_retryCounter();
         }
     Timeout
         Failed
@@ -114,7 +142,6 @@ Exit  { do_stop_timer();  }
     Terminate(msg: xbe::event::TerminateEvent&)
         Idle
         {
-            do_terminate(msg);
         }
 }
 

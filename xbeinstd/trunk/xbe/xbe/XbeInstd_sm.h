@@ -12,6 +12,7 @@ namespace xbe
     class XbeInstdFSM_Init;
     class XbeInstdFSM_Idle;
     class XbeInstdFSM_Busy;
+    class XbeInstdFSM_WaitForTaskTermination;
     class XbeInstdFSM_WaitForFinishedAck;
     class XbeInstdFSM_Shutdown;
     class XbeInstdFSM_Failed;
@@ -39,6 +40,7 @@ namespace xbe
         virtual void Shutdown(XbeInstdContext& context, xbe::event::ShutdownEvent& msg);
         virtual void Start(XbeInstdContext& context);
         virtual void StatusReq(XbeInstdContext& context, xbe::event::StatusReqEvent& msg);
+        virtual void Terminate(XbeInstdContext& context);
         virtual void Terminate(XbeInstdContext& context, xbe::event::TerminateEvent& msg);
         virtual void Timeout(XbeInstdContext& context);
 
@@ -54,6 +56,7 @@ namespace xbe
         static XbeInstdFSM_Init Init;
         static XbeInstdFSM_Idle Idle;
         static XbeInstdFSM_Busy Busy;
+        static XbeInstdFSM_WaitForTaskTermination WaitForTaskTermination;
         static XbeInstdFSM_WaitForFinishedAck WaitForFinishedAck;
         static XbeInstdFSM_Shutdown Shutdown;
         static XbeInstdFSM_Failed Failed;
@@ -108,6 +111,21 @@ namespace xbe
         void Finished(XbeInstdContext& context);
         void Shutdown(XbeInstdContext& context, xbe::event::ShutdownEvent& msg);
         void Terminate(XbeInstdContext& context, xbe::event::TerminateEvent& msg);
+    };
+
+    class XbeInstdFSM_WaitForTaskTermination :
+        public XbeInstdFSM_Default
+    {
+    public:
+        XbeInstdFSM_WaitForTaskTermination(const char *name, int stateId)
+        : XbeInstdFSM_Default(name, stateId)
+        {};
+
+        void Entry(XbeInstdContext&);
+        void Exit(XbeInstdContext&);
+        void Finished(XbeInstdContext& context);
+        void Terminate(XbeInstdContext& context);
+        void Timeout(XbeInstdContext& context);
     };
 
     class XbeInstdFSM_WaitForFinishedAck :
@@ -212,6 +230,11 @@ namespace xbe
         void StatusReq(xbe::event::StatusReqEvent& msg)
         {
             (getState()).StatusReq(*this, msg);
+        };
+
+        void Terminate()
+        {
+            (getState()).Terminate(*this);
         };
 
         void Terminate(xbe::event::TerminateEvent& msg)

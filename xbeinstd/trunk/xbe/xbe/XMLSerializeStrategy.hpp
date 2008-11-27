@@ -16,7 +16,7 @@ namespace xbe {
         {}
         virtual ~XMLSerializeStrategy() {}
 
-        virtual void perform(const seda::IEvent::Ptr&) const;
+        virtual void perform(const seda::IEvent::Ptr&);
     private:
         XBE_DECLARE_LOGGER();
     };

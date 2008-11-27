@@ -12,6 +12,7 @@ namespace xbe {
                 virtual ~TerminateAckEvent() {}
 
                 virtual std::string str() const {return "terminate-ack";}
+                template <class FSM> void execute(FSM &fsm) { fsm.TerminateAck(*this); }
         };
     }
 }

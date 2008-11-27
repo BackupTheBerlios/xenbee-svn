@@ -55,6 +55,8 @@ namespace xbe {
             /* waits until the subprocess has finished */
             void wait();
 
+            void wait(const boost::posix_time::time_duration &timeout);
+
             /* thread entry function that observes the created sub process */
             void operator()();
 

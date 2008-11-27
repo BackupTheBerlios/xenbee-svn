@@ -29,7 +29,7 @@ MessageTranslatorStrategy::MessageTranslatorStrategy(const std::string& name,
     XBE_INIT_LOGGER(name)
 {} 
 
-void MessageTranslatorStrategy::perform(const seda::IEvent::Ptr& e) const {
+void MessageTranslatorStrategy::perform(const seda::IEvent::Ptr& e) {
     if (xbe::event::ObjectEvent<xbemsg::message_t> *oe = (dynamic_cast<xbe::event::ObjectEvent<xbemsg::message_t>*>(e.get()))) {
         using namespace xercesc;
 

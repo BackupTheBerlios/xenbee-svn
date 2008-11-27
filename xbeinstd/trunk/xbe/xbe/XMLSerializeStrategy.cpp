@@ -9,7 +9,7 @@
 using namespace xbe;
 using namespace xbe::event;
 
-void XMLSerializeStrategy::perform(const seda::IEvent::Ptr &e) const {
+void XMLSerializeStrategy::perform(const seda::IEvent::Ptr &e) {
     const XMLEvent* xmlEvent(dynamic_cast<const XMLEvent*>(e.get()));
     if (xmlEvent) {
         std::ostringstream oss;

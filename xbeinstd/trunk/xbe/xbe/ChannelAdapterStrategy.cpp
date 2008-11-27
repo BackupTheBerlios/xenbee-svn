@@ -42,7 +42,7 @@ void ChannelAdapterStrategy::onException(const cms::CMSException& ex) {
     }
 }
 
-void ChannelAdapterStrategy::perform(const seda::IEvent::Ptr& e) const {
+void ChannelAdapterStrategy::perform(const seda::IEvent::Ptr& e) {
     XBE_LOG_DEBUG("handling event: " << e->str());
     // handle messages
     if (xbe::event::MessageEvent *msgEvent = dynamic_cast<xbe::event::MessageEvent*>(e.get())) {
