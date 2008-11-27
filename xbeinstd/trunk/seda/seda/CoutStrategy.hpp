@@ -11,7 +11,7 @@ namespace seda {
     CoutStrategy(std::ostream& out=std::cout) : Strategy("cout"), _os(out) {}
     ~CoutStrategy() {}
 
-    void perform(const IEvent::Ptr&) const;
+    void perform(const IEvent::Ptr&);
   private:
     std::ostream& _os;
   };

@@ -15,9 +15,9 @@ namespace seda {
         typedef std::tr1::shared_ptr<Strategy> Ptr;
     
         virtual ~Strategy() {}
-        virtual void perform(const IEvent::Ptr& e) const { throw seda::EventNotSupported(e); }
-        virtual void onStageStart() {}
-        virtual void onStageStop()  {}
+        virtual void perform(const IEvent::Ptr& e) { throw seda::EventNotSupported(e); }
+        virtual void onStageStart(const std::string& stageName) {}
+        virtual void onStageStop(const std::string& stageName)  {}
         const std::string& name() const { return _name; }
 
         /* TODO:  introduce a notation  for maximum  number of  threads this

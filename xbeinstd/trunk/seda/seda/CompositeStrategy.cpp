@@ -19,7 +19,7 @@ void CompositeStrategy::remove(const Strategy::Ptr& s) {
   }
 }
 
-void CompositeStrategy::perform(const IEvent::Ptr& e) const {
+void CompositeStrategy::perform(const IEvent::Ptr& e) {
   for (std::list<Strategy::Ptr>::const_iterator it(_children.begin());
        it != _children.end();
        it++) {

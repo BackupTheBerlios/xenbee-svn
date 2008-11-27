@@ -3,7 +3,7 @@
 #include "CoutStrategy.hpp"
 
 namespace seda {
-    void CoutStrategy::perform(const IEvent::Ptr& e) const {
+    void CoutStrategy::perform(const IEvent::Ptr& e) {
         _os << e->str() << std::endl;
     }
 }

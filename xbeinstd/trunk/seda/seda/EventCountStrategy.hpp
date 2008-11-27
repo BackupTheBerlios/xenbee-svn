@@ -17,8 +17,8 @@ namespace seda {
 
             ~EventCountStrategy() {}
 
-            void perform(const IEvent::Ptr& e) const {
-                const_cast<EventCountStrategy*>(this)->inc();
+            void perform(const IEvent::Ptr& e) {
+                inc();
                 StrategyDecorator::perform(e);
             }
 

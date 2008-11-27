@@ -12,7 +12,7 @@ namespace seda {
     {}
     ~LoggingStrategy() {}
 
-    void perform(const IEvent::Ptr& e) const {
+    void perform(const IEvent::Ptr& e) {
       SEDA_LOG_DEBUG(e->str());
       StrategyDecorator::perform(e);
     }

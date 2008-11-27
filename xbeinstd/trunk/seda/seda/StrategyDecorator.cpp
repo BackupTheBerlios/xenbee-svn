@@ -7,6 +7,6 @@ StrategyDecorator::StrategyDecorator(const std::string& name, const seda::Strate
 
 StrategyDecorator::~StrategyDecorator() {}
 
-void StrategyDecorator::perform(const IEvent::Ptr& e) const {
+void StrategyDecorator::perform(const IEvent::Ptr& e) {
   _component->perform(e);
 }

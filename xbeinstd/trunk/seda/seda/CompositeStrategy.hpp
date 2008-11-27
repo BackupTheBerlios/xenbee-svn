@@ -15,7 +15,7 @@ namespace seda {
     void add(const seda::Strategy::Ptr&);
     void remove(const seda::Strategy::Ptr&);
 
-    void perform(const seda::IEvent::Ptr&) const;
+    void perform(const seda::IEvent::Ptr&);
   private:
     std::list<seda::Strategy::Ptr> _children;
   };

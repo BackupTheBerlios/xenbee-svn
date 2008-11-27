@@ -5,7 +5,7 @@
 #include "StageRegistry.hpp"
 
 namespace seda {
-  void ForwardStrategy::perform(const IEvent::Ptr& e) const {
+  void ForwardStrategy::perform(const IEvent::Ptr& e) {
       const Stage::Ptr& nextStage(StageRegistry::instance().lookup(_next));
       if (nextStage) {
           SEDA_LOG_DEBUG("forwarding event to stage `" << nextStage->name() << "'");

@@ -2,12 +2,12 @@
 #define SEDA_ACCUMULATESTRATEGY_HPP 1
 
 #include <seda/StrategyDecorator.hpp>
+#include <boost/thread.hpp>
 #include <list>
 
 
 namespace seda {
   /* Accumulates the events sent to this StrategyDecorator.
-   * NOTE: This is not threadsafe at the moment.
    */
   class AccumulateStrategy : public StrategyDecorator {
     public:
@@ -19,7 +19,7 @@ namespace seda {
         _accumulator() {}
 
       ~AccumulateStrategy() {}
-      void perform(const IEvent::Ptr&) const;
+      void perform(const IEvent::Ptr&);
       iterator_type getIEventIteratorBegin() { return _accumulator.begin(); }
       iterator_type getIEventIteratorEnd() { return _accumulator.end(); }
 
@@ -27,6 +27,7 @@ namespace seda {
       const_iterator end() const { return _accumulator.end(); }
     private:
       std::list<IEvent::Ptr> _accumulator;
+      boost::recursive_mutex _mtx;
   };
 }
 

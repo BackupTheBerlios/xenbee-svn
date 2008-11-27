@@ -8,7 +8,7 @@ namespace seda {
   public:
     StrategyDecorator(const std::string& name, const seda::Strategy::Ptr& s);
     virtual ~StrategyDecorator();
-    virtual void perform(const IEvent::Ptr&) const;
+    virtual void perform(const IEvent::Ptr&);
   private:
     seda::Strategy::Ptr _component;
   };
