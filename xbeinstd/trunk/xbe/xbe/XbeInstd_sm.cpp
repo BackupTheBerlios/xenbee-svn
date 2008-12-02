@@ -302,6 +302,7 @@ namespace xbe
 {
         XbeInstd& ctxt(context.getOwner());
 
+        ctxt.reset_retryCounter();
         ctxt.do_start_timer();
         return;
     }
@@ -389,6 +390,7 @@ namespace xbe
 {
         XbeInstd& ctxt(context.getOwner());
 
+        ctxt.reset_retryCounter();
         ctxt.do_start_timer();
         return;
     }

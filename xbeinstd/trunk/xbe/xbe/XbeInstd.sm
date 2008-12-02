@@ -84,7 +84,7 @@ Busy
 }
 
 WaitForTaskTermination
-Entry { do_start_timer(); }
+Entry { reset_retryCounter(); do_start_timer(); }
 Exit  { do_stop_timer();  }
 {
     Finished
@@ -111,7 +111,7 @@ Exit  { do_stop_timer();  }
 }
 
 WaitForFinishedAck
-Entry { do_start_timer(); }
+Entry { reset_retryCounter(); do_start_timer(); }
 Exit  { do_stop_timer();  }
 {
     FinishedAck(msg: xbe::event::FinishedAckEvent&)
@@ -147,7 +147,7 @@ Exit  { do_stop_timer();  }
 
 /*
 WaitForFailedAck
-Entry { do_start_timer(); }
+Entry { reset_retryCounter(); do_start_timer(); }
 Exit  { do_stop_timer();  }
 {
     FailedAck(msg: xbe::event::FailedAckEvent&)

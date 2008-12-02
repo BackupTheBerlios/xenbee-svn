@@ -52,12 +52,11 @@ void XbeInstd::perform(const seda::IEvent::Ptr &e) {
     }
 }
 
-void XbeInstd::do_execute(xbe::event::ExecuteEvent&) {
+void XbeInstd::do_execute(xbe::event::ExecuteEvent& e) {
     XBE_LOG_DEBUG("executing task");
     assert(_mainTask.get() == NULL);
-    _mainTask = std::tr1::shared_ptr<xbe::Task>(new xbe::Task("/bin/sleep"));
+    _mainTask = std::tr1::shared_ptr<xbe::Task>(new xbe::Task(e.taskData()));
     _mainTask->setTaskListener(this);
-    _mainTask->params().push_back("3");
     _mainTask->run();
 }
 

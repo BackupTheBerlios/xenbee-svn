@@ -2,6 +2,12 @@
 #define XBE_EXECUTE_EVENT_HPP 1
 
 #include <xbe/event/XbeInstdEvent.hpp>
+#include <xbe/TaskData.hpp>
+#include <boost/filesystem.hpp>
+
+#include <string>
+#include <list>
+#include <map>
 
 namespace xbe {
     namespace event {
@@ -12,6 +18,14 @@ namespace xbe {
                 virtual ~ExecuteEvent() {}
 
                 virtual std::string str() const {return "execute";}
+
+                void path();
+
+                void taskData(const TaskData & td) { _taskData = td; }
+                TaskData & taskData() { return _taskData; }
+                const TaskData & taskData() const { return _taskData; }
+            private:
+                TaskData _taskData;
         };
     }
 }

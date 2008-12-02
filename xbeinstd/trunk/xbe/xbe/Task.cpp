@@ -10,16 +10,10 @@
 
 using namespace xbe;
 
-Task::Task(const boost::filesystem::path &path)
-    : XBE_INIT_LOGGER("xbe.task:"+path.string()), _path(path), _workingDir(),
-    _params(1, path.string()), _uid(getuid()), _gid(getgid()),
+Task::Task(const TaskData &td)
+    : XBE_INIT_LOGGER("xbe.task:"+td.path()), _taskData(td),
     _pid(0), _status(UNKNOWN), _exitCode(0), _taskListener(0), _barrier(2)
-
-{
-    char buf[PATH_MAX];
-    getcwd(buf, sizeof(buf));
-    _workingDir = buf;
-}
+{}
 
 Task::~Task() {}
 
@@ -110,25 +104,25 @@ void Task::run() {
             for (int fd = 0; fd < 1024; fd++)
                 close(fd);
             // redirect stdin stdout stderr
-            if (!_pathStdin.empty()) {
-                int fd = open(_pathStdin.string().c_str(), O_RDONLY);
+            if (!_taskData.stdIn().empty()) {
+                int fd = open(_taskData.stdIn().c_str(), O_RDONLY);
                 dup2(fd, 0);
             }
-            if (!_pathStdout.empty()) {
-                int fd = open(_pathStdout.string().c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0600);
+            if (!_taskData.stdOut().empty()) {
+                int fd = open(_taskData.stdOut().c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0600);
                 dup2(fd, 1);
             }
-            if (!_pathStderr.empty()) {
-                int fd = open(_pathStderr.string().c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0600);
+            if (!_taskData.stdErr().empty()) {
+                int fd = open(_taskData.stdErr().c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0600);
                 dup2(fd, 2);
             }
 
             // set uid, gid
-            setuid(uid());
-            setgid(gid());
+            setuid(_taskData.uid());
+            setgid(_taskData.gid());
 
             // set working directory
-            chdir(wd().string().c_str());
+            chdir(_taskData.wd().string().c_str());
 
             // build argv and envp
             char **argv = build_argv();
@@ -149,23 +143,24 @@ void Task::run() {
 }
 
 char **Task::build_argv() const {
-    char **argv = new char*[_params.size() + 1];
+    const size_t numParams(_taskData.params().size());
+    char **argv = new char*[numParams + 1];
 
-    for (std::size_t i = 0; i < _params.size(); i++) {
-        const std::string::size_type len(_params[i].size());
+    for (std::size_t i = 0; i < numParams; i++) {
+        const std::string::size_type len(_taskData.params()[i].size());
 
         argv[i] = new char[len+1];
-        strncpy(argv[i], _params[i].c_str(), len);
+        strncpy(argv[i], _taskData.params()[i].c_str(), len);
         argv[i][len] = (char)0;
     }
-    argv[_params.size()] = (char*)0;
+    argv[numParams] = (char*)0;
     return argv;
 }
 
 char **Task::build_envp() const {
-    char **envp = new char*[_env.size() + 1];
+    char **envp = new char*[_taskData.env().size() + 1];
     std::size_t i(0);
-    for (env_t::const_iterator it = _env.begin(); it != _env.end(); it++) {
+    for (TaskData::env_t::const_iterator it = _taskData.env().begin(); it != _taskData.env().end(); it++) {
         const std::string k(it->first);
         const std::string v(it->second);
         // len(k) + len("=") + len(v) + zero-termination
@@ -176,7 +171,7 @@ char **Task::build_envp() const {
         envp[i][len] = (char)0;
         ++i;
     }
-    envp[_env.size()] = (char*)0;
+    envp[_taskData.env().size()] = (char*)0;
     return envp;
 }
 

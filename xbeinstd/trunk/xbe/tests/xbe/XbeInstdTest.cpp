@@ -3,6 +3,7 @@
 
 #include <xbe/common.hpp>
 #include <xbe/XbeInstd.hpp>
+#include <xbe/TaskData.hpp>
 #include <xbe/event/ShutdownAckEvent.hpp>
 #include <xbe/event/TerminateAckEvent.hpp>
 #include <xbe/event/StatusEvent.hpp>
@@ -42,6 +43,11 @@ XbeInstdTest::setUp() {
 
 void
 XbeInstdTest::tearDown() {
+    _xbeInstdStage.reset();
+    _ecs.reset();
+    _acc.reset();
+    _discardStage.reset();
+
     seda::StageRegistry::instance().clear();
 }
 
@@ -178,7 +184,11 @@ void XbeInstdTest::testTerminate2() {
     _discardStage->start();
     _xbeInstdStage->start();
 
-    seda::IEvent::Ptr executeEvent(new xbe::event::ExecuteEvent("from.bar", "to.bar", "1"));
+    TaskData td("/bin/sleep");
+    td.params().push_back("3");
+
+    std::tr1::shared_ptr<xbe::event::ExecuteEvent> executeEvent(new xbe::event::ExecuteEvent("from.bar", "to.bar", "1"));
+    executeEvent->taskData(td);
     _xbeInstdStage->send(executeEvent);
 
     seda::IEvent::Ptr terminateEvent(new xbe::event::TerminateEvent("from.bar", "to.bar", "1"));
@@ -189,6 +199,9 @@ void XbeInstdTest::testTerminate2() {
 
     seda::IEvent::Ptr shutdownEvent(new xbe::event::ShutdownEvent("from.bar", "to.bar", "1"));
     _xbeInstdStage->send(shutdownEvent);
+
+    _xbeInstdStage->waitUntilEmpty();
+    _discardStage->waitUntilEmpty();
 
     _xbeInstdStage->stop();
     _discardStage->stop();
@@ -208,7 +221,11 @@ void XbeInstdTest::testExecute1() {
     _discardStage->start();
     _xbeInstdStage->start();
 
-    seda::IEvent::Ptr executeEvent(new xbe::event::ExecuteEvent("from.bar", "to.bar", "1"));
+    TaskData td("/bin/sleep");
+    td.params().push_back("3");
+
+    std::tr1::shared_ptr<xbe::event::ExecuteEvent> executeEvent(new xbe::event::ExecuteEvent("from.bar", "to.bar", "1"));
+    executeEvent->taskData(td);
     _xbeInstdStage->send(executeEvent);
 
     // just wait a bit
@@ -231,4 +248,45 @@ void XbeInstdTest::testExecute1() {
             gotAck=true;
     }
     CPPUNIT_ASSERT_EQUAL(true, gotAck);
+}
+void XbeInstdTest::testExecute2() {
+    XBE_LOG_INFO("executing XbeInstdTest::testExecute2");
+
+    _discardStage->start();
+    _xbeInstdStage->start();
+
+    // wait for the first lifesign signal
+    _ecs->wait(1, 3500);
+    CPPUNIT_ASSERT_MESSAGE("first message was no LifeSign", dynamic_cast<xbe::event::LifeSignEvent*>(_acc->begin()->get()) != NULL);
+ 
+    TaskData td("/bin/cat");
+    td.stdIn("resources/testData.1");
+    td.stdOut("resources/testData.1.out");
+
+    std::tr1::shared_ptr<xbe::event::ExecuteEvent> executeEvent(new xbe::event::ExecuteEvent("from.bar", "to.bar", "1"));
+    executeEvent->taskData(td);
+    _xbeInstdStage->send(executeEvent);
+
+    // just wait a bit
+    _ecs->wait(10, 7000);
+
+    seda::IEvent::Ptr shutdownEvent(new xbe::event::ShutdownEvent("from.bar", "to.bar", "1"));
+    _xbeInstdStage->send(shutdownEvent);
+
+    _xbeInstdStage->waitUntilEmpty();
+    _discardStage->waitUntilEmpty();
+
+    _xbeInstdStage->stop();
+    _discardStage->stop();
+
+    CPPUNIT_ASSERT(_ecs->count() > 0);
+
+    bool gotAck(false);
+    for (seda::AccumulateStrategy::const_iterator it = _acc->begin(); it != _acc->end(); it++) {
+        if (dynamic_cast<xbe::event::FinishedEvent*>((*it).get()) != NULL)
+            gotAck=true;
+    }
+    CPPUNIT_ASSERT_EQUAL(true, gotAck);
+
+    // TODO: check if testData.1.out has been created and has the same content
 }

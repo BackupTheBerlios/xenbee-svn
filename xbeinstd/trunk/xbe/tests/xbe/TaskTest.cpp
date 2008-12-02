@@ -23,7 +23,7 @@ TaskTest::tearDown() {
 
 void
 TaskTest::testNoExecutable() {
-    Task task("not-existing-executable");
+    Task task(TaskData("not-existing-executable"));
     task.run();
     task.wait();
     CPPUNIT_ASSERT_EQUAL(task.status(), Task::FINISHED);
@@ -32,8 +32,10 @@ TaskTest::testNoExecutable() {
 
 void
 TaskTest::testSignal() {
-    Task task("/bin/sleep");
-    task.params().push_back("60");
+    TaskData td("/bin/sleep");
+    td.params().push_back("60");
+
+    Task task(td);
 
     task.run();
     task.kill(SIGTERM);
@@ -50,8 +52,11 @@ TaskTest::testSignal() {
 
 void
 TaskTest::testRun() {
-    Task task("/bin/sleep");
-    task.params().push_back("1");
+    TaskData td("/bin/sleep");
+    td.params().push_back("1");
+
+    Task task(td);
+
     task.run();
     task.wait();
 
