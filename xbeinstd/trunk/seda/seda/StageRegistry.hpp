@@ -6,6 +6,9 @@
 #include <map>
 
 namespace seda {
+    /**
+     * TODO: make this class thread-safe!
+     */
     class StageRegistry {
     public:
         ~StageRegistry();
