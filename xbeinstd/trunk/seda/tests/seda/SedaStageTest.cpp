@@ -15,12 +15,13 @@
 #include <seda/ForwardStrategy.hpp>
 #include <seda/LoggingStrategy.hpp>
 #include <seda/LossyDaemonStrategy.hpp>
+#include <seda/FilterStrategy.hpp>
+#include <seda/TimerEvent.hpp>
 #include <seda/StringEvent.hpp>
 
 using namespace seda::tests;
 
 CPPUNIT_TEST_SUITE_REGISTRATION( SedaStageTest );
-
 
 void
 SedaStageTest::setUp() {}
@@ -212,6 +213,37 @@ void SedaStageTest::testLossyDaemonStrategy() {
   CPPUNIT_ASSERT((std::size_t)0   < ecs->count());
   CPPUNIT_ASSERT((std::size_t)100 > ecs->count());
   
+  first->stop();
+}
+
+void SedaStageTest::testFilterStrategy() {
+  SEDA_LOG_DEBUG("Testing FilterStrategy");
+  seda::Strategy::Ptr discard(new seda::DiscardStrategy());
+  seda::EventCountStrategy::Ptr ecs(new seda::EventCountStrategy(discard));
+  discard = seda::Strategy::Ptr(new seda::FilterStrategy<seda::StringEvent>(ecs));
+  seda::Stage::Ptr first(new seda::Stage("filter", discard));
+
+  // register the stages
+  StageRegistry::instance().insert(first);
+
+  first->start();
+
+  // string events are being filtered
+  first->send(seda::IEvent::Ptr(new seda::StringEvent("foo")));
+  first->waitUntilEmpty(500);
+
+  CPPUNIT_ASSERT(first->queue()->empty());
+  CPPUNIT_ASSERT_EQUAL((std::size_t)0, ecs->count());
+  
+  // timer events are not filtered
+  first->send(seda::IEvent::Ptr(new seda::TimerEvent("test-timer")));
+  first->waitUntilEmpty(500);
+
+  ecs->wait(1, 1000);
+
+  CPPUNIT_ASSERT(first->queue()->empty());
+  CPPUNIT_ASSERT_EQUAL((std::size_t)1, ecs->count());
+ 
   first->stop();
 }
 
