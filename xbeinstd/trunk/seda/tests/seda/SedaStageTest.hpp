@@ -14,6 +14,7 @@ namespace seda {
       CPPUNIT_TEST( testForwardEvents );
       CPPUNIT_TEST( testCompositeStrategy );
       CPPUNIT_TEST( testAccumulateStrategy );
+      CPPUNIT_TEST( testLossyDaemonStrategy );
       //      CPPUNIT_TEST( testSendReply );
       //      CPPUNIT_TEST_EXCEPTION( testStart_Timeout_Throws, cms::CMSException );
       CPPUNIT_TEST_SUITE_END();
@@ -32,6 +33,7 @@ namespace seda {
       void testForwardEvents();
       void testCompositeStrategy();
       void testAccumulateStrategy();
+      void testLossyDaemonStrategy();
     };
   }
 }

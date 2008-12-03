@@ -14,6 +14,7 @@
 #include <seda/CoutStrategy.hpp>
 #include <seda/ForwardStrategy.hpp>
 #include <seda/LoggingStrategy.hpp>
+#include <seda/LossyDaemonStrategy.hpp>
 #include <seda/StringEvent.hpp>
 
 using namespace seda::tests;
@@ -188,3 +189,29 @@ void SedaStageTest::testAccumulateStrategy() {
 
   first->stop();
 }
+
+void SedaStageTest::testLossyDaemonStrategy() {
+  SEDA_LOG_DEBUG("Testing LossyDaemonStrategy");
+  seda::Strategy::Ptr discard(new seda::DiscardStrategy());
+  seda::EventCountStrategy::Ptr ecs(new seda::EventCountStrategy(discard));
+  discard = seda::Strategy::Ptr(new seda::LossyDaemonStrategy(ecs, 0.5));
+  seda::Stage::Ptr first(new seda::Stage("lossy", discard));
+
+  // register the stages
+  StageRegistry::instance().insert(first);
+
+  first->start();
+
+  for (size_t i = 0; i < 100; i++) {
+      seda::IEvent::Ptr sendEvent(new seda::StringEvent("foo"));
+      first->send(sendEvent);
+  }
+  first->waitUntilEmpty(4000);
+
+  CPPUNIT_ASSERT(first->queue()->empty());
+  CPPUNIT_ASSERT((std::size_t)0   < ecs->count());
+  CPPUNIT_ASSERT((std::size_t)100 > ecs->count());
+  
+  first->stop();
+}
+
