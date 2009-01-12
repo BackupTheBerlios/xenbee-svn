@@ -22,7 +22,9 @@ namespace seda {
       void perform(const IEvent::Ptr&);
       iterator_type getIEventIteratorBegin() { return _accumulator.begin(); }
       iterator_type getIEventIteratorEnd() { return _accumulator.end(); }
-
+      std::size_t size() { return _accumulator.size(); }
+      void clear() { _accumulator.clear(); }
+      bool empty() { return (_accumulator.size() == 0); }
       const_iterator begin() const { return _accumulator.begin(); }
       const_iterator end() const { return _accumulator.end(); }
     private:

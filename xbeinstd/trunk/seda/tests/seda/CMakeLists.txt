@@ -3,6 +3,7 @@
 set(sedatest_src main.cpp
    EventQueueTest.cpp EventQueueTest.hpp
    SedaStageTest.cpp  SedaStageTest.hpp
+   AccumulateStrategyTest.cpp  AccumulateStrategyTest.hpp
    TimerTest.cpp TimerTest.hpp
 )
 
