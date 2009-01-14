@@ -12,6 +12,7 @@ namespace seda {
         CPPUNIT_TEST_SUITE( seda::tests::AccumulateStrategyTest );
         CPPUNIT_TEST( testAddRemoveEvents );
         CPPUNIT_TEST( testIterator );
+        CPPUNIT_TEST( testCheckSequence );
         CPPUNIT_TEST_SUITE_END();
 
       public:
@@ -24,6 +25,7 @@ namespace seda {
         SEDA_DECLARE_LOGGER();
         void testAddRemoveEvents();
         void testIterator();
+        void testCheckSequence();
       private:
         AccumulateStrategyTest (const AccumulateStrategyTest& original);
         AccumulateStrategyTest& operator= (const AccumulateStrategyTest& rhs);

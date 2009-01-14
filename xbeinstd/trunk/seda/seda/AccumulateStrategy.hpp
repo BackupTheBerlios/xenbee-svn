@@ -4,6 +4,8 @@
 #include <seda/StrategyDecorator.hpp>
 #include <boost/thread.hpp>
 #include <list>
+#include <typeinfo>
+
 
 
 namespace seda {
@@ -27,6 +29,17 @@ namespace seda {
       bool empty() { return (_accumulator.size() == 0); }
       const_iterator begin() const { return _accumulator.begin(); }
       const_iterator end() const { return _accumulator.end(); }
+      std::string str();
+
+      /***
+       * Provide a list of type-names that represent the type
+       * information. Example:
+       * std::list<std::string> expectedSequence;
+       * expectedSequence.push_back(typeid(StringEvent).name());
+       * CPPUNIT_ASSERT_EQUAL(true, _accumulate->checkSequence(expectedSequence));
+       */
+      bool checkSequence(const std::list<std::string>& );
+
     private:
       std::list<IEvent::Ptr> _accumulator;
       boost::recursive_mutex _mtx;

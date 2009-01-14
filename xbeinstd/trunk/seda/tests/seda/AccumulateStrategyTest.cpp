@@ -1,6 +1,7 @@
 #include "AccumulateStrategyTest.hpp"
 #include <seda/DiscardStrategy.hpp>
 #include <seda/StringEvent.hpp>
+#include <typeinfo>
 
 using namespace seda::tests;
 
@@ -34,6 +35,18 @@ void AccumulateStrategyTest::testAddRemoveEvents() {
   _accumulate->clear();
   CPPUNIT_ASSERT_EQUAL((std::size_t) 0, _accumulate->size());
   SEDA_LOG_DEBUG("Accumulator size = "<<_accumulate->size() <<" after calling clear");
+}
+
+void AccumulateStrategyTest::testCheckSequence() {
+  SEDA_LOG_DEBUG("Testing check of sequence.");
+  CPPUNIT_ASSERT(_accumulate->empty());
+  IEvent::Ptr event(new StringEvent("foobar"));
+  _accumulate->perform(event);
+  std::list<std::string> expectedSequence;
+  expectedSequence.push_back(typeid(StringEvent).name());
+  CPPUNIT_ASSERT_EQUAL(true, _accumulate->checkSequence(expectedSequence));
+  _accumulate->clear();
+  CPPUNIT_ASSERT_EQUAL(false, _accumulate->checkSequence(expectedSequence));
 }
 
 void AccumulateStrategyTest::testIterator() {
