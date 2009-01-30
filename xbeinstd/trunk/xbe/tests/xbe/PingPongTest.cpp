@@ -37,8 +37,6 @@ PingPongTest::PingPongTest()
 void
 PingPongTest::setUp() {
     XbeLibUtils::initialise();
-    // XMLPlatformUtils::Initialize();
-    XbeLibUtils::initialise();
     // register the test xml-namespace with the namespace map
     XbeLibUtils::namespace_infomap()["xbetest"].name = "http://www.xenbee.net/schema/2008/02/xbetest";
     char cwd[PATH_MAX];
@@ -182,6 +180,7 @@ void PingPongTest::testPingPong() {
     pongClient->doStart();
     pingClient->doStart();
 
+    XBE_LOG_DEBUG("waiting for " << numMsgs << " sent messages." );
     // wait until #msgs have been sent
     ecsPongNetStub->wait(numMsgs, 1000);
     ecsPingNetStub->wait(numMsgs, 1000);

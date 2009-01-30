@@ -15,7 +15,12 @@ Task::Task(const TaskData &td)
     _pid(0), _status(UNKNOWN), _exitCode(0), _taskListener(0), _barrier(2)
 {}
 
-Task::~Task() {}
+Task::~Task() {
+    _taskListener=NULL;
+    if (running()) {
+        kill(SIGKILL);
+    }
+}
 
 void Task::operator()() {
     // wait until the sub process has been started

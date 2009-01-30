@@ -41,6 +41,7 @@ namespace xbe {
             void do_terminate_job(int signal);
             void do_shutdown(xbe::event::ShutdownEvent&);
             void do_send_status(xbe::event::StatusReqEvent&);
+            void do_send_execute_ack(xbe::event::ExecuteEvent&);
             void do_finished_ack(xbe::event::FinishedAckEvent&);
             void do_failed_ack(xbe::event::FailedAckEvent&);
 

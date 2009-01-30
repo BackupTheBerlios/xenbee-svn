@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<xbemsg:message xmlns:xbemsg="http://www.xenbee.net/schema/2008/02/xbe-msg">
+    <xbemsg:header>
+        <xbemsg:to>foo.bar</xbemsg:to>
+        <xbemsg:from>foo.bar</xbemsg:from>
+    </xbemsg:header>
+    <xbemsg:body>
+        <xbemsg:life-sign/>
+    </xbemsg:body>
+</xbemsg:message>

@@ -18,6 +18,7 @@ macro(add_xsd_schema BASE_NAME PATH_TO_SCHEMA)
           --namespace-map "http://www.w3.org/2001/04/xmlenc#=xenc"
           --location-map "http://www.w3.org/TR/2002/REC-xmldsig-core-20020212/xmldsig-core-schema.xsd=dsig.xsd"
           --location-map "http://schemas.ggf.org/jsdl/2005/11/jsdl=jsdl.xsd"
+          --location-map "http://schemas.ggf.org/jsdl/2005/11/jsdl-posix=jsdl-posix.xsd"
           --location-map "http://www.w3.org/TR/2002/REC-xmlenc-core-20021210/xenc-schema.xsd=xenc.xsd"
           ${PATH_TO_SCHEMA}
           WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}

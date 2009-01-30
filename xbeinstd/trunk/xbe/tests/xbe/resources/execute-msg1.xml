@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<xbemsg:message xmlns:xbemsg="http://www.xenbee.net/schema/2008/02/xbe-msg"
+    xmlns:jsdl="http://schemas.ggf.org/jsdl/2005/11/jsdl"
+    xmlns:jsdl-posix="http://schemas.ggf.org/jsdl/2005/11/jsdl-posix">
+    <xbemsg:header>
+        <xbemsg:to>foo.bar</xbemsg:to>
+        <xbemsg:from>foo.bar</xbemsg:from>
+    </xbemsg:header>
+    <xbemsg:body>
+        <xbemsg:execute>
+            <xbemsg:task>
+                    <jsdl:Application>
+                        <jsdl-posix:POSIXApplication>
+                            <jsdl-posix:Executable>/bin/sleep</jsdl-posix:Executable>
+                            <jsdl-posix:Argument>10</jsdl-posix:Argument>
+                            <jsdl-posix:WorkingDirectory filesystemName="SPOOL"/>
+                            <jsdl-posix:Environment name="FOO" filesystemName="SPOOL">foo</jsdl-posix:Environment>
+                        </jsdl-posix:POSIXApplication>
+                    </jsdl:Application>
+                    <jsdl:Resources>
+                        <jsdl:FileSystem name="SPOOL">
+                            <jsdl:Description>a spool directory</jsdl:Description>
+                            <jsdl:MountPoint>/spool</jsdl:MountPoint>
+                        </jsdl:FileSystem>
+                    </jsdl:Resources>
+            </xbemsg:task>
+        </xbemsg:execute>
+    </xbemsg:body>
+</xbemsg:message>

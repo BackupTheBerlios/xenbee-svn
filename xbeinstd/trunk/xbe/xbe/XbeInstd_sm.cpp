@@ -178,6 +178,7 @@ namespace xbe
         context.clearState();
         try
         {
+            ctxt.do_send_execute_ack(msg);
             ctxt.do_execute(msg);
             context.setState(XbeInstdFSM::Busy);
         }
@@ -187,6 +188,20 @@ namespace xbe
             throw;
         }
         (context.getState()).Entry(context);
+
+        return;
+    }
+
+    void XbeInstdFSM_Idle::Finished(XbeInstdContext& context)
+    {
+
+
+        return;
+    }
+
+    void XbeInstdFSM_Idle::FinishedAck(XbeInstdContext& context, xbe::event::FinishedAckEvent& msg)
+    {
+
 
         return;
     }
@@ -233,6 +248,27 @@ namespace xbe
         return;
     }
 
+    void XbeInstdFSM_Busy::Execute(XbeInstdContext& context, xbe::event::ExecuteEvent& msg)
+    {
+        XbeInstd& ctxt(context.getOwner());
+
+        XbeInstdState& EndStateName = context.getState();
+
+        context.clearState();
+        try
+        {
+            ctxt.do_send_execute_ack(msg);
+            context.setState(EndStateName);
+        }
+        catch (...)
+        {
+            context.setState(EndStateName);
+            throw;
+        }
+
+        return;
+    }
+
     void XbeInstdFSM_Busy::Finished(XbeInstdContext& context)
     {
         XbeInstd& ctxt(context.getOwner());
@@ -262,7 +298,7 @@ namespace xbe
         context.clearState();
         try
         {
-            ctxt.do_terminate_job(SIGTERM);
+            ctxt.do_terminate_job(SIGKILL);
             ctxt.do_shutdown(msg);
             context.setState(XbeInstdFSM::Shutdown);
         }
@@ -372,6 +408,7 @@ namespace xbe
             try
             {
                 ctxt.do_terminate_job(SIGKILL);
+                ctxt.do_terminate();
                 context.setState(XbeInstdFSM::Idle);
             }
             catch (...)

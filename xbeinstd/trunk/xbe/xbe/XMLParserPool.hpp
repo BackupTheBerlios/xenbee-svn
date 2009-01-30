@@ -19,6 +19,7 @@ namespace xbe {
             ~XMLParser();
 
             xsd::cxx::xml::dom::auto_ptr<xercesc::DOMDocument> parse (std::istream& is, const std::string& id = "", bool validate = true);
+            void loadGrammar(const std::string &path);
         private:
             xercesc::MemoryManager* _memMgr;
             xercesc::XMLGrammarPool* _grammarPool;
@@ -52,7 +53,7 @@ namespace xbe {
 
             std::auto_ptr<XMLParserManager> allocate();
             void release(XMLParser* parser);
-
+            void addGrammar(const std::string &path);
         private:
             XBE_DECLARE_LOGGER();
             std::size_t _poolSize;
@@ -60,6 +61,7 @@ namespace xbe {
             boost::mutex _mtx;
             boost::condition_variable _free;
             container_type _pool;
+            std::list<std::string> _grammarPaths;
 
             XMLParser* initializeNewParser() const;
     };

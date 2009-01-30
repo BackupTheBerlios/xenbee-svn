@@ -78,8 +78,19 @@ void XMLParserPool::release(XMLParser* parser) {
     _free.notify_one();
 }
 
+void XMLParserPool::addGrammar(const std::string &path) {
+    _grammarPaths.push_back(path);
+}
+
 XMLParser* XMLParserPool::initializeNewParser() const {
-    return new XMLParser();
+    XMLParser *p(new XMLParser());
+    for (std::list<std::string>::const_iterator it(_grammarPaths.begin());
+         it != _grammarPaths.end();
+         it++) {
+        XBE_LOG_DEBUG("loading grammar from " << *it);
+        p->loadGrammar(*it);
+    }
+    return p;
 }
 
 XMLParser::XMLParser() {
@@ -99,7 +110,6 @@ XMLParser::XMLParser() {
 
     // Create a DOMBuilder.
     //
-    // TODO: make this a class-member and initialize just once
     parser = impl->createDOMBuilder(DOMImplementationLS::MODE_SYNCHRONOUS, 0, _memMgr, _grammarPool);
 
     // Discard comment nodes in the document.
@@ -126,23 +136,33 @@ XMLParser::XMLParser() {
     //
     parser->setFeature (XMLUni::fgDOMWhitespaceInElementContent, false);
 
-    parser->setFeature (XMLUni::fgXercesSchemaFullChecking, false);
+    parser->setFeature (XMLUni::fgXercesSchemaFullChecking, true);
 
     // We will release the DOM document ourselves.
     //
     parser->setFeature (XMLUni::fgXercesUserAdoptsDOMDocument, true);
 
     // Enable grammar caching and load known grammars
+    /*
     parser->loadGrammar((INSTALL_PREFIX + std::string("/etc/xbe/schema/xbe-msg.xsd")).c_str(), Grammar::SchemaGrammarType, true);
+    parser->loadGrammar((INSTALL_PREFIX + std::string("/etc/xbe/schema/jsdl.xsd")).c_str(), Grammar::SchemaGrammarType, true);
+    parser->loadGrammar((INSTALL_PREFIX + std::string("/etc/xbe/schema/jsdl-posix.xsd")).c_str(), Grammar::SchemaGrammarType, true);
     parser->loadGrammar((INSTALL_PREFIX + std::string("/etc/xbe/schema/dsig.xsd")).c_str(), Grammar::SchemaGrammarType, true);
-    parser->setFeature(XMLUni::fgXercesUseCachedGrammarInParse, true);
+    */
 
+    parser->setFeature(XMLUni::fgXercesUseCachedGrammarInParse, true);
+    parser->setFeature(XMLUni::fgXercesCacheGrammarFromParse, false);
 }
 
 XMLParser::~XMLParser() {
     delete parser;
-//   delete _grammarPool;
     delete _memMgr;
+}
+
+void XMLParser::loadGrammar(const std::string &path) {
+    using namespace xercesc;
+
+    parser->loadGrammar(path.c_str(), Grammar::SchemaGrammarType, true);
 }
 
 xsd::cxx::xml::dom::auto_ptr<xercesc::DOMDocument>

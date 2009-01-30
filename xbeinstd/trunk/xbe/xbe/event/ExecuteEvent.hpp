@@ -19,8 +19,6 @@ namespace xbe {
 
                 virtual std::string str() const {return "execute";}
 
-                void path();
-
                 void taskData(const TaskData & td) { _taskData = td; }
                 TaskData & taskData() { return _taskData; }
                 const TaskData & taskData() const { return _taskData; }

@@ -193,6 +193,24 @@ namespace xbemsg
     this->from_.set (x);
   }
 
+  const header_t::any_sequence& header_t::
+  any () const
+  {
+    return this->any_;
+  }
+
+  header_t::any_sequence& header_t::
+  any ()
+  {
+    return this->any_;
+  }
+
+  void header_t::
+  any (const any_sequence& s)
+  {
+    this->any_ = s;
+  }
+
   const header_t::conversation_id_type& header_t::
   conversation_id () const
   {
@@ -221,24 +239,6 @@ namespace xbemsg
   conversation_id_default_value ()
   {
     return conversation_id_default_value_;
-  }
-
-  const header_t::any_sequence& header_t::
-  any () const
-  {
-    return this->any_;
-  }
-
-  header_t::any_sequence& header_t::
-  any ()
-  {
-    return this->any_;
-  }
-
-  void header_t::
-  any (const any_sequence& s)
-  {
-    this->any_ = s;
   }
 
   const header_t::any_attribute_set& header_t::
@@ -716,6 +716,36 @@ namespace xbemsg
 
   // execute_t
   // 
+
+  const execute_t::task_optional& execute_t::
+  task () const
+  {
+    return this->task_;
+  }
+
+  execute_t::task_optional& execute_t::
+  task ()
+  {
+    return this->task_;
+  }
+
+  void execute_t::
+  task (const task_type& x)
+  {
+    this->task_.set (x);
+  }
+
+  void execute_t::
+  task (const task_optional& x)
+  {
+    this->task_ = x;
+  }
+
+  void execute_t::
+  task (::std::auto_ptr< task_type > x)
+  {
+    this->task_.set (x);
+  }
 
   const execute_t::any_sequence& execute_t::
   any () const
@@ -1552,14 +1582,13 @@ namespace xbemsg
 
   header_t::
   header_t (const to_type& to,
-            const from_type& from,
-            const conversation_id_type& conversation_id)
+            const from_type& from)
   : ::xml_schema::type (),
     dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     to_ (to, ::xml_schema::flags (), this),
     from_ (from, ::xml_schema::flags (), this),
-    conversation_id_ (conversation_id, ::xml_schema::flags (), this),
     any_ (this->dom_document ()),
+    conversation_id_ (conversation_id_default_value (), ::xml_schema::flags (), this),
     any_attribute_ (this->dom_document ())
   {
   }
@@ -1572,8 +1601,8 @@ namespace xbemsg
     dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     to_ (x.to_, f, this),
     from_ (x.from_, f, this),
-    conversation_id_ (x.conversation_id_, f, this),
     any_ (x.any_, this->dom_document ()),
+    conversation_id_ (x.conversation_id_, f, this),
     any_attribute_ (x.any_attribute_, this->dom_document ())
   {
   }
@@ -1586,8 +1615,8 @@ namespace xbemsg
     dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     to_ (f, this),
     from_ (f, this),
-    conversation_id_ (f, this),
     any_ (this->dom_document ()),
+    conversation_id_ (f, this),
     any_attribute_ (this->dom_document ())
   {
     if ((f & ::xml_schema::flags::base) == 0)
@@ -1635,20 +1664,6 @@ namespace xbemsg
         }
       }
 
-      // conversation-id
-      //
-      if (n.name () == "conversation-id" && n.namespace_ () == "http://www.xenbee.net/schema/2008/02/xbe-msg")
-      {
-        ::std::auto_ptr< conversation_id_type > r (
-          conversation_id_traits::create (i, f, this));
-
-        if (!conversation_id_.present ())
-        {
-          this->conversation_id (r);
-          continue;
-        }
-      }
-
       // any
       //
       if ((!n.namespace_ ().empty () && n.namespace_ () != "http://www.xenbee.net/schema/2008/02/xbe-msg"))
@@ -1678,18 +1693,20 @@ namespace xbemsg
         "http://www.xenbee.net/schema/2008/02/xbe-msg");
     }
 
-    if (!conversation_id_.present ())
-    {
-      throw ::xsd::cxx::tree::expected_element< char > (
-        "conversation-id",
-        "http://www.xenbee.net/schema/2008/02/xbe-msg");
-    }
-
     while (p.more_attributes ())
     {
       const ::xercesc::DOMAttr& i (p.next_attribute ());
       const ::xsd::cxx::xml::qualified_name< char > n (
         ::xsd::cxx::xml::dom::name< char > (i));
+
+      if (n.name () == "conversation-id" && n.namespace_ ().empty ())
+      {
+        ::std::auto_ptr< conversation_id_type > r (
+          conversation_id_traits::create (i, f, this));
+
+        this->conversation_id (r);
+        continue;
+      }
 
       // any_attribute
       //
@@ -1705,6 +1722,16 @@ namespace xbemsg
         this->any_attribute ().insert (r);
         continue;
       }
+    }
+
+    if (!conversation_id_.present ())
+    {
+      ::std::auto_ptr< conversation_id_type > r (
+        conversation_id_traits::create (
+          ::std::string (""),
+          &p.element (), f, this));
+
+      this->conversation_id (r);
     }
   }
 
@@ -2047,6 +2074,7 @@ namespace xbemsg
   execute_t ()
   : ::xml_schema::type (),
     dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    task_ (::xml_schema::flags (), this),
     any_ (this->dom_document ()),
     any_attribute_ (this->dom_document ())
   {
@@ -2058,6 +2086,7 @@ namespace xbemsg
              ::xml_schema::container* c)
   : ::xml_schema::type (x, f, c),
     dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    task_ (x.task_, f, this),
     any_ (x.any_, this->dom_document ()),
     any_attribute_ (x.any_attribute_, this->dom_document ())
   {
@@ -2069,6 +2098,7 @@ namespace xbemsg
              ::xml_schema::container* c)
   : ::xml_schema::type (e, f | ::xml_schema::flags::base, c),
     dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    task_ (f, this),
     any_ (this->dom_document ()),
     any_attribute_ (this->dom_document ())
   {
@@ -2081,13 +2111,27 @@ namespace xbemsg
 
   void execute_t::
   parse (::xsd::cxx::xml::dom::parser< char >& p,
-         ::xml_schema::flags)
+         ::xml_schema::flags f)
   {
     for (; p.more_elements (); p.next_element ())
     {
       const ::xercesc::DOMElement& i (p.cur_element ());
       const ::xsd::cxx::xml::qualified_name< char > n (
         ::xsd::cxx::xml::dom::name< char > (i));
+
+      // task
+      //
+      if (n.name () == "task" && n.namespace_ () == "http://www.xenbee.net/schema/2008/02/xbe-msg")
+      {
+        ::std::auto_ptr< task_type > r (
+          task_traits::create (i, f, this));
+
+        if (!this->task ())
+        {
+          this->task (r);
+          continue;
+        }
+      }
 
       // any
       //
@@ -3719,18 +3763,6 @@ namespace xbemsg
       s << i.from ();
     }
 
-    // conversation-id
-    //
-    {
-      ::xercesc::DOMElement& s (
-        ::xsd::cxx::xml::dom::create_element (
-          "conversation-id",
-          "http://www.xenbee.net/schema/2008/02/xbe-msg",
-          e));
-
-      s << i.conversation_id ();
-    }
-
     // any
     //
     for (header_t::any_const_iterator
@@ -3740,6 +3772,17 @@ namespace xbemsg
       e.appendChild (
         e.getOwnerDocument ()->importNode (
           const_cast< ::xercesc::DOMElement* > (&(*b)), true));
+    }
+
+    // conversation-id
+    //
+    {
+      ::xercesc::DOMAttr& a (
+        ::xsd::cxx::xml::dom::create_attribute (
+          "conversation-id",
+          e));
+
+      a << i.conversation_id ();
     }
   }
 
@@ -3966,6 +4009,19 @@ namespace xbemsg
         e.setAttributeNode (a);
       else
         e.setAttributeNodeNS (a);
+    }
+
+    // task
+    //
+    if (i.task ())
+    {
+      ::xercesc::DOMElement& s (
+        ::xsd::cxx::xml::dom::create_element (
+          "task",
+          "http://www.xenbee.net/schema/2008/02/xbe-msg",
+          e));
+
+      s << *i.task ();
     }
 
     // any

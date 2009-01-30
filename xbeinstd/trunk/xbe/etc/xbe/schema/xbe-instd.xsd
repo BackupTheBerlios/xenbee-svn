@@ -6,6 +6,7 @@
     targetNamespace="http://www.xenbee.net/schema/2008/02/xbe-instd"
     elementFormDefault="qualified">
 
+    <xs:include schemaLocation="http://schemas.ggf.org/jsdl/2005/11/jsdl"/>
 
     <!-- Messages from the XbeDaemon to the XbeInstDaemon -->
     <xs:complexType name="execute_t">

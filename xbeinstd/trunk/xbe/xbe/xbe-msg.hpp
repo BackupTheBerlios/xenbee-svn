@@ -277,6 +277,10 @@ namespace xbemsg
 
 #include <xsd/cxx/tree/containers-wildcard.hxx>
 
+#include "jsdl.hpp"
+
+#include "jsdl-posix.hpp"
+
 namespace xbemsg
 {
   class message_t: public ::xml_schema::type
@@ -427,6 +431,21 @@ namespace xbemsg
     void
     from (::std::auto_ptr< from_type > p);
 
+    // any
+    // 
+    typedef ::xsd::cxx::tree::element_sequence any_sequence;
+    typedef any_sequence::iterator any_iterator;
+    typedef any_sequence::const_iterator any_const_iterator;
+
+    const any_sequence&
+    any () const;
+
+    any_sequence&
+    any ();
+
+    void
+    any (const any_sequence& s);
+
     // conversation-id
     // 
     typedef ::xml_schema::string conversation_id_type;
@@ -446,21 +465,6 @@ namespace xbemsg
 
     static const conversation_id_type&
     conversation_id_default_value ();
-
-    // any
-    // 
-    typedef ::xsd::cxx::tree::element_sequence any_sequence;
-    typedef any_sequence::iterator any_iterator;
-    typedef any_sequence::const_iterator any_const_iterator;
-
-    const any_sequence&
-    any () const;
-
-    any_sequence&
-    any ();
-
-    void
-    any (const any_sequence& s);
 
     // any_attribute
     // 
@@ -488,8 +492,7 @@ namespace xbemsg
     // Constructors.
     //
     header_t (const to_type&,
-              const from_type&,
-              const conversation_id_type&);
+              const from_type&);
 
     header_t (const ::xercesc::DOMElement& e,
               ::xml_schema::flags f = 0,
@@ -518,9 +521,9 @@ namespace xbemsg
 
     ::xsd::cxx::tree::one< to_type > to_;
     ::xsd::cxx::tree::one< from_type > from_;
+    any_sequence any_;
     ::xsd::cxx::tree::one< conversation_id_type > conversation_id_;
     static const conversation_id_type conversation_id_default_value_;
-    any_sequence any_;
     any_attribute_set any_attribute_;
   };
 
@@ -887,6 +890,27 @@ namespace xbemsg
   class execute_t: public ::xml_schema::type
   {
     public:
+    // task
+    // 
+    typedef ::jsdl::JobDescription_Type task_type;
+    typedef ::xsd::cxx::tree::optional< task_type > task_optional;
+    typedef ::xsd::cxx::tree::traits< task_type, char > task_traits;
+
+    const task_optional&
+    task () const;
+
+    task_optional&
+    task ();
+
+    void
+    task (const task_type& x);
+
+    void
+    task (const task_optional& x);
+
+    void
+    task (::std::auto_ptr< task_type > p);
+
     // any
     // 
     typedef ::xsd::cxx::tree::element_sequence any_sequence;
@@ -954,6 +978,7 @@ namespace xbemsg
     protected:
     ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
 
+    task_optional task_;
     any_sequence any_;
     any_attribute_set any_attribute_;
   };

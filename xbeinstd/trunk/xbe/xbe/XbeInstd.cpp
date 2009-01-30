@@ -6,6 +6,7 @@
 #include "xbe/event/StatusEvent.hpp"
 #include "xbe/event/TerminateAckEvent.hpp"
 #include "xbe/event/TaskFinishedEvent.hpp"
+#include "xbe/event/ExecuteAckEvent.hpp"
 
 using namespace xbe;
 
@@ -20,7 +21,8 @@ XbeInstd::XbeInstd(const std::string &name, const std::string &nextStage,
       _lifeSignTimer(name, lifeSignInterval, "lifeSign"),
       _to(to), _from(from),
       _maxRetries(maxRetries),
-      _retryCounter(0)
+      _retryCounter(0),
+      _mainTask((xbe::Task*)0)
 {
 }
 
@@ -54,7 +56,6 @@ void XbeInstd::perform(const seda::IEvent::Ptr &e) {
 
 void XbeInstd::do_execute(xbe::event::ExecuteEvent& e) {
     XBE_LOG_DEBUG("executing task");
-    assert(_mainTask.get() == NULL);
     _mainTask = std::tr1::shared_ptr<xbe::Task>(new xbe::Task(e.taskData()));
     _mainTask->setTaskListener(this);
     _mainTask->run();
@@ -80,18 +81,29 @@ void XbeInstd::do_shutdown(xbe::event::ShutdownEvent& shutdownEvent) {
 
 void XbeInstd::do_send_status(xbe::event::StatusReqEvent&) {
     XBE_LOG_DEBUG("sending status");
-    seda::IEvent::Ptr e(new xbe::event::StatusEvent(_to, _from, "1"));
+    std::tr1::shared_ptr<xbe::event::StatusEvent> e(new xbe::event::StatusEvent(_to, _from, "1"));
+    // TODO: fill in status information
+    if (_mainTask && _mainTask->running()) {
+        e->state("Busy");
+        // TODO: if the task description contained a user-defined status query
+        // command, call it and transmit the output
+    } else {
+        e->state("Idle");
+    }
+    ForwardStrategy::perform(e);
+}
+void XbeInstd::do_send_execute_ack(xbe::event::ExecuteEvent&) {
+    XBE_LOG_DEBUG("sending execute-ack");
+    seda::IEvent::Ptr e(new xbe::event::ExecuteAckEvent(_to, _from, "1"));
     ForwardStrategy::perform(e);
 }
 
 void XbeInstd::do_finished_ack(xbe::event::FinishedAckEvent&) {
     XBE_LOG_DEBUG("got finished-ack");
-    _mainTask.reset();
 }
 
 void XbeInstd::do_failed_ack(xbe::event::FailedAckEvent&) {
     XBE_LOG_DEBUG("got failed-ack");
-    _mainTask.reset();
 }
 
 /* regular events */
@@ -100,7 +112,7 @@ void XbeInstd::do_send_lifesign() {
     ForwardStrategy::perform(seda::IEvent::Ptr(new xbe::event::LifeSignEvent(_to, _from, "1")));
 }
 
-/* events coming from the executed job */
+/* events comming from the executed job */
 void XbeInstd::do_task_finished() {
     XBE_LOG_DEBUG("sending finished event");
     seda::IEvent::Ptr e(new xbe::event::FinishedEvent(_to, _from, "1"));
@@ -152,7 +164,7 @@ void XbeInstd::onStageStart(const std::string &stageName) {
 
 void XbeInstd::onStageStop(const std::string &) {
     boost::unique_lock<boost::recursive_mutex> lock(_mtx);
-    XBE_LOG_DEBUG("stage stopped");
+    XBE_LOG_DEBUG("stage stopping");
     do_stop_lifesign();
     do_stop_timer();
 }

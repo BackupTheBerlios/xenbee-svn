@@ -5,12 +5,10 @@
 
 #include <xbe/common.hpp>
 #include <xbe/XbeException.hpp>
+#include <xbe/XMLParserPool.hpp>
 
 #include <xsd/cxx/xml/dom/auto-ptr.hxx>
 #include <xbe/xbe-msg.hpp>
-
-#include <xercesc/framework/MemoryManager.hpp>
-#include <xercesc/framework/XMLGrammarPool.hpp>
 
 namespace xbe {
     class XbeLibUtils {
@@ -27,6 +25,7 @@ namespace xbe {
         static xsd::cxx::xml::dom::auto_ptr<xercesc::DOMDocument> parse(std::istream& is, const std::string& id = "", bool validate=true);
     private:
         XbeLibUtils() {}
+        static XMLParserPool _parserPool;
     };
 }
 

@@ -96,6 +96,8 @@ namespace xbe
         {};
 
         void Execute(XbeInstdContext& context, xbe::event::ExecuteEvent& msg);
+        void Finished(XbeInstdContext& context);
+        void FinishedAck(XbeInstdContext& context, xbe::event::FinishedAckEvent& msg);
         void Shutdown(XbeInstdContext& context, xbe::event::ShutdownEvent& msg);
         void Terminate(XbeInstdContext& context, xbe::event::TerminateEvent& msg);
     };
@@ -108,6 +110,7 @@ namespace xbe
         : XbeInstdFSM_Default(name, stateId)
         {};
 
+        void Execute(XbeInstdContext& context, xbe::event::ExecuteEvent& msg);
         void Finished(XbeInstdContext& context);
         void Shutdown(XbeInstdContext& context, xbe::event::ShutdownEvent& msg);
         void Terminate(XbeInstdContext& context, xbe::event::TerminateEvent& msg);

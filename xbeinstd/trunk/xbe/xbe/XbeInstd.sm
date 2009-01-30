@@ -37,6 +37,7 @@ Idle
     Execute(msg: xbe::event::ExecuteEvent&)
         Busy
         {
+            do_send_execute_ack(msg);
             do_execute(msg);
         }
 
@@ -51,10 +52,23 @@ Idle
         {
             do_terminate();
         }
-}
+
+    FinishedAck(msg: xbe::event::FinishedAckEvent&)
+        nil
+        { }
+    Finished
+        nil
+        { }
+ }
 
 Busy
 {
+    Execute(msg: xbe::event::ExecuteEvent&)
+        nil
+        {
+            do_send_execute_ack(msg);
+        }
+ 
     Finished
         WaitForFinishedAck
         {
@@ -78,7 +92,7 @@ Busy
     Shutdown(msg: xbe::event::ShutdownEvent&)
         Shutdown
         {
-            do_terminate_job(SIGTERM);
+            do_terminate_job(SIGKILL);
             do_shutdown(msg);
         }
 }
@@ -103,6 +117,7 @@ Exit  { do_stop_timer();  }
         Idle
         {
             do_terminate_job(SIGKILL);
+            do_terminate();
         }
 
     Terminate

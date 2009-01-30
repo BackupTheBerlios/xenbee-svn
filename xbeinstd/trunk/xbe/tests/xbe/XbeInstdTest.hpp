@@ -16,6 +16,7 @@ namespace xbe {
       CPPUNIT_TEST( testShutdown1 );
       CPPUNIT_TEST( testShutdown2 );
       CPPUNIT_TEST( testStatus1 );
+      CPPUNIT_TEST( testStatus2 );
       CPPUNIT_TEST( testTerminate1 );
       CPPUNIT_TEST( testTerminate2 );
       CPPUNIT_TEST( testExecute1 );
@@ -32,6 +33,7 @@ namespace xbe {
       void testShutdown1();
       void testShutdown2();
       void testStatus1();
+      void testStatus2();
       void testTerminate1();
       void testTerminate2();
       void testExecute1();

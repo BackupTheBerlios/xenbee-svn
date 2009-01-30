@@ -3,8 +3,14 @@
     xmlns:xs="http://www.w3.org/2001/XMLSchema"
     xmlns="http://www.xenbee.net/schema/2008/02/xbe-msg"
     xmlns:xbemsg="http://www.xenbee.net/schema/2008/02/xbe-msg"
+    xmlns:jsdl="http://schemas.ggf.org/jsdl/2005/11/jsdl"
+    xmlns:jsdlPosix="http://schemas.ggf.org/jsdl/2005/11/jsdl-posix"
     targetNamespace="http://www.xenbee.net/schema/2008/02/xbe-msg"
     elementFormDefault="qualified">
+
+    <xs:import namespace="http://schemas.ggf.org/jsdl/2005/11/jsdl" schemaLocation="http://schemas.ggf.org/jsdl/2005/11/jsdl"/>
+    <xs:import namespace="http://schemas.ggf.org/jsdl/2005/11/jsdl-posix" schemaLocation="http://schemas.ggf.org/jsdl/2005/11/jsdl-posix"/>
+
 
     <!-- Message and content types -->
     <xs:complexType name="message_t">
@@ -20,9 +26,9 @@
         <xs:sequence>
             <xs:element name="to"   type="xs:string"/>
             <xs:element name="from" type="xs:string"/>
-            <xs:element name="conversation-id" type="xs:string" default=""/>
             <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
         </xs:sequence>
+        <xs:attribute name="conversation-id" type="xs:string" default="" use="optional"/>
         <xs:anyAttribute namespace="##other" processContents="lax"/>
     </xs:complexType>
 
@@ -51,8 +57,8 @@
     <!-- Messages from the XbeDaemon to the XbeInstDaemon -->
     <xs:complexType name="execute_t">
         <xs:sequence>
-            <xs:any namespace="##other" processContents="lax" minOccurs="0"
-                maxOccurs="unbounded"/>
+            <xs:element name="task" type="jsdl:JobDescription_Type" minOccurs="0"/>
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
         </xs:sequence>
         <xs:anyAttribute namespace="##other" processContents="lax"/>
     </xs:complexType>

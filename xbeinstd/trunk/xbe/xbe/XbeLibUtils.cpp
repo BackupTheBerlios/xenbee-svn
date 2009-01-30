@@ -48,6 +48,8 @@ XALAN_CPP_NAMESPACE_USE
 XERCES_CPP_NAMESPACE_USE
 #endif
 
+xbe::XMLParserPool XbeLibUtils::_parserPool(10);
+
 void XbeLibUtils::initialise() throw (xbe::XbeException) {
     XMLPlatformUtils::Initialize();
 #ifndef XSEC_NO_XALAN
@@ -62,14 +64,15 @@ void XbeLibUtils::initialise() throw (xbe::XbeException) {
     xml_schema::namespace_infomap& map = namespace_infomap();
     map["xbemsg"].name = "http://www.xenbee.net/schema/2008/02/xbe-msg";
     //map["xbetest"].name = "http://www.xenbee.net/schema/2008/02/xbetest";
-    //map["jsdl"].name = "http://schemas.ggf.org/jsdl/2005/11/jsdl";
-    //map["jsdl-posix"].name = "http://schemas.ggf.org/jsdl/2005/11/jsdl-posix";
+    map["jsdl"].name = "http://schemas.ggf.org/jsdl/2005/11/jsdl";
+    map["jsdl-posix"].name = "http://schemas.ggf.org/jsdl/2005/11/jsdl-posix";
     //map["dsig"].name = "http://www.w3.org/2000/09/xmldsig#";
     //map["dsig"].schema = "dsig.xsd";
     //map["xenc"].name = "http://www.w3.org/2001/04/xmlenc#";
 
     // TODO: fix the hard-coded stuff here!!!!
-    std::string schema_uri(std::string("file://") + std::string(INSTALL_PREFIX) + std::string("/etc/xbe/schema"));
+    std::string schema_path(std::string(INSTALL_PREFIX) + std::string("/etc/xbe/schema"));
+    std::string schema_uri(std::string("file://") + schema_path);
 
     XBE_LOG_DEBUG("using schema definitions from: " << schema_uri);
 
@@ -81,6 +84,13 @@ void XbeLibUtils::initialise() throw (xbe::XbeException) {
     props.schema_location("http://www.w3.org/2000/09/xmldsig#",             schema_uri + "/dsig.xsd");
     props.schema_location("http://www.w3.org/2001/04/xmlenc#",              schema_uri + "/xenc-schema.xsd");
 
+    // allocate and automatically release one parser
+    _parserPool.addGrammar(schema_path + "/jsdl-schema.xsd");
+    _parserPool.addGrammar(schema_path + "/jsdl-posix-schema.xsd");
+    _parserPool.addGrammar(schema_path + "/dsig.xsd");
+    _parserPool.addGrammar(schema_path + "/xenc-schema.xsd");
+    _parserPool.addGrammar(schema_path + "/xbe-msg.xsd");
+    _parserPool.allocate();
 }
 
 void XbeLibUtils::terminate() throw () {
@@ -163,6 +173,5 @@ void XbeLibUtils::serialize(std::ostream& os,
 //
 xsd::cxx::xml::dom::auto_ptr<xercesc::DOMDocument>
 XbeLibUtils::parse (std::istream& is, const std::string& id, bool validate) {
-    static XMLParserPool xmlParserPool;
-    return xmlParserPool.allocate()->parse(is,id,validate);
+    return _parserPool.allocate()->parse(is,id,validate);
 }
