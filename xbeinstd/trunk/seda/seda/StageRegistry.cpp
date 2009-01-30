@@ -35,6 +35,20 @@ const Stage::Ptr StageRegistry::lookup(const std::string& name) const throw (Sta
     }        
 }
 
+void StageRegistry::startAll() {
+    std::map<std::string, Stage::Ptr>::iterator it(_stages.begin());
+    while (it != _stages.end()) {
+        it->second->start(); it++;
+    }
+}
+
+void StageRegistry::stopAll() {
+    std::map<std::string, Stage::Ptr>::iterator it(_stages.begin());
+    while (it != _stages.end()) {
+        it->second->stop(); it++;
+    }
+}
+
 void StageRegistry::clear() {
     SEDA_LOG_DEBUG("removing all registered stages");
     _stages.clear();

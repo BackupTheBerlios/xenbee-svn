@@ -43,6 +43,16 @@ namespace seda {
         const Stage::Ptr lookup(const std::string& name) const throw(StageNotFound);
 
         /**
+         * Collectively start all stages.
+         */
+        void startAll();
+
+        /**
+         * Collectively stop all stages.
+         */
+        void stopAll();
+
+        /**
          * Remove all registered stages.
          */
         void clear();
