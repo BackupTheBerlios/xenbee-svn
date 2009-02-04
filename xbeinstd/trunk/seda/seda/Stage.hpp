@@ -34,24 +34,25 @@ namespace seda {
 
         virtual void start();
         virtual void stop();
+
+        virtual bool empty() const { return queue()->empty(); }
+        virtual std::size_t size() const { return queue()->size(); }
         virtual void waitUntilEmpty() const { queue()->waitUntilEmpty(); }
         virtual void waitUntilEmpty(unsigned long millis) { queue()->waitUntilEmpty(millis); }
     
-        virtual void waitUntilNoneEmpty() const { queue()->waitUntilNotEmpty(); }
-        virtual void waitUntilNoneEmpty(unsigned long millis) { queue()->waitUntilNotEmpty(millis); }
+        virtual void waitUntilNonEmpty() const { queue()->waitUntilNotEmpty(); }
+        virtual void waitUntilNonEmpty(unsigned long millis) { queue()->waitUntilNotEmpty(millis); }
 
         virtual const std::string& name() const { return _name; }
     
-        virtual IEventQueue::Ptr queue() { return _queue; }
-        virtual const IEventQueue::Ptr queue() const { return _queue; }
         virtual Strategy::Ptr strategy() { return _strategy; }
         virtual const Strategy::Ptr strategy() const { return _strategy; }
 
+        static void send(const std::string& stageName, const IEvent::Ptr& e) throw (QueueFull, StageNotFound);
+        
         virtual void send(const IEvent::Ptr& e) throw (QueueFull) {
             queue()->push(e);
         }
-        static void send(const std::string& stageName, const IEvent::Ptr& e) throw (QueueFull, StageNotFound);
-        
         virtual IEvent::Ptr recv(unsigned long millis) throw (QueueEmpty) {
             return queue()->pop(millis);
         }
@@ -61,6 +62,9 @@ namespace seda {
         unsigned long timeout() const { return _timeout; }
         void timeout(unsigned long millis) { _timeout = millis; }
     private:
+        IEventQueue::Ptr queue() { return _queue; }
+        const IEventQueue::Ptr queue() const { return _queue; }
+
         SEDA_DECLARE_LOGGER();
         IEventQueue::Ptr _queue;
         Strategy::Ptr _strategy;

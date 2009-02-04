@@ -10,7 +10,7 @@ namespace seda {
 
         while (!stopped()) {
             try {
-                IEvent::Ptr e = _stage->queue()->pop(_stage->timeout());
+                IEvent::Ptr e = _stage->recv(_stage->timeout());
                 _busy = true; SEDA_LOG_DEBUG("got work: " << e->str());
 
                 try {
