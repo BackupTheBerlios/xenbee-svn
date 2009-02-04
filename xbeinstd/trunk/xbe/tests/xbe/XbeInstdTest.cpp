@@ -14,6 +14,7 @@
 #include <seda/IEvent.hpp>
 #include <seda/EventCountStrategy.hpp>
 #include <seda/AccumulateStrategy.hpp>
+#include <seda/StageFactory.hpp>
 #include <seda/StageRegistry.hpp>
 #include <seda/DiscardStrategy.hpp>
 #include <seda/ForwardStrategy.hpp>
@@ -33,15 +34,15 @@ XbeInstdTest::XbeInstdTest()
 
 void
 XbeInstdTest::setUp() {
+    seda::StageFactory::Ptr factory(new seda::StageFactory());
+
     xbe::XbeInstd::Ptr xbeinstd(new XbeInstd("xbeinstd", "discard", "to.foo", "from.bar"));
-    _xbeInstdStage = seda::Stage::Ptr(new seda::Stage("xbeinstd", xbeinstd));
-    seda::StageRegistry::instance().insert(_xbeInstdStage);
+    _xbeInstdStage = factory->createStage("xbeinstd", xbeinstd);
 
     seda::Strategy::Ptr discard(new seda::DiscardStrategy());
     _ecs = seda::EventCountStrategy::Ptr(new seda::EventCountStrategy(discard));
     _acc = seda::AccumulateStrategy::Ptr(new seda::AccumulateStrategy(_ecs));
-    _discardStage = seda::Stage::Ptr(new seda::Stage("discard", _acc));
-    seda::StageRegistry::instance().insert(_discardStage);
+    _discardStage = factory->createStage("discard", _acc);
 }
 
 void

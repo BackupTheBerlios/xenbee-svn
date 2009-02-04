@@ -56,28 +56,11 @@ MessageTranslatorTest::testXMLExecute() {
     XBE_LOG_DEBUG("***** Running testXMLExecute");
 
     try {
-        /*
-        std::auto_ptr<xbe::XMLParserPool> parserPool(new xbe::XMLParserPool());
-        std::auto_ptr<xbe::XMLParserManager> parser(parserPool->allocate());
-        std::auto_ptr<xbemsg::message_t> msg;
-        for (int i = 0; i < 5; i++) {
-            XBE_LOG_DEBUG("parsing execute-msg1.xml");
-            std::ifstream ifs("resources/execute-msg1.xml");
-            msg = xbemsg::message(*parser->parse(ifs, "resources/execute-msg1.xml"), xml_schema::flags::dont_initialize | xml_schema::flags::keep_dom, props);
-            XBE_LOG_DEBUG("done");
-        }
-        */
-
         XBE_LOG_DEBUG("parsing xml message");
         std::ifstream ifs("resources/execute-msg1.xml");
         std::auto_ptr<xbemsg::message_t> msg = xbemsg::message(*XbeLibUtils::parse(ifs, "resources/execute-msg1.xml", true),
                                                                xml_schema::flags::dont_initialize | xml_schema::flags::keep_dom,
                                                                XbeLibUtils::schema_properties());
-        /*
-        std::ifstream ifs("resources/execute-msg1.xml");
-        std::auto_ptr<xbemsg::message_t> msg = xbemsg::message(ifs, xml_schema::flags::dont_initialize | xml_schema::flags::keep_dom,
-                                                               XbeLibUtils::schema_properties());
-        */
 
         seda::Strategy::Ptr discard(new seda::DiscardStrategy());
         seda::AccumulateStrategy::Ptr acc(new seda::AccumulateStrategy(discard));
