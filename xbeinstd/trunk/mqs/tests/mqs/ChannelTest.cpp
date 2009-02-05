@@ -179,6 +179,36 @@ void ChannelTest::testConnectionLoss() {
     }
 }
 
+void ChannelTest::testMultipleSender() {
+    MQS_LOG_INFO("*** executing test testMultipleSender");
+    mqs::Channel::Ptr serverChannel(new mqs::Channel(mqs::BrokerURI(TEST_BROKER_URI),  "tests.mqs.server"));
+    mqs::Channel::Ptr clientAChannel(new mqs::Channel(mqs::BrokerURI(TEST_BROKER_URI), "tests.mqs.client.a"));
+    mqs::Channel::Ptr clientBChannel(new mqs::Channel(mqs::BrokerURI(TEST_BROKER_URI), "tests.mqs.client.b"));
+
+    /*
+    serverChannel->setExceptionListener(this);
+    clientAChannel->setExceptionListener(this);
+    clientBChannel->setExceptionListener(this);
+    */
+
+    serverChannel->start();
+    clientAChannel->start();
+    clientBChannel->start();
+
+    // send a message
+    std::tr1::shared_ptr<cms::TextMessage> msgA(serverChannel->createTextMessage("hello A"));
+    std::tr1::shared_ptr<cms::TextMessage> msgB(serverChannel->createTextMessage("hello B"));
+
+    serverChannel->send(msgA.get(), "tests.mqs.client.a", "tests.mqs.server");
+    serverChannel->send(msgB.get(), "tests.mqs.client.b", "tests.mqs.server");
+
+    std::tr1::shared_ptr<cms::TextMessage> msgARecv(clientAChannel->recv<cms::TextMessage>(5000));
+    std::tr1::shared_ptr<cms::TextMessage> msgBRecv(clientBChannel->recv<cms::TextMessage>(5000));
+
+    CPPUNIT_ASSERT(msgARecv != 0);
+    CPPUNIT_ASSERT(msgBRecv != 0);
+}
+
 void ChannelTest::onException(const cms::CMSException &e) {
     MQS_LOG_WARN("think about a way how to check this automatically" << e.getMessage());
     _exceptionArrived = true;

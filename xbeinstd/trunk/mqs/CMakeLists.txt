@@ -27,7 +27,7 @@ OPTION(PERFORM_CHANNEL_IS_STARTED_CHECK
  "Perform sanity checks when calling mqs::Channel methods"
  YES)
 
-set(TEST_BROKER_URI "tcp://localhost:61616" CACHE STRING "The ActiveMQ broker to use for unit tests")
+set(TEST_BROKER_URI "tcp://localhost:61613?wireFormat=stomp" CACHE STRING "The ActiveMQ broker to use for unit tests")
 
 cmake_minimum_required(VERSION "2.6" FATAL_ERROR)
 # Where are the additional libraries installed? Note: provide includes
