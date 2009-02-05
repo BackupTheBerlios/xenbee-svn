@@ -19,6 +19,7 @@ namespace seda {
 
             void perform(const IEvent::Ptr& e) {
                 inc();
+                SEDA_LOG_DEBUG("event counted");
                 StrategyDecorator::perform(e);
             }
 
