@@ -15,10 +15,12 @@
 #include <cms/TextMessage.h>
 #include <cms/BytesMessage.h>
 #include <cms/MessageListener.h>
+
 #include <mqs/Destination.hpp>
 #include <mqs/BrokerURI.hpp>
 #include <mqs/MQSException.hpp>
 #include <mqs/Observable.hpp>
+#include <mqs/MessageSequenceGenerator.hpp>
 
 // forward declarations
 namespace cms {
@@ -255,6 +257,7 @@ namespace mqs {
         mqs::BrokerURI _broker;
         mqs::Destination _inQueue;
         mqs::Destination _outQueue;
+        mqs::MessageSequenceGenerator::Ptr _msgSeqGen;
     
         std::tr1::shared_ptr<cms::Connection> _connection;
         std::tr1::shared_ptr<cms::Session> _session;

@@ -32,6 +32,7 @@ Channel::Channel(const mqs::BrokerURI &broker, const mqs::Destination &inout)
       _broker(broker),
       _inQueue(inout),
       _outQueue(inout),
+      _msgSeqGen(mqs::MessageSequenceGenerator::newInstance()),
       _messageListener(0),
       _exceptionListener(0),
       _started(false),
@@ -46,6 +47,7 @@ Channel::Channel(const mqs::BrokerURI &broker, const mqs::Destination &in, const
       _broker(broker),
       _inQueue(in),
       _outQueue(out),
+      _msgSeqGen(mqs::MessageSequenceGenerator::newInstance()),
       _messageListener(0),
       _started(false),
       _blocked_receivers(0),
@@ -94,7 +96,7 @@ Channel::start(bool doFlush) {
     }
     _producer.reset(_session->createProducer(_producer_destination.get()));
   
-    std::string deliveryMode = _outQueue.getStringProperty("deliveryMode", "persistent");
+    std::string deliveryMode = _outQueue.getStringProperty("deliveryMode", "non-persistent");
     if (deliveryMode == "persistent") {
         _producer->setDeliveryMode(DeliveryMode::PERSISTENT);
     } else if (deliveryMode == "non-persistent") {
@@ -102,7 +104,8 @@ Channel::start(bool doFlush) {
     } else {
         throw MQSException("invalid delivery mode: "+deliveryMode);
     }
-    _producer->setDisableMessageID(_outQueue.getBooleanProperty("disableMessageID", false));
+//    _producer->setDisableMessageID(_outQueue.getBooleanProperty("disableMessageID", false));
+    _producer->setDisableMessageID(false);
     _producer->setDisableMessageTimeStamp(_outQueue.getBooleanProperty("disableMessageTimeStamp", false));
     _producer->setPriority(_outQueue.getIntProperty("priority", 4));
     _producer->setTimeToLive(_outQueue.getLongLongProperty("timeToLive", 0));
@@ -250,8 +253,10 @@ Channel::send(Message *msg) {
 std::string
 Channel::send(Message *msg, const cms::Destination *d, int deliveryMode, int priority, long long timeToLive) {
     ENSURE_STARTED();
-    
+
+    msg->setCMSMessageID(_msgSeqGen->next());
     _producer->send(d, msg, deliveryMode, priority, timeToLive);
+
     MQS_LOG_DEBUG("sent message"
                   << " id:"   << msg->getCMSMessageID()
                   << " mode:" << ((deliveryMode == cms::DeliveryMode::PERSISTENT) ? "persistent" : "non-persistent")

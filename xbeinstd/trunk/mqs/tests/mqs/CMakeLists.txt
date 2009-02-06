@@ -1,8 +1,9 @@
 # -*- mode: cmake; -*-
 
 set(mqstest_src main.cpp
-  ChannelTest.hpp ChannelTest.cpp
+  MessageSequenceGeneratorTest.hpp MessageSequenceGeneratorTest.cpp 
   DestinationTest.hpp DestinationTest.cpp
+  ChannelTest.hpp ChannelTest.cpp
 )
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
