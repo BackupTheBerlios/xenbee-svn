@@ -24,10 +24,9 @@ using namespace xbe;
 using namespace xbe::event;
 namespace fs = boost::filesystem;
 
-MessageTranslatorStrategy::MessageTranslatorStrategy(const std::string& name,
-        const seda::Strategy::Ptr& decorated)
-: seda::StrategyDecorator(name, decorated),
-    XBE_INIT_LOGGER(name)
+MessageTranslatorStrategy::MessageTranslatorStrategy(const seda::Strategy::Ptr& decorated)
+: seda::StrategyDecorator(decorated->name() + ".translate", decorated),
+    XBE_INIT_LOGGER(decorated->name() + ".translate")
 {} 
 
 void MessageTranslatorStrategy::perform(const seda::IEvent::Ptr& e) {

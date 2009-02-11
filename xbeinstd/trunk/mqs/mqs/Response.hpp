@@ -4,7 +4,7 @@
 #include <cassert>
 #include <boost/thread.hpp>
 
-#include <cms/Message.h>
+#include <mqs/Message.hpp>
 
 namespace mqs {
     /**
@@ -23,7 +23,7 @@ namespace mqs {
     class Response {
         public:
             Response(const std::string& id)
-                : response(NULL), correlationID(id) {}
+                : response((mqs::Message*)NULL), correlationID(id) {}
 
             void await() {
                 boost::unique_lock<boost::mutex> lock(_mtx);
@@ -41,19 +41,19 @@ namespace mqs {
                 }
             }
 
-            void setResponse(cms::Message* r) {
+            void setResponse(mqs::Message::Ptr r) {
                 boost::unique_lock<boost::mutex> lock(_mtx);
-                assert(response == NULL);
+                assert(response.get() == NULL);
                 response = r;
                 // wake up the request-sender
                 _cond.notify_one();
             }
 
             const std::string& getCorrelationID() const { return correlationID; }
-            cms::Message* getResponse() { return response; }
-            bool timedout() const { return response == NULL; }
+            mqs::Message::Ptr getResponse() { return response; }
+            bool timedout() const { return response.get() == NULL; }
         private:
-            cms::Message* response;
+            mqs::Message::Ptr response;
             const std::string correlationID;
             boost::mutex _mtx;
             boost::condition_variable _cond;

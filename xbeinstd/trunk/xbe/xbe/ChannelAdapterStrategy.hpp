@@ -1,7 +1,7 @@
 #ifndef XBE_CHANNEL_ADAPTER_STRATEGY_HPP
 #define XBE_CHANNEL_ADAPTER_STRATEGY_HPP 1
 
-#include <cms/MessageListener.h>
+#include <mqs/MessageListener.hpp>
 #include <cms/ExceptionListener.h>
 
 #include <mqs/Channel.hpp>
@@ -15,7 +15,7 @@
 
 namespace xbe {
     class ChannelAdapterStrategy : public seda::StrategyDecorator,
-                                   public cms::MessageListener,
+                                   public mqs::MessageListener,
                                    public cms::ExceptionListener {
 
     public:
@@ -42,10 +42,13 @@ namespace xbe {
          */
         virtual void perform(const seda::IEvent::Ptr&);
 
+        void onStageStart(const std::string &name);
+        void onStageStop(const std::string &name);
+
         /***********************************
          *  MessageListener interface
          ***********************************/
-        void onMessage(const cms::Message* m);
+        void onMessage(const mqs::Message::Ptr &m);
 
         /***********************************
          *  ExceptionListener interface

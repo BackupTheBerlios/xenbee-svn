@@ -23,7 +23,7 @@ OPTION(ENABLE_UNIT_TESTS
   "Build and perform unit tests"
   ON)
 
-set(TEST_BROKER_URI "tcp://localhost:61616" CACHE STRING "The ActiveMQ broker to use for unit tests")
+set(TEST_BROKER_URI "tcp://localhost:61613?wireFormat=stomp&username=guest&password=guest" CACHE STRING "The ActiveMQ broker to use for unit tests")
 
 cmake_minimum_required(VERSION "2.6" FATAL_ERROR)
 # Where are the additional libraries installed? Note: provide includes
@@ -99,7 +99,7 @@ set(Boost_ADDITIONAL_VERSIONS "1.36.0" "1.36")
 set(Boost_FIND_QUIETLY false)
 set(Boost_USE_STATIC_LIBS ON)
 include(FindBoost)
-find_package(Boost 1.36 REQUIRED COMPONENTS thread system filesystem)
+find_package(Boost 1.36 REQUIRED COMPONENTS thread system filesystem program_options)
 message(STATUS "Boost: -I${Boost_INCLUDE_DIRS} -L${Boost_LIBRARY_DIRS} -l${Boost_LIBRARIES}")
 
 # Deal with logging
@@ -159,6 +159,7 @@ endif(ENABLE_LOGGING)
 
 # Reflect the package structure
 add_subdirectory(xbe)
+add_subdirectory(xbeinstd)
 
 if (ENABLE_UNIT_TESTS)
   enable_testing()

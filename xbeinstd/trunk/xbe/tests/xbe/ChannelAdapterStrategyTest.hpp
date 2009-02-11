@@ -9,7 +9,6 @@ namespace xbe {
     class ChannelAdapterStrategyTest : public CppUnit::TestFixture {
       CPPUNIT_TEST_SUITE( xbe::tests::ChannelAdapterStrategyTest );
       CPPUNIT_TEST( testSendViaChannelText );
-      CPPUNIT_TEST( testSendViaChannelNoneText );
       CPPUNIT_TEST( testSendViaStageMessage );
       CPPUNIT_TEST( testSendViaStageNoneMessage );
       CPPUNIT_TEST_SUITE_END();
@@ -21,7 +20,6 @@ namespace xbe {
 
     protected:
       void testSendViaChannelText();
-      void testSendViaChannelNoneText();
 
       void testSendViaStageMessage();
       void testSendViaStageNoneMessage();

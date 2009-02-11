@@ -450,6 +450,11 @@ PingPongTest::testPingPongComplete() {
     /* Channel stage */
     mqs::Channel::Ptr pingChannel(new mqs::Channel(mqs::BrokerURI(TEST_BROKER_URI),
                 mqs::Destination("tests.xbe.pingpong.ping")));
+    /*
+    pingChannel->username("guest");
+    pingChannel->password("guest");
+    */
+
     seda::Strategy::Ptr pingNet(new ::xbe::ChannelAdapterStrategy("tests.xbe.ping.channeladapter",
                 seda::Strategy::Ptr(new seda::ForwardStrategy("tests.xbe.ping.stage.xml-deserialize")),
                 pingChannel));

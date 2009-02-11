@@ -5,7 +5,6 @@ list(APPEND srcs "${CMAKE_CURRENT_SOURCE_DIR}/PingPong_sm.cpp")
 list(APPEND hdrs "${CMAKE_CURRENT_SOURCE_DIR}/PingPong_sm.h")
 
 set(channeltest_src main.cpp
-   ChannelEventQueueAdapterTest.hpp ChannelEventQueueAdapterTest.cpp
    ChannelAdapterStrategyTest.hpp ChannelAdapterStrategyTest.cpp
 )
 

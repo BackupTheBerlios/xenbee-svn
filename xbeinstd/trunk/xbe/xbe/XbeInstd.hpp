@@ -3,7 +3,7 @@
 
 #include <boost/thread.hpp>
 
-#include <seda/ForwardStrategy.hpp>
+#include <seda/StrategyDecorator.hpp>
 #include <seda/Timer.hpp>
 
 #include <xbe/event/ExecuteEvent.hpp>
@@ -20,11 +20,11 @@
 #include <xbe/XbeInstd_sm.h>
 
 namespace xbe {
-    class XbeInstd : public seda::ForwardStrategy, public xbe::TaskListener {
+    class XbeInstd : public seda::StrategyDecorator, public xbe::TaskListener {
         public:
             typedef std::tr1::shared_ptr<XbeInstd> Ptr;
 
-            XbeInstd(const std::string &name, const std::string &nextStage,
+            XbeInstd(const std::string &name, const seda::Strategy::Ptr &decorated,
                      const std::string &to, const std::string &from,
                      const boost::posix_time::time_duration &lifeSignInterval = boost::posix_time::seconds(3),
                      std::size_t maxRetries = 5);
@@ -70,9 +70,14 @@ namespace xbe {
 
             virtual void onStageStart(const std::string &);
             virtual void onStageStop(const std::string &);
+
+            void wait();
+            void wait(unsigned long millis);
         private:
             XBE_DECLARE_LOGGER();
             XbeInstdContext _fsm;
+
+
             seda::Timer _timeoutTimer;
             seda::Timer _lifeSignTimer;
             std::string _to;
@@ -82,6 +87,7 @@ namespace xbe {
             std::size_t _retryCounter;
             std::tr1::shared_ptr<xbe::Task> _mainTask;
             boost::recursive_mutex _mtx;
+            boost::condition_variable_any _shutdown;
     };
 }
 

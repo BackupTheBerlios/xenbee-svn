@@ -1,7 +1,10 @@
 #include <string>
 #include <iostream>
 
+#include <mqs/Message.hpp>
 #include <cms/TextMessage.h>
+#include <cms/Message.h>
+#include <cms/BytesMessage.h>
 #include <mqs/BrokerURI.hpp>
 
 #include "ChannelTest.hpp"
@@ -53,33 +56,49 @@ void ChannelTest::testSendReceiveSimple() {
 
     doStart("tests.mqs?type=queue");
     MQS_LOG_INFO("sending message");
-    cms::TextMessage* msg = _channel->createTextMessage("hello world!");
+    
+    mqs::Message msg("hello world!", "tests.mqs", "tests.mqs");
     _channel->send(msg);
     MQS_LOG_INFO("message sent");
-    delete msg;
     MQS_LOG_INFO("waiting for message");
-    msg = dynamic_cast<cms::TextMessage*>(_channel->recv(1000));
-    CPPUNIT_ASSERT_MESSAGE("received null message", msg != 0);
-    CPPUNIT_ASSERT_EQUAL(std::string("hello world!"), msg->getText());
-    delete msg;
+    mqs::Message::Ptr rmsg = _channel->recv(1000);
+
+    CPPUNIT_ASSERT(rmsg.get() != NULL);
+    MQS_LOG_DEBUG("received message with body: " << rmsg->body());
+    CPPUNIT_ASSERT_EQUAL(std::string("hello world!"), rmsg->body());
+}
+
+void ChannelTest::testMessageId() {
+    MQS_LOG_INFO("**** TEST: testMessageId");
+
+    doStart("tests.mqs?type=queue");
+
+    mqs::Message msg("hello world!", "tests.mqs", "tests.mqs");
+    _channel->send(msg);
+
+    MQS_LOG_INFO("message sent id:" << msg.id());
+    mqs::Message::Ptr rmsg = _channel->recv(1000);
+
+    CPPUNIT_ASSERT(rmsg.get() != NULL);
+    CPPUNIT_ASSERT_EQUAL(msg.id(), rmsg->id());
 }
 
 void ChannelTest::testSendReply() {
     MQS_LOG_INFO("**** TEST: testSendReply");
 
     doStart("tests.mqs?type=queue");
-    cms::TextMessage* msg = _channel->createTextMessage("hello");
-    std::string id = _channel->async_request(msg, mqs::Destination("tests.mqs?type=queue"));
-    delete msg;
-    msg = dynamic_cast<cms::TextMessage*>(_channel->recv(1000));
-    CPPUNIT_ASSERT_MESSAGE("did not receive a message", msg != 0);
-    CPPUNIT_ASSERT_EQUAL(std::string("hello"), msg->getText());
-    _channel->reply(msg, "world!");
-    delete msg;
-    msg = dynamic_cast<cms::TextMessage*>(_channel->wait_reply(id, 1000));
-    CPPUNIT_ASSERT_MESSAGE("did not receive a message", msg != 0);
-    CPPUNIT_ASSERT_EQUAL(std::string("world!"), msg->getText());
-    delete msg;
+    mqs::Message msg("hello", "tests.mqs", "tests.mqs");
+    std::string id = _channel->async_request(msg);
+
+    mqs::Message::Ptr rmsg(_channel->recv(1000));
+    CPPUNIT_ASSERT_MESSAGE("did not receive a message", rmsg.get() != NULL);
+    CPPUNIT_ASSERT_EQUAL(std::string("hello"), rmsg->body());
+    mqs::Message r("world!", "tests.mqs", "tests.mqs");
+    _channel->reply(*rmsg, r);
+
+    mqs::Message::Ptr resp(_channel->wait_reply(id, 1000));
+    CPPUNIT_ASSERT_MESSAGE("did not receive a response", resp.get() != NULL);
+    CPPUNIT_ASSERT_EQUAL(std::string("world!"), resp->body());
 }
 
 void ChannelTest::testStartStopChannel() {
@@ -91,16 +110,15 @@ void ChannelTest::testStartStopChannel() {
     doStart("tests.mqs?type=queue");
     CPPUNIT_ASSERT_MESSAGE("channel could not be started", _channel->is_started());
 
-    MQS_LOG_INFO("sending first message");
-
     // send a message
-    cms::TextMessage* msg = _channel->createTextMessage("hello 1");
-    _channel->send(msg);
-    delete msg;
-    msg = dynamic_cast<cms::TextMessage*>(_channel->recv(5000));
-    CPPUNIT_ASSERT_MESSAGE("did not receive a message", msg != 0);
-    CPPUNIT_ASSERT_EQUAL(std::string("hello 1"), msg->getText());
-    delete msg;
+    MQS_LOG_INFO("sending first message");
+    _channel->send(mqs::Message("hello 1", "tests.mqs", "tests.mqs"));
+
+    // receive
+    mqs::Message::Ptr msg1(_channel->recv(1000));
+
+    CPPUNIT_ASSERT_MESSAGE("did not receive a message", msg1.get() != NULL);
+    CPPUNIT_ASSERT_EQUAL(std::string("hello 1"), msg1->body());
 
     MQS_LOG_INFO("stopping the channel");
 
@@ -112,15 +130,13 @@ void ChannelTest::testStartStopChannel() {
     // start it again
     _channel->start(true);
 
-    MQS_LOG_INFO("sending second message");
     // send another message
-    msg = _channel->createTextMessage("hello 2");
-    _channel->send(msg);
-    delete msg;
-    msg = dynamic_cast<cms::TextMessage*>(_channel->recv(1000));
-    CPPUNIT_ASSERT_MESSAGE("did not receive a message", msg != 0);
-    CPPUNIT_ASSERT_MESSAGE("message content differs", std::string("hello 2") == msg->getText());
-    delete msg;
+    MQS_LOG_INFO("sending second message");
+    _channel->send(mqs::Message("hello 2", "tests.mqs", "tests.mqs"));
+    mqs::Message::Ptr msg2(_channel->recv(1000));
+
+    CPPUNIT_ASSERT_MESSAGE("did not receive a message", msg2.get() != NULL);
+    CPPUNIT_ASSERT_MESSAGE("message content differs", std::string("hello 2") == msg2->body());
 }
 
 void ChannelTest::testAddDelIncomingQueue() {
@@ -133,35 +149,35 @@ void ChannelTest::testAddDelIncomingQueue() {
     doStart("tests.mqs?type=queue");
 
     // send a message to the channel's queue
-    msg_id = _channel->send("Hello World!", mqs::Destination("tests.mqs?type=queue&timeToLive=1000"), mqs::Destination("tests.mqs?type=queue"));
+    msg_id = _channel->send(mqs::Message("hello world!", "tests.mqs", "tests.mqs?timeToLive=1000"));
     {
-        cms::TextMessage *msg(_channel->recv<cms::TextMessage>(1000));
-        CPPUNIT_ASSERT_MESSAGE("did not receive a message", msg != 0);
-        CPPUNIT_ASSERT_EQUAL(std::string("Hello World!"), msg->getText());
-        CPPUNIT_ASSERT_EQUAL(msg_id, msg->getCMSMessageID());
-        delete msg;
+        mqs::Message::Ptr msg(_channel->recv(1000));
+        CPPUNIT_ASSERT_MESSAGE("did not receive a message", msg.get() != 0);
+        CPPUNIT_ASSERT_EQUAL(std::string("hello world!"), msg->body());
+        CPPUNIT_ASSERT_EQUAL(msg_id, msg->id());
     }
 
     // remove the only incoming queue
+    MQS_LOG_DEBUG("removing incoming queue");
     _channel->delIncomingQueue("tests.mqs?type=queue");
 
     // repeat the sending, no message should be received
-    msg_id = _channel->send("Hello World!", "tests.mqs?type=queue&timeToLive=10000", "tests.mqs?type=queue");
+    msg_id = _channel->send(mqs::Message("hello world!", "tests.mqs", "tests.mqs?timeToLive=1000&deliveryMode=persistent"));
     {
-        cms::TextMessage *msg(_channel->recv<cms::TextMessage>(2000));
-        if (msg) {
-            delete msg;
-            CPPUNIT_ASSERT_MESSAGE("received an unexpected message", false);
-        }
+        mqs::Message::Ptr msg(_channel->recv(1000));
+        CPPUNIT_ASSERT_MESSAGE("received an unexpected message", msg.get() == 0);
     }
 
     // adding the queue again should result in a message
+    MQS_LOG_DEBUG("adding incoming queue");
     _channel->addIncomingQueue("tests.mqs?type=queue");
+    msg_id = _channel->send(mqs::Message("hello world!", "tests.mqs", "tests.mqs?timeToLive=1000&deliveryMode=persistent"));
     {
-        cms::TextMessage *msg(_channel->recv<cms::TextMessage>(1000));
-        CPPUNIT_ASSERT_MESSAGE("did not receive a message", msg != 0);
-        CPPUNIT_ASSERT_EQUAL(msg_id, msg->getCMSMessageID());
-        delete msg;
+        MQS_LOG_DEBUG("trying to receive message");
+        mqs::Message::Ptr msg(_channel->recv(1000));
+        CPPUNIT_ASSERT_MESSAGE("did not receive a message", msg.get() != 0);
+        CPPUNIT_ASSERT_EQUAL(std::string("hello world!"), msg->body());
+        CPPUNIT_ASSERT_EQUAL(msg_id, msg->id());
     }
 }
 
@@ -191,22 +207,30 @@ void ChannelTest::testMultipleSender() {
     clientBChannel->setExceptionListener(this);
     */
 
+    /*
+    serverChannel->username("guest");
+    serverChannel->password("guest");
+    clientAChannel->username("guest");
+    clientAChannel->password("guest");
+    clientBChannel->username("guest");
+    clientBChannel->password("guest");
+    */
+
     serverChannel->start();
     clientAChannel->start();
     clientBChannel->start();
 
     // send a message
-    std::tr1::shared_ptr<cms::TextMessage> msgA(serverChannel->createTextMessage("hello A"));
-    std::tr1::shared_ptr<cms::TextMessage> msgB(serverChannel->createTextMessage("hello B"));
+    std::string idA = serverChannel->send(mqs::Message("hello A", "tests.mqs.server", "tests.mqs.client.a"));
+    std::string idB = serverChannel->send(mqs::Message("hello B", "tests.mqs.server", "tests.mqs.client.b"));
 
-    serverChannel->send(msgA.get(), "tests.mqs.client.a", "tests.mqs.server");
-    serverChannel->send(msgB.get(), "tests.mqs.client.b", "tests.mqs.server");
+    mqs::Message::Ptr msgA(clientAChannel->recv(5000));
+    mqs::Message::Ptr msgB(clientBChannel->recv(5000));
 
-    std::tr1::shared_ptr<cms::TextMessage> msgARecv(clientAChannel->recv<cms::TextMessage>(5000));
-    std::tr1::shared_ptr<cms::TextMessage> msgBRecv(clientBChannel->recv<cms::TextMessage>(5000));
-
-    CPPUNIT_ASSERT(msgARecv != 0);
-    CPPUNIT_ASSERT(msgBRecv != 0);
+    CPPUNIT_ASSERT(msgA.get() != 0);
+    CPPUNIT_ASSERT_EQUAL(idA, msgA->id());
+    CPPUNIT_ASSERT(msgB.get() != 0);
+    CPPUNIT_ASSERT_EQUAL(idB, msgB->id());
 }
 
 void ChannelTest::onException(const cms::CMSException &e) {
@@ -228,6 +252,10 @@ void ChannelTest::doStart(const std::string& uri, const std::string& q) {
     }
     _channel = new mqs::Channel(mqs::BrokerURI(uri), mqs::Destination(q));
     _channel->setExceptionListener(this);
+    /*
+    _channel->username("guest");
+    _channel->password("guest");
+    */
     _channel->start(true);
 }
 

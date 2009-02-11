@@ -1,8 +1,7 @@
 #ifndef XBE_EVENT_FACTORY_HPP
 #define XBE_EVENT_FACTORY_HPP 1
 
-#include <cms/Message.h>
-#include <cms/TextMessage.h>
+#include <mqs/Message.hpp>
 #include <cms/CMSException.h>
 
 #include <xbe/logging.hpp>
@@ -31,8 +30,7 @@ namespace xbe {
                 static const EventFactory& instance();
                 ~EventFactory();
 
-                seda::IEvent::Ptr newEvent(const cms::Message*) const throw(UnknownConversion);
-                seda::IEvent::Ptr newEvent(const cms::TextMessage*) const;
+                seda::IEvent::Ptr newEvent(const mqs::Message&) const throw(UnknownConversion);
                 seda::IEvent::Ptr newEvent(const cms::CMSException&) const;
                 seda::IEvent::Ptr newEvent(const std::exception&) const;
 

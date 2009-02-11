@@ -10,11 +10,11 @@
 
 using namespace xbe;
 
-XbeInstd::XbeInstd(const std::string &name, const std::string &nextStage,
+XbeInstd::XbeInstd(const std::string &name, const seda::Strategy::Ptr &decorated,
                    const std::string &to, const std::string &from,
                    const boost::posix_time::time_duration &lifeSignInterval,
                    std::size_t maxRetries)
-    : seda::ForwardStrategy(name, nextStage),
+    : seda::StrategyDecorator(name, decorated),
       XBE_INIT_LOGGER("xbe.xbeinstd"),
       _fsm(*this),
       _timeoutTimer(name, boost::posix_time::seconds(5), "timeout"),
@@ -64,7 +64,7 @@ void XbeInstd::do_execute(xbe::event::ExecuteEvent& e) {
 void XbeInstd::do_terminate() {
     XBE_LOG_DEBUG("sending terminate-ack");
     seda::IEvent::Ptr e(new xbe::event::TerminateAckEvent(_to, _from, "1"));
-    ForwardStrategy::perform(e);
+    StrategyDecorator::perform(e);
 }
 
 void XbeInstd::do_terminate_job(int signal) {
@@ -76,7 +76,7 @@ void XbeInstd::do_terminate_job(int signal) {
 void XbeInstd::do_shutdown(xbe::event::ShutdownEvent& shutdownEvent) {
     XBE_LOG_DEBUG("sending shutdown-ack");
     seda::IEvent::Ptr e(new xbe::event::ShutdownAckEvent(_to, _from, "1"));
-    ForwardStrategy::perform(e);
+    StrategyDecorator::perform(e);
 }
 
 void XbeInstd::do_send_status(xbe::event::StatusReqEvent&) {
@@ -90,12 +90,12 @@ void XbeInstd::do_send_status(xbe::event::StatusReqEvent&) {
     } else {
         e->state("Idle");
     }
-    ForwardStrategy::perform(e);
+    StrategyDecorator::perform(e);
 }
 void XbeInstd::do_send_execute_ack(xbe::event::ExecuteEvent&) {
     XBE_LOG_DEBUG("sending execute-ack");
     seda::IEvent::Ptr e(new xbe::event::ExecuteAckEvent(_to, _from, "1"));
-    ForwardStrategy::perform(e);
+    StrategyDecorator::perform(e);
 }
 
 void XbeInstd::do_finished_ack(xbe::event::FinishedAckEvent&) {
@@ -109,14 +109,14 @@ void XbeInstd::do_failed_ack(xbe::event::FailedAckEvent&) {
 /* regular events */
 void XbeInstd::do_send_lifesign() {
     XBE_LOG_DEBUG("sending life sign");
-    ForwardStrategy::perform(seda::IEvent::Ptr(new xbe::event::LifeSignEvent(_to, _from, "1")));
+    StrategyDecorator::perform(seda::IEvent::Ptr(new xbe::event::LifeSignEvent(_to, _from, "1")));
 }
 
 /* events comming from the executed job */
 void XbeInstd::do_task_finished() {
     XBE_LOG_DEBUG("sending finished event");
     seda::IEvent::Ptr e(new xbe::event::FinishedEvent(_to, _from, "1"));
-    ForwardStrategy::perform(e);
+    StrategyDecorator::perform(e);
 }
 void XbeInstd::do_task_failed() {
 
@@ -167,5 +167,18 @@ void XbeInstd::onStageStop(const std::string &) {
     XBE_LOG_DEBUG("stage stopping");
     do_stop_lifesign();
     do_stop_timer();
+}
+
+void XbeInstd::wait() {
+    boost::unique_lock<boost::recursive_mutex> lock(_mtx);
+    while (true) {
+        _shutdown.wait(lock);
+    }
+}
+
+void XbeInstd::wait(unsigned long millis) {
+    boost::unique_lock<boost::recursive_mutex> lock(_mtx);
+    boost::system_time const timeout=boost::get_system_time() + boost::posix_time::milliseconds(millis);
+    _shutdown.timed_wait(lock, timeout);
 }
 

@@ -27,7 +27,7 @@ OPTION(PERFORM_CHANNEL_IS_STARTED_CHECK
  "Perform sanity checks when calling mqs::Channel methods"
  YES)
 
-set(TEST_BROKER_URI "tcp://localhost:61613?wireFormat=stomp" CACHE STRING "The ActiveMQ broker to use for unit tests")
+set(TEST_BROKER_URI "tcp://localhost:61613?wireFormat=stomp&username=guest&password=guest" CACHE STRING "The ActiveMQ broker to use for unit tests")
 
 cmake_minimum_required(VERSION "2.6" FATAL_ERROR)
 # Where are the additional libraries installed? Note: provide includes
@@ -42,6 +42,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/modules")
 set(CMAKE_CXX_FLAGS_DEBUG "-Wall -Werror -Wno-non-virtual-dtor")
 # Releases are made with the release build. Optimize code.
 set(CMAKE_CXX_FLAGS_RELEASE "-Wall -Werror -O3 -Wno-non-virtual-dtor")
+set(CMAKE_CXX_FLAGS "-Wall -Werror -O3 -Wno-non-virtual-dtor")
 
 ## PkgConfig is helpful
 include(FindPkgConfig)

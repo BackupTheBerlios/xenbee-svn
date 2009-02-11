@@ -33,7 +33,7 @@
     </xs:complexType>
 
     <xs:complexType name="body_t">
-        <xs:sequence>
+        <xs:choice>
             <xs:element name="execute"   type="xbemsg:execute_t" minOccurs="0"/>
             <xs:element name="terminate" type="xbemsg:terminate_t" minOccurs="0"/>
             <xs:element name="status-req" type="xbemsg:status_req_t" minOccurs="0"/>
@@ -49,7 +49,7 @@
             <xs:element name="finished" type="xbemsg:finished_t" minOccurs="0"/>
             <xs:element name="failed" type="xbemsg:failed_t" minOccurs="0"/>
             <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
-        </xs:sequence>
+        </xs:choice>
         <xs:anyAttribute namespace="##other" processContents="lax"/>
     </xs:complexType>
 

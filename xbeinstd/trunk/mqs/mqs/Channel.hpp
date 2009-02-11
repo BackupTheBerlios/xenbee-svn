@@ -12,14 +12,14 @@
 #include <cms/ExceptionListener.h>
 #include <cms/DeliveryMode.h>
 #include <cms/Message.h>
-#include <cms/TextMessage.h>
-#include <cms/BytesMessage.h>
 #include <cms/MessageListener.h>
 
 #include <mqs/Destination.hpp>
 #include <mqs/BrokerURI.hpp>
 #include <mqs/MQSException.hpp>
 #include <mqs/Observable.hpp>
+#include <mqs/Message.hpp>
+#include <mqs/MessageListener.hpp>
 #include <mqs/MessageSequenceGenerator.hpp>
 
 // forward declarations
@@ -43,7 +43,7 @@ namespace mqs {
         ChannelNotStarted() : MQSException("channel not started yet") {}
         virtual ~ChannelNotStarted() throw () {}
     };
-    
+
     class Channel : public cms::MessageListener,
                     public cms::ExceptionListener,
                     public mqs::Observable {
@@ -103,22 +103,10 @@ namespace mqs {
            returned message is the calling process.
 
            @param message the message to be sent
-           @param dst the destination to send the message to
            @param timeout specifies how long to wait for a reply (milliseconds)
-           @return cms::Message pointer to the reply or NULL
+           @return mqs::Message pointer to the reply or NULL
         */
-        cms::Message* request(cms::Message* msg, const mqs::Destination& dst, unsigned long millisecs);
-
-        /**
-           Convenience function for request(cms::Message).
-
-           The   given  string   message  is   simply  wrapped   into  a
-           cms::TextMessage.
-
-           @see request(cms::Message*, mqs::Destination, long long)
-        */
-        cms::Message* request(const std::string& msg, const mqs::Destination& dst, unsigned long millisecs);
-        cms::Message* request(const std::string& msg, unsigned long millisecs);
+        mqs::Message::Ptr request(mqs::Message &msg, unsigned long millisecs);
 
         /**
            Place an asynchronous request.
@@ -129,8 +117,15 @@ namespace mqs {
            @param msg the request to be sent
            @return std::string an id that uniquely identifies the request
         */
-        std::string async_request(cms::Message* msg, const Destination& dst);
-        std::string async_request(const std::string& msg, const Destination& dst);
+        std::string async_request(mqs::Message &msg);
+
+        /**
+           Reply to a received message.
+
+           @param msg orginal message
+           @param reply the reply message
+        */
+        void reply(const mqs::Message &msg, mqs::Message &reply);
 
         /**
            Waits for a reply on a previously placed request message.
@@ -142,53 +137,26 @@ namespace mqs {
            @param requestID the unique identifier for a request
            @param timeout number of milliseconds to wait or 0 for infinity
         */
-        cms::Message* wait_reply(const std::string& requestID, unsigned long millisecs);
+        mqs::Message::Ptr wait_reply(const std::string &requestID, unsigned long millisecs);
 
         /**
-           Send (and forget) a pregenerated message.
+         * Send the given message.
+         *
+         * @param msg the message to be sent
+         * @return the message id
+         */
+        const std::string &send(const mqs::Message &msg);
 
-           @param msg the message to be sent
-        */
-        std::string send(const std::string& msg) { return send(msg, _outQueue); }
-        std::string send(const std::string& msg, const mqs::Destination& dst);
-        std::string send(const std::string& msg, const mqs::Destination& dst, const mqs::Destination& replyTo);
-        std::string send(cms::Message* msg);
-        std::string send(cms::Message* msg, const mqs::Destination& dst);
-        std::string send(cms::Message* msg, const mqs::Destination& dst, const mqs::Destination& replyTo);
-
-        Channel& operator<<(const std::string& msg) { send(msg); return *this; }
-        Channel& operator<<(cms::Message* msg) { send(msg); return *this; }
-    
-        /**
-           Reply to a received message.
-
-           @param msg orginal message
-           @param reply the reply message
-        */
-        std::string reply(const cms::Message* msg, cms::Message* reply);
-        std::string reply(const cms::Message* msg, const std::string& reply);
-    
         /**
            Receive the next new message.
 
            @param timeout wait for timeout milliseconds
-           @return the message or NULL
+           @return the cms message or NULL
         */
-        cms::Message* recv(unsigned long millisecs);
-        template <class T> T* recv(unsigned long millisecs) {
-            cms::Message *m(recv(millisecs));
-            T *t_msg(dynamic_cast<T*>(m));
-            if (t_msg) {
-                return t_msg;
-            } else {
-                if (m) {
-                    MQS_LOG_WARN("recv could not dynamic_cast<...> the received message");
-                    delete m; m = 0;
-                }
-                return 0;
-            }
-        }
+        mqs::Message::Ptr recv(unsigned long millisecs);
 
+        Channel& operator<<(mqs::Message &msg) { send(msg); return *this; }
+    
         /**
            Asynchronously handle new messages.
 
@@ -200,19 +168,9 @@ namespace mqs {
            @param listener the new message listener to use, specify NULL
            to remove any listener
         */
-        void setMessageListener(cms::MessageListener* listener);
-
+        void setMessageListener(mqs::MessageListener* listener);
         void setExceptionListener(cms::ExceptionListener* listener);
       
-        /******************************
-         *                            *
-         * Message creation functions *
-         *                            *
-         ******************************/
-        cms::Message* createMessage() const;
-        cms::TextMessage* createTextMessage(const std::string& body = "") const;
-        cms::BytesMessage* createBytesMessage(const unsigned char* bytes = 0, std::size_t = 0) const;
-
         void addIncomingQueue(const mqs::Destination& dst);
         void delIncomingQueue(const mqs::Destination& dst);
 
@@ -246,10 +204,9 @@ namespace mqs {
         void onMessage(const cms::Message*);
 
         void onException(const cms::CMSException&);
-
     private:
-        std::string send(cms::Message* msg, const cms::Destination* dst, int deliveryMode, int priority, long long timeToLive);
         void ensure_started() const throw (ChannelNotStarted);
+        mqs::Message::Ptr buildMessage(const cms::Message *m) const;
     
         MQS_DECLARE_LOGGER();
         boost::recursive_mutex _mtx;
@@ -258,7 +215,7 @@ namespace mqs {
         mqs::Destination _inQueue;
         mqs::Destination _outQueue;
         mqs::MessageSequenceGenerator::Ptr _msgSeqGen;
-    
+
         std::tr1::shared_ptr<cms::Connection> _connection;
         std::tr1::shared_ptr<cms::Session> _session;
         std::tr1::shared_ptr<cms::MessageProducer> _producer;
@@ -271,12 +228,12 @@ namespace mqs {
         };
         std::list<Consumer> _consumer;
 
-        cms::MessageListener* _messageListener;
+        mqs::MessageListener* _messageListener;
         cms::ExceptionListener* _exceptionListener;
 
         boost::mutex _incomingMessagesMutex;
         boost::condition_variable _incomingMessagesCondition;
-        std::list<cms::Message*> _incomingMessages;
+        std::list<mqs::Message::Ptr> _incomingMessages;
     
         boost::mutex _awaitingResponseMtx;
         std::vector<mqs::Response*> _awaitingResponse;

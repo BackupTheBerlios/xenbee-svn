@@ -3,6 +3,7 @@
 #include <unistd.h>
 
 #include <xbe/common.hpp>
+#include <xbe/XbeLibUtils.hpp>
 #include <xbe/XbeInstd.hpp>
 #include <xbe/TaskData.hpp>
 #include <xbe/event/ShutdownAckEvent.hpp>
@@ -34,9 +35,10 @@ XbeInstdTest::XbeInstdTest()
 
 void
 XbeInstdTest::setUp() {
+    XbeLibUtils::initialise();
     seda::StageFactory::Ptr factory(new seda::StageFactory());
 
-    xbe::XbeInstd::Ptr xbeinstd(new XbeInstd("xbeinstd", "discard", "to.foo", "from.bar"));
+    xbe::XbeInstd::Ptr xbeinstd(new XbeInstd("xbeinstd", seda::Strategy::Ptr(new seda::ForwardStrategy("discard")), "to.foo", "from.bar"));
     _xbeInstdStage = factory->createStage("xbeinstd", xbeinstd);
 
     seda::Strategy::Ptr discard(new seda::DiscardStrategy());
@@ -56,13 +58,14 @@ XbeInstdTest::tearDown() {
 
     // remove created files
     unlink("resources/testData.1.out");
+    XbeLibUtils::terminate();
 }
 
 void XbeInstdTest::testLifeSign() {
     XBE_LOG_INFO("executing XbeInstdTest::testLifeSign");
 
-    _discardStage->start();
     _xbeInstdStage->start();
+    _discardStage->start();
 
     _ecs->wait(1, 4000);
 

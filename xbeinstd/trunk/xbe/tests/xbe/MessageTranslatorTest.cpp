@@ -64,7 +64,7 @@ MessageTranslatorTest::testXMLExecute() {
 
         seda::Strategy::Ptr discard(new seda::DiscardStrategy());
         seda::AccumulateStrategy::Ptr acc(new seda::AccumulateStrategy(discard));
-        seda::Strategy::Ptr translate(new xbe::MessageTranslatorStrategy("translate", acc));
+        seda::Strategy::Ptr translate(new xbe::MessageTranslatorStrategy(acc));
         translate = seda::Strategy::Ptr(new seda::LoggingStrategy(translate));
         seda::IEvent::Ptr obj(new xbe::event::ObjectEvent<xbemsg::message_t>("foo","bar",msg));
 
@@ -100,7 +100,7 @@ MessageTranslatorTest::testXMLExecuteAck() {
 
     seda::Strategy::Ptr discard(new seda::DiscardStrategy());
     seda::AccumulateStrategy::Ptr acc(new seda::AccumulateStrategy(discard));
-    seda::Strategy::Ptr translate(new xbe::MessageTranslatorStrategy("translate", acc));
+    seda::Strategy::Ptr translate(new xbe::MessageTranslatorStrategy(acc));
     translate = seda::Strategy::Ptr(new seda::LoggingStrategy(translate));
 
     seda::IEvent::Ptr obj(new xbe::event::ObjectEvent<xbemsg::message_t>("foo","bar",msg));
@@ -117,7 +117,7 @@ MessageTranslatorTest::testExecuteAckEvent() {
 
     seda::Strategy::Ptr discard(new seda::DiscardStrategy());
     seda::AccumulateStrategy::Ptr acc(new seda::AccumulateStrategy(discard));
-    seda::Strategy::Ptr translate(new xbe::MessageTranslatorStrategy("translate", acc));
+    seda::Strategy::Ptr translate(new xbe::MessageTranslatorStrategy(acc));
     translate = seda::Strategy::Ptr(new seda::LoggingStrategy(translate));
 
     seda::IEvent::Ptr obj(new xbe::event::ExecuteAckEvent("foo","bar","conv-id:12345"));
@@ -145,7 +145,7 @@ MessageTranslatorTest::testXMLStatusReq() {
 
     seda::Strategy::Ptr discard(new seda::DiscardStrategy());
     seda::AccumulateStrategy::Ptr acc(new seda::AccumulateStrategy(discard));
-    seda::Strategy::Ptr translate(new xbe::MessageTranslatorStrategy("translate", acc));
+    seda::Strategy::Ptr translate(new xbe::MessageTranslatorStrategy(acc));
     translate = seda::Strategy::Ptr(new seda::LoggingStrategy(translate));
 
     seda::IEvent::Ptr obj(new xbe::event::ObjectEvent<xbemsg::message_t>("foo","bar",msg));
@@ -162,7 +162,7 @@ MessageTranslatorTest::testStatusReqEvent() {
 
     seda::Strategy::Ptr discard(new seda::DiscardStrategy());
     seda::AccumulateStrategy::Ptr acc(new seda::AccumulateStrategy(discard));
-    seda::Strategy::Ptr translate(new xbe::MessageTranslatorStrategy("translate", acc));
+    seda::Strategy::Ptr translate(new xbe::MessageTranslatorStrategy(acc));
     translate = seda::Strategy::Ptr(new seda::LoggingStrategy(translate));
 
     seda::IEvent::Ptr obj(new xbe::event::StatusReqEvent("foo","bar","conv-id:12345"));
@@ -190,7 +190,7 @@ MessageTranslatorTest::testXMLLifeSign() {
 
     seda::Strategy::Ptr discard(new seda::DiscardStrategy());
     seda::AccumulateStrategy::Ptr acc(new seda::AccumulateStrategy(discard));
-    seda::Strategy::Ptr translate(new xbe::MessageTranslatorStrategy("translate", acc));
+    seda::Strategy::Ptr translate(new xbe::MessageTranslatorStrategy(acc));
     translate = seda::Strategy::Ptr(new seda::LoggingStrategy(translate));
 
     seda::IEvent::Ptr obj(new xbe::event::ObjectEvent<xbemsg::message_t>("foo","bar",msg));
@@ -207,7 +207,7 @@ MessageTranslatorTest::testLifeSignEvent() {
 
     seda::Strategy::Ptr discard(new seda::DiscardStrategy());
     seda::AccumulateStrategy::Ptr acc(new seda::AccumulateStrategy(discard));
-    seda::Strategy::Ptr translate(new xbe::MessageTranslatorStrategy("translate", acc));
+    seda::Strategy::Ptr translate(new xbe::MessageTranslatorStrategy(acc));
     translate = seda::Strategy::Ptr(new seda::LoggingStrategy(translate));
 
     seda::IEvent::Ptr obj(new xbe::event::LifeSignEvent("foo","bar","conv-id:12345"));
@@ -235,7 +235,7 @@ MessageTranslatorTest::testXMLStatus() {
 
     seda::Strategy::Ptr discard(new seda::DiscardStrategy());
     seda::AccumulateStrategy::Ptr acc(new seda::AccumulateStrategy(discard));
-    seda::Strategy::Ptr translate(new xbe::MessageTranslatorStrategy("translate", acc));
+    seda::Strategy::Ptr translate(new xbe::MessageTranslatorStrategy(acc));
     translate = seda::Strategy::Ptr(new seda::LoggingStrategy(translate));
 
     seda::IEvent::Ptr obj(new xbe::event::ObjectEvent<xbemsg::message_t>("foo","bar",msg));
@@ -252,7 +252,7 @@ MessageTranslatorTest::testStatusEvent() {
 
     seda::Strategy::Ptr discard(new seda::DiscardStrategy());
     seda::AccumulateStrategy::Ptr acc(new seda::AccumulateStrategy(discard));
-    seda::Strategy::Ptr translate(new xbe::MessageTranslatorStrategy("translate", acc));
+    seda::Strategy::Ptr translate(new xbe::MessageTranslatorStrategy(acc));
     translate = seda::Strategy::Ptr(new seda::LoggingStrategy(translate));
 
     seda::IEvent::Ptr obj(new xbe::event::StatusEvent("foo","bar","conv-id:12345"));
@@ -280,7 +280,7 @@ MessageTranslatorTest::testXMLFinished() {
 
     seda::Strategy::Ptr discard(new seda::DiscardStrategy());
     seda::AccumulateStrategy::Ptr acc(new seda::AccumulateStrategy(discard));
-    seda::Strategy::Ptr translate(new xbe::MessageTranslatorStrategy("translate", acc));
+    seda::Strategy::Ptr translate(new xbe::MessageTranslatorStrategy(acc));
     translate = seda::Strategy::Ptr(new seda::LoggingStrategy(translate));
 
     seda::IEvent::Ptr obj(new xbe::event::ObjectEvent<xbemsg::message_t>("foo","bar",msg));
@@ -297,7 +297,7 @@ MessageTranslatorTest::testFinishedEvent() {
 
     seda::Strategy::Ptr discard(new seda::DiscardStrategy());
     seda::AccumulateStrategy::Ptr acc(new seda::AccumulateStrategy(discard));
-    seda::Strategy::Ptr translate(new xbe::MessageTranslatorStrategy("translate", acc));
+    seda::Strategy::Ptr translate(new xbe::MessageTranslatorStrategy(acc));
     translate = seda::Strategy::Ptr(new seda::LoggingStrategy(translate));
 
     seda::IEvent::Ptr obj(new xbe::event::FinishedEvent("foo","bar","conv-id:12345"));
@@ -325,7 +325,7 @@ MessageTranslatorTest::testXMLTerminateAck() {
 
     seda::Strategy::Ptr discard(new seda::DiscardStrategy());
     seda::AccumulateStrategy::Ptr acc(new seda::AccumulateStrategy(discard));
-    seda::Strategy::Ptr translate(new xbe::MessageTranslatorStrategy("translate", acc));
+    seda::Strategy::Ptr translate(new xbe::MessageTranslatorStrategy(acc));
     translate = seda::Strategy::Ptr(new seda::LoggingStrategy(translate));
 
     seda::IEvent::Ptr obj(new xbe::event::ObjectEvent<xbemsg::message_t>("foo","bar",msg));
@@ -342,7 +342,7 @@ MessageTranslatorTest::testTerminateAckEvent() {
 
     seda::Strategy::Ptr discard(new seda::DiscardStrategy());
     seda::AccumulateStrategy::Ptr acc(new seda::AccumulateStrategy(discard));
-    seda::Strategy::Ptr translate(new xbe::MessageTranslatorStrategy("translate", acc));
+    seda::Strategy::Ptr translate(new xbe::MessageTranslatorStrategy(acc));
     translate = seda::Strategy::Ptr(new seda::LoggingStrategy(translate));
 
     seda::IEvent::Ptr obj(new xbe::event::TerminateAckEvent("foo","bar","conv-id:12345"));
@@ -370,7 +370,7 @@ MessageTranslatorTest::testXMLShutdown() {
 
     seda::Strategy::Ptr discard(new seda::DiscardStrategy());
     seda::AccumulateStrategy::Ptr acc(new seda::AccumulateStrategy(discard));
-    seda::Strategy::Ptr translate(new xbe::MessageTranslatorStrategy("translate", acc));
+    seda::Strategy::Ptr translate(new xbe::MessageTranslatorStrategy(acc));
     translate = seda::Strategy::Ptr(new seda::LoggingStrategy(translate));
 
     seda::IEvent::Ptr obj(new xbe::event::ObjectEvent<xbemsg::message_t>("foo","bar",msg));
@@ -387,7 +387,7 @@ MessageTranslatorTest::testShutdownEvent() {
 
     seda::Strategy::Ptr discard(new seda::DiscardStrategy());
     seda::AccumulateStrategy::Ptr acc(new seda::AccumulateStrategy(discard));
-    seda::Strategy::Ptr translate(new xbe::MessageTranslatorStrategy("translate", acc));
+    seda::Strategy::Ptr translate(new xbe::MessageTranslatorStrategy(acc));
     translate = seda::Strategy::Ptr(new seda::LoggingStrategy(translate));
 
     seda::IEvent::Ptr obj(new xbe::event::ShutdownEvent("foo","bar","conv-id:12345"));
@@ -415,7 +415,7 @@ MessageTranslatorTest::testXMLShutdownAck() {
 
     seda::Strategy::Ptr discard(new seda::DiscardStrategy());
     seda::AccumulateStrategy::Ptr acc(new seda::AccumulateStrategy(discard));
-    seda::Strategy::Ptr translate(new xbe::MessageTranslatorStrategy("translate", acc));
+    seda::Strategy::Ptr translate(new xbe::MessageTranslatorStrategy(acc));
     translate = seda::Strategy::Ptr(new seda::LoggingStrategy(translate));
 
     seda::IEvent::Ptr obj(new xbe::event::ObjectEvent<xbemsg::message_t>("foo","bar",msg));
@@ -432,7 +432,7 @@ MessageTranslatorTest::testShutdownAckEvent() {
 
     seda::Strategy::Ptr discard(new seda::DiscardStrategy());
     seda::AccumulateStrategy::Ptr acc(new seda::AccumulateStrategy(discard));
-    seda::Strategy::Ptr translate(new xbe::MessageTranslatorStrategy("translate", acc));
+    seda::Strategy::Ptr translate(new xbe::MessageTranslatorStrategy(acc));
     translate = seda::Strategy::Ptr(new seda::LoggingStrategy(translate));
 
     seda::IEvent::Ptr obj(new xbe::event::ShutdownAckEvent("foo","bar","conv-id:12345"));
@@ -460,7 +460,7 @@ MessageTranslatorTest::testXMLFailed() {
 
     seda::Strategy::Ptr discard(new seda::DiscardStrategy());
     seda::AccumulateStrategy::Ptr acc(new seda::AccumulateStrategy(discard));
-    seda::Strategy::Ptr translate(new xbe::MessageTranslatorStrategy("translate", acc));
+    seda::Strategy::Ptr translate(new xbe::MessageTranslatorStrategy(acc));
     translate = seda::Strategy::Ptr(new seda::LoggingStrategy(translate));
 
     seda::IEvent::Ptr obj(new xbe::event::ObjectEvent<xbemsg::message_t>("foo","bar",msg));
@@ -477,7 +477,7 @@ MessageTranslatorTest::testFailedEvent() {
 
     seda::Strategy::Ptr discard(new seda::DiscardStrategy());
     seda::AccumulateStrategy::Ptr acc(new seda::AccumulateStrategy(discard));
-    seda::Strategy::Ptr translate(new xbe::MessageTranslatorStrategy("translate", acc));
+    seda::Strategy::Ptr translate(new xbe::MessageTranslatorStrategy(acc));
     translate = seda::Strategy::Ptr(new seda::LoggingStrategy(translate));
 
     seda::IEvent::Ptr obj(new xbe::event::FailedEvent("foo","bar","conv-id:12345"));

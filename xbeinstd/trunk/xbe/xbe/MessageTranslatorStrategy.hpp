@@ -14,7 +14,7 @@ namespace xbe {
     */
     class MessageTranslatorStrategy : public seda::StrategyDecorator {
     public:
-        MessageTranslatorStrategy(const std::string &name, const seda::Strategy::Ptr &decorated);
+        MessageTranslatorStrategy(const seda::Strategy::Ptr &decorated);
         virtual ~MessageTranslatorStrategy() {}
 
         virtual void perform(const seda::IEvent::Ptr&);

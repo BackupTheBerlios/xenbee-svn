@@ -24,11 +24,11 @@
 #endif
 
 using namespace mqs;
-using namespace cms;
+//using namespace cms;
 using namespace activemq::core;
 
 Channel::Channel(const mqs::BrokerURI &broker, const mqs::Destination &inout)
-    : MQS_INIT_LOGGER("mqs.channel"),
+    : MQS_INIT_LOGGER(std::string("mqs.channel-") + inout.name()),
       _broker(broker),
       _inQueue(inout),
       _outQueue(inout),
@@ -78,15 +78,16 @@ Channel::start(bool doFlush) {
     // Create a ConnectionFactory
     std::tr1::shared_ptr<ActiveMQConnectionFactory> connectionFactory(new ActiveMQConnectionFactory(_broker.value));
   
-    // Create a Connection
+    MQS_LOG_DEBUG("creating connection");
     _connection.reset(connectionFactory->createConnection());
 
     _connection->setExceptionListener(this);
+    MQS_LOG_DEBUG("starting underlying connection");
     _connection->start();
   
   
     // Create a Session
-    _session.reset(_connection->createSession(Session::AUTO_ACKNOWLEDGE));
+    _session.reset(_connection->createSession(cms::Session::AUTO_ACKNOWLEDGE));
 
     // create producer parts
     if (_outQueue.isTopic()) {
@@ -98,14 +99,13 @@ Channel::start(bool doFlush) {
   
     std::string deliveryMode = _outQueue.getStringProperty("deliveryMode", "non-persistent");
     if (deliveryMode == "persistent") {
-        _producer->setDeliveryMode(DeliveryMode::PERSISTENT);
+        _producer->setDeliveryMode(cms::DeliveryMode::PERSISTENT);
     } else if (deliveryMode == "non-persistent") {
-        _producer->setDeliveryMode(DeliveryMode::NON_PERSISTENT);
+        _producer->setDeliveryMode(cms::DeliveryMode::NON_PERSISTENT);
     } else {
         throw MQSException("invalid delivery mode: "+deliveryMode);
     }
-//    _producer->setDisableMessageID(_outQueue.getBooleanProperty("disableMessageID", false));
-    _producer->setDisableMessageID(false);
+    _producer->setDisableMessageID(_outQueue.getBooleanProperty("disableMessageID", false));
     _producer->setDisableMessageTimeStamp(_outQueue.getBooleanProperty("disableMessageTimeStamp", false));
     _producer->setPriority(_outQueue.getIntProperty("priority", 4));
     _producer->setTimeToLive(_outQueue.getLongLongProperty("timeToLive", 0));
@@ -190,157 +190,99 @@ Channel::delIncomingQueue(const mqs::Destination &dst) {
     }
 }
 
-std::string
-Channel::send(const std::string &text, const mqs::Destination &dst) {
+const std::string&
+Channel::send(const mqs::Message &msg) {
     ENSURE_STARTED();
 
-    MessagePtr msg(createTextMessage(text));
-    send(msg.get(), dst);
-    return msg->getCMSMessageID();
-}
+    std::tr1::shared_ptr<cms::Message> m(_session->createBytesMessage((unsigned char*)msg.body().c_str(), msg.body().size()));
+    std::tr1::shared_ptr<cms::Destination> to(msg.to().toCMSDestination(*_session));
+    std::tr1::shared_ptr<cms::Destination> from(msg.from().toCMSDestination(*_session));
 
-std::string
-Channel::send(const std::string &text, const mqs::Destination &dst, const mqs::Destination &replyTo) {
-    ENSURE_STARTED();
-
-    MessagePtr msg(createTextMessage(text));
-    send(msg.get(), dst, replyTo);
-    return msg->getCMSMessageID();
-}
-
-std::string
-Channel::send(Message *msg, const mqs::Destination &dst, const mqs::Destination &replyTo) {
-    std::tr1::shared_ptr<cms::Destination> d(replyTo.toCMSDestination(*_session));
-    msg->setCMSReplyTo(d.get());
-    return send(msg, dst);
-}
-
-std::string
-Channel::send(Message *msg, const mqs::Destination &dst) {
-    ENSURE_STARTED();
-
-    int deliveryMode;
-    int priority;
-    long long timeToLive;
-  
-    if (dst.hasProperty("deliveryMode")) {
-        std::string specifiedDeliveryMode = dst.getStringProperty("deliveryMode");
-        if (specifiedDeliveryMode == "persistent") {
-            deliveryMode = cms::DeliveryMode::PERSISTENT;
-        } else if (specifiedDeliveryMode == "non-persistent") {
-            deliveryMode = cms::DeliveryMode::NON_PERSISTENT;
-        } else {
-            throw std::invalid_argument("invalid delivery mode: "+specifiedDeliveryMode);
-        }
-    } else {
-        deliveryMode = _producer->getDeliveryMode();
+    if (msg.id().empty()) {
+        mqs::Message &m(const_cast<mqs::Message&>(msg));
+        m.id(_msgSeqGen->next());
     }
-  
-    priority = dst.hasProperty("priority") ? dst.getIntProperty("priority") : _producer->getPriority();
-    timeToLive = dst.hasProperty("timeToLive") ? dst.getLongLongProperty("timeToLive") : _producer->getTimeToLive();
 
-    std::tr1::shared_ptr<cms::Destination> d(dst.toCMSDestination(*_session));
-    return send(msg, d.get(), deliveryMode, priority, timeToLive);
-}
+    m->setCMSCorrelationID(msg.correlation());
+    m->setCMSReplyTo(from.get()); 
 
-std::string
-Channel::send(Message *msg) {
-    ENSURE_STARTED();
+    /* work around stomp */
+    m->setStringProperty("amqp-message-id", msg.id());
 
-    return send(msg, _producer_destination.get(), _producer->getDeliveryMode(), _producer->getPriority(), _producer->getTimeToLive());
-}
-
-std::string
-Channel::send(Message *msg, const cms::Destination *d, int deliveryMode, int priority, long long timeToLive) {
-    ENSURE_STARTED();
-
-    msg->setCMSMessageID(_msgSeqGen->next());
-    _producer->send(d, msg, deliveryMode, priority, timeToLive);
+    _producer->send(to.get(), m.get(), msg.deliveryMode(), msg.priority(), msg.ttl());
 
     MQS_LOG_DEBUG("sent message"
-                  << " id:"   << msg->getCMSMessageID()
-                  << " mode:" << ((deliveryMode == cms::DeliveryMode::PERSISTENT) ? "persistent" : "non-persistent")
-                  << " reply-to:" << mqs::Destination(msg->getCMSReplyTo()).str()
-                  << " prio:" << priority
-                  << " ttl:"  << timeToLive
-                  << " corr:" << msg->getCMSCorrelationID()
-                  << " type:" << msg->getCMSType());
-    return msg->getCMSMessageID();
+                  << " id:"       << msg.id()
+                  << " mode:"     << ((msg.deliveryMode() == cms::DeliveryMode::PERSISTENT) ? "persistent" : "non-persistent")
+                  << " reply-to:" << msg.from().str()
+                  << " prio:"     << msg.priority()
+                  << " ttl:"      << msg.ttl()
+                  << " corr:"     << msg.correlation()
+    );
+     
+    return msg.id();
 }
 
-Message*
-Channel::request(const std::string &text, const mqs::Destination &dst, unsigned long millisecs) {
-    ENSURE_STARTED();
-
-    MessagePtr m(createTextMessage(text));
-    return request(m.get(), dst, millisecs);
+mqs::Message::Ptr
+Channel::recv(unsigned long millis) {
+    boost::unique_lock<boost::mutex> lock(_incomingMessagesMutex);
+    _blocked_receivers++;
+    // wait until a message is available
+    while(_incomingMessages.empty()) {
+        MQS_LOG_DEBUG("waiting for new messages");
+        boost::system_time const timeout=boost::get_system_time() + boost::posix_time::milliseconds(millis);
+        if (!_incomingMessagesCondition.timed_wait(lock, timeout))
+            break;
+    }
+    if (_incomingMessages.empty()) {
+        MQS_LOG_DEBUG("message waiting timed out");
+        _blocked_receivers--;
+        return mqs::Message::Ptr((mqs::Message*)NULL);
+    } else {
+        mqs::Message::Ptr msg(_incomingMessages.front()); _incomingMessages.pop_front();
+        MQS_LOG_DEBUG("received message: " << msg->id());
+        _blocked_receivers--;
+        return msg;
+    }
 }
 
-Message*
-Channel::request(Message *msg, const mqs::Destination &dst, unsigned long millisecs) {
+mqs::Message::Ptr
+Channel::request(mqs::Message &msg, unsigned long millisecs) {
     ENSURE_STARTED();
-
-    const std::string requestID = async_request(msg, dst);
-    return wait_reply(requestID, millisecs);
+    return wait_reply(async_request(msg), millisecs);
 }
 
-Message*
-Channel::request(const std::string &text, unsigned long millisecs) {
+void
+Channel::reply(const mqs::Message &msg, mqs::Message &rmsg) {
     ENSURE_STARTED();
 
-    return request(text, _outQueue, millisecs);
-}
-
-std::string
-Channel::reply(const Message *msg, const std::string &text) {
-    ENSURE_STARTED();
-
-    MessagePtr r(createTextMessage(text));
-    return reply(msg, r.get());
-}
-
-std::string
-Channel::reply(const Message *msg, Message *r) {
-    ENSURE_STARTED();
-
-    if (msg->getCMSReplyTo() == 0) {
+    if (! msg.from().isValid()) {
         throw std::invalid_argument("cannot reply to a message that does not have a reply-to field");
     }
-    r->setCMSCorrelationID(msg->getCMSMessageID());
-    MQS_LOG_DEBUG("replying to msg: " << msg->getCMSMessageID());
-    return send(r, msg->getCMSReplyTo(), _producer->getDeliveryMode(), _producer->getPriority(), _producer->getTimeToLive());
+
+    rmsg.to(msg.from());
+    rmsg.correlation(msg.id());
+    MQS_LOG_DEBUG("replying to msg: " << msg.id());
+    send(rmsg);
 }
 
 std::string
-Channel::async_request(const std::string &text, const mqs::Destination &dst) {
+Channel::async_request(mqs::Message &msg) {
     ENSURE_STARTED();
 
-    MessagePtr m(createTextMessage(text));
-    return async_request(m.get(), dst);
-}
-
-std::string
-Channel::async_request(Message *msg, const mqs::Destination &dst) {
-    ENSURE_STARTED();
-
-    std::string msg_id;
-    {
-        boost::unique_lock<boost::recursive_mutex> lk(_mtx);
-        msg->setCMSReplyTo(_consumer.front().destination.get());
-        MQS_LOG_DEBUG("sending async request to " << dst.str());
-        msg_id = send(msg, dst);
-        assert(!msg_id.empty());
-     }
+    MQS_LOG_DEBUG("sending async request to " << msg.to().str());
+    std::string msg_id = send(msg);
  
     // create a response object and put it into the queue (deleted in wait_reply)
     mqs::Response* response = new Response(msg_id);
+
     boost::unique_lock<boost::mutex> lock(_awaitingResponseMtx);
     _awaitingResponse.push_back(response);
   
     return msg_id;
 }
 
-Message*
+mqs::Message::Ptr
 Channel::wait_reply(const std::string &requestID, unsigned long millisecs) {
     ENSURE_STARTED();
 
@@ -374,38 +316,47 @@ Channel::wait_reply(const std::string &requestID, unsigned long millisecs) {
     }
 
     if (response) {
-        Message *reply(response->getResponse());
+        mqs::Message::Ptr reply(response->getResponse());
         delete response;
         return reply;
     } else {
         MQS_LOG_FATAL("Inconsistent state: wait for reply did not find response object!");
-        assert(false);
+        abort();
     }
 }
 
-Message*
-Channel::createMessage() const {
-    ENSURE_STARTED();
+mqs::Message::Ptr
+Channel::buildMessage(const cms::Message *cm) const {
+    std::string body;
 
-    return _session->createMessage();
-}
+    cms::Message *m = const_cast<cms::Message*>(cm);
+    if (cms::BytesMessage *bm = dynamic_cast<cms::BytesMessage*>(m)) {
+        MQS_LOG_DEBUG("got a new bytes-message");
+        body = std::string((char*)bm->getBodyBytes(), bm->getBodyLength());
+    } else if (cms::TextMessage *tm = dynamic_cast<cms::TextMessage*>(m)) {
+        MQS_LOG_DEBUG("got a new text-message");
+        body = tm->getText();
+    } else {
+        throw MQSException("message not understood - must be TextMessage or BytesMessage");
+    }
+    mqs::Message::Ptr msg(new mqs::Message(body,
+                mqs::Destination(m->getCMSReplyTo()),
+                mqs::Destination(m->getCMSDestination())));
+    if (m->propertyExists("amqp-message-id")) {
+        msg->id(m->getStringProperty("amqp-message-id"));
+    } else {
+        msg->id(m->getCMSMessageID());
+    }
+    msg->correlation(m->getCMSCorrelationID());
+    msg->ttl(m->getCMSExpiration());
+    msg->priority(m->getCMSPriority());
+    msg->deliveryMode(m->getCMSDeliveryMode());
 
-TextMessage*
-Channel::createTextMessage(const std::string &text) const {
-    ENSURE_STARTED();
-
-    return _session->createTextMessage(text);
-}
-
-BytesMessage*
-Channel::createBytesMessage(const unsigned char *bytes, std::size_t length) const {
-    ENSURE_STARTED();
-
-    return _session->createBytesMessage(bytes, length);
+    return msg;
 }
 
 void
-Channel::setMessageListener(cms::MessageListener *listener) {
+Channel::setMessageListener(mqs::MessageListener *listener) {
     boost::unique_lock<boost::recursive_mutex> lock(_mtx);
     _messageListener = listener;
 }
@@ -419,71 +370,48 @@ Channel::setExceptionListener(cms::ExceptionListener *listener) {
 void
 Channel::onMessage(const cms::Message *msg) {
     // handle incoming messages
-
-    MQS_LOG_DEBUG("got new message: " << msg->getCMSMessageID());
+    try {
+        mqs::Message::Ptr m(buildMessage(msg));
+        MQS_LOG_DEBUG("got new message: " << m->id());
   
-    // 1. check for a thread waiting for a response
-    {
-        const std::string correlationID = msg->getCMSCorrelationID();
-        if (!correlationID.empty()) {
-            boost::unique_lock<boost::mutex> lock(_awaitingResponseMtx);
-            MQS_LOG_DEBUG("message correlates to: " << correlationID);
-            std::vector<mqs::Response*>::iterator it = _awaitingResponse.begin();
-            for (; it != _awaitingResponse.end(); it++) {
-                if ((*it)->getCorrelationID() == correlationID) {
-                    // got a response, clone the message and notify the blocked thread
-                    cms::Message* clonedMsg = msg->clone();
-                    (*it)->setResponse(clonedMsg);
-                    return;
+        // 1. check for a thread waiting for a response
+        {
+            const std::string correlationID = m->correlation();
+            if (! correlationID.empty()) {
+                boost::unique_lock<boost::mutex> lock(_awaitingResponseMtx);
+                MQS_LOG_DEBUG("message correlates to: " << correlationID);
+                std::vector<mqs::Response*>::iterator it = _awaitingResponse.begin();
+                for (; it != _awaitingResponse.end(); it++) {
+                    if ((*it)->getCorrelationID() == correlationID) {
+                        (*it)->setResponse(m);
+                        return;
+                    }
                 }
+                // got a response to some message, but no thread is waiting for one!!!
+                MQS_LOG_WARN("got response to some message but noone is waiting!");
+//                return; // discard the message
             }
-
-            // got a response to some message, but no thread is waiting for one!!!
-            MQS_LOG_WARN("got response to some message but noone is waiting!");
-            return; // discard the message
         }
-    }
 
-    // if  we have  a message  listener registered,  let him  handle all
-    // incoming messages unless there are blocked receivers
-    if (_messageListener && !_blocked_receivers) {
-        MQS_LOG_DEBUG("dispatching message to message listener");
-        try {
-            _messageListener->onMessage(msg);
-        } catch(const std::exception& ex) {
-            MQS_LOG_WARN("message handling failed: " << ex.what());
-        } catch(...) {
-            MQS_LOG_WARN("message handling failed: unknown error");
+        // if  we have  a message  listener registered,  let him  handle all
+        // incoming messages unless there are blocked receivers
+        if (_messageListener && (_blocked_receivers == 0)) {
+            MQS_LOG_DEBUG("dispatching message to message listener");
+            try {
+                _messageListener->onMessage(m);
+            } catch(const std::exception& ex) {
+                MQS_LOG_WARN("message handling failed: " << ex.what());
+            } catch(...) {
+                MQS_LOG_WARN("message handling failed: unknown error");
+            }
+        } else {
+            boost::unique_lock<boost::mutex> lock(_incomingMessagesMutex);
+            MQS_LOG_DEBUG("enqueueing message");
+            _incomingMessages.push_back(m);
+            _incomingMessagesCondition.notify_one();
         }
-    } else {
-        boost::unique_lock<boost::mutex> lock(_incomingMessagesMutex);
-        MQS_LOG_DEBUG("enqueueing message");
-        cms::Message* clonedMsg = msg->clone();
-        _incomingMessages.push_back(clonedMsg);
-        _incomingMessagesCondition.notify_one();
-    }
-}
-
-Message*
-Channel::recv(unsigned long millis) {
-    boost::unique_lock<boost::mutex> lock(_incomingMessagesMutex);
-    _blocked_receivers++;
-    // wait until a message is available
-    while(_incomingMessages.empty()) {
-        MQS_LOG_DEBUG("waiting for new messages");
-        boost::system_time const timeout=boost::get_system_time() + boost::posix_time::milliseconds(millis);
-        if (!_incomingMessagesCondition.timed_wait(lock, timeout))
-            break;
-    }
-    if (_incomingMessages.empty()) {
-        MQS_LOG_DEBUG("message waiting timed out");
-        _blocked_receivers--;
-        return 0;
-    } else {
-        Message* msg(_incomingMessages.front()); _incomingMessages.pop_front();
-        MQS_LOG_DEBUG("received message: " << msg->getCMSMessageID());
-        _blocked_receivers--;
-        return msg;
+    } catch (const std::exception &ex) {
+        MQS_LOG_ERROR("onMessage() failed: " << ex.what());
     }
 }
 
@@ -492,11 +420,10 @@ Channel::flushMessages() {
     MQS_LOG_DEBUG("flushing old messages...");
     std::size_t count(0);
     for (;;) {
-        Message *m = recv(1000);
+        mqs::Message::Ptr m(recv(1000));
         if (m) {
-            MQS_LOG_DEBUG("flushed message ("<< m->getCMSMessageID() <<")...");
+            MQS_LOG_DEBUG("flushed message ("<< m->id() <<")...");
             count++;
-            delete m;
         } else {
             break;
         }

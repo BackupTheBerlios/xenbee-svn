@@ -21,10 +21,18 @@ ChannelAdapterStrategy::ChannelAdapterStrategy(const std::string& name,
 
 ChannelAdapterStrategy::~ChannelAdapterStrategy() {}
 
-void ChannelAdapterStrategy::onMessage(const cms::Message *m) {
+void ChannelAdapterStrategy::onStageStart(const std::string &name) {
+    _channel->start();
+}
+
+void ChannelAdapterStrategy::onStageStop(const std::string &name) {
+    _channel->stop();
+}
+
+void ChannelAdapterStrategy::onMessage(const mqs::Message::Ptr &m) {
     try {
         XBE_LOG_INFO("got new message from the network");
-        StrategyDecorator::perform(EventFactory::instance().newEvent(m));
+        StrategyDecorator::perform(EventFactory::instance().newEvent(*m));
     } catch (const xbe::event::UnknownConversion& ex) {
         XBE_LOG_DEBUG("cms::Message could not be converted to Event: " << ex.what());
     } catch (const std::exception& ex) {
@@ -47,12 +55,11 @@ void ChannelAdapterStrategy::perform(const seda::IEvent::Ptr& e) {
     // handle messages
     if (xbe::event::MessageEvent *msgEvent = dynamic_cast<xbe::event::MessageEvent*>(e.get())) {
         try {
-            if (msgEvent->destination().isValid()) {
-                XBE_LOG_DEBUG("sending message `"<< msgEvent->message() << "' to " << msgEvent->destination().str());
-                _channel->send(msgEvent->message(), msgEvent->destination());
+            if (msgEvent->destination().isValid() && msgEvent->source().isValid()) {
+                XBE_LOG_DEBUG("sending message `"<< msgEvent->message() << "': " << msgEvent->source().str() << " -> " << msgEvent->destination().str());
+                _channel->send(mqs::Message(msgEvent->message(), msgEvent->source(), msgEvent->destination()));
             } else {
-                XBE_LOG_DEBUG("sending message `"<< msgEvent->message() << "'");
-                _channel->send(msgEvent->message());
+                XBE_LOG_DEBUG("cannot send message, destination unknown!");
             }
         } catch(const cms::CMSException& ex) {
             StrategyDecorator::perform(EventFactory::instance().newEvent(ex));
