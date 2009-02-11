@@ -49,8 +49,8 @@ void
 EventQueueTest::testQueueFull_Throws() {
   // fill the queue
   while (_queue->size() < _queue->maxQueueSize()) {
-    _queue->push(seda::IEvent::Ptr(new StringEvent()));
+    _queue->push(seda::IEvent::Ptr(new StringEvent("test")));
   }
   // push one more element to trigger the overflow
-  _queue->push(seda::IEvent::Ptr(new StringEvent()));
+  _queue->push(seda::IEvent::Ptr(new StringEvent("test")));
 }
