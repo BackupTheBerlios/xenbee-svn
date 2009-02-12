@@ -67,13 +67,13 @@ class ClientXMLProtocol(protocol.XMLProtocol):
             self.protocol.cacheEntriesReceived(cache_entries)
 
     def do_StatusList(self, elem, *args, **kw):
+        log.info("got status list")
         try:
             status_list = message.MessageBuilder.from_xml(elem.getroottree())
-        except Exception, e:
-            log.warn("could not build status_list: %s", e)
-        else:
             if self.protocol is not None:
                 self.protocol.statusListReceived(status_list)
+        except Exception, e:
+            log.warn("could not build status_list: %s", e)
         
     def do_ReservationResponse(self, elem, *args, **kw):
         response = message.MessageBuilder.from_xml(elem.getroottree())
@@ -127,6 +127,7 @@ class BaseCommandLineProtocol(BaseProtocol):
         self.transport.sendMessage(msg.as_xml())
 
     def requestStatus(self, ticket, remove_entry=False):
+        log.info("requesting status")
         msg = message.StatusRequest(ticket, remove_entry)
         self.transport.sendMessage(msg.as_xml())
 

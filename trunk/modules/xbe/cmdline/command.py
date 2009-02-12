@@ -210,6 +210,7 @@ class RemoteCommand(Command, SimpleCommandLineProtocol):
         self.ca_cert = X509Certificate.load_from_files(opts.ca_cert)
 
     def connectionMade(self):
+        log.info("connection made")
         self.cancelTimeout()
         try:
             self.execute()
@@ -220,11 +221,11 @@ class RemoteCommand(Command, SimpleCommandLineProtocol):
         self.mtx.acquire()
         try:
             to = self.__timeoutCall
-        except AttributeError:
-            pass
-        else:
             del self.__timeoutCall
             to.cancel()
+#            log.debug("timeout -")
+        except AttributeError:
+            pass
         finally:
             self.mtx.release()
 
@@ -232,7 +233,7 @@ class RemoteCommand(Command, SimpleCommandLineProtocol):
         try:
             self.scheduleTimeout()
             rv = self._execute()
-            self.cancelTimeout()
+#            self.cancelTimeout()
         except Exception, e:
             self.failed(e)
         else:
@@ -248,6 +249,7 @@ class RemoteCommand(Command, SimpleCommandLineProtocol):
                 timeout = self.opts.timeout
             self.__timeoutCall = reactor.callLater(timeout,
                                                    self.timedout, *args, **kw)
+#            log.debug("timeout +")
         finally:
             self.mtx.release()
 
@@ -258,17 +260,27 @@ class RemoteCommand(Command, SimpleCommandLineProtocol):
             msg = "timed out"
             if name is not None:
                 msg = "%s %s" % (name, msg)
+#            log.debug("timeout !")
             self.failed(RuntimeError(msg))
         finally:
             self.mtx.release()
+
+    def stop(self, failed=False, *args, **kw):
+        from twisted.internet import reactor
+        if failed:
+            reactor.callLater(0.00001, self.failed, *args, **kw)
+        else:
+            reactor.callLater(0.00001, self.done, *args, **kw)
+        reactor.wakeUp()
 
     def done(self):
         self.mtx.acquire()
         try:
             self.cancelTimeout()
             from twisted.internet import reactor
-            reactor.stop()
+            log.debug("stopping")
             Command.done(self)
+            reactor.stop()
         finally:
             self.mtx.release()
 
@@ -296,9 +308,9 @@ class RemoteCommand(Command, SimpleCommandLineProtocol):
         )
 
         if code == errcode.OK:
-            self.done()
+            self.stop()
         else:
-            self.failed(RuntimeError(error.description()))
+            self.stop(True, RuntimeError(error.description()))
 
     #########################################
     #                                       #
@@ -677,7 +689,7 @@ class Command_status(RemoteCommand, HasTicket):
             except:
                 print "status retrieval failed"
                 sys.exit(1)
-        self.done()
+        self.stop()
 CommandFactory.getInstance().registerCommand(Command_status, "status", "stat", "st")
 
 class Command_showcache(RemoteCommand):
@@ -698,7 +710,7 @@ class Command_showcache(RemoteCommand):
     def cacheEntriesReceived(self, cache_entries):
         self.cancelTimeout()
         print repr(cache_entries)
-        self.done()
+        self.stop()
 CommandFactory.getInstance().registerCommand(Command_showcache, "showcache", "sc")
 
 class CommandLineClient:
