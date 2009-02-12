@@ -51,8 +51,8 @@ policy          = policy_match
 # For the CA policy
 [ policy_match ]
 countryName             = match
-stateOrProvinceName     = match
-organizationName        = match
+stateOrProvinceName     = optional
+organizationName        = optional
 organizationalUnitName  = optional
 commonName              = supplied
 emailAddress            = optional

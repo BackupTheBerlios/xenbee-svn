@@ -55,6 +55,7 @@ Additional requirements for the 'xbed':
         * python-libvirt (virtualization module for python that binds to xen)
 	* python-pysqlite2 (for the cache database)
 	* python-pycurl
+	* mkdir /var/log/xenbee
 
 
 +===========================+

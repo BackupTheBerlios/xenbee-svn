@@ -157,7 +157,7 @@ class StompClient(LineReceiver):
         self.replyTo = None
 	self.mode = "command"
 	self.delimiter = '\n'
-	self.terminator = "\x00\x0a"
+	self.terminator = "\x00"
 	self.buffer = ''
 	self.defer = None
         self.factory = None
@@ -205,6 +205,7 @@ class StompClient(LineReceiver):
 
     def lineReceived(self, line):
 	"""Handle a new line."""
+	print "got line:", line
 	line = line.strip()
 	if self.mode == "command":
 	    # ignore any empty lines before a new command
@@ -219,6 +220,7 @@ class StompClient(LineReceiver):
 	    # got new command
 	    self.frame = Frame(line.upper())
 	    self.mode = "header"
+	    print "got new command:", self.frame
 	    return
 
 	# parse header
@@ -295,6 +297,7 @@ class StompClient(LineReceiver):
         return False
     
     def handleFrame(self, frame):
+	print frame
 	if frame.type == "CONNECTED":
 	    self.handle_CONNECTED(frame)
 	elif frame.type == "MESSAGE":

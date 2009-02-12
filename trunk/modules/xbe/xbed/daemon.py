@@ -257,7 +257,7 @@ class XBEDaemon(Daemon):
                                                        queue="/queue"+queue,
                                                        topic="/topic/xenbee.daemons",
                                                        user=self.opts.stomp_user,
-                                                       passwrd=self.opts.stomp_pass))
+                                                       password=self.opts.stomp_pass))
         log.info("  done.")
         
     def run(self, *args, **kw):

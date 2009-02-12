@@ -108,7 +108,7 @@ class XenBEEClientProtocol(protocol.XMLProtocol):
             # if no ticket could be generated:
             msg = message.Error(errcode.SERVER_BUSY)
         else:
-            task = TaskManager.getInstance().new()
+            task = TaskManager.getInstance().new(ticket.id())
             ticket.task = task
             msg = message.ReservationResponse(ticket.id(), task.id())
         return msg
@@ -295,8 +295,8 @@ class _XBEDProtocol(XenBEEProtocol):
 class XenBEEDaemonProtocolFactory(XenBEEProtocolFactory):
     protocol = _XBEDProtocol
     
-    def __init__(self, daemon, queue, topic, user, passwrd):
-	XenBEEProtocolFactory.__init__(self, queue, user, passwrd)
+    def __init__(self, daemon, queue, topic, user, password):
+	XenBEEProtocolFactory.__init__(self, queue, user, password)
         self.daemon = daemon
         self.__topic = topic
         self.__protocolRemovalTimeout = 60

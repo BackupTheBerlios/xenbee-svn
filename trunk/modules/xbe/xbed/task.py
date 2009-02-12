@@ -60,19 +60,24 @@ class StopTask(TaskError):
     pass
 
 class Task(TaskFSM):
-    def __init__(self, id, mgr):
+    def __init__(self, ticket_id, id, mgr):
         """Initialize a new task."""
         TaskFSM.__init__(self)
         self.mtx = self.fsm.getLock()
+	self.__ticket_id = ticket_id
         self.__timestamps = {}
         self.__timestamps["submit"] = time.time()
         self.__activity_logs = {}
         self.__id = id
         self.log = logging.getLogger("task."+self.id())
+        self.state_log = logging.getLogger("JobState."+self.__ticket_id)
         self.mgr = mgr
 
     def id(self):
         return self.__id
+
+    def ticket_id(self):
+        return self.__ticket_id
 
     def __repr__(self):
         return "<%(cls)s %(id)s in state %(state)s>" % {
@@ -168,6 +173,7 @@ class Task(TaskFSM):
         self.mtx.acquire()
         try:
             self.__timestamps["confirm"] = time.time()
+            TaskManager.getInstance().logStateChange(self, "Pending:Confirmed")
             self.log.info("confirmed")
             self.__jsdl_xml = jsdl_xml
             self.__jsdl_doc = jsdl_doc
@@ -183,6 +189,7 @@ class Task(TaskFSM):
         try:
             self.__timestamps["terminate"] = time.time()
             self.reason = reason
+            TaskManager.getInstance().logStateChange(self, "Terminated")
             self.log.info("terminating pending reserved: %s" % self.reason_as_str())
         finally:
             self.mtx.release()
@@ -193,6 +200,7 @@ class Task(TaskFSM):
         try:
             self.__timestamps["terminate"] = time.time()
             self.reason = reason
+            TaskManager.getInstance().logStateChange(self, "Terminated")
             self.log.info("terminating pending confirmed: %s" % self.reason_as_str())
             del self.__jsdl_xml
             del self.__jsdl_doc
@@ -212,6 +220,7 @@ class Task(TaskFSM):
         try:
             self.__timestamps["stage-in-start"] = time.time()
             self.__activity_logs["stage-in"] = []
+            TaskManager.getInstance().logStateChange(self, "Running:Stage-In")
             rv = self.__prepare()
         finally:
             self.mtx.release()
@@ -224,6 +233,8 @@ class Task(TaskFSM):
             self.__timestamps["terminate"] = time.time()
             self.reason = reason
             self.log.info("terminating stage-in: %s" % self.reason_as_str())
+            TaskManager.getInstance().logStateChange(self, "Terminated")
+            self.state_log.info("Terminated")
             self.__clean_up_spool()
         finally:
             self.mtx.release()
@@ -235,6 +246,7 @@ class Task(TaskFSM):
             self.__timestamps["failed"] = time.time()
             self.reason = reason
             self.log.warn("stage-in failed: %s" % self.reason_as_str())
+            TaskManager.getInstance().logStateChange(self, "Failed")
             self.__clean_up_spool()
         finally:
             self.mtx.release()
@@ -247,6 +259,7 @@ class Task(TaskFSM):
             self.log.debug("initiating instance startup")
             self.__timestamps["instance-start"] = time.time()
             self.__configureInstance(self.__inst, self.__jsdl_doc)
+            TaskManager.getInstance().logStateChange(self, "Running:Instance-Starting")
             self.__start_instance()
         finally:
             self.mtx.release()
@@ -259,6 +272,7 @@ class Task(TaskFSM):
             self.__timestamps["terminate"] = time.time()
             self.reason = reason
             self.log.info("terminating instance-start: %s" % self.reason_as_str())
+            TaskManager.getInstance().logStateChange(self, "Terminated")
             self._cb_release_resources()
             self.__clean_up_spool()
         finally:
@@ -271,6 +285,7 @@ class Task(TaskFSM):
             self.__timestamps["failed"] = time.time()
             self.reason = reason
             self.log.warn("instance start failed: %s" % self.reason_as_str())
+            TaskManager.getInstance().logStateChange(self, "Failed")
             self._cb_release_resources()
             self.__clean_up_spool()
         finally:
@@ -284,6 +299,7 @@ class Task(TaskFSM):
         self.mtx.acquire()
         try:
             self.log.info("executing task")
+            TaskManager.getInstance().logStateChange(self, "Running:Executing")
             self.__timestamps["execution-start"] = time.time()
             self.__execute()
         finally:
@@ -299,6 +315,7 @@ class Task(TaskFSM):
             self.__timestamps["terminate"] = time.time()
             self.reason = reason
             self.log.info("terminating execution: %s" % self.reason_as_str())
+            TaskManager.getInstance().logStateChange(self, "Terminated")
             self.__stop_instance()
             self._cb_release_resources()
             self.__clean_up_spool()
@@ -315,6 +332,7 @@ class Task(TaskFSM):
             self.__timestamps["failed"] = time.time()
             self.reason = reason
             self.log.warn("execution failed: %s" % self.reason_as_str())
+            TaskManager.getInstance().logStateChange(self, "Failed")
             self.__stop_instance()
             self._cb_release_resources()
             self.__clean_up_spool()
@@ -327,6 +345,7 @@ class Task(TaskFSM):
         self.mtx.acquire()
         try:
             self.log.info("staging out")
+            TaskManager.getInstance().logStateChange(self, "Running:Stage-Out")
             self.__timestamps["stage-out-start"] = time.time()
             self.__activity_logs["stage-out"] = []
             rv = self.__unprepare()
@@ -341,6 +360,7 @@ class Task(TaskFSM):
             self.__timestamps["failed"] = time.time()
             self.reason = reason
             self.log.warn("stage-out failed: %s" % self.reason_as_str())
+            TaskManager.getInstance().logStateChange(self, "Failed")
             self.__clean_up_spool()
         finally:
             self.mtx.release()
@@ -351,6 +371,7 @@ class Task(TaskFSM):
         try:
             self.reason = reason
             self.log.info("terminating stage out: %s" % self.reason_as_str())
+            TaskManager.getInstance().logStateChange(self, "Terminated")
             self.__timestamps["terminate"] = time.time()
             self.__clean_up_spool()
         finally:
@@ -361,6 +382,7 @@ class Task(TaskFSM):
         self.mtx.acquire()
         try:
             self.log.info("task finished")
+            TaskManager.getInstance().logStateChange(self, "Finished")
             self.__timestamps["finished"] = time.time()
             self.__clean_up_spool()
         finally:
@@ -632,13 +654,15 @@ class TaskManager(singleton.Singleton, Observable):
         self.mtx = threading.RLock()
         self.daemon = daemon
         self.activityQueue = ActivityQueue()
+	# TODO: fixme -> this has to be moved somewhere else
+	self.taskStateLog = open("/var/log/xenbee/task-state.log", "a")
 
-    def new(self):
+    def new(self, ticket_id):
         """Returns a new task."""
         from xbe.util.uuid import uuid
         self.mtx.acquire()
 
-        task = Task(uuid(), self)
+        task = Task(ticket_id, uuid(), self)
 
         self.tasks[task.id()] = task
         self.mtx.release()
@@ -672,6 +696,30 @@ class TaskManager(singleton.Singleton, Observable):
         """
         return self.tasks.get(id)
 
+    def logStateChange(self, task, state):
+        stateMap = {
+            "Pending:Reserved" : 1,
+            "Pending:Confirmed" : 1,
+            "Running:Stage-In" : 64,
+            "Running:Instance-Starting" : 2,
+            "Running:Executing" : 2,
+            "Running:Stage-Out" : 128,
+            "Running:Instance-Stopping" : 128,
+            "Finished" : 8,
+            "Failed" : 4,
+            "Terminated" : 4
+        }
+        try:
+            log.info("state of task changed: %s -> %s", task.id(), state)
+            self.mtx.acquire()
+            exitcode = 0
+            if hasattr(task, "exitcode"):
+                exitcode = task.exitcode
+            self.taskStateLog.write("%s;%d;%s;%d;%d\n" % ("001", int(time.time()), task.ticket_id(), stateMap[state], exitcode ))
+            self.taskStateLog.flush()
+        finally:
+            self.mtx.release()	
+
     def terminateTask(self, task, reason):
         self.abortActivities(task)
         task.terminate(reason)
@@ -687,3 +735,4 @@ class TaskManager(singleton.Singleton, Observable):
     def taskFinished(self, task):
         """Called when a task finished."""
         self.notify( (task, "taskFinished") )
+
