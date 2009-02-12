@@ -759,7 +759,7 @@ class StatusList(BaseServerMessage):
             e = etree.SubElement(entries, XBE("Status"))
             e.attrib["task-id"] = task_id
             e.append(bes.fromXBETaskState(info["State"]))
-            etree.SubElement(e, XBE("Ticket")).text = self.__ticket
+            etree.SubElement(e, XBE("Ticket")).text = info["Ticket"]
             meta = etree.SubElement(e, XBE("Meta"))
             unparse_dictionary(info["Meta"], meta)
         return root
