@@ -399,20 +399,15 @@ class Command_reserve(RemoteCommand):
 
     def print_info(self, ticket, task):
         print dedent("""\
-        Your ticket: %(ticket)s
-
-        please remember that ticket-id, it will be
-        required in subsequent calls.
-
-        A task has been registered for you as:
-        Your task: %(task)s
+        ticket:%(ticket)s
+        task:%(task)s
         """ % {"ticket": ticket,
                "task": task,
                }
         )
 
     def madeReservation(self, ticket, task):
-        self.done()
+        self.stop()
 CommandFactory.getInstance().registerCommand(Command_reserve, "reserve", "res")
 
 class Command_terminate(RemoteCommand, HasTicket):
