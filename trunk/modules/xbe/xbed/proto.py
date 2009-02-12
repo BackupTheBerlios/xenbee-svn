@@ -157,7 +157,6 @@ class XenBEEClientProtocol(protocol.XMLProtocol):
                         status_list.add(task.id(), task.state(), ticket.id(), task.getStatusInfo())
 
 	                # remove the task entry
-			toberemoved = []
 	                if task.is_done() and request.removeEntry():
                             toberemoved.append( (ticket, task) )
                 for (ticket, task) in toberemoved:
