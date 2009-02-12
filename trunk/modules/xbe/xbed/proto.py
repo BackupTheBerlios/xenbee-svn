@@ -150,10 +150,21 @@ class XenBEEClientProtocol(protocol.XMLProtocol):
                     del ticket.task
             elif request.ticket() == "all":
                 log.info("user requested the status of all tasks, remove that functionality")
+                toberemoved = [] 
 		for tid, ticket in TicketStore.getInstance().all().iteritems():
                     if ticket.task:
                         task = ticket.task
                         status_list.add(task.id(), task.state(), ticket.id(), task.getStatusInfo())
+
+	                # remove the task entry
+			toberemoved = []
+	                if task.is_done() and request.removeEntry():
+                            toberemoved.append( (ticket, task) )
+                for (ticket, task) in toberemoved:
+                    log.debug("removing task-entry: %s", task.id())
+                    TaskManager.getInstance().removeTask(task)
+                    TicketStore.getInstance().release(ticket)
+                    del ticket.task
             else:
                 return message.Error(errcode.TICKET_INVALID, request.ticket())
             return status_list

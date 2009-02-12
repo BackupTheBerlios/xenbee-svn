@@ -673,8 +673,6 @@ class Command_status(RemoteCommand, HasTicket):
     def _execute(self):
         ticket = self.get_ticket()
         self.scheduleTimeout(name="status-request")
-        if self.opts.remove_entry:
-            print "removing the entry", ticket
         self.requestStatus(ticket, self.opts.remove_entry)
         return False
 
