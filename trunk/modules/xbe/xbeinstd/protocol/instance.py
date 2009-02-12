@@ -227,8 +227,8 @@ class XBEInstProtocol(xmlprotocol.XMLProtocol):
         del self.proc
 
 class XenBEEInstProtocolFactory(XenBEEProtocolFactory):
-    def __init__(self, daemon, instance_id, my_queue, server_queue):
-	XenBEEProtocolFactory.__init__(self, my_queue, "instance-%s"%instance_id)
+    def __init__(self, daemon, instance_id, my_queue, server_queue, username, password):
+	XenBEEProtocolFactory.__init__(self, my_queue, username, password) # "instance-%s"%instance_id)
         self.instance_id = instance_id
         self.p = None
         self.server_queue = server_queue

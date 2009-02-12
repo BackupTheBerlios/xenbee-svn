@@ -141,7 +141,7 @@ class XBEInstDaemon(Daemon):
         from xbe.xbeinstd.protocol.instance import XenBEEInstProtocolFactory
 
         f = XenBEEInstProtocolFactory(self, self.opts.uuid,
-                                      my_queue=self.queue, server_queue="/queue"+queue)
+                                      my_queue=self.queue, server_queue="/queue"+queue, username="guest", password="guest")
         reactor.connectTCP(self.host,
                            self.port,
                            f, self.timeout)
