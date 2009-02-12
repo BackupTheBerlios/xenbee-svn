@@ -685,7 +685,7 @@ class Command_status(RemoteCommand, HasTicket):
         else:
             try:
                 for k,v in statusList.entries().iteritems():
-                    print "%s - %s: %s" % (v["Ticket"], k, v["State"])
+                    print "ticket:%s - task:%s - %s" % (v["Ticket"], k, v["State"])
             except:
                 print "status retrieval failed"
                 sys.exit(1)
