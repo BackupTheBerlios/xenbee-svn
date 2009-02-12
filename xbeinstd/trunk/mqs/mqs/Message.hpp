@@ -17,6 +17,7 @@ namespace mqs {
                   _body(body),
                   _from(from),
                   _to(to),
+                  _size(body.size()),
                   _ttl(to.getIntProperty("timeToLive", 0)),
                   _priority(to.getIntProperty("priority", 0)),
                   _deliveryMode(1) {
@@ -36,6 +37,7 @@ namespace mqs {
                   _body(m.body()),
                   _from(m.from()),
                   _to(m.to()),
+                  _size(m.size()),
                   _ttl(m.ttl()),
                   _priority(m.priority()),
                   _deliveryMode(m.deliveryMode()) { }
@@ -43,6 +45,7 @@ namespace mqs {
             ~Message() {}
 
             const std::string &body() const { return _body; }
+            const std::size_t size() const { return _size; }
             const std::string &id() const { return _id; }
             const std::string &correlation() const { return _correlation; }
 
@@ -68,6 +71,7 @@ namespace mqs {
             std::string _body;
             mqs::Destination _from;
             mqs::Destination _to;
+            std::size_t _size;
 
             long long _ttl;
             int _priority;
