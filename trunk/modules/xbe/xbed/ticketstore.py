@@ -52,3 +52,6 @@ class TicketStore(singleton.Singleton):
     
     def is_valid(self, id):
         return id in self.__tickets
+
+    def all(self):
+	return self.__tickets

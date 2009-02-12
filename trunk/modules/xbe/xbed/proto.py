@@ -140,7 +140,7 @@ class XenBEEClientProtocol(protocol.XMLProtocol):
         try:
             if ticket is not None:
                 task = ticket.task
-                status_list.add(task.id(), task.state(), task.getStatusInfo())
+                status_list.add(task.id(), task.state(), ticket.id(), task.getStatusInfo())
                 
                 # remove the task entry
                 if task.is_done() and request.removeEntry():
@@ -150,13 +150,15 @@ class XenBEEClientProtocol(protocol.XMLProtocol):
                     del ticket.task
             elif request.ticket() == "all":
                 log.info("user requested the status of all tasks, remove that functionality")
-                for task in TaskManager.getInstance().tasks.values():
-                    status_list.add(task.id(), task.state(), task.getStatusInfo())
+		for tid, ticket in TicketStore.getInstance().all().iteritems():
+                    if ticket.task:
+                        task = ticket.task
+                        status_list.add(task.id(), task.state(), ticket.id(), task.getStatusInfo())
             else:
                 return message.Error(errcode.TICKET_INVALID, request.ticket())
             return status_list
         except Exception, e:
-            self.log.warn("status request failed %s", e, exc_info=1)
+            log.warn("status request failed %s", e, exc_info=1)
 
     def do_ListCache(self, elem, *args, **kw):
         log.debug("retrieving cache list...")

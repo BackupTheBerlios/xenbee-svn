@@ -193,6 +193,7 @@ class SecureProtocol(XMLProtocol):
             self.protocolFactoryKwArgs = protocolFactoryKwArgs
         self.__certificate_checker = certificate_checker
         self.__cert = cert
+	self.__other_cert = None
         self.__ca_cert = ca_cert
         self.__state = "disconnected"
         self.mtx = threading.RLock()
@@ -267,6 +268,7 @@ class SecureProtocol(XMLProtocol):
     def __establish(self, layer):
         log.info("Message Layer Security established")
         self.__securityLayer = layer
+	self.__other_cert = layer.other_cert()
         self.__state = "established"
 
         # instantiate the upper protocol

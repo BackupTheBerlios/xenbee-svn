@@ -744,9 +744,10 @@ class StatusList(BaseServerMessage):
             "entries": pformat(self.__entries),
         }
 
-    def add(self, id, state, meta={}):
-        self.__entries[id] = { "State": state,
-                               "Meta": meta }
+    def add(self, taskid, state, ticket, meta={}):
+        self.__entries[taskid] = { "State": state,
+				   "Ticket": ticket,
+                                   "Meta": meta }
 
     def entries(self):
         return self.__entries
