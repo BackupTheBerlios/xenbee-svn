@@ -759,6 +759,7 @@ class StatusList(BaseServerMessage):
             e = etree.SubElement(entries, XBE("Status"))
             e.attrib["task-id"] = task_id
             e.append(bes.fromXBETaskState(info["State"]))
+            etree.SubElement(e, XBE("Ticket")).text = self.__ticket
             meta = etree.SubElement(e, XBE("Meta"))
             unparse_dictionary(info["Meta"], meta)
         return root
@@ -770,8 +771,9 @@ class StatusList(BaseServerMessage):
             task_id = entry.attrib["task-id"]
             state = bes.toXBETaskState(entry.find(
                 BES_ACTIVITY("ActivityStatus")))
+            ticket = entry.findtext(XBE("Ticket"))
             meta = parse_dictionary(entry.find(XBE("Meta/Dict")), {})
-            status_list.add(task_id, state, meta)
+            status_list.add(task_id, state, ticket, meta)
         return status_list
     from_xml = classmethod(from_xml)
 MessageBuilder.register(StatusList)
