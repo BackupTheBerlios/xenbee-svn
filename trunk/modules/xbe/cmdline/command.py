@@ -387,24 +387,15 @@ class Command_reserve(RemoteCommand):
 
     def print_info(self, ticket, task):
         print dedent("""\
-        Your ticket identification code:
-        ================================
-
-        *%(bar1)s*
-        *%(bar2)s*
-        * %(ticket)s *
-        *%(bar2)s*
-        *%(bar1)s*
+        Your ticket: %(ticket)s
 
         please remember that ticket-id, it will be
         required in subsequent calls.
 
         A task has been registered for you as:
-        %(task)s
+        Your task: %(task)s
         """ % {"ticket": ticket,
                "task": task,
-               "bar1": ("*" * (len(ticket)+2)),
-               "bar2": (" " * (len(ticket)+2)),
                }
         )
 
@@ -677,7 +668,15 @@ class Command_status(RemoteCommand, HasTicket):
 
     def statusListReceived(self, statusList):
         self.cancelTimeout()
-        print repr(statusList)
+        if self.opts.verbose:
+            print repr(statusList)
+        else:
+            try:
+                for k,v in statusList.entries().iteritems():
+                    print "%s: %s" % (k, v["State"])
+            except:
+                print "status retrieval failed"
+                sys.exit(1)
         self.done()
 CommandFactory.getInstance().registerCommand(Command_status, "status", "stat", "st")
 

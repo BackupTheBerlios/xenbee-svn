@@ -204,7 +204,7 @@ class Daemon(singleton.Singleton):
         try:
             self.__check_parameters()
         except Exception, e:
-            self.error(e)
+            self.error(str(e))
         
         if self.daemonize:
             self._daemonize()

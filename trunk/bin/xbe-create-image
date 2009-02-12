@@ -44,7 +44,7 @@ from subprocess import Popen, PIPE
 from xbe.util import disk
 from exceptions import RuntimeError
 
-debug = True
+debug = False
 
 # exit codes
 EXIT_SUCCESS = 0
@@ -320,15 +320,17 @@ class DependencyNode:
 #        trace("done")
 
     def _resolve_trace_deps(self, path_resolver, depth=0):
-        trace("resolving strace dependencies for %s (%d)", self.path(), depth)
+        trace("resolving strace dependencies for %s (%d)", self.path().src(), depth)
         # matches path and return value of the open syscall
         # open returns >= 0 on success and -1 on failure
         regexp = re.compile('open\("([^"]+)".*=\s+(\d+)')
         # lookup trace parameters
-        cmd = ["strace", "-e", "open", self.path().src()]
+        cmd = ["strace", "-e", "trace=file,process,network", "-F", self.path().src()]
         params = None
         try:
+            trace("looking up: %s", self.path().dst())
             params = TraceMap.getInstance().get_params(self.path().dst())
+            trace("params = %s", params)
         except Exception, e:
             trace("tracemap failed: %s", e)
             pass
@@ -343,7 +345,9 @@ class DependencyNode:
                 match = regexp.match(line)
                 if match and len(match.groups()):
                     dependency = match.group(1).strip()
-#                    path_found = (int(match.group(2)) != -1)
+                    path_found = (int(match.group(2)) >= 0)
+                    trace("candidate: %s, path_found=%s", dependency, match.group(2))
+                    if not path_found: continue
                     try:
                         resolved_dependency = path_resolver.resolve(dependency, os.path.isfile)
                         if not self.get_root().contains_dependency(dependency):
@@ -706,10 +710,12 @@ def main():
         traceMap.add_from_file(m)
 
     scanner = DependencyScanner(resolver, template, blacklist, options.max_depth, options.run_strace)
+    print "running dependency scanner..."
     root = scanner.run()
     print root
     print "number of nodes:", root.get_child_count()
     ic = ImageCreator(root, dst, options, (None, StripFilter()))
+    print "preparing the image contents..."
     failed = ic.run()
     if len(failed):
         print >>sys.stderr, "failed dependencies:", failed
@@ -717,6 +723,7 @@ def main():
         print "The FS would consume %d MB, the generated image requires %d MB" % (ic.getRequiredSpace() / (1024**2), image_size / (1024**2))
         sys.exit(0)
     if options.image is not None:
+        print "creating the image..."
         image_size = ic.createFSImage(options.image, options.appdata_size, options.bonus_percent / 100.0)
         print "The FS consumes %d MB, the generated image requires %d MB" % (ic.getRequiredSpace() / (1024**2), image_size / (1024**2))
 
