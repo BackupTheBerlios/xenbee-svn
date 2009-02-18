@@ -7,11 +7,15 @@ namespace xbe {
     namespace event {
         class FinishedEvent : public xbe::event::XbeInstdEvent {
             public:
-                FinishedEvent(const std::string &to, const std::string &from, const std::string &conversationID)
-                : xbe::event::XbeInstdEvent(to, from, conversationID) {}
+                FinishedEvent(const std::string &to, const std::string &from, const std::string &conversationID, int exitcode)
+                : xbe::event::XbeInstdEvent(to, from, conversationID, 0), exitcode_(exitcode) {}
                 virtual ~FinishedEvent() {}
 
                 virtual std::string str() const {return "finished";}
+
+                int exitcode() const { return exitcode_; }
+            private:
+                int exitcode_;
         };
     }
 }

@@ -22,8 +22,13 @@ namespace xbe {
                 void taskData(const TaskData & td) { _taskData = td; }
                 TaskData & taskData() { return _taskData; }
                 const TaskData & taskData() const { return _taskData; }
+
+                void statusTaskData(const TaskData &sd) { _statusTaskData = sd; }
+                TaskData & statusTaskData() { return _statusTaskData; }
+                const TaskData & statusTaskData() const { return _statusTaskData; }
             private:
                 TaskData _taskData;
+                TaskData _statusTaskData;
         };
     }
 }

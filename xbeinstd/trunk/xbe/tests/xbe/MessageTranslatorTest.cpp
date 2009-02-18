@@ -38,17 +38,21 @@ CPPUNIT_TEST_SUITE_REGISTRATION( MessageTranslatorTest );
 
 MessageTranslatorTest::MessageTranslatorTest()
     : XBE_INIT_LOGGER("tests.xbe.message-translator")
-{}
+{
+    XbeLibUtils::initialise();
+}
+
+MessageTranslatorTest::~MessageTranslatorTest() {
+    XbeLibUtils::terminate();
+}
 
 void
 MessageTranslatorTest::setUp() {
-    XbeLibUtils::initialise();
+    seda::StageRegistry::instance().clear();
 }
 
 void
 MessageTranslatorTest::tearDown() {
-    seda::StageRegistry::instance().clear();
-    XbeLibUtils::terminate();
 }
 
 void
@@ -57,10 +61,15 @@ MessageTranslatorTest::testXMLExecute() {
 
     try {
         XBE_LOG_DEBUG("parsing xml message");
-        std::ifstream ifs("resources/execute-msg1.xml");
-        std::auto_ptr<xbemsg::message_t> msg = xbemsg::message(*XbeLibUtils::parse(ifs, "resources/execute-msg1.xml", true),
-                                                               xml_schema::flags::dont_initialize | xml_schema::flags::keep_dom,
-                                                               XbeLibUtils::schema_properties());
+    
+        std::auto_ptr<xbemsg::message_t> msg;
+        for (int i = 0; i < 5; i++) {
+            std::ifstream ifs("resources/execute-msg1.xml");
+            CPPUNIT_ASSERT_MESSAGE("could not open resources/execute-msg1.xml", ifs.good());
+            msg = xbemsg::message(*XbeLibUtils::parse(ifs, "resources/execute-msg1.xml", true),
+                                                      xml_schema::flags::dont_initialize | xml_schema::flags::keep_dom,
+                                                      XbeLibUtils::schema_properties());
+        }
 
         seda::Strategy::Ptr discard(new seda::DiscardStrategy());
         seda::AccumulateStrategy::Ptr acc(new seda::AccumulateStrategy(discard));
@@ -82,10 +91,51 @@ MessageTranslatorTest::testXMLExecute() {
         CPPUNIT_ASSERT_EQUAL(std::string("/spool/foo"), execEvt->taskData().env()["FOO"]);
     } catch (const xml_schema::exception &e) {
         XBE_LOG_FATAL(e);
-        CPPUNIT_ASSERT(false);
+        CPPUNIT_ASSERT_MESSAGE(e.what(), false);
     }
 }
 
+void
+MessageTranslatorTest::testXMLExecute2() {
+    XBE_LOG_DEBUG("***** Running testXMLExecute2");
+
+    try {
+        XBE_LOG_DEBUG("parsing xml message");
+        std::ifstream ifs("resources/execute-msg2.xml");
+        CPPUNIT_ASSERT_MESSAGE("could not open resources/execute-msg2.xml", ifs.good());
+
+        std::auto_ptr<xbemsg::message_t> msg = xbemsg::message(*XbeLibUtils::parse(ifs, "resources/execute-msg2.xml", true),
+                                                               xml_schema::flags::dont_initialize | xml_schema::flags::keep_dom,
+                                                               XbeLibUtils::schema_properties());
+
+        seda::Strategy::Ptr discard(new seda::DiscardStrategy());
+        seda::AccumulateStrategy::Ptr acc(new seda::AccumulateStrategy(discard));
+        seda::Strategy::Ptr translate(new xbe::MessageTranslatorStrategy(acc));
+        translate = seda::Strategy::Ptr(new seda::LoggingStrategy(translate));
+        seda::IEvent::Ptr obj(new xbe::event::ObjectEvent<xbemsg::message_t>("foo","bar",msg));
+
+        XBE_LOG_DEBUG("translating the message to an event");
+        translate->perform(obj);
+
+        CPPUNIT_ASSERT(acc->begin() != acc->end());
+        xbe::event::ExecuteEvent *execEvt(dynamic_cast<xbe::event::ExecuteEvent*>(acc->begin()->get()));
+        CPPUNIT_ASSERT(execEvt != NULL);
+        CPPUNIT_ASSERT_EQUAL(std::size_t(2), execEvt->taskData().params().size());
+        CPPUNIT_ASSERT_EQUAL(std::string("/bin/sleep"), execEvt->taskData().path());
+        CPPUNIT_ASSERT_EQUAL(std::string("10"), execEvt->taskData().params()[1]);
+        CPPUNIT_ASSERT_EQUAL(std::string("/spool"), execEvt->taskData().wd().string());
+        CPPUNIT_ASSERT(execEvt->taskData().env().size() > 0);
+        CPPUNIT_ASSERT_EQUAL(std::string("/spool/foo"), execEvt->taskData().env()["FOO"]);
+
+        CPPUNIT_ASSERT(execEvt->statusTaskData().is_valid());
+        CPPUNIT_ASSERT_EQUAL(std::size_t(2), execEvt->statusTaskData().params().size());
+        CPPUNIT_ASSERT_EQUAL(std::string("/bin/ps"), execEvt->statusTaskData().path());
+        CPPUNIT_ASSERT_EQUAL(std::string("aux"), execEvt->statusTaskData().params()[1]);
+    } catch (const xml_schema::exception &e) {
+        XBE_LOG_FATAL(e.what());
+        CPPUNIT_ASSERT_MESSAGE(e.what(), false);
+    }
+}
 void
 MessageTranslatorTest::testXMLExecuteAck() {
     XBE_LOG_DEBUG("***** Running testXMLExecuteAck");
@@ -183,7 +233,7 @@ MessageTranslatorTest::testXMLLifeSign() {
     xbemsg::header_t header("foo", "bar");
     header.conversation_id("conv-id:12345");
     xbemsg::body_t body;
-    xbemsg::life_sign_t life_sign;
+    xbemsg::life_sign_t life_sign(time(0));
     body.life_sign(life_sign);
 
     std::auto_ptr<xbemsg::message_t> msg(new xbemsg::message_t(header, body));
@@ -228,7 +278,7 @@ MessageTranslatorTest::testXMLStatus() {
     xbemsg::header_t header("foo", "bar");
     header.conversation_id("conv-id:12345");
     xbemsg::body_t body;
-    xbemsg::status_t status;
+    xbemsg::status_t status(time(0), -1);
     body.status(status);
 
     std::auto_ptr<xbemsg::message_t> msg(new xbemsg::message_t(header, body));
@@ -244,6 +294,8 @@ MessageTranslatorTest::testXMLStatus() {
     CPPUNIT_ASSERT(acc->begin() != acc->end());
     xbe::event::StatusEvent *evt(dynamic_cast<xbe::event::StatusEvent*>(acc->begin()->get()));
     CPPUNIT_ASSERT(evt != NULL);
+    CPPUNIT_ASSERT_EQUAL((unsigned int)status.timestamp(), evt->timestamp());
+    CPPUNIT_ASSERT_EQUAL((int)status.exitcode(), evt->taskStatusCode());
 }
 
 void
@@ -255,7 +307,10 @@ MessageTranslatorTest::testStatusEvent() {
     seda::Strategy::Ptr translate(new xbe::MessageTranslatorStrategy(acc));
     translate = seda::Strategy::Ptr(new seda::LoggingStrategy(translate));
 
-    seda::IEvent::Ptr obj(new xbe::event::StatusEvent("foo","bar","conv-id:12345"));
+    xbe::event::StatusEvent::Ptr obj(new xbe::event::StatusEvent("foo","bar","conv-id:12345"));
+    obj->taskStatusCode(10);
+    obj->taskStatusStdOut("Hello World!");
+    obj->taskStatusStdErr("Hello World!");
     translate->perform(obj);
 
     CPPUNIT_ASSERT(acc->begin() != acc->end());
@@ -264,6 +319,13 @@ MessageTranslatorTest::testStatusEvent() {
     XBE_LOG_DEBUG("conv-id: " << msg->header().conversation_id());
     CPPUNIT_ASSERT(msg->header().conversation_id() == "conv-id:12345");
     CPPUNIT_ASSERT(msg->body().status());
+    CPPUNIT_ASSERT_EQUAL(10, (int)msg->body().status()->exitcode());
+
+    std::string out(msg->body().status()->stdout()->data(), msg->body().status()->stdout()->size());
+    std::string err(msg->body().status()->stderr()->data(), msg->body().status()->stderr()->size());
+
+    CPPUNIT_ASSERT_EQUAL(obj->taskStatusStdOut(), out);
+    CPPUNIT_ASSERT_EQUAL(obj->taskStatusStdErr(), err);
 }
 
 void
@@ -273,7 +335,7 @@ MessageTranslatorTest::testXMLFinished() {
     xbemsg::header_t header("foo", "bar");
     header.conversation_id("conv-id:12345");
     xbemsg::body_t body;
-    xbemsg::finished_t finished;
+    xbemsg::finished_t finished(0);
     body.finished(finished);
 
     std::auto_ptr<xbemsg::message_t> msg(new xbemsg::message_t(header, body));
@@ -289,6 +351,7 @@ MessageTranslatorTest::testXMLFinished() {
     CPPUNIT_ASSERT(acc->begin() != acc->end());
     xbe::event::FinishedEvent *evt(dynamic_cast<xbe::event::FinishedEvent*>(acc->begin()->get()));
     CPPUNIT_ASSERT(evt != NULL);
+    CPPUNIT_ASSERT_EQUAL(0, evt->exitcode());
 }
 
 void
@@ -300,7 +363,7 @@ MessageTranslatorTest::testFinishedEvent() {
     seda::Strategy::Ptr translate(new xbe::MessageTranslatorStrategy(acc));
     translate = seda::Strategy::Ptr(new seda::LoggingStrategy(translate));
 
-    seda::IEvent::Ptr obj(new xbe::event::FinishedEvent("foo","bar","conv-id:12345"));
+    seda::IEvent::Ptr obj(new xbe::event::FinishedEvent("foo","bar","conv-id:12345", 0));
     translate->perform(obj);
 
     CPPUNIT_ASSERT(acc->begin() != acc->end());
@@ -309,6 +372,7 @@ MessageTranslatorTest::testFinishedEvent() {
     XBE_LOG_DEBUG("conv-id: " << msg->header().conversation_id());
     CPPUNIT_ASSERT(msg->header().conversation_id() == "conv-id:12345");
     CPPUNIT_ASSERT(msg->body().finished());
+    CPPUNIT_ASSERT_EQUAL((long long int)0, msg->body().finished()->exitcode());
 }
 
 void

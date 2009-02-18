@@ -25,6 +25,8 @@ namespace xbe {
 
     public:
       XbeInstdTest();
+      virtual ~XbeInstdTest();
+
       void setUp();
       void tearDown();
 

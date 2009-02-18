@@ -32,11 +32,17 @@ CPPUNIT_TEST_SUITE_REGISTRATION( PingPongTest );
 
 PingPongTest::PingPongTest()
     : XBE_INIT_LOGGER("tests.xbe.pingpong")
-{}
+{
+    XbeLibUtils::initialise();
+}
+
+PingPongTest::~PingPongTest()
+{
+    XbeLibUtils::terminate();
+}
 
 void
 PingPongTest::setUp() {
-    XbeLibUtils::initialise();
     // register the test xml-namespace with the namespace map
     XbeLibUtils::namespace_infomap()["xbetest"].name = "http://www.xenbee.net/schema/2008/02/xbetest";
     char cwd[PATH_MAX];
@@ -48,7 +54,6 @@ PingPongTest::setUp() {
 void
 PingPongTest::tearDown() {
     seda::StageRegistry::instance().clear();
-    XbeLibUtils::terminate();
 }
 
 void PingPongTest::testPingPong() {

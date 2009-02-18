@@ -40,18 +40,17 @@ namespace tests {
         protected: // message dispatcher
             virtual void dispatch(const xbemsg::message_t& msg);
             
-        protected:
-            PingPongContext _fsm;  // what to do with incoming events
-
         private:
             void incSentMessages() { _sentMessages++; }
-
             XBE_DECLARE_LOGGER();
             std::string _to;
             std::string _from;
             std::size_t _maxMessages;
             std::size_t _sentMessages;
             bool _initialSend; // perform an inital send operation during start up
+
+        protected:
+            PingPongContext _fsm;  // what to do with incoming events
         };
     }
 }

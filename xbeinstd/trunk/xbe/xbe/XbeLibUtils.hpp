@@ -25,7 +25,7 @@ namespace xbe {
         static xsd::cxx::xml::dom::auto_ptr<xercesc::DOMDocument> parse(std::istream& is, const std::string& id = "", bool validate=true);
     private:
         XbeLibUtils() {}
-        static XMLParserPool _parserPool;
+        static XMLParserPool *_parserPool;
     };
 }
 

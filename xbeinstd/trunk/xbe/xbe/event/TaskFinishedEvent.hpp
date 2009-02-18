@@ -7,10 +7,14 @@ namespace xbe {
     namespace event {
         class TaskFinishedEvent : public seda::UserEvent {
             public:
-                TaskFinishedEvent() {}
+                explicit
+                TaskFinishedEvent(int exitcode) : exitcode_(exitcode) {}
                 virtual ~TaskFinishedEvent() {}
 
                 virtual std::string str() const {return "task-finished";}
+                int exitcode() const { return exitcode_; }
+            private:
+                int exitcode_;
         };
     }
 }

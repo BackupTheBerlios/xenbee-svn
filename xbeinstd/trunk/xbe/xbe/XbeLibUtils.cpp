@@ -48,7 +48,7 @@ XALAN_CPP_NAMESPACE_USE
 XERCES_CPP_NAMESPACE_USE
 #endif
 
-xbe::XMLParserPool XbeLibUtils::_parserPool(10);
+xbe::XMLParserPool *XbeLibUtils::_parserPool(0);
 
 void XbeLibUtils::initialise() throw (xbe::XbeException) {
     XMLPlatformUtils::Initialize();
@@ -57,7 +57,7 @@ void XbeLibUtils::initialise() throw (xbe::XbeException) {
 #endif
     XSECPlatformUtils::Initialise(/*XSECCryptoProvider = NULL*/);
 
-    XBE_DEFINE_LOGGER("xbe.lib.utils");
+//    XBE_DEFINE_LOGGER("xbe.lib.utils");
 
     // TODO: make this configurable
     // initalize namespace map
@@ -74,8 +74,6 @@ void XbeLibUtils::initialise() throw (xbe::XbeException) {
     std::string schema_path(std::string(INSTALL_PREFIX) + std::string("/etc/xbe/schema"));
     std::string schema_uri(std::string("file://") + schema_path);
 
-    XBE_LOG_DEBUG("using schema definitions from: " << schema_uri);
-
     xml_schema::properties& props = schema_properties();
     props.schema_location("http://www.xenbee.net/schema/2008/02/xbe-msg",   schema_uri + "/xbe-msg.xsd");
     //props.schema_location("http://www.xenbee.net/schema/2008/02/xbetest",   schema_uri + "/xbe-test.xsd");
@@ -84,16 +82,26 @@ void XbeLibUtils::initialise() throw (xbe::XbeException) {
     props.schema_location("http://www.w3.org/2000/09/xmldsig#",             schema_uri + "/dsig.xsd");
     props.schema_location("http://www.w3.org/2001/04/xmlenc#",              schema_uri + "/xenc-schema.xsd");
 
-    // allocate and automatically release one parser
-    _parserPool.addGrammar(schema_path + "/jsdl-schema.xsd");
-    _parserPool.addGrammar(schema_path + "/jsdl-posix-schema.xsd");
-    _parserPool.addGrammar(schema_path + "/dsig.xsd");
-    _parserPool.addGrammar(schema_path + "/xenc-schema.xsd");
-    _parserPool.addGrammar(schema_path + "/xbe-msg.xsd");
-    _parserPool.allocate();
+    if (_parserPool == 0) {
+        _parserPool = new xbe::XMLParserPool(10);
+        // allocate and automatically release one parser
+        _parserPool->addGrammar(schema_path + "/xbe-msg.xsd");
+        _parserPool->addGrammar(schema_path + "/jsdl-schema.xsd");
+        _parserPool->addGrammar(schema_path + "/jsdl-posix-schema.xsd");
+        _parserPool->addGrammar(schema_path + "/dsig.xsd");
+        _parserPool->addGrammar(schema_path + "/xenc-schema.xsd");
+        _parserPool->allocate();
+    }
 }
 
 void XbeLibUtils::terminate() throw () {
+    // remove the parser pool
+    // assert (_parserPool->free() == _parserPool->size())
+    if (_parserPool) {
+        delete _parserPool;
+        _parserPool = 0;
+    }
+
     try {
         XSECPlatformUtils::Terminate();
     } catch(...) {
@@ -173,5 +181,5 @@ void XbeLibUtils::serialize(std::ostream& os,
 //
 xsd::cxx::xml::dom::auto_ptr<xercesc::DOMDocument>
 XbeLibUtils::parse (std::istream& is, const std::string& id, bool validate) {
-    return _parserPool.allocate()->parse(is,id,validate);
+    return _parserPool->allocate()->parse(is,id,validate);
 }

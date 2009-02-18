@@ -31,11 +31,17 @@ CPPUNIT_TEST_SUITE_REGISTRATION( XbeInstdTest );
 
 XbeInstdTest::XbeInstdTest()
     : XBE_INIT_LOGGER("tests.xbe.xbeinstd")
-{}
+{
+    XbeLibUtils::initialise();
+}
+
+XbeInstdTest::~XbeInstdTest() {
+    XbeLibUtils::terminate();
+}
 
 void
 XbeInstdTest::setUp() {
-    XbeLibUtils::initialise();
+    seda::StageRegistry::instance().clear();
     seda::StageFactory::Ptr factory(new seda::StageFactory());
 
     xbe::XbeInstd::Ptr xbeinstd(new XbeInstd("xbeinstd", seda::Strategy::Ptr(new seda::ForwardStrategy("discard")), "to.foo", "from.bar"));
@@ -58,7 +64,6 @@ XbeInstdTest::tearDown() {
 
     // remove created files
     unlink("resources/testData.1.out");
-    XbeLibUtils::terminate();
 }
 
 void XbeInstdTest::testLifeSign() {
@@ -159,7 +164,7 @@ void XbeInstdTest::testStatus1() {
         xbe::event::StatusEvent* stEvt = dynamic_cast<xbe::event::StatusEvent*>((*it).get());
         if ( stEvt != NULL) {
             statusCount++;
-            CPPUNIT_ASSERT_EQUAL(std::string("Idle"), stEvt->state());
+            CPPUNIT_ASSERT_EQUAL(std::string("IDLE"), stEvt->state());
         }
     }
     CPPUNIT_ASSERT_EQUAL(4, statusCount);
@@ -206,13 +211,13 @@ void XbeInstdTest::testStatus2() {
 
         for (seda::AccumulateStrategy::const_iterator it = _acc->begin(); it != _acc->end(); it++) {
             if (xbe::event::StatusEvent *evt = dynamic_cast<xbe::event::StatusEvent*>((*it).get())) {
-                if (evt->state() == "Idle") statusIdleSeen++;
-                if (evt->state() == "Busy") statusBusySeen++;
-            } else if (xbe::event::LifeSignEvent *evt = dynamic_cast<xbe::event::LifeSignEvent*>((*it).get())) {
+                if (evt->state() == "IDLE") statusIdleSeen++;
+                if (evt->state() == "BUSY") statusBusySeen++;
+            } else if (dynamic_cast<xbe::event::LifeSignEvent*>((*it).get())) {
                 lifeSignSeen++;
-            } else if (xbe::event::ExecuteAckEvent *evt = dynamic_cast<xbe::event::ExecuteAckEvent*>((*it).get())) {
+            } else if (dynamic_cast<xbe::event::ExecuteAckEvent*>((*it).get())) {
                 executeAckSeen++;
-            } else if (xbe::event::ShutdownAckEvent *evt = dynamic_cast<xbe::event::ShutdownAckEvent*>((*it).get())) {
+            } else if (dynamic_cast<xbe::event::ShutdownAckEvent*>((*it).get())) {
                 shutdownAckSeen++;
             }
         }

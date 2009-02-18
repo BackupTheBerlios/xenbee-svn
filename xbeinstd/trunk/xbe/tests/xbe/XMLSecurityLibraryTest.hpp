@@ -23,6 +23,8 @@ namespace xbe {
 
             public:
             XMLSecurityLibraryTest();
+            virtual ~XMLSecurityLibraryTest();
+
             void setUp();
             void tearDown();
 

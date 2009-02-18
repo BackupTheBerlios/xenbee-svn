@@ -26,7 +26,6 @@ void XMLSigner::perform(const seda::IEvent::Ptr& e) {
         DSIGSignature *sig;
         DOMElement *sigNode;
         DOMDocument *doc;
-        DOMElement *hdrElem;
 
         doc = &(xmlEvent->payload());
 

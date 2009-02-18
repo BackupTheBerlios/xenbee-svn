@@ -747,6 +747,36 @@ namespace xbemsg
     this->task_.set (x);
   }
 
+  const execute_t::status_optional& execute_t::
+  status () const
+  {
+    return this->status_;
+  }
+
+  execute_t::status_optional& execute_t::
+  status ()
+  {
+    return this->status_;
+  }
+
+  void execute_t::
+  status (const status_type& x)
+  {
+    this->status_.set (x);
+  }
+
+  void execute_t::
+  status (const status_optional& x)
+  {
+    this->status_ = x;
+  }
+
+  void execute_t::
+  status (::std::auto_ptr< status_type > x)
+  {
+    this->status_.set (x);
+  }
+
   const execute_t::any_sequence& execute_t::
   any () const
   {
@@ -1077,6 +1107,24 @@ namespace xbemsg
     this->any_ = s;
   }
 
+  const life_sign_t::timestamp_type& life_sign_t::
+  timestamp () const
+  {
+    return this->timestamp_.get ();
+  }
+
+  life_sign_t::timestamp_type& life_sign_t::
+  timestamp ()
+  {
+    return this->timestamp_.get ();
+  }
+
+  void life_sign_t::
+  timestamp (const timestamp_type& x)
+  {
+    this->timestamp_.set (x);
+  }
+
   const life_sign_t::any_attribute_set& life_sign_t::
   any_attribute () const
   {
@@ -1267,6 +1315,66 @@ namespace xbemsg
   // status_t
   // 
 
+  const status_t::stdout_optional& status_t::
+  stdout () const
+  {
+    return this->stdout_;
+  }
+
+  status_t::stdout_optional& status_t::
+  stdout ()
+  {
+    return this->stdout_;
+  }
+
+  void status_t::
+  stdout (const stdout_type& x)
+  {
+    this->stdout_.set (x);
+  }
+
+  void status_t::
+  stdout (const stdout_optional& x)
+  {
+    this->stdout_ = x;
+  }
+
+  void status_t::
+  stdout (::std::auto_ptr< stdout_type > x)
+  {
+    this->stdout_.set (x);
+  }
+
+  const status_t::stderr_optional& status_t::
+  stderr () const
+  {
+    return this->stderr_;
+  }
+
+  status_t::stderr_optional& status_t::
+  stderr ()
+  {
+    return this->stderr_;
+  }
+
+  void status_t::
+  stderr (const stderr_type& x)
+  {
+    this->stderr_.set (x);
+  }
+
+  void status_t::
+  stderr (const stderr_optional& x)
+  {
+    this->stderr_ = x;
+  }
+
+  void status_t::
+  stderr (::std::auto_ptr< stderr_type > x)
+  {
+    this->stderr_.set (x);
+  }
+
   const status_t::any_sequence& status_t::
   any () const
   {
@@ -1283,6 +1391,42 @@ namespace xbemsg
   any (const any_sequence& s)
   {
     this->any_ = s;
+  }
+
+  const status_t::timestamp_type& status_t::
+  timestamp () const
+  {
+    return this->timestamp_.get ();
+  }
+
+  status_t::timestamp_type& status_t::
+  timestamp ()
+  {
+    return this->timestamp_.get ();
+  }
+
+  void status_t::
+  timestamp (const timestamp_type& x)
+  {
+    this->timestamp_.set (x);
+  }
+
+  const status_t::exitcode_type& status_t::
+  exitcode () const
+  {
+    return this->exitcode_.get ();
+  }
+
+  status_t::exitcode_type& status_t::
+  exitcode ()
+  {
+    return this->exitcode_.get ();
+  }
+
+  void status_t::
+  exitcode (const exitcode_type& x)
+  {
+    this->exitcode_.set (x);
   }
 
   const status_t::any_attribute_set& status_t::
@@ -1335,6 +1479,24 @@ namespace xbemsg
   any (const any_sequence& s)
   {
     this->any_ = s;
+  }
+
+  const finished_t::exitcode_type& finished_t::
+  exitcode () const
+  {
+    return this->exitcode_.get ();
+  }
+
+  finished_t::exitcode_type& finished_t::
+  exitcode ()
+  {
+    return this->exitcode_.get ();
+  }
+
+  void finished_t::
+  exitcode (const exitcode_type& x)
+  {
+    this->exitcode_.set (x);
   }
 
   const finished_t::any_attribute_set& finished_t::
@@ -2075,6 +2237,7 @@ namespace xbemsg
   : ::xml_schema::type (),
     dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     task_ (::xml_schema::flags (), this),
+    status_ (::xml_schema::flags (), this),
     any_ (this->dom_document ()),
     any_attribute_ (this->dom_document ())
   {
@@ -2087,6 +2250,7 @@ namespace xbemsg
   : ::xml_schema::type (x, f, c),
     dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     task_ (x.task_, f, this),
+    status_ (x.status_, f, this),
     any_ (x.any_, this->dom_document ()),
     any_attribute_ (x.any_attribute_, this->dom_document ())
   {
@@ -2099,6 +2263,7 @@ namespace xbemsg
   : ::xml_schema::type (e, f | ::xml_schema::flags::base, c),
     dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     task_ (f, this),
+    status_ (f, this),
     any_ (this->dom_document ()),
     any_attribute_ (this->dom_document ())
   {
@@ -2129,6 +2294,20 @@ namespace xbemsg
         if (!this->task ())
         {
           this->task (r);
+          continue;
+        }
+      }
+
+      // status
+      //
+      if (n.name () == "status" && n.namespace_ () == "http://www.xenbee.net/schema/2008/02/xbe-msg")
+      {
+        ::std::auto_ptr< status_type > r (
+          status_traits::create (i, f, this));
+
+        if (!this->status ())
+        {
+          this->status (r);
           continue;
         }
       }
@@ -2682,10 +2861,11 @@ namespace xbemsg
   //
 
   life_sign_t::
-  life_sign_t ()
+  life_sign_t (const timestamp_type& timestamp)
   : ::xml_schema::type (),
     dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     any_ (this->dom_document ()),
+    timestamp_ (timestamp, ::xml_schema::flags (), this),
     any_attribute_ (this->dom_document ())
   {
   }
@@ -2697,6 +2877,7 @@ namespace xbemsg
   : ::xml_schema::type (x, f, c),
     dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     any_ (x.any_, this->dom_document ()),
+    timestamp_ (x.timestamp_, f, this),
     any_attribute_ (x.any_attribute_, this->dom_document ())
   {
   }
@@ -2708,6 +2889,7 @@ namespace xbemsg
   : ::xml_schema::type (e, f | ::xml_schema::flags::base, c),
     dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     any_ (this->dom_document ()),
+    timestamp_ (f, this),
     any_attribute_ (this->dom_document ())
   {
     if ((f & ::xml_schema::flags::base) == 0)
@@ -2719,7 +2901,7 @@ namespace xbemsg
 
   void life_sign_t::
   parse (::xsd::cxx::xml::dom::parser< char >& p,
-         ::xml_schema::flags)
+         ::xml_schema::flags f)
   {
     for (; p.more_elements (); p.next_element ())
     {
@@ -2748,6 +2930,12 @@ namespace xbemsg
       const ::xsd::cxx::xml::qualified_name< char > n (
         ::xsd::cxx::xml::dom::name< char > (i));
 
+      if (n.name () == "timestamp" && n.namespace_ ().empty ())
+      {
+        this->timestamp (timestamp_traits::create (i, f, this));
+        continue;
+      }
+
       // any_attribute
       //
       if ((!n.namespace_ ().empty () &&
@@ -2762,6 +2950,13 @@ namespace xbemsg
         this->any_attribute ().insert (r);
         continue;
       }
+    }
+
+    if (!timestamp_.present ())
+    {
+      throw ::xsd::cxx::tree::expected_attribute< char > (
+        "timestamp",
+        "");
     }
   }
 
@@ -3078,10 +3273,15 @@ namespace xbemsg
   //
 
   status_t::
-  status_t ()
+  status_t (const timestamp_type& timestamp,
+            const exitcode_type& exitcode)
   : ::xml_schema::type (),
     dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    stdout_ (::xml_schema::flags (), this),
+    stderr_ (::xml_schema::flags (), this),
     any_ (this->dom_document ()),
+    timestamp_ (timestamp, ::xml_schema::flags (), this),
+    exitcode_ (exitcode, ::xml_schema::flags (), this),
     any_attribute_ (this->dom_document ())
   {
   }
@@ -3092,7 +3292,11 @@ namespace xbemsg
             ::xml_schema::container* c)
   : ::xml_schema::type (x, f, c),
     dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    stdout_ (x.stdout_, f, this),
+    stderr_ (x.stderr_, f, this),
     any_ (x.any_, this->dom_document ()),
+    timestamp_ (x.timestamp_, f, this),
+    exitcode_ (x.exitcode_, f, this),
     any_attribute_ (x.any_attribute_, this->dom_document ())
   {
   }
@@ -3103,7 +3307,11 @@ namespace xbemsg
             ::xml_schema::container* c)
   : ::xml_schema::type (e, f | ::xml_schema::flags::base, c),
     dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
+    stdout_ (f, this),
+    stderr_ (f, this),
     any_ (this->dom_document ()),
+    timestamp_ (f, this),
+    exitcode_ (f, this),
     any_attribute_ (this->dom_document ())
   {
     if ((f & ::xml_schema::flags::base) == 0)
@@ -3115,13 +3323,41 @@ namespace xbemsg
 
   void status_t::
   parse (::xsd::cxx::xml::dom::parser< char >& p,
-         ::xml_schema::flags)
+         ::xml_schema::flags f)
   {
     for (; p.more_elements (); p.next_element ())
     {
       const ::xercesc::DOMElement& i (p.cur_element ());
       const ::xsd::cxx::xml::qualified_name< char > n (
         ::xsd::cxx::xml::dom::name< char > (i));
+
+      // stdout
+      //
+      if (n.name () == "stdout" && n.namespace_ () == "http://www.xenbee.net/schema/2008/02/xbe-msg")
+      {
+        ::std::auto_ptr< stdout_type > r (
+          stdout_traits::create (i, f, this));
+
+        if (!this->stdout ())
+        {
+          this->stdout (r);
+          continue;
+        }
+      }
+
+      // stderr
+      //
+      if (n.name () == "stderr" && n.namespace_ () == "http://www.xenbee.net/schema/2008/02/xbe-msg")
+      {
+        ::std::auto_ptr< stderr_type > r (
+          stderr_traits::create (i, f, this));
+
+        if (!this->stderr ())
+        {
+          this->stderr (r);
+          continue;
+        }
+      }
 
       // any
       //
@@ -3144,6 +3380,18 @@ namespace xbemsg
       const ::xsd::cxx::xml::qualified_name< char > n (
         ::xsd::cxx::xml::dom::name< char > (i));
 
+      if (n.name () == "timestamp" && n.namespace_ ().empty ())
+      {
+        this->timestamp (timestamp_traits::create (i, f, this));
+        continue;
+      }
+
+      if (n.name () == "exitcode" && n.namespace_ ().empty ())
+      {
+        this->exitcode (exitcode_traits::create (i, f, this));
+        continue;
+      }
+
       // any_attribute
       //
       if ((!n.namespace_ ().empty () &&
@@ -3158,6 +3406,20 @@ namespace xbemsg
         this->any_attribute ().insert (r);
         continue;
       }
+    }
+
+    if (!timestamp_.present ())
+    {
+      throw ::xsd::cxx::tree::expected_attribute< char > (
+        "timestamp",
+        "");
+    }
+
+    if (!exitcode_.present ())
+    {
+      throw ::xsd::cxx::tree::expected_attribute< char > (
+        "exitcode",
+        "");
     }
   }
 
@@ -3177,10 +3439,11 @@ namespace xbemsg
   //
 
   finished_t::
-  finished_t ()
+  finished_t (const exitcode_type& exitcode)
   : ::xml_schema::type (),
     dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     any_ (this->dom_document ()),
+    exitcode_ (exitcode, ::xml_schema::flags (), this),
     any_attribute_ (this->dom_document ())
   {
   }
@@ -3192,6 +3455,7 @@ namespace xbemsg
   : ::xml_schema::type (x, f, c),
     dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     any_ (x.any_, this->dom_document ()),
+    exitcode_ (x.exitcode_, f, this),
     any_attribute_ (x.any_attribute_, this->dom_document ())
   {
   }
@@ -3203,6 +3467,7 @@ namespace xbemsg
   : ::xml_schema::type (e, f | ::xml_schema::flags::base, c),
     dom_document_ (::xsd::cxx::xml::dom::create_document< char > ()),
     any_ (this->dom_document ()),
+    exitcode_ (f, this),
     any_attribute_ (this->dom_document ())
   {
     if ((f & ::xml_schema::flags::base) == 0)
@@ -3214,7 +3479,7 @@ namespace xbemsg
 
   void finished_t::
   parse (::xsd::cxx::xml::dom::parser< char >& p,
-         ::xml_schema::flags)
+         ::xml_schema::flags f)
   {
     for (; p.more_elements (); p.next_element ())
     {
@@ -3243,6 +3508,12 @@ namespace xbemsg
       const ::xsd::cxx::xml::qualified_name< char > n (
         ::xsd::cxx::xml::dom::name< char > (i));
 
+      if (n.name () == "exitcode" && n.namespace_ ().empty ())
+      {
+        this->exitcode (exitcode_traits::create (i, f, this));
+        continue;
+      }
+
       // any_attribute
       //
       if ((!n.namespace_ ().empty () &&
@@ -3257,6 +3528,13 @@ namespace xbemsg
         this->any_attribute ().insert (r);
         continue;
       }
+    }
+
+    if (!exitcode_.present ())
+    {
+      throw ::xsd::cxx::tree::expected_attribute< char > (
+        "exitcode",
+        "");
     }
   }
 
@@ -4024,6 +4302,19 @@ namespace xbemsg
       s << *i.task ();
     }
 
+    // status
+    //
+    if (i.status ())
+    {
+      ::xercesc::DOMElement& s (
+        ::xsd::cxx::xml::dom::create_element (
+          "status",
+          "http://www.xenbee.net/schema/2008/02/xbe-msg",
+          e));
+
+      s << *i.status ();
+    }
+
     // any
     //
     for (execute_t::any_const_iterator
@@ -4238,6 +4529,17 @@ namespace xbemsg
         e.getOwnerDocument ()->importNode (
           const_cast< ::xercesc::DOMElement* > (&(*b)), true));
     }
+
+    // timestamp
+    //
+    {
+      ::xercesc::DOMAttr& a (
+        ::xsd::cxx::xml::dom::create_attribute (
+          "timestamp",
+          e));
+
+      a << i.timestamp ();
+    }
   }
 
   void
@@ -4364,6 +4666,32 @@ namespace xbemsg
         e.setAttributeNodeNS (a);
     }
 
+    // stdout
+    //
+    if (i.stdout ())
+    {
+      ::xercesc::DOMElement& s (
+        ::xsd::cxx::xml::dom::create_element (
+          "stdout",
+          "http://www.xenbee.net/schema/2008/02/xbe-msg",
+          e));
+
+      s << *i.stdout ();
+    }
+
+    // stderr
+    //
+    if (i.stderr ())
+    {
+      ::xercesc::DOMElement& s (
+        ::xsd::cxx::xml::dom::create_element (
+          "stderr",
+          "http://www.xenbee.net/schema/2008/02/xbe-msg",
+          e));
+
+      s << *i.stderr ();
+    }
+
     // any
     //
     for (status_t::any_const_iterator
@@ -4373,6 +4701,28 @@ namespace xbemsg
       e.appendChild (
         e.getOwnerDocument ()->importNode (
           const_cast< ::xercesc::DOMElement* > (&(*b)), true));
+    }
+
+    // timestamp
+    //
+    {
+      ::xercesc::DOMAttr& a (
+        ::xsd::cxx::xml::dom::create_attribute (
+          "timestamp",
+          e));
+
+      a << i.timestamp ();
+    }
+
+    // exitcode
+    //
+    {
+      ::xercesc::DOMAttr& a (
+        ::xsd::cxx::xml::dom::create_attribute (
+          "exitcode",
+          e));
+
+      a << i.exitcode ();
     }
   }
 
@@ -4407,6 +4757,17 @@ namespace xbemsg
       e.appendChild (
         e.getOwnerDocument ()->importNode (
           const_cast< ::xercesc::DOMElement* > (&(*b)), true));
+    }
+
+    // exitcode
+    //
+    {
+      ::xercesc::DOMAttr& a (
+        ::xsd::cxx::xml::dom::create_attribute (
+          "exitcode",
+          e));
+
+      a << i.exitcode ();
     }
   }
 

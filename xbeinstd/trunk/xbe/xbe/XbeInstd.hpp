@@ -9,6 +9,7 @@
 #include <xbe/event/ExecuteEvent.hpp>
 #include <xbe/event/LifeSignEvent.hpp>
 #include <xbe/event/StatusReqEvent.hpp>
+#include <xbe/event/StatusEvent.hpp>
 #include <xbe/event/TerminateEvent.hpp>
 #include <xbe/event/FinishedEvent.hpp>
 #include <xbe/event/FinishedAckEvent.hpp>
@@ -40,7 +41,7 @@ namespace xbe {
             void do_terminate();
             void do_terminate_job(int signal);
             void do_shutdown(xbe::event::ShutdownEvent&);
-            void do_send_status(xbe::event::StatusReqEvent&);
+            void do_send_status(xbe::event::StatusReqEvent&, xbe::event::StatusEvent::Status);
             void do_send_execute_ack(xbe::event::ExecuteEvent&);
             void do_finished_ack(xbe::event::FinishedAckEvent&);
             void do_failed_ack(xbe::event::FailedAckEvent&);
@@ -49,7 +50,7 @@ namespace xbe {
             void do_send_lifesign();
 
             /* events coming from the executed job */
-            void do_task_finished();
+            void do_task_finished(int exitcode);
             void do_task_failed();
 
             void do_failed();
@@ -77,7 +78,6 @@ namespace xbe {
             XBE_DECLARE_LOGGER();
             XbeInstdContext _fsm;
 
-
             seda::Timer _timeoutTimer;
             seda::Timer _lifeSignTimer;
             std::string _to;
@@ -85,7 +85,10 @@ namespace xbe {
             std::string _stageName;
             std::size_t _maxRetries;
             std::size_t _retryCounter;
+
             std::tr1::shared_ptr<xbe::Task> _mainTask;
+            std::tr1::shared_ptr<xbe::Task> _statusTask;
+
             boost::recursive_mutex _mtx;
             boost::condition_variable_any _shutdown;
     };

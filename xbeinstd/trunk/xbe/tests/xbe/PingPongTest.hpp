@@ -17,6 +17,8 @@ namespace xbe {
 
     public:
       PingPongTest();
+      virtual ~PingPongTest();
+
       void setUp();
       void tearDown();
 

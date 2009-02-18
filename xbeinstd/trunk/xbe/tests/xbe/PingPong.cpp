@@ -20,12 +20,12 @@ PingPong::PingPong(const std::string& name,
         bool initialSend) :
     ::seda::ForwardStrategy(name, next),
     XBE_INIT_LOGGER("tests.xbe.pingpong"),
-    _fsm(*this),
     _to(to),
     _from(from),
     _maxMessages(maxMessages),
     _sentMessages(0),
-    _initialSend(initialSend)
+    _initialSend(initialSend),
+    _fsm(*this)
 { }
 
 PingPong::~PingPong() {}

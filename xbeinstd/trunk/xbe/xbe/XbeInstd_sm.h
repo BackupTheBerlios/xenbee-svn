@@ -34,7 +34,7 @@ namespace xbe
         virtual void Exit(XbeInstdContext&) {};
 
         virtual void Execute(XbeInstdContext& context, xbe::event::ExecuteEvent& msg);
-        virtual void Finished(XbeInstdContext& context);
+        virtual void Finished(XbeInstdContext& context, int exitcode);
         virtual void FinishedAck(XbeInstdContext& context, xbe::event::FinishedAckEvent& msg);
         virtual void LifeSign(XbeInstdContext& context);
         virtual void Shutdown(XbeInstdContext& context, xbe::event::ShutdownEvent& msg);
@@ -72,7 +72,6 @@ namespace xbe
         {};
 
         virtual void Execute(XbeInstdContext& context, xbe::event::ExecuteEvent& msg);
-        virtual void StatusReq(XbeInstdContext& context, xbe::event::StatusReqEvent& msg);
         virtual void LifeSign(XbeInstdContext& context);
     };
 
@@ -96,9 +95,10 @@ namespace xbe
         {};
 
         void Execute(XbeInstdContext& context, xbe::event::ExecuteEvent& msg);
-        void Finished(XbeInstdContext& context);
+        void Finished(XbeInstdContext& context, int exitcode);
         void FinishedAck(XbeInstdContext& context, xbe::event::FinishedAckEvent& msg);
         void Shutdown(XbeInstdContext& context, xbe::event::ShutdownEvent& msg);
+        void StatusReq(XbeInstdContext& context, xbe::event::StatusReqEvent& msg);
         void Terminate(XbeInstdContext& context, xbe::event::TerminateEvent& msg);
     };
 
@@ -111,8 +111,9 @@ namespace xbe
         {};
 
         void Execute(XbeInstdContext& context, xbe::event::ExecuteEvent& msg);
-        void Finished(XbeInstdContext& context);
+        void Finished(XbeInstdContext& context, int exitcode);
         void Shutdown(XbeInstdContext& context, xbe::event::ShutdownEvent& msg);
+        void StatusReq(XbeInstdContext& context, xbe::event::StatusReqEvent& msg);
         void Terminate(XbeInstdContext& context, xbe::event::TerminateEvent& msg);
     };
 
@@ -126,7 +127,8 @@ namespace xbe
 
         void Entry(XbeInstdContext&);
         void Exit(XbeInstdContext&);
-        void Finished(XbeInstdContext& context);
+        void Finished(XbeInstdContext& context, int exitcode);
+        void StatusReq(XbeInstdContext& context, xbe::event::StatusReqEvent& msg);
         void Terminate(XbeInstdContext& context);
         void Timeout(XbeInstdContext& context);
     };
@@ -143,6 +145,7 @@ namespace xbe
         void Exit(XbeInstdContext&);
         void FinishedAck(XbeInstdContext& context, xbe::event::FinishedAckEvent& msg);
         void Shutdown(XbeInstdContext& context, xbe::event::ShutdownEvent& msg);
+        void StatusReq(XbeInstdContext& context, xbe::event::StatusReqEvent& msg);
         void Terminate(XbeInstdContext& context, xbe::event::TerminateEvent& msg);
         void Timeout(XbeInstdContext& context);
     };
@@ -205,9 +208,9 @@ namespace xbe
             (getState()).Execute(*this, msg);
         };
 
-        void Finished()
+        void Finished(int exitcode)
         {
-            (getState()).Finished(*this);
+            (getState()).Finished(*this, exitcode);
         };
 
         void FinishedAck(xbe::event::FinishedAckEvent& msg)

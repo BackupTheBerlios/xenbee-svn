@@ -13,6 +13,7 @@
 %include <xbe/event/FinishedAckEvent.hpp>
 %include <xbe/event/FailedEvent.hpp>
 %include <xbe/event/FailedAckEvent.hpp>
+%include <xbe/event/StatusEvent.hpp>
 %include <signal.h>
 
 %package xbe
@@ -53,13 +54,19 @@ Idle
             do_terminate();
         }
 
+    StatusReq(msg: xbe::event::StatusReqEvent&)
+        nil
+        {
+            do_send_status(msg, xbe::event::StatusEvent::ST_IDLE);
+        }
+
     FinishedAck(msg: xbe::event::FinishedAckEvent&)
         nil
         { }
-    Finished
+    Finished(exitcode: int)
         nil
         { }
- }
+}
 
 Busy
 {
@@ -69,19 +76,17 @@ Busy
             do_send_execute_ack(msg);
         }
  
-    Finished
+    Finished(exitcode: int)
         WaitForFinishedAck
         {
-            do_task_finished();
+            do_task_finished(exitcode);
         }
 
-/*
-    Failed
-        WaitForFailedAck
+    StatusReq(msg: xbe::event::StatusReqEvent&)
+        nil
         {
-            do_task_failed();
+            do_send_status(msg, xbe::event::StatusEvent::ST_BUSY);
         }
-*/
 
     Terminate(msg: xbe::event::TerminateEvent&)
         WaitForTaskTermination
@@ -101,7 +106,7 @@ WaitForTaskTermination
 Entry { reset_retryCounter(); do_start_timer(); }
 Exit  { do_stop_timer();  }
 {
-    Finished
+    Finished(exitcode: int)
         Idle
         {
             do_terminate();
@@ -120,6 +125,12 @@ Exit  { do_stop_timer();  }
             do_terminate();
         }
 
+    StatusReq(msg: xbe::event::StatusReqEvent&)
+        nil
+        {
+            do_send_status(msg, xbe::event::StatusEvent::ST_BUSY);
+        }
+
     Terminate
         nil
         {}        
@@ -135,11 +146,17 @@ Exit  { do_stop_timer();  }
             do_finished_ack(msg);
         }
 
+    StatusReq(msg: xbe::event::StatusReqEvent&)
+        nil
+        {
+            do_send_status(msg, xbe::event::StatusEvent::ST_BUSY);
+        }
+
     Timeout
         [ctxt.retryCounter() < ctxt.maxRetries()]
         nil
         {
-            do_task_finished();
+            do_task_finished(-1);
             inc_retryCounter();
         }
     Timeout
@@ -159,42 +176,6 @@ Exit  { do_stop_timer();  }
         {
         }
 }
-
-/*
-WaitForFailedAck
-Entry { reset_retryCounter(); do_start_timer(); }
-Exit  { do_stop_timer();  }
-{
-    FailedAck(msg: xbe::event::FailedAckEvent&)
-        Idle
-        {
-            do_stop_timer();
-            do_failed_ack(msg);
-        }
-
-    Timeout
-        [ctxt.retryCounter() < ctxt.maxRetries()]
-        WaitForFailedAck
-        {
-            do_task_failed();
-        }
-    Timeout
-        Failed
-        {
-            do_failed();
-        }
-
-    Shutdown(msg: xbe::event::ShutdownEvent&)
-        Shutdown
-        {
-            do_shutdown(msg);
-        }
-    Terminate(msg: xbe::event::TerminateEvent&)
-        Idle
-        {
-        }
-}
-*/
 
 Shutdown
 Entry { do_stop_lifesign(); do_stop_timer(); }
@@ -229,13 +210,6 @@ Default
         {
             // ignore further execute requests
             // only state Idle provides Execute
-        }
-
-    // status requests should always be handled
-    StatusReq(msg: xbe::event::StatusReqEvent&)
-        nil
-        {
-            do_send_status(msg);
         }
 
     // life signals should always be handled

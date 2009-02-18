@@ -58,6 +58,7 @@
     <xs:complexType name="execute_t">
         <xs:sequence>
             <xs:element name="task" type="jsdl:JobDescription_Type" minOccurs="0"/>
+            <xs:element name="status" type="jsdl:JobDescription_Type" minOccurs="0"/>
             <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
         </xs:sequence>
         <xs:anyAttribute namespace="##other" processContents="lax"/>
@@ -104,6 +105,7 @@
         <xs:sequence>
             <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
         </xs:sequence>
+        <xs:attribute name="timestamp" type="xs:positiveInteger" use="required"/>
         <xs:anyAttribute namespace="##other" processContents="lax"/>
     </xs:complexType>
 
@@ -130,8 +132,12 @@
 
     <xs:complexType name="status_t">
         <xs:sequence>
+            <xs:element name="stdout" type="xs:base64Binary" minOccurs="0"/>
+            <xs:element name="stderr" type="xs:base64Binary" minOccurs="0"/>
             <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
         </xs:sequence>
+        <xs:attribute name="timestamp" type="xs:positiveInteger" use="required"/>
+        <xs:attribute name="exitcode" type="xs:integer" use="required"/>
         <xs:anyAttribute namespace="##other" processContents="lax"/>
     </xs:complexType>
 
@@ -139,6 +145,7 @@
         <xs:sequence>
             <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
         </xs:sequence>
+        <xs:attribute name="exitcode" type="xs:integer" use="required"/>
         <xs:anyAttribute namespace="##other" processContents="lax"/>
     </xs:complexType>
 

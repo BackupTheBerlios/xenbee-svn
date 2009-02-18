@@ -21,6 +21,8 @@ namespace xbe {
 
             virtual ~TaskData() {}
 
+            bool is_valid() const { return (! path().empty()); }
+
             const env_t & env() const { return _env; }
             env_t & env() { return _env; }
 
@@ -61,4 +63,4 @@ namespace xbe {
     };
 }
 
-#endif // ! XBE_TASK_HPP
+#endif // ! XBE_TASK_DATA_HPP

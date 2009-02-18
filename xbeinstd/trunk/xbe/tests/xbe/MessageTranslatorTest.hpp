@@ -9,6 +9,7 @@ namespace xbe {
     class MessageTranslatorTest : public CppUnit::TestFixture {
       CPPUNIT_TEST_SUITE( xbe::tests::MessageTranslatorTest );
       CPPUNIT_TEST( testXMLExecute );
+      CPPUNIT_TEST( testXMLExecute2 );
       CPPUNIT_TEST( testXMLExecuteAck );
       CPPUNIT_TEST( testExecuteAckEvent );
       CPPUNIT_TEST( testXMLShutdown );
@@ -31,11 +32,13 @@ namespace xbe {
 
     public:
       MessageTranslatorTest();
+      virtual ~MessageTranslatorTest();
       void setUp();
       void tearDown();
 
     protected:
       void testXMLExecute();
+      void testXMLExecute2();
       void testXMLExecuteAck();
       void testExecuteAckEvent();
       void testXMLStatusReq();

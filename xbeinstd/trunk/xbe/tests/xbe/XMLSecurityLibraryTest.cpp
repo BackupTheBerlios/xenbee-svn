@@ -76,13 +76,8 @@ CPPUNIT_TEST_SUITE_REGISTRATION( XMLSecurityLibraryTest );
 
 XMLSecurityLibraryTest::XMLSecurityLibraryTest()
     : XBE_INIT_LOGGER("tests.xbe.xml-security-library")
-{}
-
-void
-XMLSecurityLibraryTest::setUp() {
-    // XMLPlatformUtils::Initialize();
+{
     XbeLibUtils::initialise();
-    // register the test xml-namespace with the namespace map
     XbeLibUtils::namespace_infomap()["xbetest"].name = "http://www.xenbee.net/schema/2008/02/xbetest";
     char cwd[PATH_MAX];
     getcwd(cwd, PATH_MAX);
@@ -90,11 +85,16 @@ XMLSecurityLibraryTest::setUp() {
     XbeLibUtils::schema_properties().schema_location("http://www.xenbee.net/schema/2008/02/xbetest", std::string(cwd)+"/resources//xbe-test.xsd");
 }
 
-void
-XMLSecurityLibraryTest::tearDown() {
-    // XMLPlatformUtils::Terminate();
+XMLSecurityLibraryTest::~XMLSecurityLibraryTest()
+{
     XbeLibUtils::terminate();
 }
+
+void
+XMLSecurityLibraryTest::setUp() { }
+
+void
+XMLSecurityLibraryTest::tearDown() { }
 
 void XMLSecurityLibraryTest::testSignHomePageExample() {
     XBE_LOG_DEBUG("running the simple signing example from the xml-security homepage...");

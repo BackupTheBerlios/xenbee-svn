@@ -13,6 +13,7 @@
 #include <xbe/event/FinishedAckEvent.hpp>
 #include <xbe/event/FailedEvent.hpp>
 #include <xbe/event/FailedAckEvent.hpp>
+#include <xbe/event/StatusEvent.hpp>
 #include <signal.h>
 #include "XbeInstd.hpp"
 #include "XbeInstd_sm.h"
@@ -36,7 +37,7 @@ namespace xbe
         return;
     }
 
-    void XbeInstdState::Finished(XbeInstdContext& context)
+    void XbeInstdState::Finished(XbeInstdContext& context, int exitcode)
     {
         Default(context);
         return;
@@ -107,27 +108,6 @@ namespace xbe
         return;
     }
 
-    void XbeInstdFSM_Default::StatusReq(XbeInstdContext& context, xbe::event::StatusReqEvent& msg)
-    {
-        XbeInstd& ctxt(context.getOwner());
-
-        XbeInstdState& EndStateName = context.getState();
-
-        context.clearState();
-        try
-        {
-            ctxt.do_send_status(msg);
-            context.setState(EndStateName);
-        }
-        catch (...)
-        {
-            context.setState(EndStateName);
-            throw;
-        }
-
-        return;
-    }
-
     void XbeInstdFSM_Default::LifeSign(XbeInstdContext& context)
     {
         XbeInstd& ctxt(context.getOwner());
@@ -192,7 +172,7 @@ namespace xbe
         return;
     }
 
-    void XbeInstdFSM_Idle::Finished(XbeInstdContext& context)
+    void XbeInstdFSM_Idle::Finished(XbeInstdContext& context, int exitcode)
     {
 
 
@@ -223,6 +203,27 @@ namespace xbe
             throw;
         }
         (context.getState()).Entry(context);
+
+        return;
+    }
+
+    void XbeInstdFSM_Idle::StatusReq(XbeInstdContext& context, xbe::event::StatusReqEvent& msg)
+    {
+        XbeInstd& ctxt(context.getOwner());
+
+        XbeInstdState& EndStateName = context.getState();
+
+        context.clearState();
+        try
+        {
+            ctxt.do_send_status(msg, xbe::event::StatusEvent::ST_IDLE);
+            context.setState(EndStateName);
+        }
+        catch (...)
+        {
+            context.setState(EndStateName);
+            throw;
+        }
 
         return;
     }
@@ -269,7 +270,7 @@ namespace xbe
         return;
     }
 
-    void XbeInstdFSM_Busy::Finished(XbeInstdContext& context)
+    void XbeInstdFSM_Busy::Finished(XbeInstdContext& context, int exitcode)
     {
         XbeInstd& ctxt(context.getOwner());
 
@@ -277,7 +278,7 @@ namespace xbe
         context.clearState();
         try
         {
-            ctxt.do_task_finished();
+            ctxt.do_task_finished(exitcode);
             context.setState(XbeInstdFSM::WaitForFinishedAck);
         }
         catch (...)
@@ -308,6 +309,27 @@ namespace xbe
             throw;
         }
         (context.getState()).Entry(context);
+
+        return;
+    }
+
+    void XbeInstdFSM_Busy::StatusReq(XbeInstdContext& context, xbe::event::StatusReqEvent& msg)
+    {
+        XbeInstd& ctxt(context.getOwner());
+
+        XbeInstdState& EndStateName = context.getState();
+
+        context.clearState();
+        try
+        {
+            ctxt.do_send_status(msg, xbe::event::StatusEvent::ST_BUSY);
+            context.setState(EndStateName);
+        }
+        catch (...)
+        {
+            context.setState(EndStateName);
+            throw;
+        }
 
         return;
     }
@@ -352,7 +374,7 @@ namespace xbe
         return;
     }
 
-    void XbeInstdFSM_WaitForTaskTermination::Finished(XbeInstdContext& context)
+    void XbeInstdFSM_WaitForTaskTermination::Finished(XbeInstdContext& context, int exitcode)
     {
         XbeInstd& ctxt(context.getOwner());
 
@@ -369,6 +391,27 @@ namespace xbe
             throw;
         }
         (context.getState()).Entry(context);
+
+        return;
+    }
+
+    void XbeInstdFSM_WaitForTaskTermination::StatusReq(XbeInstdContext& context, xbe::event::StatusReqEvent& msg)
+    {
+        XbeInstd& ctxt(context.getOwner());
+
+        XbeInstdState& EndStateName = context.getState();
+
+        context.clearState();
+        try
+        {
+            ctxt.do_send_status(msg, xbe::event::StatusEvent::ST_BUSY);
+            context.setState(EndStateName);
+        }
+        catch (...)
+        {
+            context.setState(EndStateName);
+            throw;
+        }
 
         return;
     }
@@ -483,6 +526,27 @@ namespace xbe
         return;
     }
 
+    void XbeInstdFSM_WaitForFinishedAck::StatusReq(XbeInstdContext& context, xbe::event::StatusReqEvent& msg)
+    {
+        XbeInstd& ctxt(context.getOwner());
+
+        XbeInstdState& EndStateName = context.getState();
+
+        context.clearState();
+        try
+        {
+            ctxt.do_send_status(msg, xbe::event::StatusEvent::ST_BUSY);
+            context.setState(EndStateName);
+        }
+        catch (...)
+        {
+            context.setState(EndStateName);
+            throw;
+        }
+
+        return;
+    }
+
     void XbeInstdFSM_WaitForFinishedAck::Terminate(XbeInstdContext& context, xbe::event::TerminateEvent& msg)
     {
 
@@ -504,7 +568,7 @@ namespace xbe
             context.clearState();
             try
             {
-                ctxt.do_task_finished();
+                ctxt.do_task_finished(-1);
                 ctxt.inc_retryCounter();
                 context.setState(EndStateName);
             }

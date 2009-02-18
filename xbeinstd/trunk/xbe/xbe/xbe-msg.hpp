@@ -911,6 +911,27 @@ namespace xbemsg
     void
     task (::std::auto_ptr< task_type > p);
 
+    // status
+    // 
+    typedef ::jsdl::JobDescription_Type status_type;
+    typedef ::xsd::cxx::tree::optional< status_type > status_optional;
+    typedef ::xsd::cxx::tree::traits< status_type, char > status_traits;
+
+    const status_optional&
+    status () const;
+
+    status_optional&
+    status ();
+
+    void
+    status (const status_type& x);
+
+    void
+    status (const status_optional& x);
+
+    void
+    status (::std::auto_ptr< status_type > p);
+
     // any
     // 
     typedef ::xsd::cxx::tree::element_sequence any_sequence;
@@ -979,6 +1000,7 @@ namespace xbemsg
     ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
 
     task_optional task_;
+    status_optional status_;
     any_sequence any_;
     any_attribute_set any_attribute_;
   };
@@ -1371,6 +1393,20 @@ namespace xbemsg
     void
     any (const any_sequence& s);
 
+    // timestamp
+    // 
+    typedef ::xml_schema::positive_integer timestamp_type;
+    typedef ::xsd::cxx::tree::traits< timestamp_type, char > timestamp_traits;
+
+    const timestamp_type&
+    timestamp () const;
+
+    timestamp_type&
+    timestamp ();
+
+    void
+    timestamp (const timestamp_type& x);
+
     // any_attribute
     // 
     typedef ::xsd::cxx::tree::attribute_set< char > any_attribute_set;
@@ -1396,7 +1432,7 @@ namespace xbemsg
 
     // Constructors.
     //
-    life_sign_t ();
+    life_sign_t (const timestamp_type&);
 
     life_sign_t (const ::xercesc::DOMElement& e,
                  ::xml_schema::flags f = 0,
@@ -1424,6 +1460,7 @@ namespace xbemsg
     ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
 
     any_sequence any_;
+    ::xsd::cxx::tree::one< timestamp_type > timestamp_;
     any_attribute_set any_attribute_;
   };
 
@@ -1652,6 +1689,48 @@ namespace xbemsg
   class status_t: public ::xml_schema::type
   {
     public:
+    // stdout
+    // 
+    typedef ::xml_schema::base64_binary stdout_type;
+    typedef ::xsd::cxx::tree::optional< stdout_type > stdout_optional;
+    typedef ::xsd::cxx::tree::traits< stdout_type, char > stdout_traits;
+
+    const stdout_optional&
+    stdout () const;
+
+    stdout_optional&
+    stdout ();
+
+    void
+    stdout (const stdout_type& x);
+
+    void
+    stdout (const stdout_optional& x);
+
+    void
+    stdout (::std::auto_ptr< stdout_type > p);
+
+    // stderr
+    // 
+    typedef ::xml_schema::base64_binary stderr_type;
+    typedef ::xsd::cxx::tree::optional< stderr_type > stderr_optional;
+    typedef ::xsd::cxx::tree::traits< stderr_type, char > stderr_traits;
+
+    const stderr_optional&
+    stderr () const;
+
+    stderr_optional&
+    stderr ();
+
+    void
+    stderr (const stderr_type& x);
+
+    void
+    stderr (const stderr_optional& x);
+
+    void
+    stderr (::std::auto_ptr< stderr_type > p);
+
     // any
     // 
     typedef ::xsd::cxx::tree::element_sequence any_sequence;
@@ -1666,6 +1745,34 @@ namespace xbemsg
 
     void
     any (const any_sequence& s);
+
+    // timestamp
+    // 
+    typedef ::xml_schema::positive_integer timestamp_type;
+    typedef ::xsd::cxx::tree::traits< timestamp_type, char > timestamp_traits;
+
+    const timestamp_type&
+    timestamp () const;
+
+    timestamp_type&
+    timestamp ();
+
+    void
+    timestamp (const timestamp_type& x);
+
+    // exitcode
+    // 
+    typedef ::xml_schema::integer exitcode_type;
+    typedef ::xsd::cxx::tree::traits< exitcode_type, char > exitcode_traits;
+
+    const exitcode_type&
+    exitcode () const;
+
+    exitcode_type&
+    exitcode ();
+
+    void
+    exitcode (const exitcode_type& x);
 
     // any_attribute
     // 
@@ -1692,7 +1799,8 @@ namespace xbemsg
 
     // Constructors.
     //
-    status_t ();
+    status_t (const timestamp_type&,
+              const exitcode_type&);
 
     status_t (const ::xercesc::DOMElement& e,
               ::xml_schema::flags f = 0,
@@ -1719,7 +1827,11 @@ namespace xbemsg
     protected:
     ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
 
+    stdout_optional stdout_;
+    stderr_optional stderr_;
     any_sequence any_;
+    ::xsd::cxx::tree::one< timestamp_type > timestamp_;
+    ::xsd::cxx::tree::one< exitcode_type > exitcode_;
     any_attribute_set any_attribute_;
   };
 
@@ -1740,6 +1852,20 @@ namespace xbemsg
 
     void
     any (const any_sequence& s);
+
+    // exitcode
+    // 
+    typedef ::xml_schema::integer exitcode_type;
+    typedef ::xsd::cxx::tree::traits< exitcode_type, char > exitcode_traits;
+
+    const exitcode_type&
+    exitcode () const;
+
+    exitcode_type&
+    exitcode ();
+
+    void
+    exitcode (const exitcode_type& x);
 
     // any_attribute
     // 
@@ -1766,7 +1892,7 @@ namespace xbemsg
 
     // Constructors.
     //
-    finished_t ();
+    finished_t (const exitcode_type&);
 
     finished_t (const ::xercesc::DOMElement& e,
                 ::xml_schema::flags f = 0,
@@ -1794,6 +1920,7 @@ namespace xbemsg
     ::xml_schema::dom::auto_ptr< ::xercesc::DOMDocument > dom_document_;
 
     any_sequence any_;
+    ::xsd::cxx::tree::one< exitcode_type > exitcode_;
     any_attribute_set any_attribute_;
   };
 

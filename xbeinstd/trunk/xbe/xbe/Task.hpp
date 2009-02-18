@@ -26,6 +26,7 @@ namespace xbe {
         public:
             enum Status {
                 UNKNOWN,
+                RUNNING,
                 FINISHED,
                 SIGNALED,
                 FAILED
@@ -53,6 +54,9 @@ namespace xbe {
 
             const TaskData& taskData() const { return _taskData; }
             TaskData& taskData() { return _taskData; }
+
+            std::string stdout();
+            std::string stderr();
 
             pid_t pid() const { return _pid; }
             int exitcode() const { return _exitCode; }

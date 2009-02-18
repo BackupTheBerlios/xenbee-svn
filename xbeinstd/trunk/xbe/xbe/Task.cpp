@@ -1,5 +1,7 @@
 #include "Task.hpp"
 
+#include <iostream>
+#include <fstream>
 #include <unistd.h>
 #include <errno.h>
 #include <sys/types.h>
@@ -7,12 +9,14 @@
 #include <fcntl.h>
 #include <sys/wait.h>
 #include <signal.h>
+#include <limits.h>
+#include <sys/resource.h>
 
 using namespace xbe;
 
 Task::Task(const TaskData &td)
-    : XBE_INIT_LOGGER("xbe.task:"+td.path()), _taskData(td),
-    _pid(0), _status(UNKNOWN), _exitCode(0), _taskListener(0), _barrier(2)
+    : XBE_INIT_LOGGER("xbe.task:"+td.path()), _taskData(td), _exitCode(0),
+    _status(UNKNOWN), _pid(0), _taskListener(0), _barrier(2)
 {}
 
 Task::~Task() {
@@ -78,11 +82,12 @@ void Task::wait(const boost::posix_time::time_duration &timeout) {
     }
 }
 
-
 int Task::kill(int signal) {
     boost::unique_lock<boost::recursive_mutex> lock(_mtx);
     if (status() == UNKNOWN && running()) {
         return ::kill(pid(), signal);
+    } else {
+        return -1;
     }
 }
 
@@ -90,6 +95,30 @@ bool Task::running() {
     boost::unique_lock<boost::recursive_mutex> lock(_mtx);
     return (_thread.get_id() != boost::thread::id());
 }
+
+std::string Task::stdout() {
+    if (running()) {
+        return "";
+    }
+    std::ifstream f(taskData().stdOut().c_str());
+    std::string result;
+    while (f.good()) {
+        result.append(1, (char) (f.get() & 0xff));
+    }
+    return result;
+}
+std::string Task::stderr() {
+    if (running()) {
+        return "";
+    }
+    std::ifstream f(taskData().stdErr().c_str());
+    std::string result;
+    while (f.good()) {
+        result.append(1, (char) (f.get() & 0xff));
+    }
+    return result;
+}
+
 
 void Task::run() {
     boost::unique_lock<boost::recursive_mutex> lock(_mtx);
