@@ -325,6 +325,7 @@ void XbeInstdTest::testExecute1() {
     }
     CPPUNIT_ASSERT_EQUAL(true, gotAck);
 }
+
 void XbeInstdTest::testExecute2() {
     XBE_LOG_INFO("executing XbeInstdTest::testExecute2");
 
@@ -370,5 +371,57 @@ void XbeInstdTest::testExecute2() {
     std::string text;
     std::getline(ifs, text);
     CPPUNIT_ASSERT_EQUAL(std::string("Hello World"), text);
+}
+
+void XbeInstdTest::testExecuteWithStatus() {
+    XBE_LOG_INFO("executing " << __FUNCTION__);
+
+    _discardStage->start();
+    _xbeInstdStage->start();
+
+    // wait for the first lifesign signal
+    _ecs->wait(1, 3500);
+    CPPUNIT_ASSERT_MESSAGE("first message was no LifeSign", dynamic_cast<xbe::event::LifeSignEvent*>(_acc->begin()->get()) != NULL);
+
+    TaskData mainTask("/bin/sleep");
+    mainTask.params().push_back("10");
+    TaskData statusTask("/bin/ps");
+    statusTask.params().push_back("aux");
+    statusTask.stdOut("resources/status.out");
+
+    std::tr1::shared_ptr<xbe::event::ExecuteEvent> executeEvent(new xbe::event::ExecuteEvent("from.bar", "to.bar", "1"));
+    executeEvent->taskData(mainTask);
+    executeEvent->statusTaskData(statusTask);
+    _xbeInstdStage->send(executeEvent);
+
+    std::tr1::shared_ptr<xbe::event::StatusReqEvent> statusRequestEvent(new xbe::event::StatusReqEvent("from.bar", "to.bar", "1"));
+    _xbeInstdStage->send(statusRequestEvent);
+    
+    // just wait a bit
+    _ecs->wait(10, 6000);
+
+    seda::IEvent::Ptr shutdownEvent(new xbe::event::ShutdownEvent("from.bar", "to.bar", "1"));
+    _xbeInstdStage->send(shutdownEvent);
+
+    _ecs->wait(10, 6000);
+
+    _xbeInstdStage->waitUntilEmpty();
+    _discardStage->waitUntilEmpty();
+
+    _xbeInstdStage->stop();
+    _discardStage->stop();
+
+    CPPUNIT_ASSERT(_ecs->count() > 0);
+
+    bool gotFin(false);
+    for (seda::AccumulateStrategy::const_iterator it = _acc->begin(); it != _acc->end(); it++) {
+        if (dynamic_cast<xbe::event::FinishedEvent*>((*it).get()) != NULL)
+            gotFin=true;
+    }
+    CPPUNIT_ASSERT_EQUAL(true, gotFin);
+
+    std::ifstream ifs("resources/status.out");
+    CPPUNIT_ASSERT_MESSAGE("Could not open resources/status.out", ifs.good());
+    unlink("resources/status.out");
 }
 
