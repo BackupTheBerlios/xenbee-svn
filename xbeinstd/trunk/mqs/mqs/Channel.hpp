@@ -32,10 +32,6 @@ namespace cms {
 }
 
 namespace mqs {
-    typedef std::tr1::shared_ptr<cms::Message> MessagePtr;
-    typedef std::tr1::shared_ptr<cms::TextMessage> TextMessagePtr;
-    typedef std::tr1::shared_ptr<cms::BytesMessage> BytesMessagePtr;
-  
     class Response;
 
     class ChannelNotStarted : public MQSException {
@@ -151,7 +147,7 @@ namespace mqs {
            Receive the next new message.
 
            @param timeout wait for timeout milliseconds
-           @return the cms message or NULL
+           @return a pointer to the received message (maybe 0)
         */
         mqs::Message::Ptr recv(unsigned long millisecs);
 
