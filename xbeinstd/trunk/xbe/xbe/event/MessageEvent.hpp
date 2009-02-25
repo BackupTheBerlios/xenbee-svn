@@ -11,7 +11,7 @@ namespace xbe {
             public:
                 MessageEvent(const std::string& msg);
                 MessageEvent(const std::string& msg, const mqs::Destination& dst, const mqs::Destination& src);
-                ~MessageEvent();
+                virtual ~MessageEvent();
 
                 const std::string& message() const { return _msg; }
                 const std::string& id() const { return _id; }

@@ -1,0 +1,110 @@
+package xbe.messages;
+
+message XbeMessage {
+    required Header header = 1;
+
+    optional Error error = 2;
+
+    optional Execute execute = 3;
+    optional ExecuteAck execute_ack = 4;
+
+    optional StatusReq status_req = 5;
+    optional Status status = 6;
+
+    optional Finished finished = 7;
+    optional FinishedAck finished_ack = 8;
+
+    optional Failed failed = 9;
+    optional FailedAck failed_ack = 10;
+
+    optional Shutdown shutdown = 11;
+    optional ShutdownAck shutdown_ack = 12;
+
+    optional Terminate terminate = 13;
+    optional TerminateAck terminate_ack = 14;
+
+    optional LifeSign life_sign = 15;
+}
+
+enum ErrorCode {
+    UNKNOWN_ERROR = 1;
+}
+
+enum ExecuteNakReason {
+    UNKNOWN_REASON = 1;
+}
+
+message Header {
+    // each message must contain a UUID indentifying the conversation
+    required bytes conversation_id = 1;
+}
+
+message Error {
+    required ErrorCode code = 1;
+    optional string message = 2;
+}
+
+message Task {
+    required string executable = 1;
+    repeated string argument = 2;
+
+    message Env {
+        required string key = 1;
+        required string val = 2;
+    }
+    repeated Env env = 3;
+
+    optional string stdin = 6;
+    optional string stdout = 7;
+    optional string stderr = 8;
+    optional string wd = 9 [default = "/"]; // working dir
+}
+
+message Execute {
+    optional Task main_task = 1;
+    optional Task status_task = 2;
+}
+
+message ExecuteAck {
+    
+}
+
+message ExecuteNak {
+    required ExecuteNakReason reason = 1;
+    optional string message = 2;
+}
+
+message StatusReq {
+}
+
+message Status {
+}
+
+message Finished {
+}
+
+message FinishedAck {
+}
+
+message Failed {
+}
+
+message FailedAck {
+}
+
+message Shutdown {
+}
+
+message ShutdownAck {
+}
+
+message Terminate {
+}
+
+message TerminateAck {
+}
+
+message LifeSign {
+    required uint64 tstamp = 1;
+}
+
