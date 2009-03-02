@@ -1,8 +1,8 @@
 #ifndef SEDA_TIMER_HPP
 #define SEDA_TIMER_HPP 1
 
-#include <tr1/memory>
 #include <boost/thread.hpp>
+#include <seda/shared_ptr.hpp>
 
 namespace seda {
     class Timer {

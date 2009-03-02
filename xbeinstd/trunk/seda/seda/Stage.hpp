@@ -3,11 +3,11 @@
 
 #include <string>
 #include <list>
-#include <tr1/memory>
 
 #include <boost/thread.hpp>
 
 #include <seda/common.hpp>
+#include <seda/shared_ptr.hpp>
 #include <seda/constants.hpp>
 #include <seda/SedaException.hpp>
 #include <seda/StageNotFound.hpp>

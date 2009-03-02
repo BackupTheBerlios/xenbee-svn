@@ -1,8 +1,8 @@
 #ifndef SEDA_STRATEGY_HPP
 #define SEDA_STRATEGY_HPP 1
 
-#include <tr1/memory>
 #include <seda/common.hpp>
+#include <seda/shared_ptr.hpp>
 #include <seda/EventNotSupported.hpp>
 
 #include <seda/IEvent.hpp>

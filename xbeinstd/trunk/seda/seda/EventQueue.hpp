@@ -2,12 +2,12 @@
 #define SEDA_EVENT_QUEUE_HPP 1
 
 #include <list>
-#include <tr1/memory>
 #include <assert.h>
 
 #include <boost/thread.hpp>
 
 #include <seda/common.hpp>
+#include <seda/shared_ptr.hpp>
 #include <seda/constants.hpp>
 #include <seda/IEventQueue.hpp>
 #include <seda/IEvent.hpp>

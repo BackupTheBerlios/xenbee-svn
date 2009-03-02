@@ -3,7 +3,7 @@
 
 #include <string>
 #include <ostream>
-#include <tr1/memory>
+#include <seda/shared_ptr.hpp>
 
 namespace seda {
     class IEvent {

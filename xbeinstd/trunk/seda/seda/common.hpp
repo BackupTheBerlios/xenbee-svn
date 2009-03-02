@@ -67,5 +67,4 @@ extern unsigned long INFINITE_WAITTIME;
 
 #include <seda/logging.hpp>
 
-
 #endif /* !SEDA_COMMON_HPP */

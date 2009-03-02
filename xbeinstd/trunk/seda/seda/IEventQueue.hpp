@@ -1,8 +1,7 @@
 #ifndef SEDA_IEVENT_QUEUE_HPP
 #define SEDA_IEVENT_QUEUE_HPP 1
 
-#include <tr1/memory>
-
+#include <seda/shared_ptr.hpp>
 #include <seda/IEvent.hpp>
 #include <seda/SedaException.hpp>
 
