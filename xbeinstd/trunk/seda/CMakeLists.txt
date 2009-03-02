@@ -52,7 +52,7 @@ if ( PKG_CONFIG_FOUND )
   #  pkg_check_modules(AMQ REQUIRED activemq-cpp>=2.1.3)
   #  message(STATUS "ActiveMQ: ${AMQ_CFLAGS} ${AMQ_LDFLAGS} STATIC=${AMQ_STATIC_LDFLAGS}")
 else  ( PKG_CONFIG_FOUND )
-  message(FATAL_ERROR "No PKGCONFIG found - hoping for the best.")
+  message(ERROR "No PKGCONFIG found - hoping for the best.")
 endif ( PKG_CONFIG_FOUND )
 
 ## check for threads
