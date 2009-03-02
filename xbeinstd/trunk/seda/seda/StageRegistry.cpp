@@ -10,20 +10,39 @@ StageRegistry& StageRegistry::instance() {
     return _instance;
 }
 
-void StageRegistry::insert(const std::string& name, const Stage::Ptr& stage) {
-    _stages.insert(std::make_pair(name, stage));
-    SEDA_LOG_DEBUG("added stage `" << name << "'");
+void StageRegistry::insert(const std::string& name, const Stage::Ptr& stage) throw(StageAlreadyRegistered) {
+    // lookup the stage first
+    try {
+        lookup(name);
+        throw StageAlreadyRegistered(name);
+    } catch (const StageNotFound &snf) {
+        _stages.insert(std::make_pair(name, stage));
+        SEDA_LOG_DEBUG("added stage `" << name << "'");
+    }
 }
-void StageRegistry::insert(const std::string& name, Stage* stage) {
-    _stages.insert(std::make_pair(name, Stage::Ptr(stage)));
-    SEDA_LOG_DEBUG("added stage `" << name << "'");
+void StageRegistry::insert(const std::string& name, Stage* stage) throw(StageAlreadyRegistered) {
+    insert(name, Stage::Ptr(stage));
 }
 
-void StageRegistry::insert(const Stage::Ptr& stage) {
+void StageRegistry::insert(const Stage::Ptr& stage) throw(StageAlreadyRegistered) {
     insert(stage->name(), stage);
 }
-void StageRegistry::insert(Stage* stage) {
+void StageRegistry::insert(Stage* stage) throw(StageAlreadyRegistered) {
     insert(stage->name(), Stage::Ptr(stage));
+}
+
+bool StageRegistry::remove(const Stage::Ptr &stage) {
+    return remove(stage->name());
+}
+
+bool StageRegistry::remove(const std::string &name) {
+    std::map<std::string, Stage::Ptr>::iterator it(_stages.find(name));
+    if (it == _stages.end()) {
+        return false;
+    } else {
+        _stages.erase(it);
+        return true;
+    }        
 }
 
 const Stage::Ptr StageRegistry::lookup(const std::string& name) const throw (StageNotFound) {
