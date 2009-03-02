@@ -60,9 +60,9 @@ void AccumulateStrategyTest::testIterator() {
   SEDA_LOG_DEBUG("Accumulator size is " << _accumulate->size() << " IEvents.");
   CPPUNIT_ASSERT_EQUAL(acc_size, _accumulate->size());
   std::size_t counter=0;
-  seda::AccumulateStrategy::iterator_type it;
-  for (it=_accumulate->getIEventIteratorBegin();
-       it != _accumulate->getIEventIteratorEnd();
+  seda::AccumulateStrategy::iterator it;
+  for (it=_accumulate->begin();
+       it != _accumulate->end();
        it++) {
     // We iterate over the type 
     //  typedef std::list<IEvent::Ptr>::iterator iterator_type;

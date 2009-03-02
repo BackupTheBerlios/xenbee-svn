@@ -177,8 +177,8 @@ void SedaStageTest::testAccumulateStrategy() {
 
     // Now, check what we have accumulated in our strategy.
     SEDA_LOG_DEBUG("Expected event: " << sendEvent->str());
-    seda::AccumulateStrategy::iterator_type it;
-    for (it = accumulate->getIEventIteratorBegin(); it != accumulate->getIEventIteratorEnd(); *it++) {
+    seda::AccumulateStrategy::iterator it;
+    for (it = accumulate->begin(); it != accumulate->end(); *it++) {
         SEDA_LOG_DEBUG("Found event: " << (*it)->str());
         if ((*it)->str().compare(sendEvent->str()) != 0) 
             CPPUNIT_FAIL("Expected and actual event differ!");
