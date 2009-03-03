@@ -33,10 +33,10 @@ set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/modules")
 # Definitions for different compilations.
 # Debug is the default development mode. Warn as much as possible, but
 # CPPUnit raises some errors about virtual functions - suppress them.
-set(CMAKE_CXX_FLAGS_DEBUG "-Wall -Werror -Wno-non-virtual-dtor")
+set(CMAKE_CXX_FLAGS_DEBUG "-Wall -Werror -Wno-non-virtual-dtor" CACHE STRING "compiler flags - debug")
 # Releases are made with the release build. Optimize code.
-set(CMAKE_CXX_FLAGS_RELEASE "-Wall -Werror -O3 -Wno-non-virtual-dtor")
-set(CMAKE_CXX_FLAGS "-Wall -Werror -O3 -Wno-non-virtual-dtor")
+set(CMAKE_CXX_FLAGS_RELEASE "-Wall -Werror -O3 -Wno-non-virtual-dtor" CACHE STRING "compiler flags - release")
+set(CMAKE_CXX_FLAGS "-Wall -Werror -O3 -Wno-non-virtual-dtor" CACHE STRING "compiler flags")
 
 ## PkgConfig is helpful
 include(FindPkgConfig)
@@ -52,7 +52,16 @@ if ( PKG_CONFIG_FOUND )
   #  pkg_check_modules(AMQ REQUIRED activemq-cpp>=2.1.3)
   #  message(STATUS "ActiveMQ: ${AMQ_CFLAGS} ${AMQ_LDFLAGS} STATIC=${AMQ_STATIC_LDFLAGS}")
 else  ( PKG_CONFIG_FOUND )
-  message(ERROR "No PKGCONFIG found - hoping for the best.")
+  message("No PKGCONFIG found - hoping for the best.")
+
+  set(CPPUNIT_INCLUDE_DIRS "" CACHE STRING "CPPUnit Include dir")
+  set(CPPUNIT_LIBRARY_DIRS "" CACHE STRING "CPPUnit Library dir")
+  set(CPPUNIT_LIBRARIES "" CACHE STRING "CPPUnit libraries")
+
+  set(LOG4CPP_STATIC_INCLUDE_DIRS "" CACHE STRING "Log4cpp Include dir")
+  set(LOG4CPP_STATIC_LIBRARY_DIRS "" CACHE STRING "Log4cpp Library dir")
+  set(LOG4CPP_STATIC_LIBRARIES    "" CACHE STRING "Log4cpp libraries")
+
 endif ( PKG_CONFIG_FOUND )
 
 ## check for threads
@@ -63,7 +72,7 @@ if (CMAKE_USE_PTHREADS_INIT)
 endif (CMAKE_USE_PTHREADS_INIT)
 
 ## check for boost
-set(BOOST_ROOT "/usr/local")
+set(BOOST_ROOT "/usr/local" CACHE STRING "Where to find the Boost libraries")
 set(Boost_ADDITIONAL_VERSIONS "1.37.0" "1.37" "1.36.0" "1.36")
 set(Boost_FIND_QUIETLY false)
 set(Boost_USE_STATIC_LIBS ON)
