@@ -57,7 +57,6 @@ Destination::reset(const std::string &newDestination) {
         _isValid = true;
     } catch(...) {
         reset();
-        throw;
     }
 }
 
