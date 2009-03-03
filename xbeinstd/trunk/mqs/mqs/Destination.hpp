@@ -6,9 +6,9 @@
 #include <string>
 #include <stdexcept>
 #include <ostream>
-#include <tr1/memory>
 #include <cms/Destination.h>
 #include <cms/Session.h>
+#include <mqs/shared_ptr.hpp>
 
 namespace mqs {
     /**

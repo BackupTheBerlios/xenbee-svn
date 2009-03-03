@@ -1,9 +1,9 @@
 #ifndef MQS_MESSAGE_SEQUENCE_GENERATOR_HPP
 #define MQS_MESSAGE_SEQUENCE_GENERATOR_HPP 1
 
-#include <tr1/memory>
 #include <string>
 #include <boost/thread.hpp>
+#include <mqs/shared_ptr.hpp>
 
 namespace mqs {
     class MessageSequenceGenerator { 

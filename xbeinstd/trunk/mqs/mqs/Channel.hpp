@@ -2,10 +2,10 @@
 #define MQS_CHANNEL_HPP
 
 #include <mqs/common.hpp>
+#include <mqs/shared_ptr.hpp>
 
 #include <vector>
 #include <list>
-#include <tr1/memory>
 
 #include <boost/thread.hpp>
 

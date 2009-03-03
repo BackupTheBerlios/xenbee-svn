@@ -2,7 +2,7 @@
 #define MQS_MESSAGE_HPP 1
 
 #include <string>
-#include <tr1/memory>
+#include <mqs/shared_ptr.hpp>
 #include <mqs/MQSException.hpp>
 #include <mqs/Destination.hpp>
 
