@@ -2,7 +2,7 @@
 #define SEDA_LOSSY_DAEMON_STRATEGY_HPP 1
 
 #include <iostream>
-
+#include <boost/random.hpp>
 #include <seda/StrategyDecorator.hpp>
 
 namespace seda {
@@ -16,6 +16,10 @@ namespace seda {
         private:
             double probability_;
             unsigned int seed_;
+
+            typedef boost::minstd_rand generator_type;
+            typedef boost::uniform_01<generator_type> gen_type;
+            gen_type random_;
     };
 }
 

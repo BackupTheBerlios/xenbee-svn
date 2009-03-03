@@ -1,6 +1,7 @@
 #ifndef SEDA_STAGE_WORKER_HPP
 #define SEDA_STAGE_WORKER_HPP
 
+#include <string>
 #include <seda/common.hpp>
 
 namespace seda {
