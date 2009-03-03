@@ -39,13 +39,13 @@ Timer::operator()() {
             try {
                 seda::Stage::Ptr stage(StageRegistry::instance().lookup(targetStage()));
                 stage->send(evt);
-            } catch(const seda::StageNotFound& notFound) {
+            } catch(const seda::StageNotFound& ) {
                 std::clog << "stage `" << targetStage() << "' could not be found!" << std::endl;
                 break;
             } catch(...) {
                // ignore any failures during send
             }
-        } catch (const boost::thread_interrupted& interrupt) {
+        } catch (const boost::thread_interrupted& ) {
             break;
         }
     }

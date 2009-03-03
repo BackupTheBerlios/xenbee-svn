@@ -27,7 +27,7 @@ namespace seda {
                 _busy = false; SEDA_LOG_DEBUG("done");
             } catch (const seda::QueueEmpty&) {
                 // ignore
-            } catch (const seda::QueueFull& qf) {
+            } catch (const seda::QueueFull&) {
                 SEDA_LOG_ERROR("event discarded due to overflow protection");
             } catch (const seda::StageNotFound& snf) {
                 SEDA_LOG_ERROR("event not handled, stage `" << snf.stageName() << "' could not be found!");
