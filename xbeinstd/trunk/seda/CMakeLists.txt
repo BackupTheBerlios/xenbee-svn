@@ -54,14 +54,14 @@ if ( PKG_CONFIG_FOUND )
 else  ( PKG_CONFIG_FOUND )
   message("No PKGCONFIG found - hoping for the best.")
 
-  set(CPPUNIT_INCLUDE_DIRS "" CACHE STRING "CPPUnit Include dir")
-  set(CPPUNIT_LIBRARY_DIRS "" CACHE STRING "CPPUnit Library dir")
-  set(CPPUNIT_LIBRARIES "" CACHE STRING "CPPUnit libraries")
+  set(CPPUNIT_INCLUDE_DIRS "${CMAKE_ADDITIONAL_PATH}/include" CACHE PATH "CPPUnit Include dir")
+  set(CPPUNIT_LIBRARY_DIRS "${CMAKE_ADDITIONAL_PATH}/lib" CACHE PATH "CPPUnit Library dir")
+  set(CPPUNIT_LIBRARIES "cppunit" CACHE PATH "CPPUnit libraries")
 
-  set(LOG4CPP_STATIC_INCLUDE_DIRS "" CACHE STRING "Log4cpp Include dir")
-  set(LOG4CPP_STATIC_LIBRARY_DIRS "" CACHE STRING "Log4cpp Library dir")
-  set(LOG4CPP_STATIC_LIBRARIES    "" CACHE STRING "Log4cpp libraries")
-
+  set(LOG4CPP_STATIC_INCLUDE_DIRS "${CMAKE_ADDITIONAL_PATH}/include" CACHE PATH "Log4cpp Include dir")
+  set(LOG4CPP_STATIC_LIBRARY_DIRS "${CMAKE_ADDITIONAL_PATH}/lib" CACHE PATH "Log4cpp Library dir")
+  set(LOG4CPP_STATIC_LIBRARIES    "log4cpp" CACHE STRING "Log4cpp libraries")
+  set(LOG4CPP_FOUND NO CACHE BOOL "Log4cpp found")
 endif ( PKG_CONFIG_FOUND )
 
 ## check for threads
