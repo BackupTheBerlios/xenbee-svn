@@ -26,7 +26,7 @@ namespace xbe {
             typedef std::tr1::shared_ptr<XbeInstd> Ptr;
 
             XbeInstd(const std::string &name, const seda::Strategy::Ptr &decorated,
-                     const std::string &to, const std::string &from,
+                     const std::string &to, const std::string &from, const std::string &conversation_id,
                      const boost::posix_time::time_duration &lifeSignInterval = boost::posix_time::seconds(3),
                      std::size_t maxRetries = 5);
 
@@ -41,8 +41,9 @@ namespace xbe {
             void do_terminate();
             void do_terminate_job(int signal);
             void do_shutdown(xbe::event::ShutdownEvent&);
-            void do_send_status(xbe::event::StatusReqEvent&, xbe::event::StatusEvent::Status);
+            void do_send_status(xbe::event::StatusReqEvent&, xbe::event::StatusEvent::StatusCode);
             void do_send_execute_ack(xbe::event::ExecuteEvent&);
+            void do_send_execute_nak(xbe::event::ExecuteEvent&);
             void do_finished_ack(xbe::event::FinishedAckEvent&);
             void do_failed_ack(xbe::event::FailedAckEvent&);
 
@@ -82,6 +83,7 @@ namespace xbe {
             seda::Timer _lifeSignTimer;
             std::string _to;
             std::string _from;
+            std::string _conversation_id;
             std::string _stageName;
             std::size_t _maxRetries;
             std::size_t _retryCounter;

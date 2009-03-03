@@ -1,18 +1,31 @@
 #ifndef XBE_TERMINATE_ACK_EVENT_HPP
 #define XBE_TERMINATE_ACK_EVENT_HPP 1
 
-#include <xbe/event/XbeInstdEvent.hpp>
+#include <xbe/common.hpp>
+#include <xbe/event/DecodedMessageEvent.hpp>
 
 namespace xbe {
     namespace event {
-        class TerminateAckEvent : public xbe::event::XbeInstdEvent {
+        class TerminateAckEvent : public xbe::event::DecodedMessageEvent {
             public:
-                TerminateAckEvent(const std::string &to, const std::string &from, const std::string &conversationID)
-                : XbeInstdEvent(to, from, conversationID) {}
+                typedef std::tr1::shared_ptr<TerminateAckEvent> Ptr;
+
+                TerminateAckEvent(const std::string &conversation_id, const mqs::Destination &dst="", const mqs::Destination &src="")
+                : DecodedMessageEvent(conversation_id, "TerminateAck", dst, src),
+                  XBE_INIT_LOGGER("TerminateAckEvent"), task_(-1) {}
                 virtual ~TerminateAckEvent() {}
 
-                virtual std::string str() const {return "terminate-ack";}
-                template <class FSM> void execute(FSM &fsm) { fsm.TerminateAck(*this); }
+                virtual std::string str() const;
+                virtual std::string serialize() const;
+                static Ptr deserialize(const std::string &s);
+
+                TerminateAckEvent *task(int t) { task_ = t; return this; }
+                int task() const { return task_; }
+
+//                template <class FSM> void execute(FSM &fsm) { fsm.TerminateAck(*this); }
+            private:
+                XBE_DECLARE_LOGGER();
+                int task_;
         };
     }
 }

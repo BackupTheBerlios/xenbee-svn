@@ -7,31 +7,44 @@ message XbeMessage {
 
     optional Execute execute = 3;
     optional ExecuteAck execute_ack = 4;
+    optional ExecuteNak execute_nak = 5;
 
-    optional StatusReq status_req = 5;
-    optional Status status = 6;
+    optional StatusReq status_req = 6;
+    optional Status status = 7;
 
-    optional Finished finished = 7;
-    optional FinishedAck finished_ack = 8;
+    optional Finished finished = 8;
+    optional FinishedAck finished_ack = 9;
 
-    optional Failed failed = 9;
-    optional FailedAck failed_ack = 10;
+    optional Failed failed = 10;
+    optional FailedAck failed_ack = 11;
 
-    optional Shutdown shutdown = 11;
-    optional ShutdownAck shutdown_ack = 12;
+    optional Shutdown shutdown = 12;
+    optional ShutdownAck shutdown_ack = 13;
 
-    optional Terminate terminate = 13;
-    optional TerminateAck terminate_ack = 14;
+    optional Terminate terminate = 14;
+    optional TerminateAck terminate_ack = 15;
 
-    optional LifeSign life_sign = 15;
+    optional LifeSign life_sign = 16;
 }
 
 enum ErrorCode {
-    UNKNOWN_ERROR = 1;
+    UNKNOWN_ERROR = 0;
 }
 
 enum ExecuteNakReason {
-    UNKNOWN_REASON = 1;
+    UNKNOWN_REASON = 0;
+    RESOURCE_BUSY = 1;
+}
+
+enum StatusCode {
+    IDLE = 0;
+    RUNNING = 1;
+    FINISHED = 2;
+    FAILED = 3;
+}
+
+enum FailReason {
+    UNKNOWN = 0;
 }
 
 message Header {
@@ -66,7 +79,7 @@ message Execute {
 }
 
 message ExecuteAck {
-    
+    optional int32 task = 1;
 }
 
 message ExecuteNak {
@@ -75,36 +88,48 @@ message ExecuteNak {
 }
 
 message StatusReq {
+    optional bool execute_status_task = 1;
 }
 
 message Status {
+    required StatusCode status = 1;
+    optional int32 status_task_exit_code = 2;
+    optional bytes stdout = 3;
+    optional bytes stderr = 4;    
 }
 
 message Finished {
+    required int32 exitcode = 1;
+    optional int32 task = 2;
 }
 
 message FinishedAck {
+    optional int32 task = 1;
 }
 
 message Failed {
+    optional int32 task = 1;
+    optional FailReason reason = 2;
 }
 
 message FailedAck {
+    optional int32 task = 1;
 }
 
-message Shutdown {
-}
+message Shutdown { }
 
-message ShutdownAck {
-}
+message ShutdownAck { }
 
 message Terminate {
+    optional int32 task = 1;
 }
 
 message TerminateAck {
+    optional int32 task = 1;
 }
 
 message LifeSign {
     required uint64 tstamp = 1;
+    optional StatusCode status = 2;
 }
 

@@ -4,14 +4,9 @@
 
 #include <xbe/common.hpp>
 #include <xbe/ChannelAdapterStrategy.hpp>
-#include <xbe/XbeLibUtils.hpp>
+#include <xbe/SerializeStrategy.hpp>
+#include <xbe/DeserializeStrategy.hpp>
 #include <xbe/XbeInstd.hpp>
-#include <xbe/MessageTranslatorStrategy.hpp>
-#include <xbe/XMLSerializeStrategy.hpp>
-#include <xbe/XMLDeserializeStrategy.hpp>
-#include <xbe/XMLDataBinder.hpp>
-#include <xbe/XMLDataUnbinder.hpp>
-#include <xbe/XbeXMLMessageHandling.hpp>
 
 #include <seda/StageFactory.hpp>
 #include <seda/ForwardStrategy.hpp>
@@ -27,6 +22,7 @@ namespace po = boost::program_options;
 bool done(false);
 void signalHandler(int signal) {
     done = true;
+    std::cerr << "done" << std::endl;
 }
 
 int
@@ -86,46 +82,36 @@ main(int argc, char **argv) {
 
     // set up the whole application environment
     try {
-        xbe::XbeLibUtils::initialise();
         seda::StageFactory::Ptr factory(new seda::StageFactory());
 
         // channel
         mqs::Channel::Ptr channel(new mqs::Channel(mqs::BrokerURI(vm["broker"].as<std::string>()), vm["name"].as<std::string>()));
-        seda::Strategy::Ptr chan2xml(new seda::ForwardStrategy("xbe.xml-parse"));
-        chan2xml = seda::Strategy::Ptr(new seda::LoggingStrategy(chan2xml));
-        chan2xml = seda::Strategy::Ptr(new xbe::ChannelAdapterStrategy("xbe.channeladapter", chan2xml, channel));
-        factory->createStage("xbe.net", chan2xml);
+        seda::Strategy::Ptr net(new seda::ForwardStrategy("xbe.decode"));
+        net = seda::Strategy::Ptr(new seda::LoggingStrategy(net));
+        net = seda::Strategy::Ptr(new xbe::ChannelAdapterStrategy("xbe.channeladapter", net, channel));
+        factory->createStage("xbe.net", net);
+        std::cerr << "created stage xbe.net" << std::endl;
 
-        // parse and bind text to xsd-objects
-        seda::Strategy::Ptr txt2obj(new seda::ForwardStrategy("xbe.obj-to-evt"));
-        txt2obj = seda::Strategy::Ptr(new xbe::XbeXMLDataBinder(txt2obj));
-        txt2obj = seda::Strategy::Ptr(new seda::LoggingStrategy(txt2obj));
-        txt2obj = seda::Strategy::Ptr(new xbe::XMLDeserializeStrategy(txt2obj));
-        factory->createStage("xbe.xml-parse", txt2obj);
- 
-        // transform objects into events
-        seda::Strategy::Ptr obj2evt(new seda::ForwardStrategy("xbe.xbeinstd"));
-        obj2evt = seda::Strategy::Ptr(new xbe::MessageTranslatorStrategy(obj2evt));
-        factory->createStage("xbe.obj-to-evt", obj2evt);
+        // decode messages stage
+        seda::Strategy::Ptr decode(new xbe::DeserializeStrategy("xbe.decode.strategy", "xbe.xbeinstd"));
+        decode = seda::Strategy::Ptr(new seda::LoggingStrategy(decode));
+        factory->createStage("xbe.decode", decode);
+        std::cerr << "created stage xbe.decode" << std::endl;
+
+        // encode messages stage
+        seda::Strategy::Ptr encode(new xbe::SerializeStrategy("xbe.encode.strategy", "xbe.net"));
+        encode = seda::Strategy::Ptr(new seda::LoggingStrategy(encode));
+        factory->createStage("xbe.encode", encode);
+        std::cerr << "created stage xbe.encode" << std::endl;
 
         xbe::XbeInstd::Ptr xbeinstd(new xbe::XbeInstd("xbe.xbeinstd",
-                                                 seda::Strategy::Ptr(new seda::ForwardStrategy("xbe.evt-to-obj")),
-                                                 vm["xbed"].as<std::string>(),
-                                                 vm["name"].as<std::string>()
-                                                 ));
+                    seda::Strategy::Ptr(new seda::ForwardStrategy("xbe.encode")),
+                    vm["xbed"].as<std::string>(),
+                    vm["name"].as<std::string>(),
+                    "conv-id:1234"
+                    ));
         factory->createStage("xbe.xbeinstd", xbeinstd);
- 
-        // transform events into objects
-        seda::Strategy::Ptr evt2obj(new seda::ForwardStrategy("xbe.obj-to-xml"));
-        evt2obj = seda::Strategy::Ptr(new xbe::MessageTranslatorStrategy(evt2obj));
-        factory->createStage("xbe.evt-to-obj", evt2obj);
-
-        // transform xsd-objects to text
-        seda::Strategy::Ptr obj2txt(new seda::ForwardStrategy("xbe.net"));
-        obj2txt = seda::Strategy::Ptr(new xbe::XMLSerializeStrategy(obj2txt));
-        obj2txt = seda::Strategy::Ptr(new seda::LoggingStrategy(obj2txt));
-        obj2txt = seda::Strategy::Ptr(new xbe::XbeXMLDataUnbinder(obj2txt));
-        factory->createStage("xbe.obj-to-xml", obj2txt);
+        std::cerr << "created stage xbe.xbeinstd" << std::endl;
 
         // register signal handler
         signal(SIGINT, signalHandler);
@@ -134,15 +120,16 @@ main(int argc, char **argv) {
         seda::StageRegistry::instance().startAll();
 
         // wait ...
+        std::cerr << "waiting..." << std::endl;
         while (! done ) {
-            
             xbeinstd->wait(500);
         }
 
         std::cerr << "shutting down..." << std::endl;
         seda::StageRegistry::instance().stopAll();
-     } catch (...) {
-
+        seda::StageRegistry::instance().clear();
+    } catch (...) {
+        std::cerr << "an unknown error occured" << std::endl;
     }    
 
     return 0;

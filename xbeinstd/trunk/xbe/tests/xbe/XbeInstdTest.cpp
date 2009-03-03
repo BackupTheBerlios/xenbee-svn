@@ -3,7 +3,6 @@
 #include <unistd.h>
 
 #include <xbe/common.hpp>
-#include <xbe/XbeLibUtils.hpp>
 #include <xbe/XbeInstd.hpp>
 #include <xbe/TaskData.hpp>
 #include <xbe/event/ShutdownAckEvent.hpp>
@@ -32,11 +31,9 @@ CPPUNIT_TEST_SUITE_REGISTRATION( XbeInstdTest );
 XbeInstdTest::XbeInstdTest()
     : XBE_INIT_LOGGER("tests.xbe.xbeinstd")
 {
-    XbeLibUtils::initialise();
 }
 
 XbeInstdTest::~XbeInstdTest() {
-    XbeLibUtils::terminate();
 }
 
 void
@@ -44,7 +41,7 @@ XbeInstdTest::setUp() {
     seda::StageRegistry::instance().clear();
     seda::StageFactory::Ptr factory(new seda::StageFactory());
 
-    xbe::XbeInstd::Ptr xbeinstd(new XbeInstd("xbeinstd", seda::Strategy::Ptr(new seda::ForwardStrategy("discard")), "to.foo", "from.bar"));
+    xbe::XbeInstd::Ptr xbeinstd(new XbeInstd("xbeinstd", seda::Strategy::Ptr(new seda::ForwardStrategy("discard")), "to.foo", "from.bar", "conv-id:1234"));
     _xbeInstdStage = factory->createStage("xbeinstd", xbeinstd);
 
     seda::Strategy::Ptr discard(new seda::DiscardStrategy());
@@ -89,7 +86,7 @@ void XbeInstdTest::testShutdown1() {
     _discardStage->start();
     _xbeInstdStage->start();
 
-    seda::IEvent::Ptr shutdownEvent(new xbe::event::ShutdownEvent("from.bar", "to.bar", "1"));
+    seda::IEvent::Ptr shutdownEvent(new xbe::event::ShutdownEvent("1", "from.bar", "to.bar"));
 
     _xbeInstdStage->send(shutdownEvent);
 
@@ -114,7 +111,7 @@ void XbeInstdTest::testShutdown2() {
     _discardStage->start();
 
     /* send shutdown before start */
-    seda::IEvent::Ptr shutdownEvent(new xbe::event::ShutdownEvent("from.bar", "to.bar", "1"));
+    seda::IEvent::Ptr shutdownEvent(new xbe::event::ShutdownEvent("1", "from.bar", "to.bar"));
     _xbeInstdStage->send(shutdownEvent);
 
     _xbeInstdStage->start();
@@ -140,7 +137,7 @@ void XbeInstdTest::testStatus1() {
     _discardStage->start();
     _xbeInstdStage->start();
 
-    seda::IEvent::Ptr statusReqEvent(new xbe::event::StatusReqEvent("from.bar", "to.bar", "1"));
+    seda::IEvent::Ptr statusReqEvent(new xbe::event::StatusReqEvent("1", "from.bar", "to.bar"));
 
     _xbeInstdStage->send(statusReqEvent);
     _ecs->wait(1, 4000);
@@ -164,7 +161,7 @@ void XbeInstdTest::testStatus1() {
         xbe::event::StatusEvent* stEvt = dynamic_cast<xbe::event::StatusEvent*>((*it).get());
         if ( stEvt != NULL) {
             statusCount++;
-            CPPUNIT_ASSERT_EQUAL(std::string("IDLE"), stEvt->state());
+            CPPUNIT_ASSERT_EQUAL(xbe::event::StatusEvent::ST_IDLE, stEvt->state());
         }
     }
     CPPUNIT_ASSERT_EQUAL(4, statusCount);
@@ -177,19 +174,19 @@ void XbeInstdTest::testStatus2() {
     _xbeInstdStage->start();
 
     _ecs->wait(1, 4000); // wait for life signal
-    seda::IEvent::Ptr statusReqEvent(new xbe::event::StatusReqEvent("from.bar", "to.bar", "1"));
+    seda::IEvent::Ptr statusReqEvent(new xbe::event::StatusReqEvent("1", "from.bar", "to.bar"));
     _xbeInstdStage->send(statusReqEvent);
 
     TaskData td("/bin/sleep");
     td.params().push_back("10");
 
-    std::tr1::shared_ptr<xbe::event::ExecuteEvent> executeEvent(new xbe::event::ExecuteEvent("from.bar", "to.bar", "1"));
+    std::tr1::shared_ptr<xbe::event::ExecuteEvent> executeEvent(new xbe::event::ExecuteEvent("1", "from.bar", "to.bar"));
     executeEvent->taskData(td);
     _xbeInstdStage->send(executeEvent);
 
     _xbeInstdStage->send(statusReqEvent);
 
-    seda::IEvent::Ptr shutdownEvent(new xbe::event::ShutdownEvent("from.bar", "to.bar", "1"));
+    seda::IEvent::Ptr shutdownEvent(new xbe::event::ShutdownEvent("1", "from.bar", "to.bar"));
     _xbeInstdStage->send(shutdownEvent);
 
     _xbeInstdStage->waitUntilEmpty();
@@ -211,8 +208,8 @@ void XbeInstdTest::testStatus2() {
 
         for (seda::AccumulateStrategy::const_iterator it = _acc->begin(); it != _acc->end(); it++) {
             if (xbe::event::StatusEvent *evt = dynamic_cast<xbe::event::StatusEvent*>((*it).get())) {
-                if (evt->state() == "IDLE") statusIdleSeen++;
-                if (evt->state() == "BUSY") statusBusySeen++;
+                if (evt->state() == xbe::event::StatusEvent::ST_IDLE) statusIdleSeen++;
+                if (evt->state() == xbe::event::StatusEvent::ST_RUNNING) statusBusySeen++;
             } else if (dynamic_cast<xbe::event::LifeSignEvent*>((*it).get())) {
                 lifeSignSeen++;
             } else if (dynamic_cast<xbe::event::ExecuteAckEvent*>((*it).get())) {
@@ -234,7 +231,7 @@ void XbeInstdTest::testTerminate1() {
     _discardStage->start();
     _xbeInstdStage->start();
 
-    seda::IEvent::Ptr terminateEvent(new xbe::event::TerminateEvent("from.bar", "to.bar", "1"));
+    seda::IEvent::Ptr terminateEvent(new xbe::event::TerminateEvent("1", "from.bar", "to.bar"));
     _xbeInstdStage->send(terminateEvent);
 
     _ecs->wait(1, 4000);
@@ -263,17 +260,17 @@ void XbeInstdTest::testTerminate2() {
     TaskData td("/bin/sleep");
     td.params().push_back("3");
 
-    std::tr1::shared_ptr<xbe::event::ExecuteEvent> executeEvent(new xbe::event::ExecuteEvent("from.bar", "to.bar", "1"));
+    std::tr1::shared_ptr<xbe::event::ExecuteEvent> executeEvent(new xbe::event::ExecuteEvent("1", "from.bar", "to.bar"));
     executeEvent->taskData(td);
     _xbeInstdStage->send(executeEvent);
 
-    seda::IEvent::Ptr terminateEvent(new xbe::event::TerminateEvent("from.bar", "to.bar", "1"));
+    seda::IEvent::Ptr terminateEvent(new xbe::event::TerminateEvent("1", "from.bar", "to.bar"));
     _xbeInstdStage->send(terminateEvent);
 
     // just wait a bit
     _ecs->wait(5, 3000);
 
-    seda::IEvent::Ptr shutdownEvent(new xbe::event::ShutdownEvent("from.bar", "to.bar", "1"));
+    seda::IEvent::Ptr shutdownEvent(new xbe::event::ShutdownEvent("1", "from.bar", "to.bar"));
     _xbeInstdStage->send(shutdownEvent);
 
     _xbeInstdStage->waitUntilEmpty();
@@ -300,14 +297,14 @@ void XbeInstdTest::testExecute1() {
     TaskData td("/bin/sleep");
     td.params().push_back("3");
 
-    std::tr1::shared_ptr<xbe::event::ExecuteEvent> executeEvent(new xbe::event::ExecuteEvent("from.bar", "to.bar", "1"));
+    std::tr1::shared_ptr<xbe::event::ExecuteEvent> executeEvent(new xbe::event::ExecuteEvent("1", "from.bar", "to.bar"));
     executeEvent->taskData(td);
     _xbeInstdStage->send(executeEvent);
 
     // just wait a bit
     _ecs->wait(10, 7000);
 
-    seda::IEvent::Ptr shutdownEvent(new xbe::event::ShutdownEvent("from.bar", "to.bar", "1"));
+    seda::IEvent::Ptr shutdownEvent(new xbe::event::ShutdownEvent("1", "from.bar", "to.bar"));
     _xbeInstdStage->send(shutdownEvent);
 
     _xbeInstdStage->waitUntilEmpty();
@@ -340,14 +337,14 @@ void XbeInstdTest::testExecute2() {
     td.stdIn("resources/testData.1");
     td.stdOut("resources/testData.1.out");
 
-    std::tr1::shared_ptr<xbe::event::ExecuteEvent> executeEvent(new xbe::event::ExecuteEvent("from.bar", "to.bar", "1"));
+    std::tr1::shared_ptr<xbe::event::ExecuteEvent> executeEvent(new xbe::event::ExecuteEvent("1", "from.bar", "to.bar"));
     executeEvent->taskData(td);
     _xbeInstdStage->send(executeEvent);
 
     // just wait a bit
     _ecs->wait(10, 7000);
 
-    seda::IEvent::Ptr shutdownEvent(new xbe::event::ShutdownEvent("from.bar", "to.bar", "1"));
+    seda::IEvent::Ptr shutdownEvent(new xbe::event::ShutdownEvent("1", "from.bar", "to.bar"));
     _xbeInstdStage->send(shutdownEvent);
 
     _xbeInstdStage->waitUntilEmpty();
@@ -389,18 +386,18 @@ void XbeInstdTest::testExecuteWithStatus() {
     statusTask.params().push_back("aux");
     statusTask.stdOut("resources/status.out");
 
-    std::tr1::shared_ptr<xbe::event::ExecuteEvent> executeEvent(new xbe::event::ExecuteEvent("from.bar", "to.bar", "1"));
+    std::tr1::shared_ptr<xbe::event::ExecuteEvent> executeEvent(new xbe::event::ExecuteEvent("1", "from.bar", "to.bar"));
     executeEvent->taskData(mainTask);
     executeEvent->statusTaskData(statusTask);
     _xbeInstdStage->send(executeEvent);
 
-    std::tr1::shared_ptr<xbe::event::StatusReqEvent> statusRequestEvent(new xbe::event::StatusReqEvent("from.bar", "to.bar", "1"));
+    std::tr1::shared_ptr<xbe::event::StatusReqEvent> statusRequestEvent(new xbe::event::StatusReqEvent("1", "from.bar", "to.bar"));
     _xbeInstdStage->send(statusRequestEvent);
     
     // just wait a bit
     _ecs->wait(10, 6000);
 
-    seda::IEvent::Ptr shutdownEvent(new xbe::event::ShutdownEvent("from.bar", "to.bar", "1"));
+    seda::IEvent::Ptr shutdownEvent(new xbe::event::ShutdownEvent("1", "from.bar", "to.bar"));
     _xbeInstdStage->send(shutdownEvent);
 
     _ecs->wait(10, 6000);

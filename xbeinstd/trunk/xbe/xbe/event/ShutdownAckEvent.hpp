@@ -1,17 +1,25 @@
 #ifndef XBE_shutdownack_EVENT_HPP
 #define XBE_shutdownack_EVENT_HPP 1
 
-#include <xbe/event/XbeInstdEvent.hpp>
+#include <xbe/common.hpp>
+#include <xbe/event/DecodedMessageEvent.hpp>
 
 namespace xbe {
     namespace event {
-        class ShutdownAckEvent : public xbe::event::XbeInstdEvent {
+        class ShutdownAckEvent : public xbe::event::DecodedMessageEvent {
             public:
-                ShutdownAckEvent(const std::string &to, const std::string &from, const std::string &conversationID)
-                : XbeInstdEvent(to, from, conversationID) {}
+                typedef std::tr1::shared_ptr<ShutdownAckEvent> Ptr;
+
+                ShutdownAckEvent(const std::string &conv_id, const mqs::Destination &dst="", const mqs::Destination &src="")
+                : DecodedMessageEvent(conv_id, "ShutdownAck", dst, src),
+                  XBE_INIT_LOGGER("ShutdownAckEvent") {}
                 virtual ~ShutdownAckEvent() {}
 
-                virtual std::string str() const {return "shutdown-ack";}
+                virtual std::string str() const;
+                virtual std::string serialize() const;
+                static Ptr deserialize(const std::string &);
+            private:
+                XBE_DECLARE_LOGGER();
         };
     }
 }

@@ -1,17 +1,25 @@
 #ifndef XBE_shutdown_EVENT_HPP
 #define XBE_shutdown_EVENT_HPP 1
 
-#include <xbe/event/XbeInstdEvent.hpp>
+#include <xbe/common.hpp>
+#include <xbe/event/DecodedMessageEvent.hpp>
 
 namespace xbe {
     namespace event {
-        class ShutdownEvent : public xbe::event::XbeInstdEvent {
+        class ShutdownEvent : public xbe::event::DecodedMessageEvent {
             public:
-                ShutdownEvent(const std::string &to, const std::string &from, const std::string &conversationID)
-                : XbeInstdEvent(to, from, conversationID) {}
+                typedef std::tr1::shared_ptr<ShutdownEvent> Ptr;
+
+                ShutdownEvent(const std::string &conv_id, const mqs::Destination &dst="", const mqs::Destination &src="")
+                : DecodedMessageEvent(conv_id, "Shutdown", dst, src),
+                  XBE_INIT_LOGGER("ShutdownEvent") {}
                 virtual ~ShutdownEvent() {}
 
-                virtual std::string str() const {return "shutdown";}
+                virtual std::string str() const;
+                virtual std::string serialize() const;
+                static Ptr deserialize(const std::string &);
+            private:
+                XBE_DECLARE_LOGGER();
         };
     }
 }

@@ -1,8 +1,9 @@
 #ifndef XBE_EXECUTE_EVENT_HPP
 #define XBE_EXECUTE_EVENT_HPP 1
 
-#include <xbe/event/XbeInstdEvent.hpp>
+#include <xbe/event/DecodedMessageEvent.hpp>
 #include <xbe/TaskData.hpp>
+#include <xbe/common.hpp>
 #include <boost/filesystem.hpp>
 
 #include <string>
@@ -11,13 +12,15 @@
 
 namespace xbe {
     namespace event {
-        class ExecuteEvent : public xbe::event::XbeInstdEvent {
+        class ExecuteEvent : public xbe::event::DecodedMessageEvent {
             public:
-                ExecuteEvent(const std::string &to, const std::string &from, const std::string &conversationID)
-                : xbe::event::XbeInstdEvent(to, from, conversationID) {}
+                typedef std::tr1::shared_ptr<ExecuteEvent> Ptr;
+
+                ExecuteEvent(const std::string &conversation_id, const mqs::Destination &dst="", const mqs::Destination &src="")
+                : xbe::event::DecodedMessageEvent(conversation_id, "ExecuteEvent", dst, src), XBE_INIT_LOGGER("ExecuteEvent") {}
                 virtual ~ExecuteEvent() {}
 
-                virtual std::string str() const {return "execute";}
+                virtual std::string str() const;
 
                 void taskData(const TaskData & td) { _taskData = td; }
                 TaskData & taskData() { return _taskData; }
@@ -26,7 +29,11 @@ namespace xbe {
                 void statusTaskData(const TaskData &sd) { _statusTaskData = sd; }
                 TaskData & statusTaskData() { return _statusTaskData; }
                 const TaskData & statusTaskData() const { return _statusTaskData; }
+
+                virtual std::string serialize() const;
+                static Ptr deserialize(const std::string &);
             private:
+                XBE_DECLARE_LOGGER();
                 TaskData _taskData;
                 TaskData _statusTaskData;
         };

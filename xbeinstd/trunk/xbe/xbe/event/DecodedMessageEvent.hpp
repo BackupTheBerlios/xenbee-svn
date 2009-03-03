@@ -11,7 +11,7 @@ namespace event {
         typedef std::tr1::shared_ptr<DecodedMessageEvent> Ptr;
         
         virtual std::string serialize() const = 0;
-        const std::string &converation_id() const { return conversation_id_; }
+        const std::string &conversation_id() const { return conversation_id_; }
     protected:
         DecodedMessageEvent(const std::string &conversation_id,
                             const std::string &msg,

@@ -1,8 +1,8 @@
 #ifndef XBE_CONVERSATION_HPP
 #define XBE_CONVERSATION_HPP 1
 
-#include <tr1/memory>
 #include <mqs/Destination.hpp>
+#include <xbe/shared_ptr.hpp>
 
 namespace xbe {
     class Conversation {

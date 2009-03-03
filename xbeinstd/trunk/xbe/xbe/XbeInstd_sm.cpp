@@ -258,7 +258,7 @@ namespace xbe
         context.clearState();
         try
         {
-            ctxt.do_send_execute_ack(msg);
+            ctxt.do_send_execute_nak(msg);
             context.setState(EndStateName);
         }
         catch (...)
@@ -322,7 +322,7 @@ namespace xbe
         context.clearState();
         try
         {
-            ctxt.do_send_status(msg, xbe::event::StatusEvent::ST_BUSY);
+            ctxt.do_send_status(msg, xbe::event::StatusEvent::ST_RUNNING);
             context.setState(EndStateName);
         }
         catch (...)
@@ -404,7 +404,7 @@ namespace xbe
         context.clearState();
         try
         {
-            ctxt.do_send_status(msg, xbe::event::StatusEvent::ST_BUSY);
+            ctxt.do_send_status(msg, xbe::event::StatusEvent::ST_RUNNING);
             context.setState(EndStateName);
         }
         catch (...)
@@ -535,7 +535,7 @@ namespace xbe
         context.clearState();
         try
         {
-            ctxt.do_send_status(msg, xbe::event::StatusEvent::ST_BUSY);
+            ctxt.do_send_status(msg, xbe::event::StatusEvent::ST_FINISHED);
             context.setState(EndStateName);
         }
         catch (...)

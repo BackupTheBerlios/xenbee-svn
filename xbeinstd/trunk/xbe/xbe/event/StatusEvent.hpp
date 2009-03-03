@@ -1,40 +1,54 @@
 #ifndef XBE_status_EVENT_HPP
 #define XBE_status_EVENT_HPP 1
 
-#include <xbe/event/XbeInstdEvent.hpp>
+#include <xbe/common.hpp>
+#include <xbe/event/DecodedMessageEvent.hpp>
 
 namespace xbe {
     namespace event {
-        class StatusEvent : public xbe::event::XbeInstdEvent {
+        class StatusEvent : public xbe::event::DecodedMessageEvent {
             public:
                 typedef std::tr1::shared_ptr<StatusEvent> Ptr;
 
-                enum Status {
-                    ST_IDLE,
-                    ST_BUSY,
+                enum StatusCode {
+                    ST_IDLE = 0,
+                    ST_RUNNING,
+                    ST_FINISHED,
+                    ST_FAILED
                 };
 
-                StatusEvent(const std::string &to, const std::string &from, const std::string &conversationID, unsigned int timestamp = 0)
-                : xbe::event::XbeInstdEvent(to, from, conversationID, timestamp),
+                explicit
+                StatusEvent(const std::string &conversation_id, const mqs::Destination &dst = "", const mqs::Destination &src = "")
+                : xbe::event::DecodedMessageEvent(conversation_id, "StatusEvent", dst, src),
+                  XBE_INIT_LOGGER("StatusEvent"),
                   state_(ST_IDLE), statusTaskExitCode_(-1) {}
                 virtual ~StatusEvent() {}
 
-                virtual std::string str() const {return "status";}
+                virtual std::string str() const;
+                virtual std::string serialize() const;
+                static Ptr deserialize(const std::string &);
 
-                const std::string & state() const {
+                const std::string & state_str() const {
                     static std::string IDLE("IDLE");
-                    static std::string BUSY("BUSY");
+                    static std::string RUNNING("RUNNING");
+                    static std::string FINISHED("FINISHED");
+                    static std::string FAILED("FAILED");
 
                     switch (state_) {
                         case ST_IDLE:
                             return IDLE;
-                        case ST_BUSY:
-                            return BUSY;
+                        case ST_RUNNING:
+                            return RUNNING;
+                        case ST_FINISHED:
+                            return FINISHED;
+                        case ST_FAILED:
+                            return FAILED;
                         default:
                             throw std::runtime_error("internal inconsistency detected - unknown state!");
                     }
                 }
-                void state(Status st) { state_ = st; }
+                StatusCode state() const { return state_; }
+                void state(StatusCode st) { state_ = st; }
                 int taskStatusCode() const { return statusTaskExitCode_; }
                 void taskStatusCode(int code) { statusTaskExitCode_ = code; }
 
@@ -44,7 +58,8 @@ namespace xbe {
                 void taskStatusStdErr(const std::string &s) { statusTaskErr_ = s; }
 
             private:
-                Status state_;
+                XBE_DECLARE_LOGGER();
+                StatusCode state_;
                 int statusTaskExitCode_;
                 std::string statusTaskOut_;
                 std::string statusTaskErr_;

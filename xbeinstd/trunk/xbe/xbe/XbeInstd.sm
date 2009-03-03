@@ -73,7 +73,7 @@ Busy
     Execute(msg: xbe::event::ExecuteEvent&)
         nil
         {
-            do_send_execute_ack(msg);
+            do_send_execute_nak(msg);
         }
  
     Finished(exitcode: int)
@@ -85,7 +85,7 @@ Busy
     StatusReq(msg: xbe::event::StatusReqEvent&)
         nil
         {
-            do_send_status(msg, xbe::event::StatusEvent::ST_BUSY);
+            do_send_status(msg, xbe::event::StatusEvent::ST_RUNNING);
         }
 
     Terminate(msg: xbe::event::TerminateEvent&)
@@ -128,7 +128,7 @@ Exit  { do_stop_timer();  }
     StatusReq(msg: xbe::event::StatusReqEvent&)
         nil
         {
-            do_send_status(msg, xbe::event::StatusEvent::ST_BUSY);
+            do_send_status(msg, xbe::event::StatusEvent::ST_RUNNING);
         }
 
     Terminate
@@ -149,7 +149,7 @@ Exit  { do_stop_timer();  }
     StatusReq(msg: xbe::event::StatusReqEvent&)
         nil
         {
-            do_send_status(msg, xbe::event::StatusEvent::ST_BUSY);
+            do_send_status(msg, xbe::event::StatusEvent::ST_FINISHED);
         }
 
     Timeout

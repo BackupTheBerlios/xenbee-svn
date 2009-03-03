@@ -51,7 +51,7 @@ class TerminateAck;
 class LifeSign;
 
 enum ErrorCode {
-  UNKNOWN_ERROR = 1
+  UNKNOWN_ERROR = 0
 };
 const ::google::protobuf::EnumDescriptor* ErrorCode_descriptor();
 bool ErrorCode_IsValid(int value);
@@ -59,12 +59,32 @@ const ErrorCode ErrorCode_MIN = UNKNOWN_ERROR;
 const ErrorCode ErrorCode_MAX = UNKNOWN_ERROR;
 
 enum ExecuteNakReason {
-  UNKNOWN_REASON = 1
+  UNKNOWN_REASON = 0,
+  RESOURCE_BUSY = 1
 };
 const ::google::protobuf::EnumDescriptor* ExecuteNakReason_descriptor();
 bool ExecuteNakReason_IsValid(int value);
 const ExecuteNakReason ExecuteNakReason_MIN = UNKNOWN_REASON;
-const ExecuteNakReason ExecuteNakReason_MAX = UNKNOWN_REASON;
+const ExecuteNakReason ExecuteNakReason_MAX = RESOURCE_BUSY;
+
+enum StatusCode {
+  IDLE = 0,
+  RUNNING = 1,
+  FINISHED = 2,
+  FAILED = 3
+};
+const ::google::protobuf::EnumDescriptor* StatusCode_descriptor();
+bool StatusCode_IsValid(int value);
+const StatusCode StatusCode_MIN = IDLE;
+const StatusCode StatusCode_MAX = FAILED;
+
+enum FailReason {
+  UNKNOWN = 0
+};
+const ::google::protobuf::EnumDescriptor* FailReason_descriptor();
+bool FailReason_IsValid(int value);
+const FailReason FailReason_MIN = UNKNOWN;
+const FailReason FailReason_MAX = UNKNOWN;
 
 // ===================================================================
 
@@ -131,67 +151,73 @@ class XbeMessage : public ::google::protobuf::Message {
   inline const ::xbe::messages::ExecuteAck& execute_ack() const;
   inline ::xbe::messages::ExecuteAck* mutable_execute_ack();
   
-  // optional .xbe.messages.StatusReq status_req = 5;
+  // optional .xbe.messages.ExecuteNak execute_nak = 5;
+  inline bool has_execute_nak() const;
+  inline void clear_execute_nak();
+  inline const ::xbe::messages::ExecuteNak& execute_nak() const;
+  inline ::xbe::messages::ExecuteNak* mutable_execute_nak();
+  
+  // optional .xbe.messages.StatusReq status_req = 6;
   inline bool has_status_req() const;
   inline void clear_status_req();
   inline const ::xbe::messages::StatusReq& status_req() const;
   inline ::xbe::messages::StatusReq* mutable_status_req();
   
-  // optional .xbe.messages.Status status = 6;
+  // optional .xbe.messages.Status status = 7;
   inline bool has_status() const;
   inline void clear_status();
   inline const ::xbe::messages::Status& status() const;
   inline ::xbe::messages::Status* mutable_status();
   
-  // optional .xbe.messages.Finished finished = 7;
+  // optional .xbe.messages.Finished finished = 8;
   inline bool has_finished() const;
   inline void clear_finished();
   inline const ::xbe::messages::Finished& finished() const;
   inline ::xbe::messages::Finished* mutable_finished();
   
-  // optional .xbe.messages.FinishedAck finished_ack = 8;
+  // optional .xbe.messages.FinishedAck finished_ack = 9;
   inline bool has_finished_ack() const;
   inline void clear_finished_ack();
   inline const ::xbe::messages::FinishedAck& finished_ack() const;
   inline ::xbe::messages::FinishedAck* mutable_finished_ack();
   
-  // optional .xbe.messages.Failed failed = 9;
+  // optional .xbe.messages.Failed failed = 10;
   inline bool has_failed() const;
   inline void clear_failed();
   inline const ::xbe::messages::Failed& failed() const;
   inline ::xbe::messages::Failed* mutable_failed();
   
-  // optional .xbe.messages.FailedAck failed_ack = 10;
+  // optional .xbe.messages.FailedAck failed_ack = 11;
   inline bool has_failed_ack() const;
   inline void clear_failed_ack();
   inline const ::xbe::messages::FailedAck& failed_ack() const;
   inline ::xbe::messages::FailedAck* mutable_failed_ack();
   
-  // optional .xbe.messages.Shutdown shutdown = 11;
+  // optional .xbe.messages.Shutdown shutdown = 12;
   inline bool has_shutdown() const;
   inline void clear_shutdown();
   inline const ::xbe::messages::Shutdown& shutdown() const;
   inline ::xbe::messages::Shutdown* mutable_shutdown();
   
-  // optional .xbe.messages.ShutdownAck shutdown_ack = 12;
+  // optional .xbe.messages.ShutdownAck shutdown_ack = 13;
   inline bool has_shutdown_ack() const;
   inline void clear_shutdown_ack();
   inline const ::xbe::messages::ShutdownAck& shutdown_ack() const;
   inline ::xbe::messages::ShutdownAck* mutable_shutdown_ack();
   
-  // optional .xbe.messages.Terminate terminate = 13;
+  // optional .xbe.messages.Terminate terminate = 14;
   inline bool has_terminate() const;
   inline void clear_terminate();
   inline const ::xbe::messages::Terminate& terminate() const;
   inline ::xbe::messages::Terminate* mutable_terminate();
   
-  // optional .xbe.messages.TerminateAck terminate_ack = 14;
+  // optional .xbe.messages.TerminateAck terminate_ack = 15;
   inline bool has_terminate_ack() const;
   inline void clear_terminate_ack();
   inline const ::xbe::messages::TerminateAck& terminate_ack() const;
   inline ::xbe::messages::TerminateAck* mutable_terminate_ack();
   
-  // optional .xbe.messages.LifeSign life_sign = 15;
+  // optional .xbe.messages.LifeSign life_sign = 16;
   inline bool has_life_sign() const;
   inline void clear_life_sign();
   inline const ::xbe::messages::LifeSign& life_sign() const;
@@ -205,6 +231,7 @@ class XbeMessage : public ::google::protobuf::Message {
   ::xbe::messages::Error* error_;
   ::xbe::messages::Execute* execute_;
   ::xbe::messages::ExecuteAck* execute_ack_;
+  ::xbe::messages::ExecuteNak* execute_nak_;
   ::xbe::messages::StatusReq* status_req_;
   ::xbe::messages::Status* status_;
   ::xbe::messages::Finished* finished_;
@@ -218,7 +245,7 @@ class XbeMessage : public ::google::protobuf::Message {
   ::xbe::messages::LifeSign* life_sign_;
   friend void protobuf_BuildDesc_xbemsg_2eproto_AssignGlobalDescriptors(
       const ::google::protobuf::FileDescriptor* file);
-  ::google::protobuf::uint32 _has_bits_[(15 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(16 + 31) / 32];
   
   // WHY DOES & HAVE LOWER PRECEDENCE THAN != !?
   inline bool _has_bit(int index) const {
@@ -728,13 +755,20 @@ class ExecuteAck : public ::google::protobuf::Message {
   
   // accessors -------------------------------------------------------
   
+  // optional int32 task = 1;
+  inline bool has_task() const;
+  inline void clear_task();
+  inline ::google::protobuf::int32 task() const;
+  inline void set_task(::google::protobuf::int32 value);
+  
  private:
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
   mutable int _cached_size_;
   
+  ::google::protobuf::int32 task_;
   friend void protobuf_BuildDesc_xbemsg_2eproto_AssignGlobalDescriptors(
       const ::google::protobuf::FileDescriptor* file);
-  ::google::protobuf::uint32 _has_bits_[1];
+  ::google::protobuf::uint32 _has_bits_[(1 + 31) / 32];
   
   // WHY DOES & HAVE LOWER PRECEDENCE THAN != !?
   inline bool _has_bit(int index) const {
@@ -871,13 +905,20 @@ class StatusReq : public ::google::protobuf::Message {
   
   // accessors -------------------------------------------------------
   
+  // optional bool execute_status_task = 1;
+  inline bool has_execute_status_task() const;
+  inline void clear_execute_status_task();
+  inline bool execute_status_task() const;
+  inline void set_execute_status_task(bool value);
+  
  private:
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
   mutable int _cached_size_;
   
+  bool execute_status_task_;
   friend void protobuf_BuildDesc_xbemsg_2eproto_AssignGlobalDescriptors(
       const ::google::protobuf::FileDescriptor* file);
-  ::google::protobuf::uint32 _has_bits_[1];
+  ::google::protobuf::uint32 _has_bits_[(1 + 31) / 32];
   
   // WHY DOES & HAVE LOWER PRECEDENCE THAN != !?
   inline bool _has_bit(int index) const {
@@ -934,13 +975,49 @@ class Status : public ::google::protobuf::Message {
   
   // accessors -------------------------------------------------------
   
+  // required .xbe.messages.StatusCode status = 1;
+  inline bool has_status() const;
+  inline void clear_status();
+  inline xbe::messages::StatusCode status() const;
+  inline void set_status(xbe::messages::StatusCode value);
+  
+  // optional int32 status_task_exit_code = 2;
+  inline bool has_status_task_exit_code() const;
+  inline void clear_status_task_exit_code();
+  inline ::google::protobuf::int32 status_task_exit_code() const;
+  inline void set_status_task_exit_code(::google::protobuf::int32 value);
+  
+  // optional bytes stdout = 3;
+  inline bool has_stdout() const;
+  inline void clear_stdout();
+  inline const ::std::string& stdout() const;
+  inline void set_stdout(const ::std::string& value);
+  inline void set_stdout(const char* value);
+  inline void set_stdout(const void* value, size_t size);
+  inline ::std::string* mutable_stdout();
+  
+  // optional bytes stderr = 4;
+  inline bool has_stderr() const;
+  inline void clear_stderr();
+  inline const ::std::string& stderr() const;
+  inline void set_stderr(const ::std::string& value);
+  inline void set_stderr(const char* value);
+  inline void set_stderr(const void* value, size_t size);
+  inline ::std::string* mutable_stderr();
+  
  private:
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
   mutable int _cached_size_;
   
+  int status_;
+  ::google::protobuf::int32 status_task_exit_code_;
+  ::std::string* stdout_;
+  static const ::std::string _default_stdout_;
+  ::std::string* stderr_;
+  static const ::std::string _default_stderr_;
   friend void protobuf_BuildDesc_xbemsg_2eproto_AssignGlobalDescriptors(
       const ::google::protobuf::FileDescriptor* file);
-  ::google::protobuf::uint32 _has_bits_[1];
+  ::google::protobuf::uint32 _has_bits_[(4 + 31) / 32];
   
   // WHY DOES & HAVE LOWER PRECEDENCE THAN != !?
   inline bool _has_bit(int index) const {
@@ -997,13 +1074,27 @@ class Finished : public ::google::protobuf::Message {
   
   // accessors -------------------------------------------------------
   
+  // required int32 exitcode = 1;
+  inline bool has_exitcode() const;
+  inline void clear_exitcode();
+  inline ::google::protobuf::int32 exitcode() const;
+  inline void set_exitcode(::google::protobuf::int32 value);
+  
+  // optional int32 task = 2;
+  inline bool has_task() const;
+  inline void clear_task();
+  inline ::google::protobuf::int32 task() const;
+  inline void set_task(::google::protobuf::int32 value);
+  
  private:
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
   mutable int _cached_size_;
   
+  ::google::protobuf::int32 exitcode_;
+  ::google::protobuf::int32 task_;
   friend void protobuf_BuildDesc_xbemsg_2eproto_AssignGlobalDescriptors(
       const ::google::protobuf::FileDescriptor* file);
-  ::google::protobuf::uint32 _has_bits_[1];
+  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
   
   // WHY DOES & HAVE LOWER PRECEDENCE THAN != !?
   inline bool _has_bit(int index) const {
@@ -1060,13 +1151,20 @@ class FinishedAck : public ::google::protobuf::Message {
   
   // accessors -------------------------------------------------------
   
+  // optional int32 task = 1;
+  inline bool has_task() const;
+  inline void clear_task();
+  inline ::google::protobuf::int32 task() const;
+  inline void set_task(::google::protobuf::int32 value);
+  
  private:
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
   mutable int _cached_size_;
   
+  ::google::protobuf::int32 task_;
   friend void protobuf_BuildDesc_xbemsg_2eproto_AssignGlobalDescriptors(
       const ::google::protobuf::FileDescriptor* file);
-  ::google::protobuf::uint32 _has_bits_[1];
+  ::google::protobuf::uint32 _has_bits_[(1 + 31) / 32];
   
   // WHY DOES & HAVE LOWER PRECEDENCE THAN != !?
   inline bool _has_bit(int index) const {
@@ -1123,13 +1221,27 @@ class Failed : public ::google::protobuf::Message {
   
   // accessors -------------------------------------------------------
   
+  // optional int32 task = 1;
+  inline bool has_task() const;
+  inline void clear_task();
+  inline ::google::protobuf::int32 task() const;
+  inline void set_task(::google::protobuf::int32 value);
+  
+  // optional .xbe.messages.FailReason reason = 2;
+  inline bool has_reason() const;
+  inline void clear_reason();
+  inline xbe::messages::FailReason reason() const;
+  inline void set_reason(xbe::messages::FailReason value);
+  
  private:
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
   mutable int _cached_size_;
   
+  ::google::protobuf::int32 task_;
+  int reason_;
   friend void protobuf_BuildDesc_xbemsg_2eproto_AssignGlobalDescriptors(
       const ::google::protobuf::FileDescriptor* file);
-  ::google::protobuf::uint32 _has_bits_[1];
+  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
   
   // WHY DOES & HAVE LOWER PRECEDENCE THAN != !?
   inline bool _has_bit(int index) const {
@@ -1186,13 +1298,20 @@ class FailedAck : public ::google::protobuf::Message {
   
   // accessors -------------------------------------------------------
   
+  // optional int32 task = 1;
+  inline bool has_task() const;
+  inline void clear_task();
+  inline ::google::protobuf::int32 task() const;
+  inline void set_task(::google::protobuf::int32 value);
+  
  private:
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
   mutable int _cached_size_;
   
+  ::google::protobuf::int32 task_;
   friend void protobuf_BuildDesc_xbemsg_2eproto_AssignGlobalDescriptors(
       const ::google::protobuf::FileDescriptor* file);
-  ::google::protobuf::uint32 _has_bits_[1];
+  ::google::protobuf::uint32 _has_bits_[(1 + 31) / 32];
   
   // WHY DOES & HAVE LOWER PRECEDENCE THAN != !?
   inline bool _has_bit(int index) const {
@@ -1375,13 +1494,20 @@ class Terminate : public ::google::protobuf::Message {
   
   // accessors -------------------------------------------------------
   
+  // optional int32 task = 1;
+  inline bool has_task() const;
+  inline void clear_task();
+  inline ::google::protobuf::int32 task() const;
+  inline void set_task(::google::protobuf::int32 value);
+  
  private:
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
   mutable int _cached_size_;
   
+  ::google::protobuf::int32 task_;
   friend void protobuf_BuildDesc_xbemsg_2eproto_AssignGlobalDescriptors(
       const ::google::protobuf::FileDescriptor* file);
-  ::google::protobuf::uint32 _has_bits_[1];
+  ::google::protobuf::uint32 _has_bits_[(1 + 31) / 32];
   
   // WHY DOES & HAVE LOWER PRECEDENCE THAN != !?
   inline bool _has_bit(int index) const {
@@ -1438,13 +1564,20 @@ class TerminateAck : public ::google::protobuf::Message {
   
   // accessors -------------------------------------------------------
   
+  // optional int32 task = 1;
+  inline bool has_task() const;
+  inline void clear_task();
+  inline ::google::protobuf::int32 task() const;
+  inline void set_task(::google::protobuf::int32 value);
+  
  private:
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
   mutable int _cached_size_;
   
+  ::google::protobuf::int32 task_;
   friend void protobuf_BuildDesc_xbemsg_2eproto_AssignGlobalDescriptors(
       const ::google::protobuf::FileDescriptor* file);
-  ::google::protobuf::uint32 _has_bits_[1];
+  ::google::protobuf::uint32 _has_bits_[(1 + 31) / 32];
   
   // WHY DOES & HAVE LOWER PRECEDENCE THAN != !?
   inline bool _has_bit(int index) const {
@@ -1507,14 +1640,21 @@ class LifeSign : public ::google::protobuf::Message {
   inline ::google::protobuf::uint64 tstamp() const;
   inline void set_tstamp(::google::protobuf::uint64 value);
   
+  // optional .xbe.messages.StatusCode status = 2;
+  inline bool has_status() const;
+  inline void clear_status();
+  inline xbe::messages::StatusCode status() const;
+  inline void set_status(xbe::messages::StatusCode value);
+  
  private:
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
   mutable int _cached_size_;
   
   ::google::protobuf::uint64 tstamp_;
+  int status_;
   friend void protobuf_BuildDesc_xbemsg_2eproto_AssignGlobalDescriptors(
       const ::google::protobuf::FileDescriptor* file);
-  ::google::protobuf::uint32 _has_bits_[(1 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
   
   // WHY DOES & HAVE LOWER PRECEDENCE THAN != !?
   inline bool _has_bit(int index) const {
@@ -1608,189 +1748,206 @@ inline ::xbe::messages::ExecuteAck* XbeMessage::mutable_execute_ack() {
   return execute_ack_;
 }
 
-// optional .xbe.messages.StatusReq status_req = 5;
-inline bool XbeMessage::has_status_req() const {
+// optional .xbe.messages.ExecuteNak execute_nak = 5;
+inline bool XbeMessage::has_execute_nak() const {
   return _has_bit(4);
+}
+inline void XbeMessage::clear_execute_nak() {
+  if (execute_nak_ != NULL) execute_nak_->::xbe::messages::ExecuteNak::Clear();
+  _clear_bit(4);
+}
+inline const ::xbe::messages::ExecuteNak& XbeMessage::execute_nak() const {
+  return execute_nak_ != NULL ? *execute_nak_ : *default_instance_->execute_nak_;
+}
+inline ::xbe::messages::ExecuteNak* XbeMessage::mutable_execute_nak() {
+  _set_bit(4);
+  if (execute_nak_ == NULL) execute_nak_ = new ::xbe::messages::ExecuteNak;
+  return execute_nak_;
+}
+
+// optional .xbe.messages.StatusReq status_req = 6;
+inline bool XbeMessage::has_status_req() const {
+  return _has_bit(5);
 }
 inline void XbeMessage::clear_status_req() {
   if (status_req_ != NULL) status_req_->::xbe::messages::StatusReq::Clear();
-  _clear_bit(4);
+  _clear_bit(5);
 }
 inline const ::xbe::messages::StatusReq& XbeMessage::status_req() const {
   return status_req_ != NULL ? *status_req_ : *default_instance_->status_req_;
 }
 inline ::xbe::messages::StatusReq* XbeMessage::mutable_status_req() {
-  _set_bit(4);
+  _set_bit(5);
   if (status_req_ == NULL) status_req_ = new ::xbe::messages::StatusReq;
   return status_req_;
 }
 
-// optional .xbe.messages.Status status = 6;
+// optional .xbe.messages.Status status = 7;
 inline bool XbeMessage::has_status() const {
-  return _has_bit(5);
+  return _has_bit(6);
 }
 inline void XbeMessage::clear_status() {
   if (status_ != NULL) status_->::xbe::messages::Status::Clear();
-  _clear_bit(5);
+  _clear_bit(6);
 }
 inline const ::xbe::messages::Status& XbeMessage::status() const {
   return status_ != NULL ? *status_ : *default_instance_->status_;
 }
 inline ::xbe::messages::Status* XbeMessage::mutable_status() {
-  _set_bit(5);
+  _set_bit(6);
   if (status_ == NULL) status_ = new ::xbe::messages::Status;
   return status_;
 }
 
-// optional .xbe.messages.Finished finished = 7;
+// optional .xbe.messages.Finished finished = 8;
 inline bool XbeMessage::has_finished() const {
-  return _has_bit(6);
+  return _has_bit(7);
 }
 inline void XbeMessage::clear_finished() {
   if (finished_ != NULL) finished_->::xbe::messages::Finished::Clear();
-  _clear_bit(6);
+  _clear_bit(7);
 }
 inline const ::xbe::messages::Finished& XbeMessage::finished() const {
   return finished_ != NULL ? *finished_ : *default_instance_->finished_;
 }
 inline ::xbe::messages::Finished* XbeMessage::mutable_finished() {
-  _set_bit(6);
+  _set_bit(7);
   if (finished_ == NULL) finished_ = new ::xbe::messages::Finished;
   return finished_;
 }
 
-// optional .xbe.messages.FinishedAck finished_ack = 8;
+// optional .xbe.messages.FinishedAck finished_ack = 9;
 inline bool XbeMessage::has_finished_ack() const {
-  return _has_bit(7);
+  return _has_bit(8);
 }
 inline void XbeMessage::clear_finished_ack() {
   if (finished_ack_ != NULL) finished_ack_->::xbe::messages::FinishedAck::Clear();
-  _clear_bit(7);
+  _clear_bit(8);
 }
 inline const ::xbe::messages::FinishedAck& XbeMessage::finished_ack() const {
   return finished_ack_ != NULL ? *finished_ack_ : *default_instance_->finished_ack_;
 }
 inline ::xbe::messages::FinishedAck* XbeMessage::mutable_finished_ack() {
-  _set_bit(7);
+  _set_bit(8);
   if (finished_ack_ == NULL) finished_ack_ = new ::xbe::messages::FinishedAck;
   return finished_ack_;
 }
 
-// optional .xbe.messages.Failed failed = 9;
+// optional .xbe.messages.Failed failed = 10;
 inline bool XbeMessage::has_failed() const {
-  return _has_bit(8);
+  return _has_bit(9);
 }
 inline void XbeMessage::clear_failed() {
   if (failed_ != NULL) failed_->::xbe::messages::Failed::Clear();
-  _clear_bit(8);
+  _clear_bit(9);
 }
 inline const ::xbe::messages::Failed& XbeMessage::failed() const {
   return failed_ != NULL ? *failed_ : *default_instance_->failed_;
 }
 inline ::xbe::messages::Failed* XbeMessage::mutable_failed() {
-  _set_bit(8);
+  _set_bit(9);
   if (failed_ == NULL) failed_ = new ::xbe::messages::Failed;
   return failed_;
 }
 
-// optional .xbe.messages.FailedAck failed_ack = 10;
+// optional .xbe.messages.FailedAck failed_ack = 11;
 inline bool XbeMessage::has_failed_ack() const {
-  return _has_bit(9);
+  return _has_bit(10);
 }
 inline void XbeMessage::clear_failed_ack() {
   if (failed_ack_ != NULL) failed_ack_->::xbe::messages::FailedAck::Clear();
-  _clear_bit(9);
+  _clear_bit(10);
 }
 inline const ::xbe::messages::FailedAck& XbeMessage::failed_ack() const {
   return failed_ack_ != NULL ? *failed_ack_ : *default_instance_->failed_ack_;
 }
 inline ::xbe::messages::FailedAck* XbeMessage::mutable_failed_ack() {
-  _set_bit(9);
+  _set_bit(10);
   if (failed_ack_ == NULL) failed_ack_ = new ::xbe::messages::FailedAck;
   return failed_ack_;
 }
 
-// optional .xbe.messages.Shutdown shutdown = 11;
+// optional .xbe.messages.Shutdown shutdown = 12;
 inline bool XbeMessage::has_shutdown() const {
-  return _has_bit(10);
+  return _has_bit(11);
 }
 inline void XbeMessage::clear_shutdown() {
   if (shutdown_ != NULL) shutdown_->::xbe::messages::Shutdown::Clear();
-  _clear_bit(10);
+  _clear_bit(11);
 }
 inline const ::xbe::messages::Shutdown& XbeMessage::shutdown() const {
   return shutdown_ != NULL ? *shutdown_ : *default_instance_->shutdown_;
 }
 inline ::xbe::messages::Shutdown* XbeMessage::mutable_shutdown() {
-  _set_bit(10);
+  _set_bit(11);
   if (shutdown_ == NULL) shutdown_ = new ::xbe::messages::Shutdown;
   return shutdown_;
 }
 
-// optional .xbe.messages.ShutdownAck shutdown_ack = 12;
+// optional .xbe.messages.ShutdownAck shutdown_ack = 13;
 inline bool XbeMessage::has_shutdown_ack() const {
-  return _has_bit(11);
+  return _has_bit(12);
 }
 inline void XbeMessage::clear_shutdown_ack() {
   if (shutdown_ack_ != NULL) shutdown_ack_->::xbe::messages::ShutdownAck::Clear();
-  _clear_bit(11);
+  _clear_bit(12);
 }
 inline const ::xbe::messages::ShutdownAck& XbeMessage::shutdown_ack() const {
   return shutdown_ack_ != NULL ? *shutdown_ack_ : *default_instance_->shutdown_ack_;
 }
 inline ::xbe::messages::ShutdownAck* XbeMessage::mutable_shutdown_ack() {
-  _set_bit(11);
+  _set_bit(12);
   if (shutdown_ack_ == NULL) shutdown_ack_ = new ::xbe::messages::ShutdownAck;
   return shutdown_ack_;
 }
 
-// optional .xbe.messages.Terminate terminate = 13;
+// optional .xbe.messages.Terminate terminate = 14;
 inline bool XbeMessage::has_terminate() const {
-  return _has_bit(12);
+  return _has_bit(13);
 }
 inline void XbeMessage::clear_terminate() {
   if (terminate_ != NULL) terminate_->::xbe::messages::Terminate::Clear();
-  _clear_bit(12);
+  _clear_bit(13);
 }
 inline const ::xbe::messages::Terminate& XbeMessage::terminate() const {
   return terminate_ != NULL ? *terminate_ : *default_instance_->terminate_;
 }
 inline ::xbe::messages::Terminate* XbeMessage::mutable_terminate() {
-  _set_bit(12);
+  _set_bit(13);
   if (terminate_ == NULL) terminate_ = new ::xbe::messages::Terminate;
   return terminate_;
 }
 
-// optional .xbe.messages.TerminateAck terminate_ack = 14;
+// optional .xbe.messages.TerminateAck terminate_ack = 15;
 inline bool XbeMessage::has_terminate_ack() const {
-  return _has_bit(13);
+  return _has_bit(14);
 }
 inline void XbeMessage::clear_terminate_ack() {
   if (terminate_ack_ != NULL) terminate_ack_->::xbe::messages::TerminateAck::Clear();
-  _clear_bit(13);
+  _clear_bit(14);
 }
 inline const ::xbe::messages::TerminateAck& XbeMessage::terminate_ack() const {
   return terminate_ack_ != NULL ? *terminate_ack_ : *default_instance_->terminate_ack_;
 }
 inline ::xbe::messages::TerminateAck* XbeMessage::mutable_terminate_ack() {
-  _set_bit(13);
+  _set_bit(14);
   if (terminate_ack_ == NULL) terminate_ack_ = new ::xbe::messages::TerminateAck;
   return terminate_ack_;
 }
 
-// optional .xbe.messages.LifeSign life_sign = 15;
+// optional .xbe.messages.LifeSign life_sign = 16;
 inline bool XbeMessage::has_life_sign() const {
-  return _has_bit(14);
+  return _has_bit(15);
 }
 inline void XbeMessage::clear_life_sign() {
   if (life_sign_ != NULL) life_sign_->::xbe::messages::LifeSign::Clear();
-  _clear_bit(14);
+  _clear_bit(15);
 }
 inline const ::xbe::messages::LifeSign& XbeMessage::life_sign() const {
   return life_sign_ != NULL ? *life_sign_ : *default_instance_->life_sign_;
 }
 inline ::xbe::messages::LifeSign* XbeMessage::mutable_life_sign() {
-  _set_bit(14);
+  _set_bit(15);
   if (life_sign_ == NULL) life_sign_ = new ::xbe::messages::LifeSign;
   return life_sign_;
 }
@@ -1850,7 +2007,7 @@ inline bool Error::has_code() const {
   return _has_bit(0);
 }
 inline void Error::clear_code() {
-  code_ = 1;
+  code_ = 0;
   _clear_bit(0);
 }
 inline xbe::messages::ErrorCode Error::code() const {
@@ -2254,6 +2411,22 @@ inline ::xbe::messages::Task* Execute::mutable_status_task() {
 
 // ExecuteAck
 
+// optional int32 task = 1;
+inline bool ExecuteAck::has_task() const {
+  return _has_bit(0);
+}
+inline void ExecuteAck::clear_task() {
+  task_ = 0;
+  _clear_bit(0);
+}
+inline ::google::protobuf::int32 ExecuteAck::task() const {
+  return task_;
+}
+inline void ExecuteAck::set_task(::google::protobuf::int32 value) {
+  _set_bit(0);
+  task_ = value;
+}
+
 // -------------------------------------------------------------------
 
 // ExecuteNak
@@ -2263,7 +2436,7 @@ inline bool ExecuteNak::has_reason() const {
   return _has_bit(0);
 }
 inline void ExecuteNak::clear_reason() {
-  reason_ = 1;
+  reason_ = 0;
   _clear_bit(0);
 }
 inline xbe::messages::ExecuteNakReason ExecuteNak::reason() const {
@@ -2314,25 +2487,255 @@ inline ::std::string* ExecuteNak::mutable_message() {
 
 // StatusReq
 
+// optional bool execute_status_task = 1;
+inline bool StatusReq::has_execute_status_task() const {
+  return _has_bit(0);
+}
+inline void StatusReq::clear_execute_status_task() {
+  execute_status_task_ = false;
+  _clear_bit(0);
+}
+inline bool StatusReq::execute_status_task() const {
+  return execute_status_task_;
+}
+inline void StatusReq::set_execute_status_task(bool value) {
+  _set_bit(0);
+  execute_status_task_ = value;
+}
+
 // -------------------------------------------------------------------
 
 // Status
+
+// required .xbe.messages.StatusCode status = 1;
+inline bool Status::has_status() const {
+  return _has_bit(0);
+}
+inline void Status::clear_status() {
+  status_ = 0;
+  _clear_bit(0);
+}
+inline xbe::messages::StatusCode Status::status() const {
+  return static_cast< xbe::messages::StatusCode >(status_);
+}
+inline void Status::set_status(xbe::messages::StatusCode value) {
+  GOOGLE_DCHECK(xbe::messages::StatusCode_IsValid(value));
+  _set_bit(0);
+  status_ = value;
+}
+
+// optional int32 status_task_exit_code = 2;
+inline bool Status::has_status_task_exit_code() const {
+  return _has_bit(1);
+}
+inline void Status::clear_status_task_exit_code() {
+  status_task_exit_code_ = 0;
+  _clear_bit(1);
+}
+inline ::google::protobuf::int32 Status::status_task_exit_code() const {
+  return status_task_exit_code_;
+}
+inline void Status::set_status_task_exit_code(::google::protobuf::int32 value) {
+  _set_bit(1);
+  status_task_exit_code_ = value;
+}
+
+// optional bytes stdout = 3;
+inline bool Status::has_stdout() const {
+  return _has_bit(2);
+}
+inline void Status::clear_stdout() {
+  if (stdout_ != &_default_stdout_) {
+    stdout_->clear();
+  }
+  _clear_bit(2);
+}
+inline const ::std::string& Status::stdout() const {
+  return *stdout_;
+}
+inline void Status::set_stdout(const ::std::string& value) {
+  _set_bit(2);
+  if (stdout_ == &_default_stdout_) {
+    stdout_ = new ::std::string;
+  }
+  stdout_->assign(value);
+}
+inline void Status::set_stdout(const char* value) {
+  _set_bit(2);
+  if (stdout_ == &_default_stdout_) {
+    stdout_ = new ::std::string;
+  }
+  stdout_->assign(value);
+}
+inline void Status::set_stdout(const void* value, size_t size) {
+  _set_bit(2);
+  if (stdout_ == &_default_stdout_) {
+    stdout_ = new ::std::string;
+  }
+  stdout_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* Status::mutable_stdout() {
+  _set_bit(2);
+  if (stdout_ == &_default_stdout_) {
+    stdout_ = new ::std::string;
+  }
+  return stdout_;
+}
+
+// optional bytes stderr = 4;
+inline bool Status::has_stderr() const {
+  return _has_bit(3);
+}
+inline void Status::clear_stderr() {
+  if (stderr_ != &_default_stderr_) {
+    stderr_->clear();
+  }
+  _clear_bit(3);
+}
+inline const ::std::string& Status::stderr() const {
+  return *stderr_;
+}
+inline void Status::set_stderr(const ::std::string& value) {
+  _set_bit(3);
+  if (stderr_ == &_default_stderr_) {
+    stderr_ = new ::std::string;
+  }
+  stderr_->assign(value);
+}
+inline void Status::set_stderr(const char* value) {
+  _set_bit(3);
+  if (stderr_ == &_default_stderr_) {
+    stderr_ = new ::std::string;
+  }
+  stderr_->assign(value);
+}
+inline void Status::set_stderr(const void* value, size_t size) {
+  _set_bit(3);
+  if (stderr_ == &_default_stderr_) {
+    stderr_ = new ::std::string;
+  }
+  stderr_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* Status::mutable_stderr() {
+  _set_bit(3);
+  if (stderr_ == &_default_stderr_) {
+    stderr_ = new ::std::string;
+  }
+  return stderr_;
+}
 
 // -------------------------------------------------------------------
 
 // Finished
 
+// required int32 exitcode = 1;
+inline bool Finished::has_exitcode() const {
+  return _has_bit(0);
+}
+inline void Finished::clear_exitcode() {
+  exitcode_ = 0;
+  _clear_bit(0);
+}
+inline ::google::protobuf::int32 Finished::exitcode() const {
+  return exitcode_;
+}
+inline void Finished::set_exitcode(::google::protobuf::int32 value) {
+  _set_bit(0);
+  exitcode_ = value;
+}
+
+// optional int32 task = 2;
+inline bool Finished::has_task() const {
+  return _has_bit(1);
+}
+inline void Finished::clear_task() {
+  task_ = 0;
+  _clear_bit(1);
+}
+inline ::google::protobuf::int32 Finished::task() const {
+  return task_;
+}
+inline void Finished::set_task(::google::protobuf::int32 value) {
+  _set_bit(1);
+  task_ = value;
+}
+
 // -------------------------------------------------------------------
 
 // FinishedAck
+
+// optional int32 task = 1;
+inline bool FinishedAck::has_task() const {
+  return _has_bit(0);
+}
+inline void FinishedAck::clear_task() {
+  task_ = 0;
+  _clear_bit(0);
+}
+inline ::google::protobuf::int32 FinishedAck::task() const {
+  return task_;
+}
+inline void FinishedAck::set_task(::google::protobuf::int32 value) {
+  _set_bit(0);
+  task_ = value;
+}
 
 // -------------------------------------------------------------------
 
 // Failed
 
+// optional int32 task = 1;
+inline bool Failed::has_task() const {
+  return _has_bit(0);
+}
+inline void Failed::clear_task() {
+  task_ = 0;
+  _clear_bit(0);
+}
+inline ::google::protobuf::int32 Failed::task() const {
+  return task_;
+}
+inline void Failed::set_task(::google::protobuf::int32 value) {
+  _set_bit(0);
+  task_ = value;
+}
+
+// optional .xbe.messages.FailReason reason = 2;
+inline bool Failed::has_reason() const {
+  return _has_bit(1);
+}
+inline void Failed::clear_reason() {
+  reason_ = 0;
+  _clear_bit(1);
+}
+inline xbe::messages::FailReason Failed::reason() const {
+  return static_cast< xbe::messages::FailReason >(reason_);
+}
+inline void Failed::set_reason(xbe::messages::FailReason value) {
+  GOOGLE_DCHECK(xbe::messages::FailReason_IsValid(value));
+  _set_bit(1);
+  reason_ = value;
+}
+
 // -------------------------------------------------------------------
 
 // FailedAck
+
+// optional int32 task = 1;
+inline bool FailedAck::has_task() const {
+  return _has_bit(0);
+}
+inline void FailedAck::clear_task() {
+  task_ = 0;
+  _clear_bit(0);
+}
+inline ::google::protobuf::int32 FailedAck::task() const {
+  return task_;
+}
+inline void FailedAck::set_task(::google::protobuf::int32 value) {
+  _set_bit(0);
+  task_ = value;
+}
 
 // -------------------------------------------------------------------
 
@@ -2346,9 +2749,41 @@ inline ::std::string* ExecuteNak::mutable_message() {
 
 // Terminate
 
+// optional int32 task = 1;
+inline bool Terminate::has_task() const {
+  return _has_bit(0);
+}
+inline void Terminate::clear_task() {
+  task_ = 0;
+  _clear_bit(0);
+}
+inline ::google::protobuf::int32 Terminate::task() const {
+  return task_;
+}
+inline void Terminate::set_task(::google::protobuf::int32 value) {
+  _set_bit(0);
+  task_ = value;
+}
+
 // -------------------------------------------------------------------
 
 // TerminateAck
+
+// optional int32 task = 1;
+inline bool TerminateAck::has_task() const {
+  return _has_bit(0);
+}
+inline void TerminateAck::clear_task() {
+  task_ = 0;
+  _clear_bit(0);
+}
+inline ::google::protobuf::int32 TerminateAck::task() const {
+  return task_;
+}
+inline void TerminateAck::set_task(::google::protobuf::int32 value) {
+  _set_bit(0);
+  task_ = value;
+}
 
 // -------------------------------------------------------------------
 
@@ -2368,6 +2803,23 @@ inline ::google::protobuf::uint64 LifeSign::tstamp() const {
 inline void LifeSign::set_tstamp(::google::protobuf::uint64 value) {
   _set_bit(0);
   tstamp_ = value;
+}
+
+// optional .xbe.messages.StatusCode status = 2;
+inline bool LifeSign::has_status() const {
+  return _has_bit(1);
+}
+inline void LifeSign::clear_status() {
+  status_ = 0;
+  _clear_bit(1);
+}
+inline xbe::messages::StatusCode LifeSign::status() const {
+  return static_cast< xbe::messages::StatusCode >(status_);
+}
+inline void LifeSign::set_status(xbe::messages::StatusCode value) {
+  GOOGLE_DCHECK(xbe::messages::StatusCode_IsValid(value));
+  _set_bit(1);
+  status_ = value;
 }
 
 

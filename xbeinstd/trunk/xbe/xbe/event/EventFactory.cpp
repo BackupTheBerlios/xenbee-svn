@@ -2,7 +2,7 @@
 
 #include <mqs/Destination.hpp>
 
-#include "MessageEvent.hpp"
+#include "EncodedMessageEvent.hpp"
 #include "ErrorEvent.hpp"
 
 using namespace xbe;
@@ -10,27 +10,25 @@ using namespace xbe::event;
 using namespace seda;
 
 const EventFactory& EventFactory::instance() {
-  static EventFactory instance;
-  return instance;
+    static EventFactory instance;
+    return instance;
 }
 
 EventFactory::EventFactory() : XBE_INIT_LOGGER("xbe.eventFactory") {}
 EventFactory::~EventFactory() {}
 
 IEvent::Ptr EventFactory::newEvent(const mqs::Message &m) const throw (UnknownConversion) {
-  XBE_LOG_DEBUG("msg has reply-to: " << ((m.from().isValid()) ? "true" : "false"));
-  XBE_LOG_DEBUG("msg has dst: " << (m->to().isValid() ? "true" : "false"));
-  MessageEvent *me(new MessageEvent(m.body(), m.from(), m.to()));
-  me->id(m.id());
-  return seda::IEvent::Ptr(me);
+    EncodedMessageEvent::Ptr eme(new EncodedMessageEvent(m.body(), m.from(), m.to()));
+    eme->id(m.id());
+    return eme;
 }
 
 IEvent::Ptr EventFactory::newEvent(const cms::CMSException& ex) const {
-  return seda::IEvent::Ptr(new ErrorEvent(ex.getMessage(), ex.getStackTraceString()));
+    return seda::IEvent::Ptr(new ErrorEvent(ex.getMessage(), ex.getStackTraceString()));
 }
 
 IEvent::Ptr EventFactory::newEvent(const std::exception& ex) const {
-  return seda::IEvent::Ptr(new ErrorEvent(ex.what()));
+    return seda::IEvent::Ptr(new ErrorEvent(ex.what()));
 }
 
 

@@ -70,6 +70,8 @@ const ::google::protobuf::internal::GeneratedMessageReflection*
   LifeSign_reflection_ = NULL;
 const ::google::protobuf::EnumDescriptor* ErrorCode_descriptor_ = NULL;
 const ::google::protobuf::EnumDescriptor* ExecuteNakReason_descriptor_ = NULL;
+const ::google::protobuf::EnumDescriptor* StatusCode_descriptor_ = NULL;
+const ::google::protobuf::EnumDescriptor* FailReason_descriptor_ = NULL;
 
 }  // namespace
 
@@ -77,11 +79,12 @@ const ::google::protobuf::EnumDescriptor* ExecuteNakReason_descriptor_ = NULL;
 void protobuf_BuildDesc_xbemsg_2eproto_AssignGlobalDescriptors(const ::google::protobuf::FileDescriptor* file) {
   XbeMessage_descriptor_ = file->message_type(0);
   XbeMessage::default_instance_ = new XbeMessage();
-  static const int XbeMessage_offsets_[15] = {
+  static const int XbeMessage_offsets_[16] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(XbeMessage, header_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(XbeMessage, error_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(XbeMessage, execute_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(XbeMessage, execute_ack_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(XbeMessage, execute_nak_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(XbeMessage, status_req_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(XbeMessage, status_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(XbeMessage, finished_),
@@ -203,6 +206,7 @@ void protobuf_BuildDesc_xbemsg_2eproto_AssignGlobalDescriptors(const ::google::p
   ExecuteAck_descriptor_ = file->message_type(5);
   ExecuteAck::default_instance_ = new ExecuteAck();
   static const int ExecuteAck_offsets_[1] = {
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(ExecuteAck, task_),
   };
   ExecuteAck_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
@@ -237,6 +241,7 @@ void protobuf_BuildDesc_xbemsg_2eproto_AssignGlobalDescriptors(const ::google::p
   StatusReq_descriptor_ = file->message_type(7);
   StatusReq::default_instance_ = new StatusReq();
   static const int StatusReq_offsets_[1] = {
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(StatusReq, execute_status_task_),
   };
   StatusReq_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
@@ -252,7 +257,11 @@ void protobuf_BuildDesc_xbemsg_2eproto_AssignGlobalDescriptors(const ::google::p
     StatusReq_descriptor_, StatusReq::default_instance_);
   Status_descriptor_ = file->message_type(8);
   Status::default_instance_ = new Status();
-  static const int Status_offsets_[1] = {
+  static const int Status_offsets_[4] = {
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Status, status_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Status, status_task_exit_code_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Status, stdout_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Status, stderr_),
   };
   Status_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
@@ -268,7 +277,9 @@ void protobuf_BuildDesc_xbemsg_2eproto_AssignGlobalDescriptors(const ::google::p
     Status_descriptor_, Status::default_instance_);
   Finished_descriptor_ = file->message_type(9);
   Finished::default_instance_ = new Finished();
-  static const int Finished_offsets_[1] = {
+  static const int Finished_offsets_[2] = {
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Finished, exitcode_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Finished, task_),
   };
   Finished_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
@@ -285,6 +296,7 @@ void protobuf_BuildDesc_xbemsg_2eproto_AssignGlobalDescriptors(const ::google::p
   FinishedAck_descriptor_ = file->message_type(10);
   FinishedAck::default_instance_ = new FinishedAck();
   static const int FinishedAck_offsets_[1] = {
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(FinishedAck, task_),
   };
   FinishedAck_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
@@ -300,7 +312,9 @@ void protobuf_BuildDesc_xbemsg_2eproto_AssignGlobalDescriptors(const ::google::p
     FinishedAck_descriptor_, FinishedAck::default_instance_);
   Failed_descriptor_ = file->message_type(11);
   Failed::default_instance_ = new Failed();
-  static const int Failed_offsets_[1] = {
+  static const int Failed_offsets_[2] = {
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Failed, task_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Failed, reason_),
   };
   Failed_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
@@ -317,6 +331,7 @@ void protobuf_BuildDesc_xbemsg_2eproto_AssignGlobalDescriptors(const ::google::p
   FailedAck_descriptor_ = file->message_type(12);
   FailedAck::default_instance_ = new FailedAck();
   static const int FailedAck_offsets_[1] = {
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(FailedAck, task_),
   };
   FailedAck_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
@@ -365,6 +380,7 @@ void protobuf_BuildDesc_xbemsg_2eproto_AssignGlobalDescriptors(const ::google::p
   Terminate_descriptor_ = file->message_type(15);
   Terminate::default_instance_ = new Terminate();
   static const int Terminate_offsets_[1] = {
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Terminate, task_),
   };
   Terminate_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
@@ -381,6 +397,7 @@ void protobuf_BuildDesc_xbemsg_2eproto_AssignGlobalDescriptors(const ::google::p
   TerminateAck_descriptor_ = file->message_type(16);
   TerminateAck::default_instance_ = new TerminateAck();
   static const int TerminateAck_offsets_[1] = {
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(TerminateAck, task_),
   };
   TerminateAck_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
@@ -396,8 +413,9 @@ void protobuf_BuildDesc_xbemsg_2eproto_AssignGlobalDescriptors(const ::google::p
     TerminateAck_descriptor_, TerminateAck::default_instance_);
   LifeSign_descriptor_ = file->message_type(17);
   LifeSign::default_instance_ = new LifeSign();
-  static const int LifeSign_offsets_[1] = {
+  static const int LifeSign_offsets_[2] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(LifeSign, tstamp_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(LifeSign, status_),
   };
   LifeSign_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
@@ -413,6 +431,8 @@ void protobuf_BuildDesc_xbemsg_2eproto_AssignGlobalDescriptors(const ::google::p
     LifeSign_descriptor_, LifeSign::default_instance_);
   ErrorCode_descriptor_ = file->enum_type(0);
   ExecuteNakReason_descriptor_ = file->enum_type(1);
+  StatusCode_descriptor_ = file->enum_type(2);
+  FailReason_descriptor_ = file->enum_type(3);
   XbeMessage::default_instance_->InitAsDefaultInstance();
   Header::default_instance_->InitAsDefaultInstance();
   Error::default_instance_->InitAsDefaultInstance();
@@ -443,41 +463,53 @@ void protobuf_BuildDesc_xbemsg_2eproto() {
     ::google::protobuf::DescriptorPool::internal_generated_pool();
 
   pool->InternalBuildGeneratedFile(
-    "\n\014xbemsg.proto\022\014xbe.messages\"\223\005\n\nXbeMess"
+    "\n\014xbemsg.proto\022\014xbe.messages\"\302\005\n\nXbeMess"
     "age\022$\n\006header\030\001 \002(\0132\024.xbe.messages.Heade"
     "r\022\"\n\005error\030\002 \001(\0132\023.xbe.messages.Error\022&\n"
     "\007execute\030\003 \001(\0132\025.xbe.messages.Execute\022-\n"
     "\013execute_ack\030\004 \001(\0132\030.xbe.messages.Execut"
-    "eAck\022+\n\nstatus_req\030\005 \001(\0132\027.xbe.messages."
-    "StatusReq\022$\n\006status\030\006 \001(\0132\024.xbe.messages"
-    ".Status\022(\n\010finished\030\007 \001(\0132\026.xbe.messages"
-    ".Finished\022/\n\014finished_ack\030\010 \001(\0132\031.xbe.me"
-    "ssages.FinishedAck\022$\n\006failed\030\t \001(\0132\024.xbe"
-    ".messages.Failed\022+\n\nfailed_ack\030\n \001(\0132\027.x"
-    "be.messages.FailedAck\022(\n\010shutdown\030\013 \001(\0132"
-    "\026.xbe.messages.Shutdown\022/\n\014shutdown_ack\030"
-    "\014 \001(\0132\031.xbe.messages.ShutdownAck\022*\n\tterm"
-    "inate\030\r \001(\0132\027.xbe.messages.Terminate\0221\n\r"
-    "terminate_ack\030\016 \001(\0132\032.xbe.messages.Termi"
-    "nateAck\022)\n\tlife_sign\030\017 \001(\0132\026.xbe.message"
-    "s.LifeSign\"!\n\006Header\022\027\n\017conversation_id\030"
-    "\001 \002(\014\"?\n\005Error\022%\n\004code\030\001 \002(\0162\027.xbe.messa"
-    "ges.ErrorCode\022\017\n\007message\030\002 \001(\t\"\260\001\n\004Task\022"
-    "\022\n\nexecutable\030\001 \002(\t\022\020\n\010argument\030\002 \003(\t\022#\n"
-    "\003env\030\003 \003(\0132\026.xbe.messages.Task.Env\022\r\n\005st"
-    "din\030\006 \001(\t\022\016\n\006stdout\030\007 \001(\t\022\016\n\006stderr\030\010 \001("
-    "\t\022\r\n\002wd\030\t \001(\t:\001/\032\037\n\003Env\022\013\n\003key\030\001 \002(\t\022\013\n\003"
-    "val\030\002 \002(\t\"Y\n\007Execute\022%\n\tmain_task\030\001 \001(\0132"
-    "\022.xbe.messages.Task\022\'\n\013status_task\030\002 \001(\013"
-    "2\022.xbe.messages.Task\"\014\n\nExecuteAck\"M\n\nEx"
-    "ecuteNak\022.\n\006reason\030\001 \002(\0162\036.xbe.messages."
-    "ExecuteNakReason\022\017\n\007message\030\002 \001(\t\"\013\n\tSta"
-    "tusReq\"\010\n\006Status\"\n\n\010Finished\"\r\n\013Finished"
-    "Ack\"\010\n\006Failed\"\013\n\tFailedAck\"\n\n\010Shutdown\"\r"
-    "\n\013ShutdownAck\"\013\n\tTerminate\"\016\n\014TerminateA"
-    "ck\"\032\n\010LifeSign\022\016\n\006tstamp\030\001 \002(\004*\036\n\tErrorC"
-    "ode\022\021\n\rUNKNOWN_ERROR\020\001*&\n\020ExecuteNakReas"
-    "on\022\022\n\016UNKNOWN_REASON\020\001", 1382,
+    "eAck\022-\n\013execute_nak\030\005 \001(\0132\030.xbe.messages"
+    ".ExecuteNak\022+\n\nstatus_req\030\006 \001(\0132\027.xbe.me"
+    "ssages.StatusReq\022$\n\006status\030\007 \001(\0132\024.xbe.m"
+    "essages.Status\022(\n\010finished\030\010 \001(\0132\026.xbe.m"
+    "essages.Finished\022/\n\014finished_ack\030\t \001(\0132\031"
+    ".xbe.messages.FinishedAck\022$\n\006failed\030\n \001("
+    "\0132\024.xbe.messages.Failed\022+\n\nfailed_ack\030\013 "
+    "\001(\0132\027.xbe.messages.FailedAck\022(\n\010shutdown"
+    "\030\014 \001(\0132\026.xbe.messages.Shutdown\022/\n\014shutdo"
+    "wn_ack\030\r \001(\0132\031.xbe.messages.ShutdownAck\022"
+    "*\n\tterminate\030\016 \001(\0132\027.xbe.messages.Termin"
+    "ate\0221\n\rterminate_ack\030\017 \001(\0132\032.xbe.message"
+    "s.TerminateAck\022)\n\tlife_sign\030\020 \001(\0132\026.xbe."
+    "messages.LifeSign\"!\n\006Header\022\027\n\017conversat"
+    "ion_id\030\001 \002(\014\"?\n\005Error\022%\n\004code\030\001 \002(\0162\027.xb"
+    "e.messages.ErrorCode\022\017\n\007message\030\002 \001(\t\"\260\001"
+    "\n\004Task\022\022\n\nexecutable\030\001 \002(\t\022\020\n\010argument\030\002"
+    " \003(\t\022#\n\003env\030\003 \003(\0132\026.xbe.messages.Task.En"
+    "v\022\r\n\005stdin\030\006 \001(\t\022\016\n\006stdout\030\007 \001(\t\022\016\n\006stde"
+    "rr\030\010 \001(\t\022\r\n\002wd\030\t \001(\t:\001/\032\037\n\003Env\022\013\n\003key\030\001 "
+    "\002(\t\022\013\n\003val\030\002 \002(\t\"Y\n\007Execute\022%\n\tmain_task"
+    "\030\001 \001(\0132\022.xbe.messages.Task\022\'\n\013status_tas"
+    "k\030\002 \001(\0132\022.xbe.messages.Task\"\032\n\nExecuteAc"
+    "k\022\014\n\004task\030\001 \001(\005\"M\n\nExecuteNak\022.\n\006reason\030"
+    "\001 \002(\0162\036.xbe.messages.ExecuteNakReason\022\017\n"
+    "\007message\030\002 \001(\t\"(\n\tStatusReq\022\033\n\023execute_s"
+    "tatus_task\030\001 \001(\010\"q\n\006Status\022(\n\006status\030\001 \002"
+    "(\0162\030.xbe.messages.StatusCode\022\035\n\025status_t"
+    "ask_exit_code\030\002 \001(\005\022\016\n\006stdout\030\003 \001(\014\022\016\n\006s"
+    "tderr\030\004 \001(\014\"*\n\010Finished\022\020\n\010exitcode\030\001 \002("
+    "\005\022\014\n\004task\030\002 \001(\005\"\033\n\013FinishedAck\022\014\n\004task\030\001"
+    " \001(\005\"@\n\006Failed\022\014\n\004task\030\001 \001(\005\022(\n\006reason\030\002"
+    " \001(\0162\030.xbe.messages.FailReason\"\031\n\tFailed"
+    "Ack\022\014\n\004task\030\001 \001(\005\"\n\n\010Shutdown\"\r\n\013Shutdow"
+    "nAck\"\031\n\tTerminate\022\014\n\004task\030\001 \001(\005\"\034\n\014Termi"
+    "nateAck\022\014\n\004task\030\001 \001(\005\"D\n\010LifeSign\022\016\n\006tst"
+    "amp\030\001 \002(\004\022(\n\006status\030\002 \001(\0162\030.xbe.messages"
+    ".StatusCode*\036\n\tErrorCode\022\021\n\rUNKNOWN_ERRO"
+    "R\020\000*9\n\020ExecuteNakReason\022\022\n\016UNKNOWN_REASO"
+    "N\020\000\022\021\n\rRESOURCE_BUSY\020\001*=\n\nStatusCode\022\010\n\004"
+    "IDLE\020\000\022\013\n\007RUNNING\020\001\022\014\n\010FINISHED\020\002\022\n\n\006FAI"
+    "LED\020\003*\031\n\nFailReason\022\013\n\007UNKNOWN\020\000", 1872,
   &protobuf_BuildDesc_xbemsg_2eproto_AssignGlobalDescriptors);
 }
 
@@ -494,7 +526,7 @@ const ::google::protobuf::EnumDescriptor* ErrorCode_descriptor() {
 }
 bool ErrorCode_IsValid(int value) {
   switch(value) {
-    case 1:
+    case 0:
       return true;
     default:
       return false;
@@ -507,7 +539,37 @@ const ::google::protobuf::EnumDescriptor* ExecuteNakReason_descriptor() {
 }
 bool ExecuteNakReason_IsValid(int value) {
   switch(value) {
+    case 0:
     case 1:
+      return true;
+    default:
+      return false;
+  }
+}
+
+const ::google::protobuf::EnumDescriptor* StatusCode_descriptor() {
+  if (StatusCode_descriptor_ == NULL) protobuf_BuildDesc_xbemsg_2eproto();
+  return StatusCode_descriptor_;
+}
+bool StatusCode_IsValid(int value) {
+  switch(value) {
+    case 0:
+    case 1:
+    case 2:
+    case 3:
+      return true;
+    default:
+      return false;
+  }
+}
+
+const ::google::protobuf::EnumDescriptor* FailReason_descriptor() {
+  if (FailReason_descriptor_ == NULL) protobuf_BuildDesc_xbemsg_2eproto();
+  return FailReason_descriptor_;
+}
+bool FailReason_IsValid(int value) {
+  switch(value) {
+    case 0:
       return true;
     default:
       return false;
@@ -532,6 +594,7 @@ bool ExecuteNakReason_IsValid(int value) {
 
 
 
+
 XbeMessage::XbeMessage()
   : ::google::protobuf::Message(),
     _cached_size_(0),
@@ -539,6 +602,7 @@ XbeMessage::XbeMessage()
     error_(NULL),
     execute_(NULL),
     execute_ack_(NULL),
+    execute_nak_(NULL),
     status_req_(NULL),
     status_(NULL),
     finished_(NULL),
@@ -557,6 +621,7 @@ void XbeMessage::InitAsDefaultInstance() {  header_ = const_cast< ::xbe::message
   error_ = const_cast< ::xbe::messages::Error*>(&::xbe::messages::Error::default_instance());
   execute_ = const_cast< ::xbe::messages::Execute*>(&::xbe::messages::Execute::default_instance());
   execute_ack_ = const_cast< ::xbe::messages::ExecuteAck*>(&::xbe::messages::ExecuteAck::default_instance());
+  execute_nak_ = const_cast< ::xbe::messages::ExecuteNak*>(&::xbe::messages::ExecuteNak::default_instance());
   status_req_ = const_cast< ::xbe::messages::StatusReq*>(&::xbe::messages::StatusReq::default_instance());
   status_ = const_cast< ::xbe::messages::Status*>(&::xbe::messages::Status::default_instance());
   finished_ = const_cast< ::xbe::messages::Finished*>(&::xbe::messages::Finished::default_instance());
@@ -577,6 +642,7 @@ XbeMessage::XbeMessage(const XbeMessage& from)
     error_(NULL),
     execute_(NULL),
     execute_ack_(NULL),
+    execute_nak_(NULL),
     status_req_(NULL),
     status_(NULL),
     finished_(NULL),
@@ -598,6 +664,7 @@ XbeMessage::~XbeMessage() {
     delete error_;
     delete execute_;
     delete execute_ack_;
+    delete execute_nak_;
     delete status_req_;
     delete status_;
     delete finished_;
@@ -697,7 +764,7 @@ const ::std::string Error::_default_message_;
 Error::Error()
   : ::google::protobuf::Message(),
     _cached_size_(0),
-    code_(1),
+    code_(0),
     message_(const_cast< ::std::string*>(&_default_message_)) {
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
@@ -707,7 +774,7 @@ void Error::InitAsDefaultInstance() {}
 Error::Error(const Error& from)
   : ::google::protobuf::Message(),
     _cached_size_(0),
-    code_(1),
+    code_(0),
     message_(const_cast< ::std::string*>(&_default_message_)) {
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
   MergeFrom(from);
@@ -943,9 +1010,11 @@ const ::google::protobuf::Reflection* Execute::GetReflection() const {
 
 // ===================================================================
 
+
 ExecuteAck::ExecuteAck()
   : ::google::protobuf::Message(),
-    _cached_size_(0) {
+    _cached_size_(0),
+    task_(0) {
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -953,7 +1022,8 @@ void ExecuteAck::InitAsDefaultInstance() {}
 
 ExecuteAck::ExecuteAck(const ExecuteAck& from)
   : ::google::protobuf::Message(),
-    _cached_size_(0) {
+    _cached_size_(0),
+    task_(0) {
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
   MergeFrom(from);
 }
@@ -995,7 +1065,7 @@ const ::std::string ExecuteNak::_default_message_;
 ExecuteNak::ExecuteNak()
   : ::google::protobuf::Message(),
     _cached_size_(0),
-    reason_(1),
+    reason_(0),
     message_(const_cast< ::std::string*>(&_default_message_)) {
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
@@ -1005,7 +1075,7 @@ void ExecuteNak::InitAsDefaultInstance() {}
 ExecuteNak::ExecuteNak(const ExecuteNak& from)
   : ::google::protobuf::Message(),
     _cached_size_(0),
-    reason_(1),
+    reason_(0),
     message_(const_cast< ::std::string*>(&_default_message_)) {
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
   MergeFrom(from);
@@ -1046,9 +1116,11 @@ const ::google::protobuf::Reflection* ExecuteNak::GetReflection() const {
 
 // ===================================================================
 
+
 StatusReq::StatusReq()
   : ::google::protobuf::Message(),
-    _cached_size_(0) {
+    _cached_size_(0),
+    execute_status_task_(false) {
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -1056,7 +1128,8 @@ void StatusReq::InitAsDefaultInstance() {}
 
 StatusReq::StatusReq(const StatusReq& from)
   : ::google::protobuf::Message(),
-    _cached_size_(0) {
+    _cached_size_(0),
+    execute_status_task_(false) {
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
   MergeFrom(from);
 }
@@ -1093,9 +1166,17 @@ const ::google::protobuf::Reflection* StatusReq::GetReflection() const {
 
 // ===================================================================
 
+
+
+const ::std::string Status::_default_stdout_;
+const ::std::string Status::_default_stderr_;
 Status::Status()
   : ::google::protobuf::Message(),
-    _cached_size_(0) {
+    _cached_size_(0),
+    status_(0),
+    status_task_exit_code_(0),
+    stdout_(const_cast< ::std::string*>(&_default_stdout_)),
+    stderr_(const_cast< ::std::string*>(&_default_stderr_)) {
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -1103,12 +1184,22 @@ void Status::InitAsDefaultInstance() {}
 
 Status::Status(const Status& from)
   : ::google::protobuf::Message(),
-    _cached_size_(0) {
+    _cached_size_(0),
+    status_(0),
+    status_task_exit_code_(0),
+    stdout_(const_cast< ::std::string*>(&_default_stdout_)),
+    stderr_(const_cast< ::std::string*>(&_default_stderr_)) {
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
   MergeFrom(from);
 }
 
 Status::~Status() {
+  if (stdout_ != &_default_stdout_) {
+    delete stdout_;
+  }
+  if (stderr_ != &_default_stderr_) {
+    delete stderr_;
+  }
   if (this != default_instance_) {
   }
 }
@@ -1140,9 +1231,13 @@ const ::google::protobuf::Reflection* Status::GetReflection() const {
 
 // ===================================================================
 
+
+
 Finished::Finished()
   : ::google::protobuf::Message(),
-    _cached_size_(0) {
+    _cached_size_(0),
+    exitcode_(0),
+    task_(0) {
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -1150,7 +1245,9 @@ void Finished::InitAsDefaultInstance() {}
 
 Finished::Finished(const Finished& from)
   : ::google::protobuf::Message(),
-    _cached_size_(0) {
+    _cached_size_(0),
+    exitcode_(0),
+    task_(0) {
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
   MergeFrom(from);
 }
@@ -1187,9 +1284,11 @@ const ::google::protobuf::Reflection* Finished::GetReflection() const {
 
 // ===================================================================
 
+
 FinishedAck::FinishedAck()
   : ::google::protobuf::Message(),
-    _cached_size_(0) {
+    _cached_size_(0),
+    task_(0) {
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -1197,7 +1296,8 @@ void FinishedAck::InitAsDefaultInstance() {}
 
 FinishedAck::FinishedAck(const FinishedAck& from)
   : ::google::protobuf::Message(),
-    _cached_size_(0) {
+    _cached_size_(0),
+    task_(0) {
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
   MergeFrom(from);
 }
@@ -1234,9 +1334,13 @@ const ::google::protobuf::Reflection* FinishedAck::GetReflection() const {
 
 // ===================================================================
 
+
+
 Failed::Failed()
   : ::google::protobuf::Message(),
-    _cached_size_(0) {
+    _cached_size_(0),
+    task_(0),
+    reason_(0) {
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -1244,7 +1348,9 @@ void Failed::InitAsDefaultInstance() {}
 
 Failed::Failed(const Failed& from)
   : ::google::protobuf::Message(),
-    _cached_size_(0) {
+    _cached_size_(0),
+    task_(0),
+    reason_(0) {
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
   MergeFrom(from);
 }
@@ -1281,9 +1387,11 @@ const ::google::protobuf::Reflection* Failed::GetReflection() const {
 
 // ===================================================================
 
+
 FailedAck::FailedAck()
   : ::google::protobuf::Message(),
-    _cached_size_(0) {
+    _cached_size_(0),
+    task_(0) {
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -1291,7 +1399,8 @@ void FailedAck::InitAsDefaultInstance() {}
 
 FailedAck::FailedAck(const FailedAck& from)
   : ::google::protobuf::Message(),
-    _cached_size_(0) {
+    _cached_size_(0),
+    task_(0) {
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
   MergeFrom(from);
 }
@@ -1422,9 +1531,11 @@ const ::google::protobuf::Reflection* ShutdownAck::GetReflection() const {
 
 // ===================================================================
 
+
 Terminate::Terminate()
   : ::google::protobuf::Message(),
-    _cached_size_(0) {
+    _cached_size_(0),
+    task_(0) {
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -1432,7 +1543,8 @@ void Terminate::InitAsDefaultInstance() {}
 
 Terminate::Terminate(const Terminate& from)
   : ::google::protobuf::Message(),
-    _cached_size_(0) {
+    _cached_size_(0),
+    task_(0) {
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
   MergeFrom(from);
 }
@@ -1469,9 +1581,11 @@ const ::google::protobuf::Reflection* Terminate::GetReflection() const {
 
 // ===================================================================
 
+
 TerminateAck::TerminateAck()
   : ::google::protobuf::Message(),
-    _cached_size_(0) {
+    _cached_size_(0),
+    task_(0) {
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -1479,7 +1593,8 @@ void TerminateAck::InitAsDefaultInstance() {}
 
 TerminateAck::TerminateAck(const TerminateAck& from)
   : ::google::protobuf::Message(),
-    _cached_size_(0) {
+    _cached_size_(0),
+    task_(0) {
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
   MergeFrom(from);
 }
@@ -1517,10 +1632,12 @@ const ::google::protobuf::Reflection* TerminateAck::GetReflection() const {
 // ===================================================================
 
 
+
 LifeSign::LifeSign()
   : ::google::protobuf::Message(),
     _cached_size_(0),
-    tstamp_(GOOGLE_ULONGLONG(0)) {
+    tstamp_(GOOGLE_ULONGLONG(0)),
+    status_(0) {
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -1529,7 +1646,8 @@ void LifeSign::InitAsDefaultInstance() {}
 LifeSign::LifeSign(const LifeSign& from)
   : ::google::protobuf::Message(),
     _cached_size_(0),
-    tstamp_(GOOGLE_ULONGLONG(0)) {
+    tstamp_(GOOGLE_ULONGLONG(0)),
+    status_(0) {
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
   MergeFrom(from);
 }

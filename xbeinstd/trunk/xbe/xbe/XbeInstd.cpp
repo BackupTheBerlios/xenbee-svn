@@ -7,11 +7,12 @@
 #include "xbe/event/TerminateAckEvent.hpp"
 #include "xbe/event/TaskFinishedEvent.hpp"
 #include "xbe/event/ExecuteAckEvent.hpp"
+#include "xbe/event/ExecuteNakEvent.hpp"
 
 using namespace xbe;
 
 XbeInstd::XbeInstd(const std::string &name, const seda::Strategy::Ptr &decorated,
-                   const std::string &to, const std::string &from,
+                   const std::string &to, const std::string &from, const std::string &conversation_id,
                    const boost::posix_time::time_duration &lifeSignInterval,
                    std::size_t maxRetries)
     : seda::StrategyDecorator(name, decorated),
@@ -19,7 +20,7 @@ XbeInstd::XbeInstd(const std::string &name, const seda::Strategy::Ptr &decorated
       _fsm(*this),
       _timeoutTimer(name, boost::posix_time::seconds(5), "timeout"),
       _lifeSignTimer(name, lifeSignInterval, "lifeSign"),
-      _to(to), _from(from),
+      _to(to), _from(from), _conversation_id(conversation_id),
       _maxRetries(maxRetries),
       _retryCounter(0),
       _mainTask((xbe::Task*)0),
@@ -45,13 +46,12 @@ void XbeInstd::perform(const seda::IEvent::Ptr &e) {
         _fsm.StatusReq(*evt);
     } else if (xbe::event::FinishedAckEvent* evt = dynamic_cast<xbe::event::FinishedAckEvent*>(e.get())) {
         _fsm.FinishedAck(*evt);
-    } else if (xbe::event::TaskFinishedEvent* evt = dynamic_cast<xbe::event::TaskFinishedEvent*>(e.get())) {
-        _fsm.Finished(evt->exitcode());
 /*
     } else if (xbe::event::FailedAckEvent* evt = dynamic_cast<xbe::event::FailedAckEvent*>(e.get())) {
         _fsm.FailedAck(*evt);
 */
-
+    } else if (xbe::event::TaskFinishedEvent* evt = dynamic_cast<xbe::event::TaskFinishedEvent*>(e.get())) {
+        _fsm.Finished(evt->exitcode());
     }
 }
 
@@ -71,27 +71,27 @@ void XbeInstd::do_execute(xbe::event::ExecuteEvent& e) {
 
 void XbeInstd::do_terminate() {
     XBE_LOG_DEBUG("sending terminate-ack");
-    seda::IEvent::Ptr e(new xbe::event::TerminateAckEvent(_to, _from, "1"));
+    seda::IEvent::Ptr e(new xbe::event::TerminateAckEvent(_conversation_id, _to, _from));
     StrategyDecorator::perform(e);
 }
 
 void XbeInstd::do_terminate_job(int signal) {
-    XBE_LOG_DEBUG("terminating task");
+    XBE_LOG_DEBUG("terminating task with signal: " << signal);
     assert(_mainTask.get() != NULL);
     _mainTask->kill(signal);
 }
 
 void XbeInstd::do_shutdown(xbe::event::ShutdownEvent& shutdownEvent) {
     XBE_LOG_DEBUG("sending shutdown-ack");
-    seda::IEvent::Ptr e(new xbe::event::ShutdownAckEvent(_to, _from, "1"));
+    seda::IEvent::Ptr e(new xbe::event::ShutdownAckEvent(_conversation_id, _to, _from));
     StrategyDecorator::perform(e);
 }
 
-void XbeInstd::do_send_status(xbe::event::StatusReqEvent&, xbe::event::StatusEvent::Status st) {
-    std::tr1::shared_ptr<xbe::event::StatusEvent> e(new xbe::event::StatusEvent(_to, _from, "1", time(0)));
+void XbeInstd::do_send_status(xbe::event::StatusReqEvent& req, xbe::event::StatusEvent::StatusCode st) {
+    std::tr1::shared_ptr<xbe::event::StatusEvent> e(new xbe::event::StatusEvent(_conversation_id, _to, _from));
     e->state(st);
 
-    if (_statusTask) {
+    if (req.execute_status_task() && _statusTask) {
         XBE_LOG_DEBUG("running user-defined status query");
         _statusTask->run(); _statusTask->wait();
         e->taskStatusCode(_statusTask->exitcode());
@@ -104,7 +104,12 @@ void XbeInstd::do_send_status(xbe::event::StatusReqEvent&, xbe::event::StatusEve
 }
 void XbeInstd::do_send_execute_ack(xbe::event::ExecuteEvent&) {
     XBE_LOG_DEBUG("sending execute-ack");
-    seda::IEvent::Ptr e(new xbe::event::ExecuteAckEvent(_to, _from, "1"));
+    seda::IEvent::Ptr e(new xbe::event::ExecuteAckEvent(_conversation_id, _to, _from));
+    StrategyDecorator::perform(e);
+}
+void XbeInstd::do_send_execute_nak(xbe::event::ExecuteEvent&) {
+    XBE_LOG_DEBUG("sending execute-nak");
+    seda::IEvent::Ptr e(new xbe::event::ExecuteNakEvent(_conversation_id, _to, _from));
     StrategyDecorator::perform(e);
 }
 
@@ -119,13 +124,13 @@ void XbeInstd::do_failed_ack(xbe::event::FailedAckEvent&) {
 /* regular events */
 void XbeInstd::do_send_lifesign() {
     XBE_LOG_DEBUG("sending life sign");
-    StrategyDecorator::perform(seda::IEvent::Ptr(new xbe::event::LifeSignEvent(_to, _from, "1", time(0))));
+    StrategyDecorator::perform(seda::IEvent::Ptr(new xbe::event::LifeSignEvent(_conversation_id, _to, _from)));
 }
 
 /* events comming from the executed job */
 void XbeInstd::do_task_finished(int exitcode) {
     XBE_LOG_DEBUG("sending finished event");
-    seda::IEvent::Ptr e(new xbe::event::FinishedEvent(_to, _from, "1", exitcode));
+    seda::IEvent::Ptr e((new xbe::event::FinishedEvent(_conversation_id, _to, _from))->exitcode(exitcode));
     StrategyDecorator::perform(e);
 }
 void XbeInstd::do_task_failed() {
