@@ -322,6 +322,8 @@ Channel::wait_reply(const std::string &requestID, unsigned long millisecs) {
     } else {
         MQS_LOG_FATAL("Inconsistent state: wait for reply did not find response object!");
         abort();
+        // never reached;
+        return mqs::Message::Ptr((mqs::Message*)NULL);
     }
 }
 

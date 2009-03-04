@@ -37,8 +37,7 @@ std::string MessageSequenceGenerator::next() {
         count = _counter++;
     } 
 
-    std::size_t tstamp(time(NULL));
-
+    time_t tstamp(time(NULL));
     std::stringstream sstr;
     sstr << _hostId << ":" << tstamp << ":" << _globalId << ":" << _generatorId << ":" << count;
     return sstr.str();
