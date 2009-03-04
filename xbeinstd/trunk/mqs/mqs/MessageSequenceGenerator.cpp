@@ -1,7 +1,7 @@
 #include "MessageSequenceGenerator.hpp"
 
+#include <mqs/common.hpp>
 #include <boost/random.hpp>
-#include <limits>
 #include <sstream>
 
 using namespace mqs;

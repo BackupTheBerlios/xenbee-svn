@@ -63,6 +63,12 @@ extern int errno;
 #  define EXIT_FAILURE 1
 #endif
 
+#include <limits.h>
+
+#ifndef HOST_NAME_MAX
+#define HOST_NAME_MAX 255
+#endif
+
 //extern unsigned long INFINITE_WAITTIME;
 
 #include <mqs/logging.hpp>
