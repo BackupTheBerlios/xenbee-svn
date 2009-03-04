@@ -69,7 +69,13 @@ extern int errno;
 #define HOST_NAME_MAX 255
 #endif
 
+#if defined(__WIN32__) || defined (_WIN32) || defined(__WIN32) || defined(WIN32)
+#define MQS_WINDOWS 1
+#endif
+
 //extern unsigned long INFINITE_WAITTIME;
+// include compatibility stuff
+#include <mqs/lib_compat.hpp>
 
 #include <mqs/logging.hpp>
 
