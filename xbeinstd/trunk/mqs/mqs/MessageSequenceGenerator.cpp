@@ -1,11 +1,8 @@
 #include "MessageSequenceGenerator.hpp"
 
 #include <boost/random.hpp>
-#include <time.h>
 #include <limits>
 #include <sstream>
-#include <sys/types.h>
-#include <unistd.h>
 
 using namespace mqs;
 
