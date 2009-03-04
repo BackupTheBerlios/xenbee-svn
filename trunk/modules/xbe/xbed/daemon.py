@@ -255,7 +255,7 @@ class XBEDaemon(Daemon):
                            port,
                            XenBEEDaemonProtocolFactory(self,
                                                        queue="/queue"+queue,
-                                                       topic="/topic/xenbee.daemons",
+                                                       topic="/queue/xenbee.daemons",
                                                        user=self.opts.stomp_user,
                                                        password=self.opts.stomp_pass))
         log.info("  done.")
