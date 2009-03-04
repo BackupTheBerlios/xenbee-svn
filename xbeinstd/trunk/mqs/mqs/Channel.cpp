@@ -174,7 +174,7 @@ Channel::delIncomingQueue(const mqs::Destination &dst) {
     boost::unique_lock<boost::recursive_mutex> lock(_mtx);
     std::list<Consumer>::iterator it(_consumer.begin());
     while (it != _consumer.end()) {
-        if (it->mqs_destination->name() == dst.name() and it->mqs_destination->type() == dst.type()) {
+        if ((it->mqs_destination->name() == dst.name()) && (it->mqs_destination->type() == dst.type())) {
             // found a match, remove it
             struct Consumer c(*it); it = _consumer.erase(it);
             c.mqs_destination.reset();
