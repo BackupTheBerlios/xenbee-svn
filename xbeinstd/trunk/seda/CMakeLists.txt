@@ -33,10 +33,14 @@ set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/modules")
 # Definitions for different compilations.
 # Debug is the default development mode. Warn as much as possible, but
 # CPPUnit raises some errors about virtual functions - suppress them.
-set(CMAKE_CXX_FLAGS_DEBUG "-Wall -Werror -Wno-non-virtual-dtor" CACHE STRING "compiler flags - debug")
-# Releases are made with the release build. Optimize code.
-set(CMAKE_CXX_FLAGS_RELEASE "-Wall -Werror -O3 -Wno-non-virtual-dtor" CACHE STRING "compiler flags - release")
-set(CMAKE_CXX_FLAGS "-Wall -Werror -O3 -Wno-non-virtual-dtor" CACHE STRING "compiler flags")
+if (UNIX)
+  set(CMAKE_CXX_FLAGS_DEBUG "-Wall -Werror -Wno-non-virtual-dtor" CACHE STRING "compiler flags - debug")
+  # Releases are made with the release build. Optimize code.
+  set(CMAKE_CXX_FLAGS_RELEASE "-Wall -Werror -O3 -Wno-non-virtual-dtor" CACHE STRING "compiler flags - release")
+  set(CMAKE_CXX_FLAGS "-Wall -Werror -O3 -Wno-non-virtual-dtor" CACHE STRING "compiler flags")
+else(UNIX)
+  # make windows happy
+endif(UNIX)
 
 ## PkgConfig is helpful
 include(FindPkgConfig)
@@ -72,7 +76,7 @@ if (CMAKE_USE_PTHREADS_INIT)
 endif (CMAKE_USE_PTHREADS_INIT)
 
 ## check for boost
-set(BOOST_ROOT "/usr/local" CACHE STRING "Where to find the Boost libraries")
+set(BOOST_ROOT "${CMAKE_ADDITIONAL_PATH}" CACHE PATH "Where to find the Boost libraries")
 set(Boost_ADDITIONAL_VERSIONS "1.37.0" "1.37" "1.36.0" "1.36")
 set(Boost_FIND_QUIETLY false)
 set(Boost_USE_STATIC_LIBS ON)

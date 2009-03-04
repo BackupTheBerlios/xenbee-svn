@@ -39,10 +39,14 @@ set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/modules")
 # Definitions for different compilations.
 # Debug is the default development mode. Warn as much as possible, but
 # CPPUnit raises some errors about virtual functions - suppress them.
-set(CMAKE_CXX_FLAGS_DEBUG "-Wall -Werror -Wno-non-virtual-dtor")
-# Releases are made with the release build. Optimize code.
-set(CMAKE_CXX_FLAGS_RELEASE "-Wall -Werror -O3 -Wno-non-virtual-dtor")
-set(CMAKE_CXX_FLAGS "-Wall -Werror -O3 -Wno-non-virtual-dtor")
+if (UNIX)
+  set(CMAKE_CXX_FLAGS_DEBUG "-Wall -Werror -Wno-non-virtual-dtor")
+  # Releases are made with the release build. Optimize code.
+  set(CMAKE_CXX_FLAGS_RELEASE "-Wall -Werror -O3 -Wno-non-virtual-dtor")
+  set(CMAKE_CXX_FLAGS "-Wall -Werror -O3 -Wno-non-virtual-dtor")
+else(UNIX)
+  # make windows happy by not specifying -Werror and stuff
+endif(UNIX)
 
 ## PkgConfig is helpful
 include(FindPkgConfig)
@@ -59,6 +63,10 @@ if ( PKG_CONFIG_FOUND )
    message(STATUS "ActiveMQ: ${AMQ_CFLAGS} ${AMQ_LDFLAGS}")
 else  ( PKG_CONFIG_FOUND )
   message("No PKGCONFIG found - hoping for the best.")
+
+  set(AMQ_STATIC_INCLUDE_DIRS "${CMAKE_ADDITIONAL_PATH}/include" CACHE PATH "ActiveMQ Include dir")
+  set(AMQ_LIBRARY_DIRS        "${CMAKE_ADDITIONAL_PATH}/lib" CACHE PATH "ActiveMQ Library dir")
+  set(AMQ_LIBRARIES           "activemq-cpp" CACHE PATH "ActiveMQ libraries")
 
   set(CPPUNIT_INCLUDE_DIRS "${CMAKE_ADDITIONAL_PATH}/include" CACHE PATH "CPPUnit Include dir")
   set(CPPUNIT_LIBRARY_DIRS "${CMAKE_ADDITIONAL_PATH}/lib" CACHE PATH "CPPUnit Library dir")
