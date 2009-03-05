@@ -2,7 +2,7 @@
 #define MQS_LOGGING_HPP 1
 
 /* Logging */
-#if ENABLE_LOGGING
+#if ENABLE_LOGGING == 1
 
 #include <mqs/LoggingConfigurator.hpp>
 
@@ -55,10 +55,14 @@
 #define MQS_LOG_FATAL(msg) MQS_LLOG_FATAL(mqs_logger, msg)
 
 #else
-#error Logging has been enabled, but no usable logging mechanism available!
+#warn Logging has been enabled, but no usable logging mechanism available!
+#undef ENABLE_LOGGING
+#define ENABLE_LOGGING 0
 #endif
 
-#else /* ! ENABLE_LOGGING */
+#endif
+
+#if ENABLE_LOGGING == 0 /* ! ENABLE_LOGGING */
 
 #define MQS_LDECLARE_LOGGER(logger)   void* __mqs_unused_##logger
 #define MQS_LDEFINE_LOGGER(logger, h)
