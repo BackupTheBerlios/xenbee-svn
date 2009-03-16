@@ -53,6 +53,7 @@ class UserDatabase(Singleton):
         Singleton.__init__(self)
         self.mtx = threading.RLock()
         self.__user_db = path
+        self.__users = []
         self.__mtime = 0
         self.rebuilder = task.LoopingCall(self.rebuild)
         self.rebuilder.start(10)
@@ -63,19 +64,26 @@ class UserDatabase(Singleton):
             line = line.split("#", 1)[0].strip()
             if len(line):
                 users.append(User(Subject(line)))
-        log.debug("rebuilt user database: %d user(s) allowed", len(users))
-        self.__users = users
+        return users
 
     def rebuild(self, force=False):
         self.mtx.acquire()
         try:
+            newUsers = None
             if force:
-                self.__read_file()
+                newUsers = self.__read_file()
             else:
                 mtime = os.path.getmtime(self.__user_db)
                 if mtime > self.__mtime:
-                    self.__read_file()
+                    newUsers = self.__read_file()
                     self.__mtime = mtime
+            if newUsers is not None:
+                newUsers.sort()
+                if newUsers != self.__users:
+                    self.__users = newUsers
+        	    log.debug("rebuilt user database from file %s: %d user(s) allowed", self.__user_db, len(newUsers))
+        except Exception, e:
+            log.warn("could not rebuild user database: %s", str(e))
         finally:
             self.mtx.release()
 
@@ -85,6 +93,9 @@ class UserDatabase(Singleton):
             for user in self.__users:
                 if user.matches(cert):
                     return True
+        except Exception, e:
+            log.debug("user %s failed authentication check: %s", str(cert.subject()), str(e))
         finally:
             self.mtx.release()
         return False
+
