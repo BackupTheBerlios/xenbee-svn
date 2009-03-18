@@ -662,7 +662,8 @@ class Command_status(RemoteCommand, HasTicket):
             if len(args):
                 opts.ticket = args.pop(0)
             else:
-                raise CommandFailed("ticket required")
+                opts.ticket = "all"
+#                raise CommandFailed("ticket required")
         return True
     
     def _execute(self):
