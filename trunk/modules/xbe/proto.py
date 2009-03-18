@@ -133,3 +133,4 @@ class XenBEEProtocolFactory(StompClientFactory):
     def stompConnectionMade(self, stomp_protocol):
         """called when we are connected to the STOMP server"""
         pass
+

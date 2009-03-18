@@ -47,7 +47,9 @@ from xbe.xbed.daemon import XBEDaemon
 from xbe.xbed.ticketstore import TicketStore
 from xbe.xbed.task import TaskManager
 from xbe.xbed.instance import InstanceManager
-            
+
+import xbe.xbed.xbemsg_pb2 as xbemsg
+
 class XenBEEClientProtocol(protocol.XMLProtocol):
     """The XBE client side protocol.
 
@@ -61,7 +63,7 @@ class XenBEEClientProtocol(protocol.XMLProtocol):
 
     def connectionMade(self):
         log.debug("client %s has connected" % (self.client))
-    
+
     def do_ConfirmReservation(self, elem, *args, **kw):
         try:
             confirm = message.MessageBuilder.from_xml(elem.getroottree())
@@ -71,7 +73,7 @@ class XenBEEClientProtocol(protocol.XMLProtocol):
         if ticket is None:
             return message.Error(errcode.TICKET_INVALID, confirm.ticket())
         log.debug("got confirmation with ticket %s" % confirm.ticket())
-        
+
         xbed = XBEDaemon.getInstance()
         jsdl_doc = jsdl.JsdlDocument(schema_map=xbed.schema_map)
         try:
@@ -128,7 +130,7 @@ class XenBEEClientProtocol(protocol.XMLProtocol):
         msg = message.MessageBuilder(elem.getroottree())
         ticket = TicketStore.getInstance().lookup(msg.ticket())
         if ticket is not None:
-            reactor.callInThread(ticket.task.start())
+            reactor.callInThread(ticket.task.start)
         else:
             return message.Error(errcode.TICKET_INVALID, msg.ticket())
 
@@ -141,7 +143,7 @@ class XenBEEClientProtocol(protocol.XMLProtocol):
             if ticket is not None:
                 task = ticket.task
                 status_list.add(task.id(), task.state(), ticket.id(), task.getStatusInfo())
-                
+
                 # remove the task entry
                 if task.is_done() and request.removeEntry():
                     log.debug("removing task-entry: %s", task.id())
@@ -211,7 +213,7 @@ class XenBEEClientProtocol(protocol.XMLProtocol):
         def _failure(reason):
             return message.Error(errcode.INTERNAL_SERVER_ERROR, reason.getErrorMessage())
         d.addCallback(_success).addErrback(_failure).addCallback(self.sendMessage)
-	
+
 class XenBEEInstanceProtocol(protocol.XMLProtocol):
     """The XBE instance side protocol.
 
@@ -272,7 +274,7 @@ class XenBEEInstanceProtocol(protocol.XMLProtocol):
             inst.update_alive()
         else:
             log.warn("got alive message from suspicious source")
-            
+
     def do_ExecutionFailed(self, xml, *a, **kw):
         msg = message.MessageBuilder.from_xml(xml.getroottree())
         inst_id = msg.inst_id()
@@ -300,13 +302,183 @@ class XenBEEInstanceProtocol(protocol.XMLProtocol):
         else:
             log.warn("got execution finished from suspicious source")
 
+class BaseProtocol(object):
+    def __init__(self):
+        self.factory = None
+        self.connected = 0
+        self.transport = None
+
+    def makeConnection(self, transport):
+        self.connected = 1
+        self.transport = transport
+        self.connectionMade()
+
+    def connectionMade(self):
+        pass
+    def connectionLost(self):
+        pass
+    def messageReceived(self, msg):
+        pass
+
+    def sendMessage(self, msg):
+        if msg is not None:
+            if self.connected and self.transport:
+                try:
+                    self.transport.write(msg)
+                except Exception, e:
+                    log.error("message `%s' could not be sent: %s" % (str(msg), str(e)))
+            else:
+                log.warn("tried to send a message while not connected!")
+
+class XenBEEInstanceProtocolPB(BaseProtocol):
+    def __init__(self, instanceID):
+        BaseProtocol.__init__(self)
+        self._instanceID = instanceID
+        self._conv_id = None
+        self.log = logging.getLogger("xbed.proto.instance.%s" % instanceID)
+        self.log.debug("initializing protocol")
+
+    def connectionMade(self):
+        BaseProtocol.connectionMade(self)
+        self.log.debug("connection made")
+    
+    def connectionLost(self):
+        self.log.debug("connection lost")
+        BaseProtocol.connectionLost(self)
+
+    def messageReceived(self, msg):
+        self.log.debug("received: %s" % msg)
+        m = xbemsg.XbeMessage()
+        reply = None
+        try:
+            m.ParseFromString(msg)
+            if not m.IsInitialized():
+                raise ValueError("could not parse message into XbeMessage: unknown reason")
+
+            conv_id = m.header.conversation_id
+            if self._conv_id is None:
+                self._conv_id = conv_id
+            if self._conv_id != conv_id:
+                raise RuntimeError("wrong conversation-id: got: %s, expected: %s" % (conv_id, self._conv_id))
+
+            if m.HasField("error"):
+                reply = self.do_error(m.error)
+            elif m.HasField("execute"):
+                reply = self.do_execute(m.execute)
+            elif m.HasField("execute_ack"):
+                reply = self.do_execute_ack(m.execute_ack)
+            elif m.HasField("execute_nak"):
+                reply = self.do_execute_nak(m.execute_nak)
+            elif m.HasField("status_req"):
+                reply = self.do_status_req(m.status_req)
+            elif m.HasField("status"):
+                reply = self.do_status(m.status)
+            elif m.HasField("finished"):
+                reply = self.do_finished(m.finished)
+            elif m.HasField("finished_ack"):
+                reply = self.do_finished_ack(m.finished_ack)
+            elif m.HasField("failed"):
+                reply = self.do_failed(m.failed)
+            elif m.HasField("failed_ack"):
+                reply = self.do_failed_ack(m.failed_ack)
+            elif m.HasField("shutdown"):
+                reply = self.do_shutdown(m.shutdown)
+            elif m.HasField("shutdown_ack"):
+                reply = self.do_shutdown_ack(m.shutdown_ack)
+            elif m.HasField("terminate"):
+                reply = self.do_terminate(m.terminate)
+            elif m.HasField("terminate_ack"):
+                reply = self.do_terminate_ack(m.terminate_ack)
+            elif m.HasField("life_sign"):
+                reply = self.do_life_sign(m.life_sign)
+            else:
+                raise RuntimeError("message does not contain any element")
+        except Exception, e:
+            self.log.error("received message could not be handled: %s", e)
+
+        if reply is not None:
+            self.log.debug("replying with: %s", reply)
+            self.sendMessage(reply.SerializeToString())
+
+    def do_error(self, error):
+        self.log.info("instance had an error: %s", error)
+
+    def do_execute(self, execute):
+        pass
+
+    def do_execute_ack(self, execute_ack):
+        self.log.info("execution accepted by instance: %s", execute_ack)
+
+
+    def do_execute_nak(self, execute_nak):
+        self.log.info("execution *not* accepted by instance: %s", execute_nak)
+
+
+    def do_status_req(self, status_req):
+        pass
+
+    def do_status(self, status):
+        self.log.info("received status information: %s", status)
+
+        inst = InstanceManager.getInstance().lookupByUUID(self._instanceID)
+        if inst is not None:
+            inst.task.signalStatus(status)
+
+    def do_finished(self, finished):
+        self.log.info("execution on instance has finished: %d", finished.exitcode)
+        # send a finished ack to the instance
+        ack = xbemsg.XbeMessage()
+        ack.header.conversation_id = self._conv_id
+        ack.finished_ack.task = finished.task
+        
+        inst = InstanceManager.getInstance().lookupByUUID(self._instanceID)
+        if inst is not None:
+            inst.task.signalExecutionEnd(exitcode)
+
+        return ack
+
+    def do_finished_ack(self, finished_ack):
+        pass
+
+    def do_failed(self, failed):
+        self.log.info("execution on instance has failed: %d", failed.reason)
+        # send a failed ack to the instance
+        ack = xbemsg.XbeMessage()
+        ack.header.conversation_id = self._conv_id
+        ack.failed_ack.task = failed.task
+
+        inst = InstanceManager.getInstance().lookupByUUID(self._instanceID)
+        if inst is not None:
+            inst.task.signalExecutionFailed(failed.reason)
+        return ack
+
+    def do_failed_ack(self, failed_ack):
+        pass
+
+    def do_shutdown(self, shutdown):
+        pass
+
+    def do_shutdown_ack(self, shutdown_ack):
+        self.log.info("instance acknowledged shutdown request")
+
+    def do_terminate(self, terminate):
+        pass
+
+    def do_terminate_ack(self, terminate_ack):
+        self.log.info("instance acknowledged terminate request")
+
+    def do_life_sign(self, life_sign):
+        inst = InstanceManager.getInstance().lookupByUUID(self._instanceID)
+        if inst is not None:
+            inst.life_sign(self, life_sign)
+
 class _XBEDProtocol(XenBEEProtocol):
     def post_connect(self):
         pass
 
 class XenBEEDaemonProtocolFactory(XenBEEProtocolFactory):
     protocol = _XBEDProtocol
-    
+
     def __init__(self, daemon, queue, topic, user, password):
 	XenBEEProtocolFactory.__init__(self, queue, user, password)
         self.daemon = daemon
@@ -314,7 +486,7 @@ class XenBEEDaemonProtocolFactory(XenBEEProtocolFactory):
         self.__protocolRemovalTimeout = 60
         self.__clientProtocols = {}
         self.__clientMutex = threading.RLock()
-        
+
         self.__instanceProtocols = {}
         self.__instanceMutex = threading.RLock()
 
@@ -333,7 +505,7 @@ class XenBEEDaemonProtocolFactory(XenBEEProtocolFactory):
 
     def dispatchToProtocol(self, transport, msg, domain, sourceType, sourceId=None):
         assert sourceType != None, "the source-type must not be None"
-        
+
         if domain != "xenbee":
             raise ValueError("illegal domain: %s, expected 'xenbee'" % domain)
         if sourceId is None:
@@ -361,7 +533,7 @@ class XenBEEDaemonProtocolFactory(XenBEEProtocolFactory):
         d.addCallback(self.logCallback,
                       log.debug, "sending answer to %(client)s: %(result)s",
                       {"client": id})
-        
+
         # finally log any error and consume them
         d.addErrback(self.logCallback,
                      log.error,
@@ -372,7 +544,7 @@ class XenBEEDaemonProtocolFactory(XenBEEProtocolFactory):
         if result is not None:
             dictionary["result"] = str(result)
             logfunc(fmt % dictionary)
-            
+
     def clientMessage(self, transport, msg, client):
         self.__messageHelper(client, msg, transport,
                              self.__clientProtocols,

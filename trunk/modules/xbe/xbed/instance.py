@@ -213,6 +213,17 @@ class Instance(object):
         finally:
             self.__mtx.release()
 
+    def life_sign(self, protocol, msg):
+        """Callback called when the 'real' instance has sent us a life signal."""
+        self.__mtx.acquire()
+        try:
+            self.log.debug("got life sign")
+            self.__last_message_tstamp = time.time()
+            self.protocol = protocol
+            self._setState("started:available")
+        finally:
+            self.__mtx.release()
+
     def available(self, protocol):
         """Callback called when the 'real' instance has notified us."""
         self.__mtx.acquire()

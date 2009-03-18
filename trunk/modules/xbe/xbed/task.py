@@ -86,6 +86,9 @@ class Task(TaskFSM):
             "state": self.state(),
         }
 
+    def signalStatus(self, statusMsg):
+        pass
+
     def signalExecutionEnd(self, exitcode):
         self.mtx.acquire()
         try:
@@ -126,7 +129,7 @@ class Task(TaskFSM):
                                 "Terminated",
                                 "Failed"]
 
-    def getStatusInfo(self):
+    def getStatusInfo(self, executeStatusTask=False):
         """Return all possible information about this task in a
         dictionary.
         
@@ -160,6 +163,11 @@ class Task(TaskFSM):
             if self.state() == "Running:Executing":
                 # instance is available and has an IP
                 info["IP"] = self.__inst.ip
+                # TODO: implement status request to instance
+                try:
+                    info["TaskData"] = self.__inst.protocol.requestStatus(self)
+                except Exception, e:
+                    self.log.warn("status request failed: %s", e)
         finally:
             self.mtx.release()
         return info
