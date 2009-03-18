@@ -23,15 +23,23 @@
 """Security classes using OpenSSL"""
 
 import os, random, tempfile, hashlib, subprocess
+
+import logging
+log = logging.getLogger(__name__)
+
 from base64 import b64encode, b64decode
 from xbe.xml.security_exceptions import *
 
 class Subject(object):
     def __init__(self, text):
         self.__text = text
-        self.__dict__.update(
-            dict([c.split("=", 1) for c in text[1:].split("/")])
-        )
+        for c in text.split("/"):
+            if len(c):
+                try:
+                    k, v = c.split("=", 1)
+                    self.__dict__[k] = v
+                except Exception, e:
+                    log.warn("invalid subject line `%s': %s", text, str(e))
 
     def __getitem__(self, x):
         return getattr(self, x)
