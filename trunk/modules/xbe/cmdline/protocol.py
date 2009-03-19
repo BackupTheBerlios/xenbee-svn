@@ -126,9 +126,9 @@ class BaseCommandLineProtocol(BaseProtocol):
         msg = message.TerminateRequest(ticket, remove_entry)
         self.transport.sendMessage(msg.as_xml())
 
-    def requestStatus(self, ticket, remove_entry=False):
+    def requestStatus(self, ticket, remove_entry=False, execute_status_task=False):
         log.info("requesting status")
-        msg = message.StatusRequest(ticket, remove_entry)
+        msg = message.StatusRequest(ticket, remove_entry, execute_status_task)
         self.transport.sendMessage(msg.as_xml())
 
     def requestCacheList(self):

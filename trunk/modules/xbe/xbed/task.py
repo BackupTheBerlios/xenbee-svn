@@ -53,6 +53,42 @@ from xbe.xbed.task_activity_queue import ActivityQueue
 from twisted.internet import reactor, defer, threads
 from twisted.python import failure
 
+class WaitStruct:
+    def __init__(self, initialData=None):
+        self.__cond = threading.Condition()
+        self.__tstamp = 0
+        self.__data = initialData
+
+    def signalUpdate(self, data):
+        try:
+            self.__cond.acquire()
+            self.__data = data
+            self.__tstamp = time.time()
+            self.__cond.notifyAll()
+        finally:
+            self.__cond.release()
+
+    def wait(self, timeout=None):
+        """Waits for an update. Returns True iff the wait did not time out."""
+        timedout = False
+        try:
+            self.__cond.acquire()
+            last_update = self.__tstamp
+            self.__cond.wait(timeout)
+            if last_update == self.__tstamp:
+                timedout = True
+        finally:
+            self.__cond.release()
+        return not timedout
+
+    def data(self):
+        """Returns a (data, tstamp) tuple to identify the current data."""
+        try:
+            self.__cond.acquire()
+            return (self.__data, self.__tstamp)
+        finally:
+            self.__cond.release()
+
 class TaskError(XenBeeException):
     pass
 
@@ -69,6 +105,7 @@ class Task(TaskFSM):
         self.__timestamps["submit"] = time.time()
         self.__activity_logs = {}
         self.__id = id
+        self.__statusTaskWaiter = WaitStruct()
         self.log = logging.getLogger("task."+self.id())
         self.state_log = logging.getLogger("JobState."+self.__ticket_id)
         self.mgr = mgr
@@ -87,8 +124,8 @@ class Task(TaskFSM):
         }
 
     def signalStatus(self, statusMsg):
-        pass
-
+        self.__statusTaskWaiter.signalUpdate(statusMsg)
+                
     def signalExecutionEnd(self, exitcode):
         self.mtx.acquire()
         try:
@@ -129,7 +166,7 @@ class Task(TaskFSM):
                                 "Terminated",
                                 "Failed"]
 
-    def getStatusInfo(self, executeStatusTask=False):
+    def getStatusInfo(self, executeStatusTask=False, timeoutSeconds=5):
         """Return all possible information about this task in a
         dictionary.
         
@@ -165,7 +202,16 @@ class Task(TaskFSM):
                 info["IP"] = self.__inst.ip
                 # TODO: implement status request to instance
                 try:
-                    info["TaskData"] = self.__inst.protocol.requestStatus(self)
+                    self.__inst.protocol.requestStatus(self, executeStatusTask)
+                    try:
+                        self.mtx.release()
+                        self.log.debug("waiting for status reply from instance")
+                        self.__statusTaskWaiter.wait(timeoutSeconds)
+                        data, time = self.__statusTaskWaiter.data()
+                        info["StatusTaskData"] = data
+                        info["StatusTaskTime"] = time
+                    finally:
+                        self.mtx.acquire()
                 except Exception, e:
                     self.log.warn("status request failed: %s", e)
         finally:

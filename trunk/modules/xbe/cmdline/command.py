@@ -656,6 +656,8 @@ class Command_status(RemoteCommand, HasTicket):
         p = self.parser
         p.add_option("-r", "--remove", dest="remove_entry", action="store_true", default=False,
                      help="remove the status entry, if it has finished")
+        p.add_option("-x", "--execute-status-task", dest="execute_status_task", action="store_true", default=False,
+                     help="request execution of the status-task at the remote location")
 
     def check_opts_and_args(self, opts, args):
         if opts.ticket is None:
@@ -663,13 +665,13 @@ class Command_status(RemoteCommand, HasTicket):
                 opts.ticket = args.pop(0)
             else:
                 opts.ticket = "all"
-#                raise CommandFailed("ticket required")
+                #raise CommandFailed("ticket required")
         return True
     
     def _execute(self):
         ticket = self.get_ticket()
         self.scheduleTimeout(name="status-request")
-        self.requestStatus(ticket, self.opts.remove_entry)
+        self.requestStatus(ticket, self.opts.remove_entry, self.opts.execute_status_task)
         return False
 
     def statusListReceived(self, statusList):

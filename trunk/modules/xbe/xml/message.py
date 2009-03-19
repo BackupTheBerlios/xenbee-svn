@@ -672,29 +672,35 @@ class StatusRequest(BaseClientMessage):
     """
     tag = XBE("StatusRequest")
     
-    def __init__(self, ticket, remove_entry=False):
+    def __init__(self, ticket, remove_entry=False, execute_status_task=False):
         BaseClientMessage.__init__(self)
         self.__ticket = str(ticket)
         self.__remove_entry = remove_entry
+        self.__execute_status_task = execute_status_task
 
     def ticket(self):
         return self.__ticket
 
     def removeEntry(self):
         return self.__remove_entry
+
+    def execute_status_task(self):
+        return self.__execute_status_task
     
     def as_xml(self):
         root, hdr, body = MessageBuilder.xml_parts()
         sr = etree.SubElement(body, self.tag)
         sr.attrib["remove-entry"] = self.removeEntry() and "1" or "0"
+        sr.attrib["execute-status-task"] = self.execute_status_task() and "1" or "0"
         reservation = etree.SubElement(sr, XBE("Reservation"))
         etree.SubElement(reservation, XBE("Ticket")).text = self.ticket()
         return root
     def from_xml(cls, root, hdr, body):
         sr = body.find(cls.tag)
         remove = str(sr.attrib.get("remove-entry")).lower() in ["1", "yes", "true"]
+        execute = str(sr.attrib.get("execute-status-task")).lower() in ["1", "yes", "true"]
         ticket = sr.findtext(XBE("Reservation/Ticket"))
-        return cls(ticket, remove)
+        return cls(ticket, remove, execute)
     from_xml = classmethod(from_xml)
 MessageBuilder.register(StatusRequest)
 

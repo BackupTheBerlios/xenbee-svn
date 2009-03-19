@@ -42,6 +42,7 @@ from twisted.internet import defer, reactor, threads
 from xbe.proto import XenBEEProtocolFactory, XenBEEProtocol
 from xbe.xml.namespaces import *
 from xbe.xml import xsdl, message, protocol, errcode, jsdl
+from xbe.concurrency import LockMgr
 
 from xbe.xbed.daemon import XBEDaemon
 from xbe.xbed.ticketstore import TicketStore
@@ -304,6 +305,7 @@ class XenBEEInstanceProtocol(protocol.XMLProtocol):
 
 class BaseProtocol(object):
     def __init__(self):
+        self.mtx = threading.RLock()
         self.factory = None
         self.connected = 0
         self.transport = None
@@ -317,10 +319,20 @@ class BaseProtocol(object):
         pass
     def connectionLost(self):
         pass
+
     def messageReceived(self, msg):
         pass
-
+    def requestStatus(self, caller, executeStatusTask=False):
+        pass
+    def executeTask(self, caller, jsdl):
+        pass
+    def requestTermination(self, caller, reason=None):
+        pass
+    def requestShutdown(self, caller, reason=None):
+        pass
+    
     def sendMessage(self, msg):
+        l = LockMgr(self.mtx)
         if msg is not None:
             if self.connected and self.transport:
                 try:
@@ -335,6 +347,7 @@ class XenBEEInstanceProtocolPB(BaseProtocol):
         BaseProtocol.__init__(self)
         self._instanceID = instanceID
         self._conv_id = None
+        self._task_id = 0
         self.log = logging.getLogger("xbed.proto.instance.%s" % instanceID)
         self.log.debug("initializing protocol")
 
@@ -400,6 +413,44 @@ class XenBEEInstanceProtocolPB(BaseProtocol):
             self.log.debug("replying with: %s", reply)
             self.sendMessage(reply.SerializeToString())
 
+    def requestStatus(self, caller, executeStatusTask=False):
+        self.log.info("requesting status from instance")
+        msg = xbemsg.XbeMessage()
+        msg.header.conversation_id = self._conv_id
+        msg.status_req.execute_status_task = executeStatusTask
+        self.sendMessage(msg.SerializeToString())
+
+    def executeTask(self, caller, jsdl):
+        self.log.info("sending request for execution to instance")
+        #TODO: translate jsdl to PB
+        
+        msg = xbemsg.XbeMessage()
+        msg.header.conversation_id = self._conv_id
+        msg.execute.main_task.executable = "/bin/sleep"
+        msg.execute.main_task.argument.append("10")
+        e = msg.execute.main_task.env.add()
+        e.key = "HOME"
+        e.val = "/"
+        msg.execute.main_task.wd = "/"
+        msg.execute.status_task.executable = "/bin/ps"
+        msg.execute.status_task.argument.append("aux")
+        
+        self.sendMessage(msg.SerializeToString())
+
+    def requestTermination(self, caller, reason=None):
+        self.log.info("sending request for termination to instance")
+        msg = xbemsg.XbeMessage()
+        msg.header.conversation_id = self._conv_id
+        msg.terminate.task = self._task_id
+        self.sendMessage(msg.SerializeToString())
+
+    def requestShutdown(self, caller, reason=None):
+        self.log.info("sending request for shutdown to instance")
+        msg = xbemsg.XbeMessage()
+        msg.header.conversation_id = self._conv_id
+        msg.shutdown.reason = str(reason)
+        self.sendMessage(msg.SerializeToString())
+
     def do_error(self, error):
         self.log.info("instance had an error: %s", error)
 
@@ -408,11 +459,10 @@ class XenBEEInstanceProtocolPB(BaseProtocol):
 
     def do_execute_ack(self, execute_ack):
         self.log.info("execution accepted by instance: %s", execute_ack)
-
+        self._task_id = execute_ack.task
 
     def do_execute_nak(self, execute_nak):
         self.log.info("execution *not* accepted by instance: %s", execute_nak)
-
 
     def do_status_req(self, status_req):
         pass

@@ -42,6 +42,7 @@ except:
     from traceback import format_exception
 
 from xbe.util.exceptions import *
+from xbe.concurrency import LockMgr
 from xbe.xbed.backend import backend
 from xbe.xbed.daemon import XBEDaemon
 from xbe import util
