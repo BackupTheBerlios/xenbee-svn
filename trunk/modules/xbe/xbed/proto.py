@@ -360,13 +360,13 @@ class XenBEEInstanceProtocolPB(BaseProtocol):
         BaseProtocol.connectionLost(self)
 
     def messageReceived(self, msg):
-        self.log.debug("received: %s" % msg)
         m = xbemsg.XbeMessage()
         reply = None
         try:
             m.ParseFromString(msg)
             if not m.IsInitialized():
                 raise ValueError("could not parse message into XbeMessage: unknown reason")
+            self.log.debug("received message: %s" % m)
 
             conv_id = m.header.conversation_id
             if self._conv_id is None:
@@ -518,9 +518,13 @@ class XenBEEInstanceProtocolPB(BaseProtocol):
         self.log.info("instance acknowledged terminate request")
 
     def do_life_sign(self, life_sign):
+        self.log.debug("instance %s is alive", self._instanceID)
         inst = InstanceManager.getInstance().lookupByUUID(self._instanceID)
         if inst is not None:
             inst.life_sign(self, life_sign)
+        else:
+            self.log.warn("unknown instance: %s", self._instanceID)
+            self.requestShutdown(None, None)
 
 class _XBEDProtocol(XenBEEProtocol):
     def post_connect(self):
@@ -578,17 +582,17 @@ class XenBEEDaemonProtocolFactory(XenBEEProtocolFactory):
             mtx.release()
 #        log.debug("got message for %r" % (p,))
         d = p.messageReceived(msg)
-
-        # log sent answers
-        d.addCallback(self.logCallback,
-                      log.debug, "sending answer to %(client)s: %(result)s",
-                      {"client": id})
-
-        # finally log any error and consume them
-        d.addErrback(self.logCallback,
-                     log.error,
-                     "sending message %(message)s to %(client)s failed: %(result)s",
-                     { "client":id, "message": str(msg)})
+        if d is not None:
+            # log sent answers
+            d.addCallback(self.logCallback,
+                          log.debug, "sending answer to %(client)s: %(result)s",
+                          {"client": id})
+    
+            # finally log any error and consume them
+            d.addErrback(self.logCallback,
+                         log.error,
+                         "sending message %(message)s to %(client)s failed: %(result)s",
+                         { "client":id, "message": str(msg)})
 
     def logCallback(self, result, logfunc, fmt, dictionary):
         if result is not None:
@@ -606,14 +610,14 @@ class XenBEEDaemonProtocolFactory(XenBEEProtocolFactory):
                              XenBEEClientProtocol, client)
 
     def instanceMessage(self, transport, msg, inst):
-         self.__messageHelper(inst, msg, transport,
-                              self.__instanceProtocols,
-                              self.__instanceMutex,
-                              XenBEEInstanceProtocolPB, inst)
-#        self.__messageHelper(inst, msg, transport,
-#                             self.__instanceProtocols,
-#                             self.__instanceMutex,
-#                             XenBEEInstanceProtocol, inst)
+#         self.__messageHelper(inst, msg, transport,
+#                              self.__instanceProtocols,
+#                              self.__instanceMutex,
+#                              XenBEEInstanceProtocolPB, inst)
+        self.__messageHelper(inst, msg, transport,
+                             self.__instanceProtocols,
+                             self.__instanceMutex,
+                             XenBEEInstanceProtocol, inst)
 
 
     def certificateChecker(self, certificate):

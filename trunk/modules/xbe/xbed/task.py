@@ -526,6 +526,18 @@ class Task(TaskFSM):
         inst.config().addToKernelCommandLine(XBE_UUID="%s" % (
             inst.id()
         ))
+
+        # new environment variables
+        inst.config().addToKernelCommandLine(XBE_BROKER="%s" % (
+            XBEDaemon.getInstance().broker
+        ))
+        inst.config().addToKernelCommandLine(XBE_DAEMON="%s" % (
+            XBEDaemon.getInstance().qname
+        ))
+        inst.config().addToKernelCommandLine(XBE_INSTID="%s" % (
+            inst.id()
+        ))
+
         try:
             ncpus = int(jsdl.lookup_path("JobDefinition/JobDescription/Resources/"+
                                          "TotalCPUCount").get_value())
