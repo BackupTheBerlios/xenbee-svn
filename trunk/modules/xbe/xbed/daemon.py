@@ -250,6 +250,12 @@ class XBEDaemon(Daemon):
         log.info(" connecting to %s:%d using %s, queue: %s" % (
             host, port, proto, queue
         ))
+
+        # todo move this stuff to the config and remove the old "uri" way
+        self.broker = "tcp://%s:%d?wireFormat=%s&username=%s&password=%s" % (
+            host, port, "stomp", self.opts.stomp_user, self.opts.stomp_pass
+        )
+        self.qname = queue
                  
         reactor.connectTCP(host,
                            port,
