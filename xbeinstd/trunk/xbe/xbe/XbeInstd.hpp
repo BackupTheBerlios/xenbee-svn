@@ -75,6 +75,8 @@ namespace xbe {
 
             void wait();
             void wait(unsigned long millis);
+
+            bool is_stopped() const { return _stopped; }
         private:
             XBE_DECLARE_LOGGER();
             XbeInstdContext _fsm;
@@ -87,6 +89,7 @@ namespace xbe {
             std::string _stageName;
             std::size_t _maxRetries;
             std::size_t _retryCounter;
+            bool _stopped;
 
             std::tr1::shared_ptr<xbe::Task> _mainTask;
             std::tr1::shared_ptr<xbe::Task> _statusTask;

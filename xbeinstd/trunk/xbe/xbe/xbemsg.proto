@@ -116,9 +116,12 @@ message FailedAck {
     optional int32 task = 1;
 }
 
-message Shutdown { }
+message Shutdown {
+    optional string reason = 1;
+}
 
-message ShutdownAck { }
+message ShutdownAck {
+}
 
 message Terminate {
     optional int32 task = 1;

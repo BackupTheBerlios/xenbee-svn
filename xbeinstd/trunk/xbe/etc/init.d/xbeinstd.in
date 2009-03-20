@@ -1,0 +1,126 @@
+#!/bin/bash
+set +e
+
+# xbeinstd: start and stop the XBE instance daemon
+prefix="@INSTALL_PREFIX@"
+
+daemon="$prefix/bin/xbeinstd"
+logfile="/var/log/xbe/xbeinstd.log"
+pidfile="/var/run/xbeinstd.pid"
+config="$prefix/etc/xbe/xbeinstd.rc"
+
+test -x $daemon || exit 0
+
+if test -f /etc/default/xbeinstd; then
+    . /etc/default/xbeinstd
+fi
+
+export PATH="/bin:/sbin:/usr/sbin:/sbin:/usr/local/bin:/usr/local/sbin"
+
+function check_logfile() {
+	logdir=`/usr/bin/dirname "$logfile"`
+	/bin/mkdir -p "$logdir"
+	# empty the logfile
+	:> "$logfile"
+}
+
+function check_pidfile() {
+	piddir=`/usr/bin/dirname "$pidfile"`
+	/bin/mkdir -p "$piddir"
+    /usr/bin/touch "$pidfile"
+}
+
+function save_config() {
+    configdir=`/usr/bin/dirname "$config"`
+    /bin/mkdir -p "$configdir"
+    if [ -n "$XBE_BROKER" ]; then
+        :> "$config"
+        echo "broker = $XBE_BROKER" >> "$config"
+        echo "xbed = $XBE_DAEMON" >> "$config"
+        echo "name = xenbee.instance.$XBE_INSTID" >> "$config"
+    fi
+}
+
+function do_start() {
+    echo -n "Starting XenBEE instance daemon..."
+    check_logfile
+    check_pidfile
+    save_config
+    "$daemon" --config "$config" > "$logfile" 2>&1 &
+    echo "$!" > $pidfile
+    echo "done."
+}
+
+function do_stop() {
+    echo -n "Stopping XenBEE instance daemon..."
+    P=`/bin/cat $pidfile`
+    tmp=`/bin/kill -0 $P >/dev/null 2>&1`
+    alive=$?
+    for ((i=0; i < 5; i++)); do
+        if [ $alive -eq 0 ]; then
+            /bin/kill -TERM $P >/dev/null 2>&1
+            alive=$?
+            echo -n "."; /bin/sleep 1
+        else
+            break
+        fi
+    done
+    if [ $alive -eq 0 ]; then
+        /bin/kill -KILL $P >/dev/null 2>&1
+        echo -n " sent kill signal "
+    fi
+    echo "done."
+}
+
+# return values:
+#    0 - running
+#    1 - dead
+#    2 - unknown
+function do_status() {
+    state=2
+    P=`/bin/cat $pidfile 2>/dev/null`
+    if [ -z "$P" ]; then
+        state=2
+    fi
+    tmp=`/bin/kill -0 $P >/dev/null 2>&1`
+    alive=$?
+    if [ $alive -eq 0 ]; then
+        state=0
+    else
+        state=1
+    fi
+    return $state
+}
+
+case "$1" in
+  start)
+    do_status >/dev/null 2>&1
+    if [ $? -eq 0 ]; then
+        echo "already running"
+    else
+        do_start
+    fi
+    ;;
+  stop)
+    do_stop
+    ;;
+  status)
+    do_status
+    state=$?
+    if [ $state -eq 0 ]; then
+        echo "xbeinstd is running: `/bin/cat $pidfile`"
+    else
+        echo "xbeinstd is dead"
+    fi
+    exit $state
+    ;;
+  restart|reload|force-reload)
+    $0 stop
+    $0 start
+    ;;
+  *)
+    echo "Usage: $0 {start|stop|status|reload|force-reload|restart}"
+    exit 1
+esac
+
+exit 0

@@ -613,6 +613,13 @@ _SHUTDOWN = descriptor.Descriptor(
   filename='xbemsg.proto',
   containing_type=None,
   fields=[
+    descriptor.FieldDescriptor(
+      name='reason', full_name='xbe.messages.Shutdown.reason', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      default_value=unicode("", "utf-8"),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
   ],
   extensions=[
   ],

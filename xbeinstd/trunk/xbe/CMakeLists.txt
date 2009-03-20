@@ -50,8 +50,11 @@ if ( PKG_CONFIG_FOUND )
    pkg_check_modules (CPPUNIT cppunit>=1.12)
    message(STATUS "CPPUnit: ${CPPUNIT_CFLAGS} ${CPPUNIT_LDFLAGS} STATIC=${CPPUNIT_STATIC_LDFLAGS}")
    pkg_check_modules (LOG4CPP log4cpp>=1.0)
+
+   pkg_check_modules (MQS REQUIRED libmqs>=0.1)
    message(STATUS "MQS: -I${MQS_INCLUDE_DIRS} -L${MQS_LIBRARY_DIRS} -l${MQS_LIBRARIES}")
-   pkg_check_modules (SEDA REQUIRED libseda>=0.1)
+
+   pkg_check_modules (SEDA REQUIRED libseda>=1.1)
    message(STATUS "SEDA: -I${SEDA_INCLUDE_DIRS} -L${SEDA_LIBRARY_DIRS} -l${SEDA_LIBRARIES}")
    # The log4cpp package config is broken, doesn't set static library -
    # therefore do it manually here.
@@ -134,11 +137,13 @@ else(ENABLE_LOGGING)
   message("Disabled logging by request.")
   set(ENABLE_LOGGING)
 endif(ENABLE_LOGGING)
-set(INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
+
+set(INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in    ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/libxbe.pc.in   ${CMAKE_CURRENT_BINARY_DIR}/libxbe.pc)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/etc/xbe/xbeinstd.rc.in ${CMAKE_CURRENT_BINARY_DIR}/etc/xbe/xbeinstd.rc)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/etc/init.d/xbeinstd.in ${CMAKE_CURRENT_BINARY_DIR}/etc/init.d/xbeinstd)
 
 ADD_DEFINITIONS( -DHAVE_CONFIG_H )
 
@@ -193,7 +198,7 @@ if (ENABLE_UNIT_TESTS)
 endif (ENABLE_UNIT_TESTS)
 
 # add some files to the installation target
-INSTALL(FILES INSTALL README COPYING ChangeLog NEWS DESTINATION
+INSTALL(FILES INSTALL README COPYING ChangeLog NEWS xbe/xbemsg.proto DESTINATION
   share/doc/${PROJECT_NAME}-${V_MAJOR}.${V_MINOR}
 )
 
@@ -202,14 +207,12 @@ INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/libxbe.pc
   DESTINATION lib/pkgconfig
 )
 
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/etc/xbe DESTINATION etc
-  PATTERN ".svn" EXCLUDE
-  PATTERN "*.in" EXCLUDE
-)
-install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/etc/xbe DESTINATION etc
-  PATTERN ".svn" EXCLUDE
-  PATTERN "*.in" EXCLUDE
-)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/etc/xbe/xbeinstd.rc DESTINATION etc/xbe)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/etc/init.d/xbeinstd DESTINATION etc/init.d
+    PERMISSIONS
+    OWNER_WRITE OWNER_READ OWNER_EXECUTE
+    GROUP_READ GROUP_EXECUTE
+    WORLD_READ WORLD_EXECUTE)
 
 # CPACK packaging
 INCLUDE(InstallRequiredSystemLibraries)

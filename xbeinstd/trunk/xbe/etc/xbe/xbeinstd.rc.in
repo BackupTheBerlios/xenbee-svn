@@ -1,3 +1,4 @@
 broker = "@TEST_BROKER_URI@"
 xbed = "xbe.xbed.test"
 name = "xbe.xbeinstd.test"
+verbose = 2

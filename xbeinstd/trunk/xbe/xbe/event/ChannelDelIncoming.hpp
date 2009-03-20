@@ -1,7 +1,7 @@
 #ifndef XBE_CHANNEL_DEL_INCOMING_HPP
 #define XBE_CHANNEL_DEL_INCOMING_HPP 1
 
-#include <xbe/ChannelCommandEvent.hpp>
+#include <xbe/event/ChannelCommandEvent.hpp>
 #include <mqs/Destination.hpp>
 
 namespace xbe {

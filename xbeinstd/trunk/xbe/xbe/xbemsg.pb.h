@@ -1368,13 +1368,23 @@ class Shutdown : public ::google::protobuf::Message {
   
   // accessors -------------------------------------------------------
   
+  // optional string reason = 1;
+  inline bool has_reason() const;
+  inline void clear_reason();
+  inline const ::std::string& reason() const;
+  inline void set_reason(const ::std::string& value);
+  inline void set_reason(const char* value);
+  inline ::std::string* mutable_reason();
+  
  private:
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
   mutable int _cached_size_;
   
+  ::std::string* reason_;
+  static const ::std::string _default_reason_;
   friend void protobuf_BuildDesc_xbemsg_2eproto_AssignGlobalDescriptors(
       const ::google::protobuf::FileDescriptor* file);
-  ::google::protobuf::uint32 _has_bits_[1];
+  ::google::protobuf::uint32 _has_bits_[(1 + 31) / 32];
   
   // WHY DOES & HAVE LOWER PRECEDENCE THAN != !?
   inline bool _has_bit(int index) const {
@@ -2740,6 +2750,41 @@ inline void FailedAck::set_task(::google::protobuf::int32 value) {
 // -------------------------------------------------------------------
 
 // Shutdown
+
+// optional string reason = 1;
+inline bool Shutdown::has_reason() const {
+  return _has_bit(0);
+}
+inline void Shutdown::clear_reason() {
+  if (reason_ != &_default_reason_) {
+    reason_->clear();
+  }
+  _clear_bit(0);
+}
+inline const ::std::string& Shutdown::reason() const {
+  return *reason_;
+}
+inline void Shutdown::set_reason(const ::std::string& value) {
+  _set_bit(0);
+  if (reason_ == &_default_reason_) {
+    reason_ = new ::std::string;
+  }
+  reason_->assign(value);
+}
+inline void Shutdown::set_reason(const char* value) {
+  _set_bit(0);
+  if (reason_ == &_default_reason_) {
+    reason_ = new ::std::string;
+  }
+  reason_->assign(value);
+}
+inline ::std::string* Shutdown::mutable_reason() {
+  _set_bit(0);
+  if (reason_ == &_default_reason_) {
+    reason_ = new ::std::string;
+  }
+  return reason_;
+}
 
 // -------------------------------------------------------------------
 

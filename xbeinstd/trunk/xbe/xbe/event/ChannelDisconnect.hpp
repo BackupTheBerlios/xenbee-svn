@@ -1,7 +1,7 @@
 #ifndef XBE_CHANNEL_DISCONNECT_HPP
 #define XBE_CHANNEL_DISCONNECT_HPP 1
 
-#include <xbe/ChannelCommandEvent.hpp>
+#include <xbe/event/ChannelCommandEvent.hpp>
 
 namespace xbe {
     namespace event {

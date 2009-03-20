@@ -1,5 +1,4 @@
 #include "XbeInstd.hpp"
-#include <signal.h>
 #include <seda/TimerEvent.hpp>
 #include <seda/StageRegistry.hpp>
 #include "xbe/event/ShutdownAckEvent.hpp"
@@ -23,6 +22,7 @@ XbeInstd::XbeInstd(const std::string &name, const seda::Strategy::Ptr &decorated
       _to(to), _from(from), _conversation_id(conversation_id),
       _maxRetries(maxRetries),
       _retryCounter(0),
+      _stopped(false),
       _mainTask((xbe::Task*)0),
       _statusTask((xbe::Task*)0)
 {
@@ -85,6 +85,11 @@ void XbeInstd::do_shutdown(xbe::event::ShutdownEvent& shutdownEvent) {
     XBE_LOG_DEBUG("sending shutdown-ack");
     seda::IEvent::Ptr e(new xbe::event::ShutdownAckEvent(_conversation_id, _to, _from));
     StrategyDecorator::perform(e);
+    {
+        boost::unique_lock<boost::recursive_mutex> lock(_mtx);
+        _stopped = true;
+        _shutdown.notify_all();
+    }
 }
 
 void XbeInstd::do_send_status(xbe::event::StatusReqEvent& req, xbe::event::StatusEvent::StatusCode st) {
@@ -182,6 +187,8 @@ void XbeInstd::onStageStop(const std::string &) {
     XBE_LOG_DEBUG("stage stopping");
     do_stop_lifesign();
     do_stop_timer();
+    _stopped = true;
+    _shutdown.notify_all();
 }
 
 void XbeInstd::wait() {

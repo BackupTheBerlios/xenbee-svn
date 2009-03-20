@@ -1,6 +1,7 @@
 #include <fstream>
 #include <boost/program_options.hpp>
 #include <signal.h>
+#include <unistd.h>
 
 #include <xbe/common.hpp>
 #include <xbe/ChannelAdapterStrategy.hpp>
@@ -69,14 +70,11 @@ main(int argc, char **argv) {
     // setup logging
 #if ENABLE_LOGGING
     ::log4cpp::BasicConfigurator::configure();
-    ::log4cpp::Category::setRootPriority(::log4cpp::Priority::FATAL);
+    ::log4cpp::Category::setRootPriority(::log4cpp::Priority::WARN);
     if (vm.count("verbose")) {
         int level(vm["verbose"].as<int>());
-        if      (level > 4) ::log4cpp::Category::setRootPriority(::log4cpp::Priority::DEBUG);
-        else if (level > 3) ::log4cpp::Category::setRootPriority(::log4cpp::Priority::INFO);
-        else if (level > 2) ::log4cpp::Category::setRootPriority(::log4cpp::Priority::WARN);
-        else if (level > 1) ::log4cpp::Category::setRootPriority(::log4cpp::Priority::ERROR);
-        else if (level > 0) ::log4cpp::Category::setRootPriority(::log4cpp::Priority::CRIT);
+        if      (level > 1) ::log4cpp::Category::setRootPriority(::log4cpp::Priority::DEBUG);
+        else if (level > 0) ::log4cpp::Category::setRootPriority(::log4cpp::Priority::INFO);
     }
 #endif
 
@@ -123,6 +121,8 @@ main(int argc, char **argv) {
         std::cerr << "waiting..." << std::endl;
         while (! done ) {
             xbeinstd->wait(500);
+            if (xbeinstd->is_stopped())
+                done=true;
         }
 
         std::cerr << "shutting down..." << std::endl;
@@ -132,5 +132,7 @@ main(int argc, char **argv) {
         std::cerr << "an unknown error occured" << std::endl;
     }    
 
+    std::cerr << "syncing..." << std::endl;
+    sync();
     return 0;
 }

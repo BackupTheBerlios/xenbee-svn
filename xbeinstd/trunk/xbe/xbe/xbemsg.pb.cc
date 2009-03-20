@@ -348,6 +348,7 @@ void protobuf_BuildDesc_xbemsg_2eproto_AssignGlobalDescriptors(const ::google::p
   Shutdown_descriptor_ = file->message_type(13);
   Shutdown::default_instance_ = new Shutdown();
   static const int Shutdown_offsets_[1] = {
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Shutdown, reason_),
   };
   Shutdown_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
@@ -501,15 +502,16 @@ void protobuf_BuildDesc_xbemsg_2eproto() {
     "\005\022\014\n\004task\030\002 \001(\005\"\033\n\013FinishedAck\022\014\n\004task\030\001"
     " \001(\005\"@\n\006Failed\022\014\n\004task\030\001 \001(\005\022(\n\006reason\030\002"
     " \001(\0162\030.xbe.messages.FailReason\"\031\n\tFailed"
-    "Ack\022\014\n\004task\030\001 \001(\005\"\n\n\010Shutdown\"\r\n\013Shutdow"
-    "nAck\"\031\n\tTerminate\022\014\n\004task\030\001 \001(\005\"\034\n\014Termi"
-    "nateAck\022\014\n\004task\030\001 \001(\005\"D\n\010LifeSign\022\016\n\006tst"
-    "amp\030\001 \002(\004\022(\n\006status\030\002 \001(\0162\030.xbe.messages"
-    ".StatusCode*\036\n\tErrorCode\022\021\n\rUNKNOWN_ERRO"
-    "R\020\000*9\n\020ExecuteNakReason\022\022\n\016UNKNOWN_REASO"
-    "N\020\000\022\021\n\rRESOURCE_BUSY\020\001*=\n\nStatusCode\022\010\n\004"
-    "IDLE\020\000\022\013\n\007RUNNING\020\001\022\014\n\010FINISHED\020\002\022\n\n\006FAI"
-    "LED\020\003*\031\n\nFailReason\022\013\n\007UNKNOWN\020\000", 1872,
+    "Ack\022\014\n\004task\030\001 \001(\005\"\032\n\010Shutdown\022\016\n\006reason\030"
+    "\001 \001(\t\"\r\n\013ShutdownAck\"\031\n\tTerminate\022\014\n\004tas"
+    "k\030\001 \001(\005\"\034\n\014TerminateAck\022\014\n\004task\030\001 \001(\005\"D\n"
+    "\010LifeSign\022\016\n\006tstamp\030\001 \002(\004\022(\n\006status\030\002 \001("
+    "\0162\030.xbe.messages.StatusCode*\036\n\tErrorCode"
+    "\022\021\n\rUNKNOWN_ERROR\020\000*9\n\020ExecuteNakReason\022"
+    "\022\n\016UNKNOWN_REASON\020\000\022\021\n\rRESOURCE_BUSY\020\001*="
+    "\n\nStatusCode\022\010\n\004IDLE\020\000\022\013\n\007RUNNING\020\001\022\014\n\010F"
+    "INISHED\020\002\022\n\n\006FAILED\020\003*\031\n\nFailReason\022\013\n\007U"
+    "NKNOWN\020\000", 1888,
   &protobuf_BuildDesc_xbemsg_2eproto_AssignGlobalDescriptors);
 }
 
@@ -1437,9 +1439,11 @@ const ::google::protobuf::Reflection* FailedAck::GetReflection() const {
 
 // ===================================================================
 
+const ::std::string Shutdown::_default_reason_;
 Shutdown::Shutdown()
   : ::google::protobuf::Message(),
-    _cached_size_(0) {
+    _cached_size_(0),
+    reason_(const_cast< ::std::string*>(&_default_reason_)) {
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -1447,12 +1451,16 @@ void Shutdown::InitAsDefaultInstance() {}
 
 Shutdown::Shutdown(const Shutdown& from)
   : ::google::protobuf::Message(),
-    _cached_size_(0) {
+    _cached_size_(0),
+    reason_(const_cast< ::std::string*>(&_default_reason_)) {
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
   MergeFrom(from);
 }
 
 Shutdown::~Shutdown() {
+  if (reason_ != &_default_reason_) {
+    delete reason_;
+  }
   if (this != default_instance_) {
   }
 }
