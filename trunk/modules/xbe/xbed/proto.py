@@ -606,10 +606,15 @@ class XenBEEDaemonProtocolFactory(XenBEEProtocolFactory):
                              XenBEEClientProtocol, client)
 
     def instanceMessage(self, transport, msg, inst):
-        self.__messageHelper(inst, msg, transport,
-                             self.__instanceProtocols,
-                             self.__instanceMutex,
-                             XenBEEInstanceProtocol, inst)
+         self.__messageHelper(inst, msg, transport,
+                              self.__instanceProtocols,
+                              self.__instanceMutex,
+                              XenBEEInstanceProtocolPB, inst)
+#        self.__messageHelper(inst, msg, transport,
+#                             self.__instanceProtocols,
+#                             self.__instanceMutex,
+#                             XenBEEInstanceProtocol, inst)
+
 
     def certificateChecker(self, certificate):
         return XBEDaemon.getInstance().userDatabase.check_x509(certificate)
