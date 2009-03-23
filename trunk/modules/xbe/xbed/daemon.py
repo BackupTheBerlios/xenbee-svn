@@ -247,6 +247,7 @@ class XBEDaemon(Daemon):
             port = int(port)
         except ValueError, e:
             port = 61613
+	queue = queue.lstrip("/")
         log.info(" connecting to %s:%d using %s, queue: %s" % (
             host, port, proto, queue
         ))
@@ -260,7 +261,7 @@ class XBEDaemon(Daemon):
         reactor.connectTCP(host,
                            port,
                            XenBEEDaemonProtocolFactory(self,
-                                                       queue="/queue"+queue,
+                                                       queue="/queue/"+queue,
                                                        topic="/queue/xenbee.daemons",
                                                        user=self.opts.stomp_user,
                                                        password=self.opts.stomp_pass))

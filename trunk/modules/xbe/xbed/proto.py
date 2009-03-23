@@ -238,6 +238,9 @@ class XenBEEInstanceProtocol(protocol.XMLProtocol):
         # TODO: implement
         raise NotImplementedError("queryStatus is not yet implemented")
 
+    def requestStatus(self, caller, executeStatusTask=False):
+        caller.signalStatus("n/a")
+
     #########################
     #                       #
     # Message handling part #
@@ -421,13 +424,11 @@ class XenBEEInstanceProtocolPB(BaseProtocol):
         self.sendMessage(msg.SerializeToString())
 
     def executeTask(self, caller, jsdl):
-        self.log.info("sending request for execution to instance")
         #TODO: translate jsdl to PB
-        
         msg = xbemsg.XbeMessage()
         msg.header.conversation_id = self._conv_id
         msg.execute.main_task.executable = "/bin/sleep"
-        msg.execute.main_task.argument.append("10")
+        msg.execute.main_task.argument.append("600")
         e = msg.execute.main_task.env.add()
         e.key = "HOME"
         e.val = "/"
@@ -435,6 +436,7 @@ class XenBEEInstanceProtocolPB(BaseProtocol):
         msg.execute.status_task.executable = "/bin/ps"
         msg.execute.status_task.argument.append("aux")
         
+        self.log.info("sending request for execution to instance: %s", msg)
         self.sendMessage(msg.SerializeToString())
 
     def requestTermination(self, caller, reason=None):
@@ -483,7 +485,7 @@ class XenBEEInstanceProtocolPB(BaseProtocol):
         
         inst = InstanceManager.getInstance().lookupByUUID(self._instanceID)
         if inst is not None:
-            inst.task.signalExecutionEnd(exitcode)
+            inst.task.signalExecutionEnd(finished.exitcode)
 
         return ack
 
@@ -618,7 +620,6 @@ class XenBEEDaemonProtocolFactory(XenBEEProtocolFactory):
                              self.__instanceProtocols,
                              self.__instanceMutex,
                              XenBEEInstanceProtocol, inst)
-
 
     def certificateChecker(self, certificate):
         return XBEDaemon.getInstance().userDatabase.check_x509(certificate)

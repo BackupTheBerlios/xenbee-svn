@@ -456,16 +456,16 @@ class SetUpActivity(TaskActivity):
         # setup the jail
         #
         ##############################################
-        log.info("setting up the jail")
-        try:
-            self._handle_location(self._jail_location, self.spool)
-        except Exception, e:
-            log.debug("jail could not be retrieved: %s", e)
-            raise e
+#        log.info("setting up the jail")
+#        try:
+#            self._handle_location(self._jail_location, self.spool)
+#        except Exception, e:
+#            log.debug("jail could not be retrieved: %s", e)
+#            raise e
+#
+#        self.check_abort()
 
-        self.check_abort()
-
-        self.jail_path = os.path.join(self.spool, "jail")
+        self.jail_path = self.spool #os.path.join(self.spool, "jail")
         if not os.path.exists(self.jail_path):
             raise StageInFailed("jail setup failed", self.jail_path)
 
@@ -505,18 +505,18 @@ class SetUpActivity(TaskActivity):
         # get the control scripts
         #
         ##############################################
-        if instdesc.get("Control") is not None:
-            self._prepare_control_files(instdesc.get("Control"))
-
-        self.check_abort()
+#        if instdesc.get("Control") is not None:
+#            self._prepare_control_files(instdesc.get("Control"))
+#
+#        self.check_abort()
 
         
         try:
             # mount the proc filesystem
-            subprocess.check_call(["mount", "-t", "proc", "proc", self.proc_path])
+#            subprocess.check_call(["mount", "-t", "proc", "proc", self.proc_path])
             
             # call the pre-setup hooks, they may modify the image in place
-            self._call_scripts(os.path.join(self.xbe_spool, "scripts"), "pre-setup", self.jail_path)
+#            self._call_scripts(os.path.join(self.xbe_spool, "scripts"), "pre-setup", self.jail_path)
         
             img = self._mount_image(os.path.join(self.xbe_spool, "image"), self.image_fs_type, self.xbe_spool)
             try:
@@ -540,15 +540,16 @@ class SetUpActivity(TaskActivity):
                 self.check_abort()
 
                 # setup scripts
-                self._call_scripts(os.path.join(self.xbe_spool, "scripts"), "setup", self.jail_path,
-                                   self.make_path_relative_to(img.mount_point(),
-                                                              self.jail_path) # passed to the script
-                )
+#                self._call_scripts(os.path.join(self.xbe_spool, "scripts"), "setup", self.jail_path,
+#                                   self.make_path_relative_to(img.mount_point(),
+#                                                              self.jail_path) # passed to the script
+#                )
             finally:
                 del img
         finally:
+            pass
             # umount the proc filesystem
-            subprocess.check_call(["umount", self.proc_path])
+#            subprocess.check_call(["umount", self.proc_path])
 
         self.check_abort()
 
@@ -676,7 +677,7 @@ class TearDownActivity(TaskActivity):
         """
         self.check_abort()
 
-        self.jail_path = os.path.join(self.spool, "jail")
+        self.jail_path = self.spool #os.path.join(self.spool, "jail")
         self.proc_path = os.path.join(self.jail_path, 'proc')
         self.xbe_spool = os.path.join(self.jail_path, "var", "xbe-spool")
 
@@ -708,15 +709,15 @@ class TearDownActivity(TaskActivity):
  
         try:
             # mount the proc filesystem
-            subprocess.check_call(["mount", "-t", "proc", "proc", self.proc_path])
+#            subprocess.check_call(["mount", "-t", "proc", "proc", self.proc_path])
 
             img = self._mount_image(os.path.join(self.xbe_spool, "image"), self.image_fs_type,
                                     self.xbe_spool)
             try:
-                self._call_scripts(os.path.join(self.xbe_spool, "scripts"), "cleanup", self.jail_path,
-                                   # passed to the script
-                                   self.make_path_relative_to(img.mount_point(), self.jail_path)
-                )
+#                self._call_scripts(os.path.join(self.xbe_spool, "scripts"), "cleanup", self.jail_path,
+#                                   # passed to the script
+#                                   self.make_path_relative_to(img.mount_point(), self.jail_path)
+#                )
 
                 # staging operations
                 if stagings is not None:
@@ -729,10 +730,11 @@ class TearDownActivity(TaskActivity):
                 del img
 
             # call the post-cleanup hooks, they may for instance transfer the image to some place
-            self._call_scripts(os.path.join(self.xbe_spool, "scripts"), "post-cleanup", self.jail_path)
+#            self._call_scripts(os.path.join(self.xbe_spool, "scripts"), "post-cleanup", self.jail_path)
         finally:
+            pass
             # umount the proc filesystem
-            subprocess.check_call(["umount", self.proc_path])
+#            subprocess.check_call(["umount", self.proc_path])
         
         log.info("un-preparation complete!")
 

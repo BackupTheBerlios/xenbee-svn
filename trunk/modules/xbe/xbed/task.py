@@ -166,7 +166,7 @@ class Task(TaskFSM):
                                 "Terminated",
                                 "Failed"]
 
-    def getStatusInfo(self, executeStatusTask=False, timeoutSeconds=5):
+    def getStatusInfo(self, executeStatusTask=False, timeoutSeconds=1):
         """Return all possible information about this task in a
         dictionary.
         
@@ -208,12 +208,13 @@ class Task(TaskFSM):
                         self.log.debug("waiting for status reply from instance")
                         self.__statusTaskWaiter.wait(timeoutSeconds)
                         data, time = self.__statusTaskWaiter.data()
+                        self.log.debug("status reply from instance was: %s", data)
                         info["StatusTaskData"] = data
                         info["StatusTaskTime"] = time
                     finally:
                         self.mtx.acquire()
                 except Exception, e:
-                    self.log.warn("status request failed: %s", e)
+                    self.log.warn("status request from instance failed: %s", e)
         finally:
             self.mtx.release()
         return info
@@ -493,7 +494,8 @@ class Task(TaskFSM):
 
     def _cb_assign_files_to_inst(self):
         inst = self.__inst
-        spool = os.path.join(self.__spool, "jail", "var", "xbe-spool")
+#        spool = os.path.join(self.__spool, "jail", "var", "xbe-spool")
+        spool = os.path.join(self.__spool, "var", "xbe-spool")
 
         # images, kernel and probably initrd
         images = []
@@ -520,6 +522,7 @@ class Task(TaskFSM):
 
     def __configureInstance(self, inst, jsdl):
         # set the uri through which i am reachable
+
         inst.config().addToKernelCommandLine(XBE_SERVER="%s" % (
             XBEDaemon.getInstance().opts.uri
         ))
@@ -528,15 +531,15 @@ class Task(TaskFSM):
         ))
 
         # new environment variables
-        inst.config().addToKernelCommandLine(XBE_BROKER="%s" % (
-            XBEDaemon.getInstance().broker
-        ))
-        inst.config().addToKernelCommandLine(XBE_DAEMON="%s" % (
-            XBEDaemon.getInstance().qname
-        ))
-        inst.config().addToKernelCommandLine(XBE_INSTID="%s" % (
-            inst.id()
-        ))
+#        inst.config().addToKernelCommandLine(XBE_BROKER="%s" % (
+#            XBEDaemon.getInstance().broker
+#        ))
+#        inst.config().addToKernelCommandLine(XBE_DAEMON="%s" % (
+#            XBEDaemon.getInstance().qname
+#        ))
+#        inst.config().addToKernelCommandLine(XBE_INSTID="%s" % (
+#            inst.id()
+#        ))
 
         try:
             ncpus = int(jsdl.lookup_path("JobDefinition/JobDescription/Resources/"+
