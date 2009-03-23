@@ -38,6 +38,11 @@ function save_config() {
         echo "broker = $XBE_BROKER" >> "$config"
         echo "xbed = $XBE_DAEMON" >> "$config"
         echo "name = xenbee.instance.$XBE_INSTID" >> "$config"
+        if [ -n "$XBE_VERBOSE" ]; then
+            echo "verbose = $XBE_VERBOSE" >> "$config"
+        else
+            echo "verbose = 2" >> "$config"
+        fi
     fi
 }
 
