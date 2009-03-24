@@ -1,7 +1,7 @@
 #ifndef XBE_TASK_HPP
 #define XBE_TASK_HPP 1
 
-#include <xbe/common.hpp>
+#include <xbe/common/common.hpp>
 #include <xbe/TaskData.hpp>
 
 #include <string>

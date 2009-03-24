@@ -140,7 +140,7 @@ endif(ENABLE_LOGGING)
 
 set(INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in    ${CMAKE_CURRENT_BINARY_DIR}/config.h)
+#configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in    ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/libxbe.pc.in   ${CMAKE_CURRENT_BINARY_DIR}/libxbe.pc)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/etc/xbe/xbeinstd.rc.in ${CMAKE_CURRENT_BINARY_DIR}/etc/xbe/xbeinstd.rc)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/etc/init.d/xbeinstd.in ${CMAKE_CURRENT_BINARY_DIR}/etc/init.d/xbeinstd)
@@ -189,6 +189,7 @@ if(ENABLE_LOGGING)
 endif(ENABLE_LOGGING)
 
 # Reflect the package structure
+add_subdirectory(common)
 add_subdirectory(xbe)
 add_subdirectory(xbeinstd)
 

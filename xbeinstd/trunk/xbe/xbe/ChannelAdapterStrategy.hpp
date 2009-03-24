@@ -11,7 +11,7 @@
 #include <seda/IEvent.hpp>
 #include <seda/SystemEvent.hpp>
 
-#include <xbe/common.hpp>
+#include <xbe/common/common.hpp>
 
 namespace xbe {
     class ChannelAdapterStrategy : public seda::StrategyDecorator,

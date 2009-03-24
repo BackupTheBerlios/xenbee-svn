@@ -1,7 +1,7 @@
 #ifndef XBE_TERMINATE_EVENT_HPP
 #define XBE_TERMINATE_EVENT_HPP 1
 
-#include <xbe/common.hpp>
+#include <xbe/common/common.hpp>
 #include <xbe/event/DecodedMessageEvent.hpp>
 
 namespace xbe {

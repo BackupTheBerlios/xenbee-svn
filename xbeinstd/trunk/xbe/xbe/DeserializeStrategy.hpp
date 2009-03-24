@@ -2,7 +2,7 @@
 #define XBE_DESERIALIZE_STRATEGY_HPP 1
 
 #include <seda/ForwardStrategy.hpp>
-#include <xbe/common.hpp>
+#include <xbe/common/common.hpp>
 
 namespace xbe {
     class DeserializeStrategy : public seda::ForwardStrategy {

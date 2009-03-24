@@ -5,7 +5,7 @@
 #include <mqs/MQSException.hpp>
 #include <cms/CMSException.h>
 
-#include <xbe/logging.hpp>
+#include <xbe/common/common.hpp>
 #include <seda/IEvent.hpp>
 #include <seda/SystemEvent.hpp>
 

@@ -1,7 +1,7 @@
 #ifndef XBE_LIFE_SIGN_EVENT_HPP
 #define XBE_LIFE_SIGN_EVENT_HPP 1
 
-#include <xbe/common.hpp>
+#include <xbe/common/common.hpp>
 #include <sys/time.h>
 #include <xbe/event/DecodedMessageEvent.hpp>
 

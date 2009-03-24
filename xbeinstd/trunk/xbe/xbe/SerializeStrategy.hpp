@@ -1,8 +1,8 @@
 #ifndef XBE_SERIALIZE_STRATEGY_HPP
 #define XBE_SERIALIZE_STRATEGY_HPP 1
 
+#include <xbe/common/common.hpp>
 #include <seda/ForwardStrategy.hpp>
-#include <xbe/common.hpp>
 
 namespace xbe {
     class SerializeStrategy : public seda::ForwardStrategy {

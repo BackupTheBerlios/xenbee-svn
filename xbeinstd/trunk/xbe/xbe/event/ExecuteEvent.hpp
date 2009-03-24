@@ -1,9 +1,9 @@
 #ifndef XBE_EXECUTE_EVENT_HPP
 #define XBE_EXECUTE_EVENT_HPP 1
 
+#include <xbe/common/common.hpp>
 #include <xbe/event/DecodedMessageEvent.hpp>
 #include <xbe/TaskData.hpp>
-#include <xbe/common.hpp>
 #include <boost/filesystem.hpp>
 
 #include <string>

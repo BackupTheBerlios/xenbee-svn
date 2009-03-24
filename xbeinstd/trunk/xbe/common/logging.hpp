@@ -1,5 +1,5 @@
-#ifndef XBE_LOGGING_HPP
-#define XBE_LOGGING_HPP 1
+#ifndef XBE_COMMON_LOGGING_HPP
+#define XBE_COMMON_LOGGING_HPP 1
 
 /* Logging */
 #if ENABLE_LOGGING == 1
