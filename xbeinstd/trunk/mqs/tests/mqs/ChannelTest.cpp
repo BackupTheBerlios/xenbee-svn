@@ -41,7 +41,7 @@ void ChannelTest::testStart_illegal_URI_Throws() {
 void ChannelTest::testStartNoQueueServer_Throws() {
     MQS_LOG_INFO("**** TEST: testStartNoQueueServer_Throws");
 
-    doStart("tcp://127.0.0.1:56565", "tests.mqs?type=queue");
+    doStart("tcp://127.0.0.1:12345", "tests.mqs?type=queue");
 }
 
 void ChannelTest::testStart_Timeout_Throws() {
@@ -235,6 +235,10 @@ void ChannelTest::testMultipleSender() {
 
 void ChannelTest::onException(const cms::CMSException &e) {
     MQS_LOG_WARN("think about a way how to check this automatically" << e.getMessage());
+    _exceptionArrived = true;
+}
+void ChannelTest::onException(const mqs::MQSException &e) {
+    MQS_LOG_WARN("think about a way how to check this automatically" << e.what());
     _exceptionArrived = true;
 }
 

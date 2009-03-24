@@ -61,11 +61,19 @@ Channel::~Channel() {
         stop();
     } catch (cms::CMSException& e) {
         MQS_LOG_ERROR("error during channel stop procedure: " << e.getStackTraceString());
+        if (_exceptionListener)
+            _exceptionListener->onException(e);
     } catch (const std::exception& e) {
         MQS_LOG_ERROR("error during channel stop procedure: " << e.what());
+        if (_exceptionListener)
+            _exceptionListener->onException(MQSException(e.what()));
     } catch (...) {
         MQS_LOG_ERROR("unknown error during channel stop procedure");
+        if (_exceptionListener)
+            _exceptionListener->onException(MQSException("unknown error during destructor"));
     }
+    _exceptionListener = NULL;
+    _messageListener = NULL;
 }
 
 void
@@ -364,7 +372,7 @@ Channel::setMessageListener(mqs::MessageListener *listener) {
 }
 
 void
-Channel::setExceptionListener(cms::ExceptionListener *listener) {
+Channel::setExceptionListener(mqs::ExceptionListener *listener) {
     boost::unique_lock<boost::recursive_mutex> lock(_mtx);
     _exceptionListener = listener;
 }
@@ -442,7 +450,7 @@ Channel::onException(const cms::CMSException &ex) {
             MQS_LOG_WARN("registered exception handler threw exception, discarding it!");
         }
     } else {
-        MQS_LOG_WARN("no message listener registered to handle: " << ex.getMessage() << " " << ex.getStackTraceString());
+        MQS_LOG_WARN("no exception listener registered to handle: " << ex.getMessage() << " " << ex.getStackTraceString());
     }
 }
 

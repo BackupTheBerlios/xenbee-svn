@@ -19,6 +19,7 @@
 #include <mqs/MQSException.hpp>
 #include <mqs/Observable.hpp>
 #include <mqs/Message.hpp>
+#include <mqs/ExceptionListener.hpp>
 #include <mqs/MessageListener.hpp>
 #include <mqs/MessageSequenceGenerator.hpp>
 
@@ -165,7 +166,7 @@ namespace mqs {
            to remove any listener
         */
         void setMessageListener(mqs::MessageListener* listener);
-        void setExceptionListener(cms::ExceptionListener* listener);
+        void setExceptionListener(mqs::ExceptionListener* listener);
       
         void addIncomingQueue(const mqs::Destination& dst);
         void delIncomingQueue(const mqs::Destination& dst);
@@ -225,7 +226,7 @@ namespace mqs {
         std::list<Consumer> _consumer;
 
         mqs::MessageListener* _messageListener;
-        cms::ExceptionListener* _exceptionListener;
+        mqs::ExceptionListener* _exceptionListener;
 
         boost::mutex _incomingMessagesMutex;
         boost::condition_variable _incomingMessagesCondition;
