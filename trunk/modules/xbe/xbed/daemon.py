@@ -113,21 +113,21 @@ class XBEDaemon(Daemon):
         if self.opts.pidfile is not None:
             self.pidfile = self.opts.pidfile
         elif cp.has_option("global", "pidfile"):
-            self.pidfile = cp.get("global", "pidfile")
+            self.pidfile = os.path.expanduser(cp.get("global", "pidfile"))
         else:
             self.pidfile = "/var/run/xbed.pid"
 
         if self.opts.backend is None:
             self.opts.backend = cp.get("global", "backend")
         if self.opts.schema_dir is None:
-            self.opts.schema_dir = cp.get("global", "schema_dir")
+            self.opts.schema_dir = os.path.expanduser(cp.get("global", "schema_dir"))
         if self.opts.spool is None:
-            self.opts.spool = cp.get("global", "spool")
+            self.opts.spool = os.path.expanduser(cp.get("global", "spool"))
 
         if self.opts.log_conf is None:
-            self.opts.log_conf = cp.get("logging", "logconf")
+            self.opts.log_conf = os.path.expanduser(cp.get("logging", "logconf"))
         if self.opts.log_conf is None and self.opts.log_file is None:
-            self.opts.log_file = cp.get("logging", "logfile")
+            self.opts.log_file = os.path.expanduser(cp.get("logging", "logfile"))
 
         if self.opts.uri is None:
             self.opts.uri = cp.get("stomp", "uri")
@@ -137,16 +137,16 @@ class XBEDaemon(Daemon):
             self.opts.stomp_pass = cp.get("stomp", "pass")
 
         if self.opts.x509 is None:
-            self.opts.x509 = cp.get("security", "pubkey")
+            self.opts.x509 = os.path.expanduser(cp.get("security", "pubkey"))
         if self.opts.p_key is None:
-            self.opts.p_key = cp.get("security", "privkey")
+            self.opts.p_key = os.path.expanduser(cp.get("security", "privkey"))
         if self.opts.ca_cert is None:
-            self.opts.ca_cert = cp.get("security", "cacert")
+            self.opts.ca_cert = os.path.expanduser(cp.get("security", "cacert"))
         if self.opts.user_db is None:
-            self.opts.user_db = cp.get("security", "userdb")
+            self.opts.user_db = os.path.expanduser(cp.get("security", "userdb"))
 
         if self.opts.mac_file is None:
-            self.opts.mac_file = cp.get("instance", "macdb")
+            self.opts.mac_file = os.path.expanduser(cp.get("instance", "macdb"))
         if self.opts.jail_package is None:
             self.opts.jail_package = cp.get("instance", "jailpkg")
 
