@@ -15,8 +15,6 @@ list(REMOVE_DUPLICATES hdrs1)
 list(REMOVE_DUPLICATES hdrs2)
 list(REMOVE_DUPLICATES srcs)
 
-add_subdirectory(common)
-
 ADD_LIBRARY(xbe ${srcs})
 
 install(FILES ${hdrs1} DESTINATION include/xbe)

@@ -190,6 +190,7 @@ if(ENABLE_LOGGING)
 endif(ENABLE_LOGGING)
 
 # Reflect the package structure
+add_subdirectory(xbe/common)
 add_subdirectory(xbe)
 add_subdirectory(xbeinstd)
 
