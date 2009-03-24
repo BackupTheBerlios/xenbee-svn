@@ -5,28 +5,29 @@
 #include <xbe/common.hpp>
 
 namespace xbe {
-  namespace tests {
-    class ChannelAdapterStrategyTest : public CppUnit::TestFixture {
-      CPPUNIT_TEST_SUITE( xbe::tests::ChannelAdapterStrategyTest );
-      CPPUNIT_TEST( testSendViaChannelText );
-      CPPUNIT_TEST( testSendViaStageMessage );
-      CPPUNIT_TEST( testSendViaStageNoneMessage );
-      CPPUNIT_TEST_SUITE_END();
+    namespace tests {
+        class ChannelAdapterStrategyTest : public CppUnit::TestFixture {
+            CPPUNIT_TEST_SUITE( xbe::tests::ChannelAdapterStrategyTest );
+            CPPUNIT_TEST( testConnectionFailed );
+            CPPUNIT_TEST( testSendViaChannelText );
+            CPPUNIT_TEST( testSendViaStageMessage );
+            CPPUNIT_TEST( testSendViaStageNoneMessage );
+            CPPUNIT_TEST_SUITE_END();
 
-    public:
-      ChannelAdapterStrategyTest();
-      void setUp();
-      void tearDown();
+            public:
+            ChannelAdapterStrategyTest();
+            void setUp();
+            void tearDown();
 
-    protected:
-      void testSendViaChannelText();
-
-      void testSendViaStageMessage();
-      void testSendViaStageNoneMessage();
-    private:
-      XBE_DECLARE_LOGGER();
-    };
-  }
+            protected:
+            void testSendViaChannelText();
+            void testConnectionFailed();
+            void testSendViaStageMessage();
+            void testSendViaStageNoneMessage();
+            private:
+            XBE_DECLARE_LOGGER();
+        };
+    }
 }
 
 #endif // !XBE_TESTS_CHANNEL_ADAPTER_STRATEGY_TEST_HPP

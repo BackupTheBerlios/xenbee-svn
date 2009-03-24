@@ -26,7 +26,7 @@ TaskTest::testNoExecutable() {
     Task task(TaskData("not-existing-executable"));
     task.run();
     task.wait();
-    CPPUNIT_ASSERT_EQUAL(task.status(), Task::FINISHED);
+    CPPUNIT_ASSERT_EQUAL(task.status(), Task::FAILED);
     CPPUNIT_ASSERT(task.exitcode() == 127);
 }
 

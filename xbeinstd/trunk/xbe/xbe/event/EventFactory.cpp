@@ -26,6 +26,10 @@ IEvent::Ptr EventFactory::newEvent(const mqs::Message &m) const throw (UnknownCo
 IEvent::Ptr EventFactory::newEvent(const cms::CMSException& ex) const {
     return seda::IEvent::Ptr(new ErrorEvent(ex.getMessage(), ex.getStackTraceString()));
 }
+IEvent::Ptr EventFactory::newEvent(const mqs::MQSException& ex) const {
+    return seda::IEvent::Ptr(new ErrorEvent(ex.what(), "stack trace unavailable"));
+}
+
 
 IEvent::Ptr EventFactory::newEvent(const std::exception& ex) const {
     return seda::IEvent::Ptr(new ErrorEvent(ex.what()));

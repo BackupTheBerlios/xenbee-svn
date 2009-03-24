@@ -2,6 +2,7 @@
 #define XBE_EVENT_FACTORY_HPP 1
 
 #include <mqs/Message.hpp>
+#include <mqs/MQSException.hpp>
 #include <cms/CMSException.h>
 
 #include <xbe/logging.hpp>
@@ -32,6 +33,7 @@ namespace xbe {
 
                 seda::IEvent::Ptr newEvent(const mqs::Message&) const throw(UnknownConversion);
                 seda::IEvent::Ptr newEvent(const cms::CMSException&) const;
+                seda::IEvent::Ptr newEvent(const mqs::MQSException&) const;
                 seda::IEvent::Ptr newEvent(const std::exception&) const;
 
                 seda::SystemEvent::Ptr newErrorEvent(const std::string& msg, const std::string& additionalData="") const;

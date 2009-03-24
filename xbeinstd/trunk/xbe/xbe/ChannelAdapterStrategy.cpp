@@ -50,6 +50,14 @@ void ChannelAdapterStrategy::onException(const cms::CMSException& ex) {
     }
 }
 
+void ChannelAdapterStrategy::onException(const mqs::MQSException& ex) {
+    try {
+        StrategyDecorator::perform(EventFactory::instance().newEvent(ex));
+    } catch (...) {
+        XBE_LOG_WARN("error event lost due to error during push");
+    }
+}
+
 void ChannelAdapterStrategy::perform(const seda::IEvent::Ptr& e) {
     XBE_LOG_DEBUG("handling event: " << e->str());
     // handle messages

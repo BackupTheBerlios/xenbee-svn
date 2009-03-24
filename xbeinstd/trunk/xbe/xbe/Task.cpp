@@ -127,6 +127,13 @@ void Task::run() {
         _status = UNKNOWN;
         _exitCode = 0;
 
+        // check if we can access the file at all
+        if (! _taskData.executable()) {
+            _status = FAILED;
+            _exitCode = 127;
+            return;
+        }
+
         // no thread running, create it
         _thread = boost::thread(boost::ref(*this));
 

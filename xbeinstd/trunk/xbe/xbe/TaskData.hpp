@@ -36,6 +36,8 @@ namespace xbe {
             boost::filesystem::path & wd() { return _workingDir; }
             void wd(const boost::filesystem::path & p) { _workingDir = p; }
 
+            bool executable() const;
+
             const uid_t & uid() const { return _uid; }
             uid_t & uid() { return _uid; }
 

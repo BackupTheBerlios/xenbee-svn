@@ -2,7 +2,7 @@
 #define XBE_CHANNEL_ADAPTER_STRATEGY_HPP 1
 
 #include <mqs/MessageListener.hpp>
-#include <cms/ExceptionListener.h>
+#include <mqs/ExceptionListener.hpp>
 
 #include <mqs/Channel.hpp>
 
@@ -16,7 +16,7 @@
 namespace xbe {
     class ChannelAdapterStrategy : public seda::StrategyDecorator,
                                    public mqs::MessageListener,
-                                   public cms::ExceptionListener {
+                                   public mqs::ExceptionListener {
 
     public:
         ChannelAdapterStrategy(const std::string& name,
@@ -54,6 +54,7 @@ namespace xbe {
          *  ExceptionListener interface
          ***********************************/
         void onException(const cms::CMSException& ex);
+        void onException(const mqs::MQSException& ex);
     private:
         XBE_DECLARE_LOGGER();
         mqs::Channel::Ptr _channel;
