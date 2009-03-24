@@ -2,7 +2,7 @@
 #define XBE_TESTS_TASK_TEST_HPP 1
 
 #include <cppunit/extensions/HelperMacros.h>
-#include <xbe/common.hpp>
+#include <xbe/common/common.hpp>
 
 namespace xbe {
   namespace tests {

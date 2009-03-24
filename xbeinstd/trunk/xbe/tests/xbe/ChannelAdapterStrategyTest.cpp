@@ -3,7 +3,7 @@
 
 #include <string>
 
-#include <xbe/common.hpp>
+#include <xbe/common/common.hpp>
 #include <xbe/ChannelAdapterStrategy.hpp>
 #include <xbe/event/MessageEvent.hpp>
 
