@@ -56,6 +56,7 @@ if ( PKG_CONFIG_FOUND )
 
    pkg_check_modules (SEDA REQUIRED libseda>=1.1)
    message(STATUS "SEDA: -I${SEDA_INCLUDE_DIRS} -L${SEDA_LIBRARY_DIRS} -l${SEDA_LIBRARIES}")
+
    # The log4cpp package config is broken, doesn't set static library -
    # therefore do it manually here.
    set(LOG4CPP_STATIC_LIBRARIES log4cpp.a)
@@ -213,6 +214,7 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/etc/init.d/xbeinstd DESTINATION etc/in
     OWNER_WRITE OWNER_READ OWNER_EXECUTE
     GROUP_READ GROUP_EXECUTE
     WORLD_READ WORLD_EXECUTE)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/config.h RENAME xbe-config.h DESTINATION include/xbe)
 
 # CPACK packaging
 INCLUDE(InstallRequiredSystemLibraries)

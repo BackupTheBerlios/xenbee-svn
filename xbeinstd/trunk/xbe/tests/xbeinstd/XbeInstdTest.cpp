@@ -2,7 +2,7 @@
 #include <iostream>
 #include <unistd.h>
 
-#include <xbe/common.hpp>
+#include <xbe/common/common.hpp>
 #include <xbe/XbeInstd.hpp>
 #include <xbe/TaskData.hpp>
 #include <xbe/event/ShutdownAckEvent.hpp>

@@ -52,10 +52,10 @@ add_test(msgencodingtest ${CMAKE_CURRENT_BINARY_DIR}/msgencodingtest)
 add_test(tasktest ${CMAKE_CURRENT_BINARY_DIR}/tasktest)
 
 
-target_link_libraries(channeltest xbe)
+target_link_libraries(channeltest xbe-common xbe)
 #target_link_libraries(xmlsecuritytest xbe)
 #target_link_libraries(xmlendecodetest xbe)
-target_link_libraries(msgencodingtest xbe)
+target_link_libraries(msgencodingtest xbe-common xbe)
 #target_link_libraries(xbetest xbe)
 #target_link_libraries(xml-test-tool xbe)
-target_link_libraries(tasktest xbe)
+target_link_libraries(tasktest xbe-common xbe)

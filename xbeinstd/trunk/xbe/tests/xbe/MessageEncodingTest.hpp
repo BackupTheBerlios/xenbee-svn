@@ -2,7 +2,7 @@
 #define XBE_TESTS_MESSAGE_ENCODING_TEST_HPP 1
 
 #include <cppunit/extensions/HelperMacros.h>
-#include <xbe/common.hpp>
+#include <xbe/common/common.hpp>
 
 #include <seda/Stage.hpp>
 #include <seda/EventCountStrategy.hpp>

@@ -2,7 +2,7 @@
 #include <iostream>
 #include <unistd.h>
 
-#include <xbe/common.hpp>
+#include <xbe/common/common.hpp>
 #include <xbe/TaskData.hpp>
 #include <xbe/SerializeStrategy.hpp>
 #include <xbe/DeserializeStrategy.hpp>

@@ -1,4 +1,4 @@
-#include <xbe/common.hpp>
+#include <xbe/common/common.hpp>
 
 #include <cppunit/extensions/TestFactoryRegistry.h>
 #include <cppunit/ui/text/TestRunner.h>
