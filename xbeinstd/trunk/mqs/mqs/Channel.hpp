@@ -17,6 +17,8 @@
 #include <mqs/Destination.hpp>
 #include <mqs/BrokerURI.hpp>
 #include <mqs/MQSException.hpp>
+#include <mqs/ChannelNotStarted.hpp>
+#include <mqs/ChannelConnectionFailed.hpp>
 #include <mqs/Observable.hpp>
 #include <mqs/Message.hpp>
 #include <mqs/ExceptionListener.hpp>
@@ -34,12 +36,6 @@ namespace cms {
 
 namespace mqs {
     class Response;
-
-    class ChannelNotStarted : public MQSException {
-    public:
-        ChannelNotStarted() : MQSException("channel not started yet") {}
-        virtual ~ChannelNotStarted() throw () {}
-    };
 
     class Channel : public cms::MessageListener,
                     public cms::ExceptionListener,
@@ -73,7 +69,7 @@ namespace mqs {
         /**
            Start the channel and its underlying components.
         */
-        void start(bool doFlush=false);
+        void start(bool doFlush=false) throw(ChannelConnectionFailed);
 
         /**
            Returns true iff the channel has been started, false otherwise.

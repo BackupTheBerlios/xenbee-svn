@@ -3,6 +3,7 @@
 
 #include <mqs/Channel.hpp>
 #include <mqs/Response.hpp>
+#include <mqs/ChannelConnectionFailed.hpp>
 
 // activemq includes
 #include <cms/Connection.h>
@@ -16,6 +17,7 @@
 #include <cms/Topic.h>
 #include <cms/Session.h>
 #include <activemq/core/ActiveMQConnectionFactory.h>
+#include <activemq/network/SocketException.h>
 
 #if PERFORM_CHANNEL_IS_STARTED_CHECK
 #define ENSURE_STARTED() ensure_started()
@@ -77,7 +79,7 @@ Channel::~Channel() {
 }
 
 void
-Channel::start(bool doFlush) {
+Channel::start(bool doFlush) throw(ChannelConnectionFailed) {
     boost::unique_lock<boost::recursive_mutex> lock(_mtx);
 
     if (_started)
@@ -87,12 +89,36 @@ Channel::start(bool doFlush) {
     std::tr1::shared_ptr<ActiveMQConnectionFactory> connectionFactory(new ActiveMQConnectionFactory(_broker.value));
   
     MQS_LOG_DEBUG("creating connection");
-    _connection.reset(connectionFactory->createConnection());
+    try {
+        _connection.reset(connectionFactory->createConnection());
+    } catch (const activemq::network::SocketException &e) {
+        MQS_LOG_WARN("could not connect to broker: " << e.getMessage());
+        throw ChannelConnectionFailed(e.getMessage());
+    } catch (const cms::CMSException &e) {
+        MQS_LOG_WARN("could not connect to broker: " << e.getMessage());
+        throw ChannelConnectionFailed(e.getMessage());
+    } catch (const std::exception &e) {
+        MQS_LOG_WARN("could not connect to broker: " << e.what());
+        throw ChannelConnectionFailed(e.what());
+    } catch(...) {
+        MQS_LOG_WARN("could not connect to broker due to an unknown reason");
+        throw ChannelConnectionFailed();
+    }
 
     _connection->setExceptionListener(this);
     MQS_LOG_DEBUG("starting underlying connection");
-    _connection->start();
-  
+    try {
+        _connection->start();
+    } catch (const cms::CMSException &e) {
+        MQS_LOG_WARN("could not start connection to broker: " << e.getMessage());
+        throw ChannelConnectionFailed(e.getMessage());
+    } catch (const std::exception &e) {
+        MQS_LOG_WARN("could not connect to broker: " << e.what());
+        throw ChannelConnectionFailed(e.what());
+    } catch (...) {
+        MQS_LOG_WARN("could not start connection to broker due to an unknown reason");
+        throw ChannelConnectionFailed();
+    }
   
     // Create a Session
     _session.reset(_connection->createSession(cms::Session::AUTO_ACKNOWLEDGE));
@@ -111,7 +137,8 @@ Channel::start(bool doFlush) {
     } else if (deliveryMode == "non-persistent") {
         _producer->setDeliveryMode(cms::DeliveryMode::NON_PERSISTENT);
     } else {
-        throw MQSException("invalid delivery mode: "+deliveryMode);
+        MQS_LOG_WARN("invalid delivery-mode `" << deliveryMode << "', falling back to non-persistent delivery.");
+        _producer->setDeliveryMode(cms::DeliveryMode::NON_PERSISTENT);
     }
     _producer->setDisableMessageID(_outQueue.getBooleanProperty("disableMessageID", false));
     _producer->setDisableMessageTimeStamp(_outQueue.getBooleanProperty("disableMessageTimeStamp", false));
@@ -121,11 +148,12 @@ Channel::start(bool doFlush) {
     _started = true;
     _state = CONNECTED;
     addIncomingQueue(_inQueue);
-    notify();
 
     if (doFlush) {
         flushMessages();
     }
+
+    notify();
 }
 
 void
@@ -146,10 +174,10 @@ Channel::stop() {
     _producer_destination.reset();
     _producer.reset();
     
-    if (_session.get())
+    if (_session)
         _session->close();
 
-    if (_connection.get())
+    if (_connection)
         _connection->close();
 
     _session.reset();
@@ -447,7 +475,7 @@ Channel::onException(const cms::CMSException &ex) {
         try {
             _exceptionListener->onException(ex);
         } catch(...) {
-            MQS_LOG_WARN("registered exception handler threw exception, discarding it!");
+            MQS_LOG_WARN("exception listener could not handle: " << ex.getMessage() << " " << ex.getStackTraceString());
         }
     } else {
         MQS_LOG_WARN("no exception listener registered to handle: " << ex.getMessage() << " " << ex.getStackTraceString());

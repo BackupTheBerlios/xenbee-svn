@@ -1,6 +1,7 @@
 # -*- mode: cmake; -*-
 
 set(mqstest_src main.cpp
+  PropertiesTest.hpp PropertiesTest.cpp
   MessageSequenceGeneratorTest.hpp MessageSequenceGeneratorTest.cpp 
   DestinationTest.hpp DestinationTest.cpp
   ChannelTest.hpp ChannelTest.cpp

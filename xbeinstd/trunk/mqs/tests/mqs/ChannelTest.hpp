@@ -10,14 +10,14 @@ namespace mqs {
     namespace tests {
         class ChannelTest : public CppUnit::TestFixture, public mqs::ExceptionListener {
             CPPUNIT_TEST_SUITE( mqs::tests::ChannelTest );
-            CPPUNIT_TEST_EXCEPTION( testStart_illegal_URI_Throws, cms::CMSException );
+            CPPUNIT_TEST_EXCEPTION( testStart_illegal_URI_Throws, mqs::ChannelConnectionFailed );
             CPPUNIT_TEST( testSendReceiveSimple );
             CPPUNIT_TEST( testMessageId );
             CPPUNIT_TEST( testStartStopChannel );
             CPPUNIT_TEST( testSendReply );
             CPPUNIT_TEST( testAddDelIncomingQueue );
             CPPUNIT_TEST( testMultipleSender );
-            CPPUNIT_TEST_EXCEPTION( testStartNoQueueServer_Throws, cms::CMSException );
+            CPPUNIT_TEST( testStartNoQueueServer );
             //      CPPUNIT_TEST_EXCEPTION( testStart_Timeout_Throws, cms::CMSException );
 //            CPPUNIT_TEST( testConnectionLoss ); // this function should be last because the broker server needs to be shut down
             CPPUNIT_TEST_SUITE_END();
@@ -36,7 +36,7 @@ namespace mqs {
             void testSendReceiveSimple();
             void testMessageId();
             void testSendReply();
-            void testStartNoQueueServer_Throws();
+            void testStartNoQueueServer();
             void testStartStopChannel();
             void testAddDelIncomingQueue();
             void testConnectionLoss();
