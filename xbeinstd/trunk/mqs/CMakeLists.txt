@@ -87,7 +87,7 @@ endif (CMAKE_USE_PTHREADS_INIT)
 
 ## check for boost
 set(BOOST_ROOT "/usr/local")
-set(Boost_ADDITIONAL_VERSIONS "1.36.0" "1.36")
+set(Boost_ADDITIONAL_VERSIONS "1.36.0" "1.36" "1.37.0" "1.37")
 set(Boost_FIND_QUIETLY false)
 set(Boost_USE_STATIC_LIBS ON)
 include(FindBoost)
@@ -114,7 +114,7 @@ else(ENABLE_LOGGING)
 endif(ENABLE_LOGGING)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in    ${CMAKE_CURRENT_BINARY_DIR}/config.h)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/libmqs.pc.in   ${CMAKE_CURRENT_BINARY_DIR}/libmqs.pc)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/libmqs.pc.in   ${CMAKE_CURRENT_BINARY_DIR}/libmqs.pc @ONLY)
 
 ADD_DEFINITIONS( -DHAVE_CONFIG_H )
 
