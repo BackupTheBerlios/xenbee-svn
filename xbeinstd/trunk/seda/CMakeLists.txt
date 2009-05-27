@@ -46,6 +46,9 @@ else(UNIX)
   # make windows happy
 endif(UNIX)
 
+## add doxygen support
+include(TargetDoc OPTIONAL)
+
 ## PkgConfig is helpful
 include(FindPkgConfig)
 if ( PKG_CONFIG_FOUND )
@@ -102,6 +105,9 @@ endif (Boost_MINOR_VERSION LESS 36)
 message(STATUS "Boost: -I${Boost_INCLUDE_DIRS} -L${Boost_LIBRARY_DIRS} -l${Boost_LIBRARIES}")
 
 if (ENABLE_COMM_LIB)
+  # we need zeromq
+  include (FindZeroMQ)
+
   # google protocol buffers
   include(FindProtocolBuffers)
   if (PB_FOUND)
