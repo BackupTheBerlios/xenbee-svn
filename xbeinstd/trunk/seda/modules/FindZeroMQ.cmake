@@ -10,13 +10,13 @@
 
 if(ZMQ_HOME MATCHES "")
   if("" MATCHES "$ENV{ZMQ_HOME}")
-    message(STATUS "ZMQ_HOME env is not set, setting it to /usr/local")
+#    message(STATUS "ZMQ_HOME env is not set, setting it to /usr/local")
     set (ZMQ_HOME "/usr/local")
   else("" MATCHES "$ENV{ZMQ_HOME}")
     set (ZMQ_HOME "$ENV{ZMQ_HOME}")
   endif("" MATCHES "$ENV{ZMQ_HOME}")
 else(ZMQ_HOME MATCHES "")
-  message(STATUS "ZMQ_HOME is not empty: \"${ZMQ_HOME}\"")
+#  message(STATUS "ZMQ_HOME is not empty: \"${ZMQ_HOME}\"")
   set (ZMQ_HOME "${ZMQ_HOME}")
 endif(ZMQ_HOME MATCHES "")
 

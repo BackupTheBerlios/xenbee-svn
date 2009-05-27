@@ -8,13 +8,13 @@
 
 if(PB_HOME MATCHES "")
   if("" MATCHES "$ENV{PB_HOME}")
-    message(STATUS "PB_HOME env is not set, setting it to /usr/local")
+#   message(STATUS "PB_HOME env is not set, setting it to /usr/local")
     set (PB_HOME "/usr/local")
   else("" MATCHES "$ENV{PB_HOME}")
     set (PB_HOME "$ENV{PB_HOME}")
   endif("" MATCHES "$ENV{PB_HOME}")
 else(PB_HOME MATCHES "")
-  message(STATUS "PB_HOME is not empty: \"${PB_HOME}\"")
+#  message(STATUS "PB_HOME is not empty: \"${PB_HOME}\"")
   set (PB_HOME "${PB_HOME}")
 endif(PB_HOME MATCHES "")
 
