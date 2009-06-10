@@ -23,6 +23,7 @@ std::string SedaMessage::encode() const throw(EncodingError) {
     m.set_to(to());
     m.set_from(from());
     m.set_payload(payload());
+
     std::string serializedMessage;
     m.SerializeToString(&serializedMessage);
     return serializedMessage;

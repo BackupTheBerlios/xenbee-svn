@@ -18,11 +18,23 @@ namespace comm {
 
         explicit
         SedaMessage()
-            : from_(""), to_(""), payload_(""), valid_(false) {}
+            : from_(address_type()), to_(address_type()), payload_(payload_type()), valid_(false) {}
         SedaMessage(const address_type & from, const address_type & to, const payload_type & payload)
             : from_(from), to_(to), payload_(payload), valid_(true) { }
 
+        SedaMessage(const SedaMessage &other)
+            : from_(other.from()), to_(other.to()), payload_(other.payload()), valid_(other.is_valid()) {}
         virtual ~SedaMessage() {}
+
+        const SedaMessage &operator=(const SedaMessage &rhs) {
+          if (this != &rhs) {
+            from_ = rhs.from();
+            to_ = rhs.to();
+            payload_ = rhs.payload();
+            valid_ = rhs.is_valid();
+          }
+          return *this;
+        }
 
         virtual void decode(const std::string&) throw(DecodingError);
         virtual std::string encode() const throw(EncodingError);
@@ -31,6 +43,7 @@ namespace comm {
         const address_type & to() const { return to_; }
         const payload_type & payload() const { return payload_; }
         bool is_valid() const { return valid_; }
+
     private:
         address_type from_;
         address_type to_;
