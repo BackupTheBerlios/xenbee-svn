@@ -2,9 +2,9 @@
 #define SEDA_LOGGING_HPP 1
 
 /* Logging */
-#if ENABLE_LOGGING == 1
+#if SEDA_ENABLE_LOGGING == 1
 
-#if HAVE_LOG4CXX
+#if SEDA_HAVE_LOG4CXX
 #include <log4cxx/logger.h>
 
 #define SEDA_LDECLARE_LOGGER(logger)           ::log4cxx::LoggerPtr logger
@@ -27,7 +27,7 @@
 #define SEDA_LOG_ERROR(msg) SEDA_LLOG_ERROR(seda_logger, msg)
 #define SEDA_LOG_FATAL(msg) SEDA_LLOG_FATAL(seda_logger, msg)
 
-#elif HAVE_LOG4CPP /* ! HAVE_LOG4CXX */
+#elif SEDA_HAVE_LOG4CPP
 
 #include <log4cpp/Category.hh>
 #include <log4cpp/convenience.h>
@@ -55,13 +55,13 @@
 #else
 
 #warn Logging has been enabled, but no usable logging mechanism available, disabling it!
-#undef ENABLE_LOGGING
-#define ENABLE_LOGGING 0
+#undef SEDA_ENABLE_LOGGING
+#define SEDA_ENABLE_LOGGING 0
 
-#endif // HAVE_LOG4CPP
-#endif // ENABLE_LOGGING == 1
+#endif // SEDA_HAVE_LOG4CPP
+#endif // SEDA_ENABLE_LOGGING == 1
 
-#if ENABLE_LOGGING == 0 /* ! ENABLE_LOGGING */
+#if SEDA_ENABLE_LOGGING == 0
 
 #define SEDA_LDECLARE_LOGGER(logger)   void* __seda_unused_##logger
 #define SEDA_LDEFINE_LOGGER(logger, h)

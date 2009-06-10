@@ -131,7 +131,7 @@ else(ENABLE_LOGGING)
   set(ENABLE_LOGGING)
 endif(ENABLE_LOGGING)
 
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in    ${CMAKE_CURRENT_BINARY_DIR}/config.h)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in    ${CMAKE_CURRENT_BINARY_DIR}/seda/seda-config.h)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/libseda.pc.in   ${CMAKE_CURRENT_BINARY_DIR}/libseda.pc @ONLY)
 
 ADD_DEFINITIONS( -DHAVE_CONFIG_H )
