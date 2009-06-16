@@ -1,6 +1,6 @@
 # -*- mode: cmake; -*-
 
-set(sedaCommTest_src main.cpp
+set(sedaCommTest_src main.cpp EncoderTest.cpp
 )
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
