@@ -109,7 +109,7 @@ if (ENABLE_COMM_LIB)
   include (FindZeroMQ)
   if (ZMQ_FOUND)
   else (ZMQ_FOUND)
-    message(ERROR "ZeroMQ could not be found!")
+    message(FATAL_ERROR "ZeroMQ could not be found!")
   endif (ZMQ_FOUND)
 
   # google protocol buffers
