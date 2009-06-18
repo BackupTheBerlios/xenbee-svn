@@ -5,7 +5,7 @@ project(libseda)
 set(CMAKE_VERBOSE_MAKEFILE true)
 
 set(V_MAJOR 1)
-set(V_MINOR 1)
+set(V_MINOR 2)
 set(V_PATCH 0)
 
 # add a path where some libraries might be stored
