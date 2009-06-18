@@ -70,17 +70,19 @@ ELSE(WIN32)
     )
 ENDIF(WIN32)
 
+if(ZMQ_SERVER)
+  message(STATUS "ZeroMQ-server found at: ${ZMQ_SERVER}")
+endif(ZMQ_SERVER)
+
 # if the include and the program are found then we have it
 if(ZMQ_LIBRARY AND ZMQ_INCLUDE_DIR)
   message(STATUS "Found ZeroMQ: I:${ZMQ_INCLUDE_DIR} L:${ZMQ_LIBRARY}")
   set(ZMQ_FOUND "YES")
 else(ZMQ_LIBRARY AND ZMQ_INCLUDE_DIR)
   message(STATUS "ZeroMQ could not be found, try setting ZMQ_HOME (value=\"${ZMQ_HOME}\").")
+  set(ZMQ_FOUND "NO")
 endif(ZMQ_LIBRARY AND ZMQ_INCLUDE_DIR)
 
-if(ZMQ_SERVER)
-  message(STATUS "ZeroMQ-server found at: ${ZMQ_SERVER}")
-endif(ZMQ_SERVER)
 
 MARK_AS_ADVANCED(
   ZMQ_HOME

@@ -107,6 +107,10 @@ message(STATUS "Boost: -I${Boost_INCLUDE_DIRS} -L${Boost_LIBRARY_DIRS} -l${Boost
 if (ENABLE_COMM_LIB)
   # we need zeromq
   include (FindZeroMQ)
+  if (ZMQ_FOUND)
+  else (ZMQ_FOUND)
+    message(ERROR "ZeroMQ could not be found!")
+  endif (ZMQ_FOUND)
 
   # google protocol buffers
   include(FindProtocolBuffers)
@@ -223,7 +227,7 @@ else (ENABLE_UNIT_TESTS)
   message("  unit tests: no")
 endif (ENABLE_UNIT_TESTS)
 if (ENABLE_COMM_LIB)
-  message("  with libsedaComm: yes: yes")
+  message("  with libsedaComm: yes")
 else (ENABLE_COMM_LIB)
   message("  with libsedaComm: no")
 endif (ENABLE_COMM_LIB)
