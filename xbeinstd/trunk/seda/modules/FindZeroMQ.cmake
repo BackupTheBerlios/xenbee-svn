@@ -22,9 +22,16 @@ SET(_zmq_LIBRARIES_SEARCH_DIRS
   /usr/lib
   )
 
+SET(_zmq_BINARY_SEARCH_DIRS
+  ${CMAKE_BINARY_PATH}
+  /usr/local/lib
+  /usr/lib
+  )
+
 IF( NOT $ENV{ZMQ_HOME} STREQUAL "" )
     SET(_zmq_INCLUDE_SEARCH_DIRS $ENV{ZMQ_HOME}/include ${_zmq_INCLUDE_SEARCH_DIRS})
-    SET(_zmq_LIBRARIES_SEARCH_DIRS $ENV{ZMQ_HOME}/lib ${_zmq_INCLUDE_SEARCH_DIRS})
+    SET(_zmq_LIBRARIES_SEARCH_DIRS $ENV{ZMQ_HOME}/lib ${_zmq_LIBRARIES_SEARCH_DIRS})
+    SET(_zmq_BINARY_SEARCH_DIRS $ENV{ZMQ_HOME}/lib ${_zmq_BINARY_SEARCH_DIRS})
     SET(_zmq_HOME $ENV{ZMQ_HOME})
   ENDIF( NOT $ENV{ZMQ_HOME} STREQUAL "" )
 
@@ -33,12 +40,17 @@ IF( NOT $ENV{ZMQ_HOME} STREQUAL "" )
   ENDIF( NOT $ENV{ZMQ_INCLUDEDIR} STREQUAL "" )
 
   IF( NOT $ENV{ZMQ_LIBRARYDIR} STREQUAL "" )
-    SET(_zmq_LIBRARIES_SEARCH_DIRS $ENV{ZMQ_LIBRARYDIR} ${_zmq_INCLUDE_SEARCH_DIRS})
+    SET(_zmq_LIBRARIES_SEARCH_DIRS $ENV{ZMQ_LIBRARYDIR} ${_zmq_LIBRARIES_SEARCH_DIRS})
   ENDIF( NOT $ENV{ZMQ_LIBRARYDIR} STREQUAL "" )
+
+  IF( NOT $ENV{ZMQ_BINARYDIR} STREQUAL "" )
+    SET(_zmq_BINARY_SEARCH_DIRS $ENV{ZMQ_LIBRARYDIR} ${_zmq_BINARY_SEARCH_DIRS})
+  ENDIF( NOT $ENV{ZMQ_BINARYDIR} STREQUAL "" )
 
   IF( ZMQ_HOME )
     SET(_zmq_INCLUDE_SEARCH_DIRS ${ZMQ_HOME}/include ${_zmq_INCLUDE_SEARCH_DIRS})
     SET(_zmq_LIBRARIES_SEARCH_DIRS ${ZMQ_HOME}/lib ${_zmq_LIBRARIES_SEARCH_DIRS})
+    SET(_zmq_BINARY_SEARCH_DIRS ${ZMQ_HOME}/lib ${_zmq_BINARY_SEARCH_DIRS})
     SET(_zmq_HOME ${ZMQ_HOME})
   ENDIF( ZMQ_HOME )
 
@@ -66,28 +78,17 @@ IF(WIN32)
     NAMES
     zmq_server.exe
     PATHS
-    ${ZMQ_HOME}/bin
-    ${CMAKE_BINARY_PATH}
-    "[HKEY_CURRENT_USER\\zmq\\bin]"
-    /usr/local/bin
-    /usr/bin
-    PATH_SUFFIXES
-    bin
+    ${_zmq_BINARY_SEARCH_PATH}
     DOC "Location of the zmq_server"
-    )
+  )
 ELSE(WIN32)
   FIND_FILE(ZMQ_SERVER
     NAMES
     zmq_server
     PATHS
-    ${ZMQ_HOME}/bin
-    ${CMAKE_BINARY_PATH}
-    /usr/local/bin
-    /usr/bin
-    PATH_SUFFIXES
-    bin
+    ${_zmq_BINARY_SEARCH_PATH}
     DOC "Location of the zmq_server"
-    )
+  )
 ENDIF(WIN32)
 
 if(ZMQ_SERVER)
