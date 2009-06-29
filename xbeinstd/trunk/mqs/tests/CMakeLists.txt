@@ -3,7 +3,11 @@
 # add the CPPUNIT stuff
 include_directories(${CPPUNIT_INCLUDE_DIRS})
 link_directories(${CPPUNIT_LIBRARY_DIRS})
-link_libraries(-Wl,-Bstatic ${CPPUNIT_STATIC_LDFLAGS} -Wl,-Bdynamic)
+if(CPPUNIT_STATIC_LIBS STREQUAL "")
+  link_libraries(${CPPUNIT_LIBRARIES} dl)
+else(CPPUNIT_STATIC_LIBS STREQUAL "")
+  link_libraries(-Wl,-Bstatic ${CPPUNIT_STATIC_LDFLAGS} -Wl,-Bdynamic)
+endif(CPPUNIT_STATIC_LIBS STREQUAL "")
 
 set(dirs "mqs;")
 foreach(DIR ${dirs})
