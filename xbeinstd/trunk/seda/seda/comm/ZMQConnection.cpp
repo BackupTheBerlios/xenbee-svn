@@ -11,7 +11,8 @@ ZMQConnection::ZMQConnection(const std::string &locator, const std::string &name
     dispatcher_(2),
     locator_(locator.c_str()),
     io_thread_(0),
-    api_(0)
+    api_(0),
+    incoming_queue_(-1)
 {}
 
 ZMQConnection::~ZMQConnection()
@@ -24,8 +25,7 @@ void ZMQConnection::start() {
   io_thread_ = zmq::io_thread_t::create(&dispatcher_);
   api_ = zmq::api_thread_t::create(&dispatcher_, &locator_);
   std::string qname(std::string("Q_") + name_);
-  api_->create_queue(qname.c_str(), zmq::scope_global, in_iface_.c_str(), io_thread_, 1, &io_thread_);
-
+  incoming_queue_ = api_->create_queue(qname.c_str(), zmq::scope_global, in_iface_.c_str(), io_thread_, 1, &io_thread_);
 }
 
 void ZMQConnection::stop() {
@@ -54,4 +54,15 @@ ZMQConnection::exchange_t ZMQConnection::locate(const SedaMessage::address_type 
     eid = it->second;
   }
   return eid;
+}
+
+int ZMQConnection::receive(SedaMessage &msg, bool block) {
+  zmq::message_t m;
+  const int code = api_->receive(&m, block);
+  if (code == incoming_queue_) {
+    // message seems to be ok
+    std::string payload((const char*)m.data(), m.size());
+    msg.decode(payload);
+  }
+  return code;
 }

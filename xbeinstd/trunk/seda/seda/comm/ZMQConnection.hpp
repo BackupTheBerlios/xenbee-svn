@@ -26,6 +26,7 @@ namespace comm {
   class ZMQConnection {
   public:
     typedef int exchange_t;
+    typedef int queue_t;
     typedef std::map<SedaMessage::address_type, exchange_t> address_map_t;
 
     ZMQConnection(const std::string &locator, const std::string &name, const std::string &in_interface, const std::string &out_interface);
@@ -35,6 +36,7 @@ namespace comm {
     void stop();
 
     void send(const seda::comm::SedaMessage &);
+    int receive(seda::comm::SedaMessage &m, bool block = true);
 
   protected:
     exchange_t locate(const SedaMessage::address_type &);
@@ -49,6 +51,7 @@ namespace comm {
     zmq::i_thread *io_thread_;
     zmq::api_thread_t *api_;
 
+    queue_t incoming_queue_;
     address_map_t exchanges_;
   };
 }
