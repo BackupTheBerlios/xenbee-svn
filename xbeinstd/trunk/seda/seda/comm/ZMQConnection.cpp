@@ -8,28 +8,47 @@ ZMQConnection::ZMQConnection(const std::string &locator, const std::string &name
     name_(name),
     in_iface_(in_interface),
     out_iface_(out_interface),
-    dispatcher_(2),
-    locator_(locator.c_str()),
+    dispatcher_(0),
+    locator_(0),
     io_thread_(0),
     api_(0),
     incoming_queue_(-1)
 {}
 
-ZMQConnection::~ZMQConnection()
-{}
+ZMQConnection::~ZMQConnection() {
+  try {
+    stop();
+  } catch(...) {
+    // ignore
+  }
+}
 
 void ZMQConnection::start() {
+  assert(dispatcher_ == 0);
+  assert(locator_ == 0);
   assert(io_thread_ == 0);
   assert(api_ == 0);
 
-  io_thread_ = zmq::io_thread_t::create(&dispatcher_);
-  api_ = zmq::api_thread_t::create(&dispatcher_, &locator_);
+  dispatcher_ = new zmq::dispatcher_t(2);
+  locator_ = new zmq::locator_t(locator_host_.c_str());
+  io_thread_ = zmq::io_thread_t::create(dispatcher_);
+  api_ = zmq::api_thread_t::create(dispatcher_, locator_);
   std::string qname(std::string("Q_") + name_);
   incoming_queue_ = api_->create_queue(qname.c_str(), zmq::scope_global, in_iface_.c_str(), io_thread_, 1, &io_thread_);
 }
 
 void ZMQConnection::stop() {
-
+  if (dispatcher_) {
+    delete dispatcher_;
+  }
+  if (locator_) {
+    delete locator_;
+  }
+  dispatcher_ = 0;
+  locator_ = 0;
+  io_thread_ = 0;
+  api_ = 0;
+  incoming_queue_ = -1;
 }
 
 void ZMQConnection::send(const seda::comm::SedaMessage &msg) {
@@ -61,8 +80,8 @@ int ZMQConnection::receive(SedaMessage &msg, bool block) {
   const int code = api_->receive(&m, block);
   if (code == incoming_queue_) {
     // message seems to be ok
-    std::string payload((const char*)m.data(), m.size());
-    msg.decode(payload);
+    std::string data((const char*)m.data(), m.size());
+    msg.decode(data);
   }
   return code;
 }

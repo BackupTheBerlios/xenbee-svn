@@ -46,8 +46,8 @@ namespace comm {
     std::string in_iface_;
     std::string out_iface_;
 
-    zmq::dispatcher_t dispatcher_;
-    zmq::locator_t locator_;
+    zmq::dispatcher_t *dispatcher_;
+    zmq::locator_t *locator_;
     zmq::i_thread *io_thread_;
     zmq::api_thread_t *api_;
 
