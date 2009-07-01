@@ -1,6 +1,8 @@
 #include "SedaMessage.hpp"
 #include "seda-msg.pb.h"
 
+#include <sstream>
+
 using namespace seda::comm;
 
 void SedaMessage::decode(const std::string &s) throw(DecodingError) {
@@ -27,4 +29,10 @@ std::string SedaMessage::encode() const throw(EncodingError) {
     std::string serializedMessage;
     m.SerializeToString(&serializedMessage);
     return serializedMessage;
+}
+
+std::string SedaMessage::str() const {
+  std::stringstream sstr;
+  sstr << "SedaMessage: " << from() << " --> " << to() << ": " << payload() << std::endl;
+  return sstr.str();
 }

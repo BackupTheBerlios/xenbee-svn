@@ -36,6 +36,7 @@ namespace comm {
           return *this;
         }
 
+        std::string str() const;
         virtual void decode(const std::string&) throw(DecodingError);
         virtual std::string encode() const throw(EncodingError);
 
