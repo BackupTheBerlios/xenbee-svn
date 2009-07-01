@@ -7,7 +7,9 @@
 namespace seda { namespace comm { namespace tests {
   class ZMQConnectionTest : public CppUnit::TestFixture {
     CPPUNIT_TEST_SUITE( seda::comm::tests::ZMQConnectionTest );
+    CPPUNIT_TEST( testAbortException );
     CPPUNIT_TEST( testSendReceive );
+    CPPUNIT_TEST( testStartStop );
     CPPUNIT_TEST_SUITE_END();
 
     private:
@@ -20,6 +22,8 @@ namespace seda { namespace comm { namespace tests {
     protected:
     SEDA_DECLARE_LOGGER();
     void testSendReceive();
+    void testStartStop();
+    void testAbortException();
   };
 }}}
 
