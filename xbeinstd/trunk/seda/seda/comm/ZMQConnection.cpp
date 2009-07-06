@@ -1,4 +1,6 @@
 #include "ZMQConnection.hpp"
+
+#include <unistd.h>
 #include <utility> // std::make_pair
 
 using namespace seda::comm;
@@ -49,6 +51,8 @@ void ZMQConnection::stop() {
   io_thread_ = 0;
   api_ = 0;
   incoming_queue_ = -1;
+
+  sleep(1);
 }
 
 void ZMQConnection::send(const seda::comm::SedaMessage &msg) {
