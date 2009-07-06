@@ -40,19 +40,22 @@ void ZMQConnection::start() {
 }
 
 void ZMQConnection::stop() {
-  if (dispatcher_) {
-    delete dispatcher_;
-  }
   if (locator_) {
     delete locator_;
+    locator_ = 0;
   }
-  dispatcher_ = 0;
-  locator_ = 0;
+  if (dispatcher_) {
+    delete dispatcher_;
+    dispatcher_ = 0;
+  }
+  /*
+  if (io_thread_) {
+    delete io_thread_;
+  }
+  */
   io_thread_ = 0;
   api_ = 0;
   incoming_queue_ = -1;
-
-  sleep(1);
 }
 
 void ZMQConnection::send(const seda::comm::SedaMessage &msg) {
