@@ -28,10 +28,12 @@ SET(_zmq_BINARY_SEARCH_DIRS
   /usr/lib
   )
 
+message("ZMQ_HOME = $ENV{ZMQ_HOME}")
+
 IF( NOT $ENV{ZMQ_HOME} STREQUAL "" )
     SET(_zmq_INCLUDE_SEARCH_DIRS $ENV{ZMQ_HOME}/include ${_zmq_INCLUDE_SEARCH_DIRS})
     SET(_zmq_LIBRARIES_SEARCH_DIRS $ENV{ZMQ_HOME}/lib ${_zmq_LIBRARIES_SEARCH_DIRS})
-    SET(_zmq_BINARY_SEARCH_DIRS $ENV{ZMQ_HOME}/lib ${_zmq_BINARY_SEARCH_DIRS})
+    SET(_zmq_BINARY_SEARCH_DIRS $ENV{ZMQ_HOME}/bin ${_zmq_BINARY_SEARCH_DIRS})
     SET(_zmq_HOME $ENV{ZMQ_HOME})
   ENDIF( NOT $ENV{ZMQ_HOME} STREQUAL "" )
 
@@ -44,7 +46,7 @@ IF( NOT $ENV{ZMQ_HOME} STREQUAL "" )
   ENDIF( NOT $ENV{ZMQ_LIBRARYDIR} STREQUAL "" )
 
   IF( NOT $ENV{ZMQ_BINARYDIR} STREQUAL "" )
-    SET(_zmq_BINARY_SEARCH_DIRS $ENV{ZMQ_LIBRARYDIR} ${_zmq_BINARY_SEARCH_DIRS})
+    SET(_zmq_BINARY_SEARCH_DIRS $ENV{ZMQ_BINARYDIR} ${_zmq_BINARY_SEARCH_DIRS})
   ENDIF( NOT $ENV{ZMQ_BINARYDIR} STREQUAL "" )
 
   IF( ZMQ_HOME )
@@ -57,7 +59,8 @@ IF( NOT $ENV{ZMQ_HOME} STREQUAL "" )
 # find the include files
 FIND_PATH(ZMQ_INCLUDE_DIR
   NAMES  zmq/message.hpp
- PATHS   ${_zmq_INCLUDE_SEARCH_DIRS}
+  PATHS ${_zmq_INCLUDE_SEARCH_DIRS}
+  NO_DEFAULT_PATH
 )
 
 # locate the library
@@ -70,6 +73,7 @@ ENDIF(WIN32)
 FIND_LIBRARY(ZMQ_LIBRARY
   NAMES ${ZMQ_LIBRARY_NAMES}
   PATHS ${_zmq_LIBRARIES_SEARCH_DIRS}
+  NO_DEFAULT_PATH
 )
 
 # try to locate the zmq_server
@@ -78,7 +82,7 @@ IF(WIN32)
     NAMES
     zmq_server.exe
     PATHS
-    ${_zmq_BINARY_SEARCH_PATH}
+    ${_zmq_BINARY_SEARCH_DIRS}
     DOC "Location of the zmq_server"
   )
 ELSE(WIN32)
@@ -86,7 +90,7 @@ ELSE(WIN32)
     NAMES
     zmq_server
     PATHS
-    ${_zmq_BINARY_SEARCH_PATH}
+    ${_zmq_BINARY_SEARCH_DIRS}
     DOC "Location of the zmq_server"
   )
 ENDIF(WIN32)
