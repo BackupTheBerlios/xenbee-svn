@@ -46,7 +46,7 @@ void ChannelAdapterStrategy::onException(const cms::CMSException& ex) {
     try {
         StrategyDecorator::perform(EventFactory::instance().newEvent(ex));
     } catch (...) {
-        XBE_LOG_WARN("error event lost due to error during push");
+        XBE_LOG_WARN("could not transform cms::exception to event: " << ex.getMessage());
     }
 }
 
@@ -54,7 +54,7 @@ void ChannelAdapterStrategy::onException(const mqs::MQSException& ex) {
     try {
         StrategyDecorator::perform(EventFactory::instance().newEvent(ex));
     } catch (...) {
-        XBE_LOG_WARN("error event lost due to error during push");
+        XBE_LOG_WARN("could not transform cms::exception to event: " << ex.what());
     }
 }
 
@@ -67,7 +67,7 @@ void ChannelAdapterStrategy::perform(const seda::IEvent::Ptr& e) {
                 XBE_LOG_DEBUG("sending message `"<< msgEvent->message() << "': " << msgEvent->source().str() << " -> " << msgEvent->destination().str());
                 _channel->send(mqs::Message(msgEvent->message(), msgEvent->source(), msgEvent->destination()));
             } else {
-                XBE_LOG_DEBUG("cannot send message, destination unknown!");
+                XBE_LOG_DEBUG("cannot send message, source or destination unknown!");
             }
         } catch(const cms::CMSException& ex) {
             StrategyDecorator::perform(EventFactory::instance().newEvent(ex));

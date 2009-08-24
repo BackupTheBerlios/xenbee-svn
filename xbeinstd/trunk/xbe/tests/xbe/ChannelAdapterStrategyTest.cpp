@@ -41,21 +41,22 @@ ChannelAdapterStrategyTest::testConnectionFailed() {
     XBE_LOG_DEBUG("starting stage");
     try {
         stage->start();
-        CPPUNIT_ASSERT_MESSAGE(false, "channel starting should fail");
-    } catch (const cms::CMSException &e) {
+        CPPUNIT_ASSERT_MESSAGE("channel starting should fail", false);
+    } catch (const mqs::ChannelConnectionFailed &) {
 
     }
 
     // try to send a message
     try {
         channel->send(mqs::Message("testConnectionFailed", "tests.xbe.queue", "tests.xbe.queue"));
-        CPPUNIT_ASSERT_MESSAGE(false, "sending message over a not started channel");
+        CPPUNIT_ASSERT_MESSAGE("sending message over a not started channel", false);
     } catch (const mqs::ChannelNotStarted &cns) {
         // ok, pass
     }
 
     XBE_LOG_DEBUG("waiting for a message to arrive");
     ecs->wait(1, 1000);
+    CPPUNIT_ASSERT_MESSAGE("received an unexpected message", ecs->count() == 0);
 
     stage->stop();
 }

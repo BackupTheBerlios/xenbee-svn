@@ -8,6 +8,7 @@ function(add_state_machine FSM_NAME)
     if ("${CMAKE_CURRENT_SOURCE_DIR}/${FSM_NAME}.sm" IS_NEWER_THAN "${CMAKE_CURRENT_SOURCE_DIR}/${FSM_NAME}_sm.cpp")
         add_custom_command(OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/${FSM_NAME}_sm.cpp ${CMAKE_CURRENT_SOURCE_DIR}/${FSM_NAME}_sm.h
           COMMAND ${JAVA_RUNTIME} -jar ${SMC_JAR} -c++ ${CMAKE_CURRENT_SOURCE_DIR}/${FSM_NAME}.sm
+          COMMAND ${JAVA_RUNTIME} -jar ${SMC_JAR} -graph -glevel 0 ${CMAKE_CURRENT_SOURCE_DIR}/${FSM_NAME}.sm
           COMMAND ${CMAKE_COMMAND} -E touch_nocreate ${CMAKE_CURRENT_SOURCE_DIR}/${FSM_NAME}_sm.cpp
           COMMAND ${CMAKE_COMMAND} -E touch_nocreate ${CMAKE_CURRENT_SOURCE_DIR}/${FSM_NAME}_sm.h
           WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}

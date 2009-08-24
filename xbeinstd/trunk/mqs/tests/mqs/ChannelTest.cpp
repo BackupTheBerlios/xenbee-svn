@@ -203,13 +203,36 @@ void ChannelTest::testAddDelIncomingQueue() {
 }
 
 void ChannelTest::testConnectionLoss() {
+    MQS_LOG_INFO("**** TEST: testConnectionLoss");
+
+    mqs::Channel::Ptr c(new mqs::Channel(mqs::BrokerURI(TEST_BROKER_URI), "tests.mqs"));
+    try {
+        c->start();
+        c->setExceptionListener(this);
+    } catch (const mqs::ChannelConnectionFailed &ex) {
+        MQS_LOG_INFO("connection failed with reason: " << ex.what());
+        CPPUNIT_ASSERT_MESSAGE("could not connect to message queue server", false);
+    } catch (const cms::CMSException &ex) {
+        MQS_LOG_INFO("connection failed: " << ex.getMessage() << ": " << ex.getStackTraceString());
+        CPPUNIT_ASSERT_MESSAGE("could not connect to message queue server", false);
+    } catch (const std::exception &ex) {
+        MQS_LOG_INFO("connection failed: " << ex.what());
+        CPPUNIT_ASSERT_MESSAGE("could not connect to message queue server", false);
+    } catch (...) {
+        MQS_LOG_INFO("connection failed with an unknown reason");
+        CPPUNIT_ASSERT_MESSAGE("could not connect to message queue server", false);
+    }
+ 
     MQS_LOG_INFO("think about a way how to check this automatically");
-    doStart("tests.mqs?type=queue");
     _awaitingException=true;
-    MQS_LOG_INFO("please kill the message-queue server now");
-    sleep(10);
+    for (size_t i = 0; i < 3; ++i) {
+        if (_exceptionArrived) break;
+
+        MQS_LOG_INFO("please kill the message-queue server now");
+        sleep(10);
+    }
     if (_exceptionArrived) {
-        MQS_LOG_INFO("please restart the message-queue server now");
+        MQS_LOG_INFO("you may restart the message-queue server now");
         sleep(10);
     } else {
         CPPUNIT_ASSERT_MESSAGE("Expected exception did not occur during connection loss test", false);
@@ -255,11 +278,11 @@ void ChannelTest::testMultipleSender() {
 }
 
 void ChannelTest::onException(const cms::CMSException &e) {
-    MQS_LOG_WARN("think about a way how to check this automatically" << e.getMessage());
+    MQS_LOG_WARN("think about a way how to check for this automatically: " << e.getMessage());
     _exceptionArrived = true;
 }
 void ChannelTest::onException(const mqs::MQSException &e) {
-    MQS_LOG_WARN("think about a way how to check this automatically" << e.what());
+    MQS_LOG_WARN("think about a way how to check this automatically: " << e.what());
     _exceptionArrived = true;
 }
 

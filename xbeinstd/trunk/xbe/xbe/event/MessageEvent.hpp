@@ -1,7 +1,6 @@
 #ifndef XBE_MESSAGEEVENT_HPP
 #define XBE_MESSAGEEVENT_HPP 1
 
-#include <cms/Message.h>
 #include <mqs/Destination.hpp>
 #include <seda/UserEvent.hpp>
 

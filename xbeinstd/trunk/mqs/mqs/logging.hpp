@@ -42,11 +42,11 @@
 #define MQS_DEFINE_LOGGER(hierarchy) MQS_LDEFINE_LOGGER(mqs_logger, hierarchy)
 #define MQS_INIT_LOGGER(hierarchy)   MQS_LINIT_LOGGER(mqs_logger, hierarchy)
 
-#define MQS_LLOG_DEBUG(logger, msg) LOG4CPP_DEBUG_S(logger) << msg
-#define MQS_LLOG_INFO(logger, msg)  LOG4CPP_INFO_S(logger)  << msg
-#define MQS_LLOG_WARN(logger, msg)  LOG4CPP_WARN_S(logger)  << msg
-#define MQS_LLOG_ERROR(logger, msg) LOG4CPP_ERROR_S(logger) << msg
-#define MQS_LLOG_FATAL(logger, msg) LOG4CPP_FATAL_S(logger) << msg
+#define MQS_LLOG_DEBUG(logger, msg) LOG4CPP_DEBUG_S(logger) << __PRETTY_FUNCTION__ << ":" << __LINE__ << ": " << msg
+#define MQS_LLOG_INFO(logger, msg)  LOG4CPP_INFO_S(logger)  << __PRETTY_FUNCTION__ << ":" << __LINE__ << ": " << msg
+#define MQS_LLOG_WARN(logger, msg)  LOG4CPP_WARN_S(logger)  << __PRETTY_FUNCTION__ << ":" << __LINE__ << ": " << msg
+#define MQS_LLOG_ERROR(logger, msg) LOG4CPP_ERROR_S(logger) << __PRETTY_FUNCTION__ << ":" << __LINE__ << ": " << msg
+#define MQS_LLOG_FATAL(logger, msg) LOG4CPP_FATAL_S(logger) << __PRETTY_FUNCTION__ << ":" << __LINE__ << ": " << msg
 
 #define MQS_LOG_DEBUG(msg) MQS_LLOG_DEBUG(mqs_logger, msg)
 #define MQS_LOG_INFO(msg)  MQS_LLOG_INFO(mqs_logger, msg) 

@@ -1,0 +1,129 @@
+digraph 
+XbeInstd {
+
+    node
+        [shape=record];
+
+    subgraph cluster_XbeInstdFSM {
+
+        label="XbeInstdFSM";
+
+        //-------------------------------------------------------
+        // States (Nodes)
+        //
+
+        "XbeInstdFSM::Init"
+            [label="\N"];
+
+        "XbeInstdFSM::Idle"
+            [label="\N"];
+
+        "XbeInstdFSM::Busy"
+            [label="\N"];
+
+        "XbeInstdFSM::WaitForTaskTermination"
+            [label="\N"];
+
+        "XbeInstdFSM::WaitForFinishedAck"
+            [label="\N"];
+
+        "XbeInstdFSM::Shutdown"
+            [label="\N"];
+
+        "XbeInstdFSM::Failed"
+            [label="\N"];
+
+        "XbeInstdFSM::Default"
+            [label="\N"];
+
+        //-------------------------------------------------------
+        // Transitions (Edges)
+        //
+
+        "XbeInstdFSM::Init" -> "XbeInstdFSM::Idle"
+            [label="Start"];
+
+        "XbeInstdFSM::Idle" -> "XbeInstdFSM::Busy"
+            [label="Execute"];
+
+        "XbeInstdFSM::Idle" -> "XbeInstdFSM::Idle"
+            [label="Finished"];
+
+        "XbeInstdFSM::Idle" -> "XbeInstdFSM::Idle"
+            [label="FinishedAck"];
+
+        "XbeInstdFSM::Idle" -> "XbeInstdFSM::Shutdown"
+            [label="Shutdown"];
+
+        "XbeInstdFSM::Idle" -> "XbeInstdFSM::Idle"
+            [label="StatusReq"];
+
+        "XbeInstdFSM::Idle" -> "XbeInstdFSM::Idle"
+            [label="Terminate"];
+
+        "XbeInstdFSM::Busy" -> "XbeInstdFSM::Busy"
+            [label="Execute"];
+
+        "XbeInstdFSM::Busy" -> "XbeInstdFSM::WaitForFinishedAck"
+            [label="Finished"];
+
+        "XbeInstdFSM::Busy" -> "XbeInstdFSM::Shutdown"
+            [label="Shutdown"];
+
+        "XbeInstdFSM::Busy" -> "XbeInstdFSM::Busy"
+            [label="StatusReq"];
+
+        "XbeInstdFSM::Busy" -> "XbeInstdFSM::WaitForTaskTermination"
+            [label="Terminate"];
+
+        "XbeInstdFSM::WaitForTaskTermination" -> "XbeInstdFSM::Idle"
+            [label="Finished"];
+
+        "XbeInstdFSM::WaitForTaskTermination" -> "XbeInstdFSM::WaitForTaskTermination"
+            [label="StatusReq"];
+
+        "XbeInstdFSM::WaitForTaskTermination" -> "XbeInstdFSM::WaitForTaskTermination"
+            [label="Terminate"];
+
+        "XbeInstdFSM::WaitForTaskTermination" -> "XbeInstdFSM::WaitForTaskTermination"
+            [label="Timeout"];
+        "XbeInstdFSM::WaitForTaskTermination" -> "XbeInstdFSM::Idle"
+            [label="Timeout"];
+
+        "XbeInstdFSM::WaitForFinishedAck" -> "XbeInstdFSM::Idle"
+            [label="FinishedAck"];
+
+        "XbeInstdFSM::WaitForFinishedAck" -> "XbeInstdFSM::Shutdown"
+            [label="Shutdown"];
+
+        "XbeInstdFSM::WaitForFinishedAck" -> "XbeInstdFSM::WaitForFinishedAck"
+            [label="StatusReq"];
+
+        "XbeInstdFSM::WaitForFinishedAck" -> "XbeInstdFSM::Idle"
+            [label="Terminate"];
+
+        "XbeInstdFSM::WaitForFinishedAck" -> "XbeInstdFSM::WaitForFinishedAck"
+            [label="Timeout"];
+        "XbeInstdFSM::WaitForFinishedAck" -> "XbeInstdFSM::Failed"
+            [label="Timeout"];
+
+        "XbeInstdFSM::Shutdown" -> "XbeInstdFSM::Shutdown"
+            [label="LifeSign"];
+
+        "XbeInstdFSM::Shutdown" -> "XbeInstdFSM::Shutdown"
+            [label="StatusReq"];
+
+        "XbeInstdFSM::Failed" -> "XbeInstdFSM::Failed"
+            [label="LifeSign"];
+
+        "XbeInstdFSM::Failed" -> "XbeInstdFSM::Failed"
+            [label="StatusReq"];
+
+        "XbeInstdFSM::DefaultState" -> "XbeInstdFSM::DefaultState"
+            [label="Execute"];
+
+        "XbeInstdFSM::DefaultState" -> "XbeInstdFSM::DefaultState"
+            [label="LifeSign"];
+    }
+
+}

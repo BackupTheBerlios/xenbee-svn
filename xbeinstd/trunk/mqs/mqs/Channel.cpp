@@ -59,23 +59,17 @@ Channel::Channel(const mqs::BrokerURI &broker, const mqs::Destination &in, const
 }
 
 Channel::~Channel() {
-    try {
-        stop();
-    } catch (cms::CMSException& e) {
-        MQS_LOG_ERROR("error during channel stop procedure: " << e.getStackTraceString());
-        if (_exceptionListener)
-            _exceptionListener->onException(e);
-    } catch (const std::exception& e) {
-        MQS_LOG_ERROR("error during channel stop procedure: " << e.what());
-        if (_exceptionListener)
-            _exceptionListener->onException(MQSException(e.what()));
-    } catch (...) {
-        MQS_LOG_ERROR("unknown error during channel stop procedure");
-        if (_exceptionListener)
-            _exceptionListener->onException(MQSException("unknown error during destructor"));
-    }
     _exceptionListener = NULL;
     _messageListener = NULL;
+    try {
+        stop();
+    } catch (cms::CMSException &e) {
+        MQS_LOG_ERROR("error during channel stop procedure: " << e.getStackTraceString());
+    } catch (const std::exception &e) {
+        MQS_LOG_ERROR("error during channel stop procedure: " << e.what());
+    } catch (...) {
+        MQS_LOG_ERROR("unknown error during channel stop procedure");
+    }
 }
 
 void
@@ -159,9 +153,11 @@ Channel::start(bool doFlush) throw(ChannelConnectionFailed) {
 void
 Channel::stop() {
     boost::unique_lock<boost::recursive_mutex> lock(_mtx);
+    MQS_LOG_INFO("stopping");
 
     while (!_consumer.empty()) {
         struct Consumer c = _consumer.front(); _consumer.pop_front();
+        MQS_LOG_DEBUG("removing consumer data for: " << c.mqs_destination->str());
         c.mqs_destination.reset();
         c.destination.reset();
         if (c.consumer) {
@@ -169,19 +165,32 @@ Channel::stop() {
             c.consumer->close();
             c.consumer.reset();
         }
+        MQS_LOG_DEBUG("done");
     }
 
+    MQS_LOG_DEBUG("resetting the producer");
     _producer_destination.reset();
     _producer.reset();
     
-    if (_session)
+    if (_session) {
+        MQS_LOG_DEBUG("closing the session");
         _session->close();
-
-    if (_connection)
+    }
+    if (_connection) {
+        MQS_LOG_DEBUG("closing the connection");
         _connection->close();
+    }
 
-    _session.reset();
-    _connection.reset();
+    try {
+        _session.reset();
+        _connection.reset();
+    } catch (const cms::CMSException &e) {
+        MQS_LOG_WARN("could not connect to broker: " << e.getMessage());
+    } catch (const std::exception &e) {
+        MQS_LOG_WARN("could not connect to broker: " << e.what());
+    } catch(...) {
+        MQS_LOG_WARN("could not connect to broker due to an unknown reason");
+    }
 
     _started = false;
     _state = DISCONNECTED;
