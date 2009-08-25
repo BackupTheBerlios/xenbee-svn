@@ -54,6 +54,7 @@ class XenBEEProtocol(StompClient):
     """Processing input received by the STOMP server."""
 
     def __init__(self):
+	log.debug("initializing XenBEE protocol...")
 	self.factory = None
 	StompClient.__init__(self)
 
@@ -104,6 +105,7 @@ class XenBEEProtocolFactory(StompClientFactory):
     protocol = XenBEEProtocol
 
     def __init__(self, queue, user, password="none"):
+	log.debug("initializing XenBEE protocol factory...")
 	StompClientFactory.__init__(self, user=user, password=password)
 	self.queue = queue
 

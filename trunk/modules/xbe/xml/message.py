@@ -104,7 +104,7 @@ class MessageBuilder(object):
             raise MessageParserError("the passed document must be an xml document")
 
         root, hdr, body = MessageBuilder.xml_parts(xml_document)
-        if not body or not len(body):
+        if body is None or not len(body):
             tag = None
         else:
             tag = body[0].tag

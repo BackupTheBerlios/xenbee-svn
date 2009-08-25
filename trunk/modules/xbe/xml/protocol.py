@@ -113,8 +113,6 @@ class XMLProtocol(object):
 
     def sendMessage(self, msg):
         if msg is not None:
-            assert (isinstance(msg, (etree._Element, etree._ElementTree)),
-                    "message to be sent must be XML")
             try:
                 return self.transport.write(msg)
             except Exception, e:
@@ -126,7 +124,7 @@ class XMLProtocol(object):
         else:
             xml = msg
         # validate xml against schema
-        assert (isinstance(xml, (etree._Element, etree._ElementTree)))
+        assert isinstance(xml, (etree._Element, etree._ElementTree))
         return xml
 
     def messageReceived(self, msg):
@@ -155,7 +153,7 @@ class XMLProtocol(object):
         hdr = msg.find(XBE("MessageHeader"))
         if hdr is not None:
             bod = msg.find(XBE("MessageBody"))
-            if bod and len(bod):
+            if bod is not None and len(bod):
                 return self.dispatch(bod[0], *args, **kw)
             else:
                 log.debug("got message with missing or empty body, ignoring it.")
@@ -353,7 +351,7 @@ class SecureProtocol(XMLProtocol):
             return message.EstablishMLS(securityLayer, my_state)
 
         # throw away empty messages
-        if not bod or not len(bod):
+        if bod is None or not len(bod):
             log.debug("throwing away empty message")
             return None
         

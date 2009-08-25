@@ -32,7 +32,8 @@ __author__ = "$Author: $"
 import sys, os, os.path
 
 # add some temporary module paths
-sys.path.append(os.path.expanduser(os.path.join(os.environ["XBED_HOME"], "modules")))
+xbed_home = os.environ.get("XBED_HOME") or (os.path.normpath(os.path.abspath(sys.argv[0]) + "/../.."))
+sys.path.append(os.path.expanduser(os.path.join(xbed_home, "modules")))
 do_profiling = False
 
 from xbe.xbed.daemon import main

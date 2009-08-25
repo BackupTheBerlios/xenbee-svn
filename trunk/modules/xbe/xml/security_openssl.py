@@ -341,7 +341,7 @@ class Cipher(object):
             # generate a random initial vector
             IV = hex(self.__random_value(16))[2:].rstrip("L")
             
-        assert (do_encryption is not None)
+        assert do_encryption is not None
 
         self.__do_encryption = do_encryption
         self.__key = key

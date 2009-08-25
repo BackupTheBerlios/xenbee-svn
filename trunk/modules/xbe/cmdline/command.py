@@ -182,6 +182,7 @@ class RemoteCommand(Command, SimpleCommandLineProtocol):
         cp = ConfigParser()
         self.cp = cp
         read_files = cp.read([os.path.join(os.environ.get("XBE_HOME", "/"), "etc", "xbe", "xberc"),
+#                              os.path.expanduser(os.path.join(self.__home, "etc", "xbe", "xberc")),
                               os.path.expanduser("~/.xbe/xberc"),
                               opts.config])
         if not len(read_files):
@@ -710,7 +711,8 @@ class Command_showcache(RemoteCommand):
 CommandFactory.getInstance().registerCommand(Command_showcache, "showcache", "sc")
 
 class CommandLineClient:
-    def __init__(self,out=sys.stdout,err=sys.stderr):
+    def __init__(self,home,out=sys.stdout,err=sys.stderr):
+	self.__home = home
         self.__old_out, sys.stdout = sys.stdout, out
         self.__old_err, sys.stderr = sys.stderr, err
 
@@ -719,6 +721,8 @@ class CommandLineClient:
         sys.stderr = self.__old_err
 
     def setup_logging(self, verbose=False):
+        if verbose:
+            print >>sys.stderr, "setting up logging..."
         # log to stderr
         logging.currentframe = lambda: sys._getframe(3)
         
@@ -754,7 +758,7 @@ class CommandLineClient:
                     prot, host, stomp_queue, u1, u2, u3 = network.urlparse(cmd.opts.server)
                     if prot != "stomp":
                         raise ValueError("I do not understand this wire-protocol", prot)
-                    
+                    log.debug("connecting to: %s" % cmd.opts.server)
                     from xbe.cmdline.protocol import ClientProtocolFactory, ClientXMLProtocol
                     # TODO: generate ID or use some given one
                     factory = ClientProtocolFactory(
@@ -786,7 +790,7 @@ class CommandLineClient:
             except CommandFailed, cf:
                 print >>sys.stderr, "%s:" % sys.argv[0], str(cmd), "failed (details follow)"
                 print >>sys.stderr, "\n".join([ "%s: %s" %
-                                                (sys.argv[0],s) for s in str(cf.message).split('\n')])
+                                                (sys.argv[0],s) for s in str(cf).split('\n')])
                 return 2
             except:
                 from traceback import format_exc

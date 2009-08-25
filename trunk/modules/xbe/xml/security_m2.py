@@ -256,7 +256,7 @@ class Cipher(object):
             # generate a random initial vector
             IV = self.__random_value()
             
-        assert (do_encryption is not None)
+        assert do_encryption is not None
         key, IV = map(str, (key, IV))
         if encoding is None:
             encoding = [b64decode, b64encode][do_encryption]

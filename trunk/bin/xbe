@@ -33,10 +33,10 @@ Type 'xbe help <subcommand>' for help on a specific subcommand.
 
 import sys
 import os.path
-xbe_home = os.environ.get("XBE_HOME") or (os.path.normpath(os.path.abspath(sys.argv[0]) + "../../"))
+xbe_home = os.environ.get("XBE_HOME") or (os.path.normpath(os.path.abspath(sys.argv[0]) + "/../.."))
 sys.path.append(os.path.expanduser(os.path.join(xbe_home, "modules")))
 
 if __name__ == "__main__":
     from xbe.cmdline.command import CommandLineClient
-    client = CommandLineClient()#err=open("/tmp/xbe.err", "wb"))
+    client = CommandLineClient(home=xbe_home)#err=open("/tmp/xbe.err", "wb"))
     sys.exit(client.main(sys.argv))

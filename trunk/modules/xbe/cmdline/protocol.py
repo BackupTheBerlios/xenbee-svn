@@ -42,6 +42,8 @@ class ClientXMLProtocol(protocol.XMLProtocol):
     protocol = None
     
     def __init__(self, protocolFactory=None, *protocolFactoryArgs, **protocolFactoryKwArgs):
+        log.debug("initializing client protocol")
+
         if protocolFactory:
             self.protocolFactory = protocolFactory
             self.protocolFactoryArgs = protocolFactoryArgs
@@ -89,6 +91,7 @@ class BaseCommandLineProtocol(BaseProtocol):
     connected = 0
 
     def makeConnection(self, transport):
+        log.debug("making command line protocol connection")
         if not isinstance(transport, protocol.XMLProtocol):
             raise ValueError("sorry, but I expect a XMLProtocol")
         self.transport = transport   # it should be a XML protocol
@@ -112,39 +115,53 @@ class BaseCommandLineProtocol(BaseProtocol):
         pass
 
     def cacheFile(self, uri, type, desc):
+        log.info("caching file: %s" % uri)
         msg = message.CacheFile(uri, type, desc)
+        log.debug("sending: %s" % msg.as_xml())
         self.transport.sendMessage(msg.as_xml())
 
     def cacheRemove(self, uri):
+	log.info("removing cache entry: %s" % uri)
         msg = message.CacheRemove(uri)
         self.transport.sendMessage(msg.as_xml())
 
     def requestTermination(self, ticket, remove_entry=False):
+	log.info("terminating ticket: %s" % ticket)
         if remove_entry:
             log.warn("TODO: entry removal not yet implemented upon termination")
             remove_entry = False
         msg = message.TerminateRequest(ticket, remove_entry)
+        log.debug("sending: %s" % msg.as_xml())
         self.transport.sendMessage(msg.as_xml())
 
     def requestStatus(self, ticket, remove_entry=False, execute_status_task=False):
         log.info("requesting status")
         msg = message.StatusRequest(ticket, remove_entry, execute_status_task)
+        log.debug("sending: %s" % msg.as_xml())
         self.transport.sendMessage(msg.as_xml())
 
     def requestCacheList(self):
+        log.info("requesting cache list")
         msg = message.ListCache()
+        log.debug("sending: %s" % msg.as_xml())
         self.transport.sendMessage(msg.as_xml())
 
     def requestReservation(self):
+	log.info("requesting a reservation") 
         msg = message.ReservationRequest()
+        log.debug("sending: %s" % msg.as_xml())
         self.transport.sendMessage(msg.as_xml())
 
     def confirmReservation(self, ticket, jsdl, auto_start=True):
+	log.info("confirming reservation: %s" % ticket)
         msg = message.ConfirmReservation(ticket, jsdl, auto_start)
+        log.debug("sending: %s" % msg.as_xml())
         self.transport.sendMessage(msg.as_xml())
 
     def requestStart(self, ticket):
+	log.info("requesting start of ticket: %s" % ticket)
         msg = message.StartRequest(ticket)
+        log.debug("sending: %s" % msg.as_xml())
         self.transport.sendMessage(msg.as_xml())
 
 class SimpleCommandLineProtocol(BaseCommandLineProtocol):
@@ -157,6 +174,7 @@ class ClientProtocolFactory(XenBEEProtocolFactory):
                  protocolFactory=None,
                  protocolFactoryArgs=(),
                  protocolFactoryKwArgs={}):
+        log.debug("initializing client protocol factory: id=%s,user=%s,server=%s" % (id, stomp_user, server_queue))
         XenBEEProtocolFactory.__init__(self,
                                        "/queue/xenbee.client.%s" % (id),
                                        stomp_user, stomp_pass)
@@ -168,12 +186,14 @@ class ClientProtocolFactory(XenBEEProtocolFactory):
         self.server_queue = server_queue
         self.cert = certificate
         self.ca_cert = ca_cert
+	log.debug("client protocol factory initialized")
         
     def dispatchToProtocol(self, transport, msg, domain, sourceType, sourceId=None):
         d = defer.maybeDeferred(self.xml_protocol.messageReceived, msg)
         d.addErrback(log.error)
 
     def stompConnectionMade(self, stomp_protocol):
+        log.debug("stomp connection established")
         try:
             self.xml_protocol
         except AttributeError:
