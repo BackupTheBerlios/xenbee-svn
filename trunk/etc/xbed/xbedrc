@@ -1,5 +1,5 @@
 [DEFAULT]
-etc: /root/xenbee/etc
+etc: /usr/local/xenbee/etc
 
 [global]
 pidfile: /var/run/xbed.pid
@@ -12,9 +12,9 @@ logconf: %(etc)s/xbed/logging.rc
 ;logfile: /var/log/xenbee/xbed.log
 
 [stomp]
-uri: stomp://xen-o-matic.itwm.fhrg.fraunhofer.de/xenbee.daemon.1
-user: daemon
-pass: Aefith3s
+uri: stomp://188.40.38.195/xenbee.daemon.1
+user: guest
+pass: guest
 
 [security]
 privkey: %(etc)s/xbed/xbed-key.pem
@@ -25,3 +25,5 @@ userdb: %(etc)s/xbed/allowed-users
 [instance]
 macdb: %(etc)s/xbed/mac-addresses
 jailpkg: /srv/xenbee/jail-package.tar.bz2
+bridge: virbr0
+diskproto: file

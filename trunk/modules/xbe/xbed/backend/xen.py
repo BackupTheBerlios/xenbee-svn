@@ -240,8 +240,8 @@ class Backend(object):
         try:
             self._runcmd("create", cfg_path)
         except ProcessError, e:
-            log.error("backend: could not create backend instance: %d: %s" %
-                      (e.returncode, e.stdout))
+            log.error("backend: could not create backend instance: %d: %s\nconfig file:\n%s" %
+                      (e.returncode, e.stdout, open(cfg_path).read()))
             raise InstanceCreationError("create failed", inst.id(), e.returncode, e.stdout)
         
         backend_id = -1

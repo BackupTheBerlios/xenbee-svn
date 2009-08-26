@@ -30,6 +30,7 @@ __version__ = "$Rev$"
 __author__ = "$Author: petry $"
 
 import time
+from xbe.xbed.daemon import XBEDaemon
 
 class ConfigurationError(Exception):
     pass
@@ -53,6 +54,7 @@ class InstanceConfig:
         self.name = name
         self.diskImages = []
         self.mac = None
+        self.bridge = None
         self.ip = None
         self.netmask = ""
         self.gateway = ""
@@ -130,6 +132,11 @@ class InstanceConfig:
         self.mac = mac
     def getMac(self):
         return self.mac
+
+    def setBridge(self, bridge):
+        self.bridge = bridge
+    def getBridge(self):
+        return self.bridge
 
     def setIP(self, ip):
         self.ip = ip
@@ -244,25 +251,28 @@ class XenConfigGenerator:
 
         # all disks
         disks = []
+        disk_proto = XBEDaemon.getInstance().opts.disk_proto or "file"
         for disk in self.config.getDisks():
-            disks.append( "tap:aio:%(path)s,%(target)s,w" % disk )
+            disk["proto"] = disk_proto
+            disks.append( "%(proto)s:%(path)s,%(target)s,w" % disk )
         self._write_helper("disk", disks)
 
     def write_networking(self):
         print >>self.out, "# Networking configuration"
+        bridge = self.config.getBridge() or "xenbr0"
         if self.config.getMac():
-            vif = [ "mac=%s, bridge=xenbr0" % self.config.getMac() ]
+            vif = [ "mac=%s, bridge=%s" % (self.config.getMac(), bridge) ]
         else:
-            vif = [ 'bridge=xenbr0' ]
+            vif = [ 'bridge=%s' % bridge ]
         self._write_helper("vif", vif)
-        if self.config.getIP():
-           self._write_helper("ip", self.config.getIP())
-           self._write_helper("gateway", self.config.getGateway())
-           self._write_helper("netmask", self.config.getNetmask())
-           self._write_helper("dhcp", "off")
-        else:
-           # use dhcp
-           self._write_helper("dhcp", "dhcp")
+#        if self.config.getIP():
+#           self._write_helper("ip", self.config.getIP())
+#           self._write_helper("gateway", self.config.getGateway())
+#           self._write_helper("netmask", self.config.getNetmask())
+#           self._write_helper("dhcp", "off")
+#        else:
+#           # use dhcp
+#           self._write_helper("dhcp", "dhcp")
 
     def write_behavior(self):
         print >>self.out, "# Behavior"

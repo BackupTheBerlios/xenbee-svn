@@ -78,7 +78,8 @@ class XenBEEClientProtocol(protocol.XMLProtocol):
         xbed = XBEDaemon.getInstance()
         jsdl_doc = jsdl.JsdlDocument(schema_map=xbed.schema_map)
         try:
-            etree.clearErrorLog()
+            if hasattr(etree, 'clearErrorLog'): etree.clearErrorLog()
+            if hasattr(etree, 'clear_error_log'): etree.clear_error_log()
             parsed_jsdl = jsdl_doc.parse(confirm.jsdl())
         except etree.DocumentInvalid, e:
             log.info("got invalid document: %s" % str(e.error_log))

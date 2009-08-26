@@ -487,8 +487,9 @@ class Task(TaskFSM):
     def _cb_assign_mac_ip_to_inst(self, mac_ip):
         inst = self.__inst
         self.log.debug(
-            "assigning mac '%s' with IP '%s' to instance: %s" % (mac_ip[0], mac_ip[1], inst.id()))
+            "assigning mac '%s' with IP '%s' on Bridge '%s' to instance: %s" % (mac_ip[0], mac_ip[1], XBEDaemon.getInstance().opts.xen_bridge, inst.id()))
         inst.config().setMac(mac_ip[0])
+        inst.config().setBridge(XBEDaemon.getInstance().opts.xen_bridge)
 #	inst.config().setIP(mac_ip[1])
         inst.ip = mac_ip[1]
 
