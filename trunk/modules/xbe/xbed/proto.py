@@ -128,7 +128,7 @@ class XenBEEClientProtocol(protocol.XMLProtocol):
             return message.Error(errcode.TICKET_INVALID, msg.ticket())
 
     def do_StartRequest(self, elem, *a, **kw):
-        msg = message.MessageBuilder(elem.getroottree())
+        msg = message.MessageBuilder.from_xml(elem.getroottree())
         ticket = TicketStore.getInstance().lookup(msg.ticket())
         if ticket is not None:
             reactor.callInThread(ticket.task.start)
@@ -612,14 +612,16 @@ class XenBEEDaemonProtocolFactory(XenBEEProtocolFactory):
                              XenBEEClientProtocol, client)
 
     def instanceMessage(self, transport, msg, inst):
-#         self.__messageHelper(inst, msg, transport,
-#                              self.__instanceProtocols,
-#                              self.__instanceMutex,
-#                              XenBEEInstanceProtocolPB, inst)
-        self.__messageHelper(inst, msg, transport,
-                             self.__instanceProtocols,
-                             self.__instanceMutex,
-                             XenBEEInstanceProtocol, inst)
+        try:
+            self.__messageHelper(inst, msg, transport,
+                                 self.__instanceProtocols,
+                                 self.__instanceMutex,
+                                 XenBEEInstanceProtocol, inst)
+        except:
+            self.__messageHelper(inst, msg, transport,
+                                 self.__instanceProtocols,
+                                 self.__instanceMutex,
+                                 XenBEEInstanceProtocolPB, inst)
 
     def certificateChecker(self, certificate):
         return XBEDaemon.getInstance().userDatabase.check_x509(certificate)
