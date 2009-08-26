@@ -125,7 +125,7 @@ class FSM(object):
             if not self.start or not self.current:
                 raise FSMError("neither start state nor current state available!")
 
-            assert not self.__inTransition, "already in some transition"
+#            assert not self.__inTransition, "already in some transition"
             self.__inTransition = True
             
             if callable(symbol):
