@@ -247,7 +247,7 @@ class XenConfigGenerator:
         print >>self.out, "# Disk device(s)"
         
         # root
-        self._write_helper("root", "/dev/"+self.config.getDisks()[0]["target"])
+        self._write_helper("root", "/dev/"+self.config.getDisks()[0]["target"] + " ro")
 
         # all disks
         disks = []
