@@ -25,5 +25,10 @@ userdb: %(etc)s/xbed/allowed-users
 [instance]
 macdb: %(etc)s/xbed/mac-addresses
 jailpkg: /srv/xenbee/jail-package.tar.bz2
-bridge: virbr0
 diskproto: file
+
+[network]
+bridge: virbr0
+gateway: 192.168.122.1
+nameserver: 192.168.122.1
+netmask: 255.255.255.0

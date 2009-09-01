@@ -265,11 +265,11 @@ class XenConfigGenerator:
         else:
             vif = [ 'bridge=%s' % bridge ]
         self._write_helper("vif", vif)
-#        if self.config.getIP():
-#           self._write_helper("ip", self.config.getIP())
-#           self._write_helper("gateway", self.config.getGateway())
-#           self._write_helper("netmask", self.config.getNetmask())
-#           self._write_helper("dhcp", "off")
+        if self.config.getIP():
+           gw = XBEDaemon.getInstance().opts.network_gateway
+           dns = XBEDaemon.getInstance().opts.network_nameserver or gw
+           nm = XBEDaemon.getInstance().opts.network_netmask or "255.255.255.0"
+           self._write_helper("ip", "%s:%s:%s:%s" % (self.config.getIP(), dns, gw, nm))
 #        else:
 #           # use dhcp
 #           self._write_helper("dhcp", "dhcp")

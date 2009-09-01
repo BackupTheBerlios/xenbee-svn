@@ -92,6 +92,15 @@ class XBEDaemon(Daemon):
             "--disk-proto", dest="disk_proto", type="string",
             help="the protocol to access disks via xen (file, tap:aio)")
         p.add_option(
+            "--network-gateway", dest="network_gateway", type="string",
+            help="the gateway to use for virtual domains (will also be used as DNS)")
+        p.add_option(
+            "--network-nameserver", dest="network_nameserver", type="string",
+            help="the nameserver to use for virtual domains (defaults to the gateway)")
+        p.add_option(
+            "--network-netmask", dest="network_netmask", type="string",
+            help="the netmask to use for virtual domains")
+        p.add_option(
             "--stomp-user", dest="stomp_user", type="string",
             help="username for the stomp connection")
         p.add_option(
@@ -153,8 +162,16 @@ class XBEDaemon(Daemon):
 
         if self.opts.mac_file is None:
             self.opts.mac_file = os.path.expanduser(cp.get("instance", "macdb"))
+
         if self.opts.xen_bridge is None:
-            self.opts.xen_bridge = cp.get("instance", "bridge") or "xenbr0"
+            self.opts.xen_bridge = cp.get("network", "bridge") or "xenbr0"
+        if self.opts.network_gateway is None:
+            self.opts.network_gateway = cp.get("network", "gateway")
+        if self.opts.network_nameserver is None:
+            self.opts.network_nameserver = cp.get("network", "nameserver") or self.opts.network_gateway
+        if self.opts.network_netmask is None:
+            self.opts.network_netmask = cp.get("network", "netmask")
+
         if self.opts.disk_proto is None:
             self.opts.disk_proto = cp.get("instance", "diskproto") or "file"
         if self.opts.jail_package is None:

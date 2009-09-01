@@ -480,9 +480,9 @@ class Task(TaskFSM):
 
     def __clean_up_spool(self, *a, **kw):
         """cleans up the task, i.e. removes the task's spool directory"""
-        self.log.info("removing spool directory")
-        from xbe.util import removeDirCompletely
-        removeDirCompletely(self.__spool)
+        self.log.info("removing spool directory - DISABLED")
+#        from xbe.util import removeDirCompletely
+#        removeDirCompletely(self.__spool)
 
     def _cb_assign_mac_ip_to_inst(self, mac_ip):
         inst = self.__inst
@@ -490,7 +490,7 @@ class Task(TaskFSM):
             "assigning mac '%s' with IP '%s' on Bridge '%s' to instance: %s" % (mac_ip[0], mac_ip[1], XBEDaemon.getInstance().opts.xen_bridge, inst.id()))
         inst.config().setMac(mac_ip[0])
         inst.config().setBridge(XBEDaemon.getInstance().opts.xen_bridge)
-#	inst.config().setIP(mac_ip[1])
+        inst.config().setIP(mac_ip[1])
         inst.ip = mac_ip[1]
 
     def _cb_assign_files_to_inst(self):
