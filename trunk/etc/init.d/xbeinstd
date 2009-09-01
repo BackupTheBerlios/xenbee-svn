@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 set -e
 
 # /etc/init.d/xbeinstd: start and stop the XBE instance daemon
@@ -40,11 +40,31 @@ function load_environ() {
 	fi
 }
 
+function config_network() {
+	# ip variable layout:
+	#	ip=<client-ip>:<boot-server-ip>:<gateway>:<netmask>
+	if [ -z "$XBE_IP_CONFIG" ]; then
+		XBE_IP_CONFIG=`/bin/grep -o 'ip=[^ ]\+' /proc/cmdline | /usr/bin/cut -d '=' -f 2`
+		export XBE_IP_CONFIG
+	fi
+	if [ -n "$XBE_IP_CONFIG" ]; then
+		echo -e "\tconfiguring network..."
+		my_ip=`echo $XBE_IP_CONFIG | cut -d : -f 1`
+		my_gw=`echo $XBE_IP_CONFIG | cut -d : -f 3`
+		my_nm=`echo $XBE_IP_CONFIG | cut -d : -f 4`
+		echo -e "\t\t ip=$my_ip gw=$my_gw nm=$my_nm dns=$my_gw"
+		/sbin/ifconfig eth0 "$my_ip" netmask "$my_nm"
+		/sbin/route add default gw "$my_gw" dev eth0
+		echo "nameserver $my_gw" > /etc/resolv.conf
+	fi
+}
+
 case "$1" in
   start)
 	log_begin_msg "Starting XenBEE instance daemon..."
 	check_logfile
 	save_environ
+	config_network
 	"$daemon" start --pidfile "$pidfile" $XBEINSTD_OPTS || log_end_msg 1
 	log_end_msg 0
 	;;
