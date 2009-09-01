@@ -50,12 +50,13 @@ function config_network() {
 	if [ -n "$XBE_IP_CONFIG" ]; then
 		echo -e "\tconfiguring network..."
 		my_ip=`echo $XBE_IP_CONFIG | cut -d : -f 1`
+                my_dns=`echo $XBE_IP_CONFIG | cut -d : -f 2`
 		my_gw=`echo $XBE_IP_CONFIG | cut -d : -f 3`
 		my_nm=`echo $XBE_IP_CONFIG | cut -d : -f 4`
-		echo -e "\t\t ip=$my_ip gw=$my_gw nm=$my_nm dns=$my_gw"
+		echo -e "\t\t ip=$my_ip gw=$my_gw nm=$my_nm dns=$my_dns"
 		/sbin/ifconfig eth0 "$my_ip" netmask "$my_nm"
 		/sbin/route add default gw "$my_gw" dev eth0
-		echo "nameserver $my_gw" > /etc/resolv.conf
+		echo "nameserver $my_dns" > /etc/resolv.conf
 	fi
 }
 
