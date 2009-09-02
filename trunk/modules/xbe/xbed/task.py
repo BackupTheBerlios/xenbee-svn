@@ -123,6 +123,12 @@ class Task(TaskFSM):
             "state": self.state(),
         }
 
+    def cleanUp(self):
+        """cleans up the task, i.e. removes the task's spool directory"""
+        self.log.info("removing spool directory")
+        from xbe.util import removeDirCompletely
+        removeDirCompletely(self.__spool)
+
     def signalStatus(self, statusMsg):
         self.__statusTaskWaiter.signalUpdate(statusMsg)
                 
@@ -745,6 +751,7 @@ class TaskManager(singleton.Singleton, Observable):
         try:
             self.mtx.acquire()
             self.tasks.pop(task.id())
+            task.cleanUp()
             del task.mgr
             self.notify( (task, "removeTask") )
         finally:

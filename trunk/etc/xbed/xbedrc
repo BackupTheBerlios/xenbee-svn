@@ -12,15 +12,15 @@ logconf: %(etc)s/xbed/logging.rc
 ;logfile: /var/log/xenbee/xbed.log
 
 [stomp]
-uri: stomp://188.40.38.195/xenbee.daemon.1
+uri: stomp://192.168.122.1/xenbee.daemon.1
 user: guest
 pass: guest
 
 [security]
 privkey: %(etc)s/xbed/xbed-key.pem
-pubkey: %(etc)s/xbed/xbed.pem
-cacert: %(etc)s/xbed/ca-cert.pem
-userdb: %(etc)s/xbed/allowed-users
+pubkey:  %(etc)s/xbed/xbed.pem
+cacert:  %(etc)s/xbed/ca-cert.pem
+userdb:  %(etc)s/xbed/allowed-users
 
 [instance]
 macdb: %(etc)s/xbed/mac-addresses
