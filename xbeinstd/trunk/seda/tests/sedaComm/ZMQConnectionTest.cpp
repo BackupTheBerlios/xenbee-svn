@@ -42,7 +42,7 @@ ZMQConnectionTest::testSendReceive() {
   seda::comm::SedaMessage msg1("test", "test", "foo");
   conn.send(msg1);
   seda::comm::SedaMessage msg2;
-  conn.receive(msg2);
+  conn.recv(msg2);
   CPPUNIT_ASSERT_MESSAGE("received payload differs from sent payload", msg1.payload() == msg2.payload());
 }
 
@@ -51,13 +51,13 @@ ZMQConnectionTest::testStartStop() {
   seda::comm::ZMQConnection conn("localhost", "test", "*:5222", "*");
   try {
     // FIXME: this segfaults for larger loop-counts! problem of libzmq!
-    for (std::size_t i(0); i < 1; i++) {
+    for (std::size_t i(0); i < 10; i++) {
       conn.start();
 
       seda::comm::SedaMessage msg1("test", "test", "foo");
       conn.send(msg1);
       seda::comm::SedaMessage msg2;
-      conn.receive(msg2);
+      conn.recv(msg2);
       CPPUNIT_ASSERT_MESSAGE("received payload differs from sent payload", msg1.payload() == msg2.payload());
 
       conn.stop();
