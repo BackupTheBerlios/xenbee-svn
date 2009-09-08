@@ -88,7 +88,7 @@ ZMQConnection::exchange_t ZMQConnection::locate(const SedaMessage::address_type 
   return eid;
 }
 
-int ZMQConnection::receive(SedaMessage &msg, bool block)
+bool ZMQConnection::recv(SedaMessage &msg, bool block)
 {
   zmq::message_t m;
   const int code = api_->receive(&m, block);
@@ -97,6 +97,6 @@ int ZMQConnection::receive(SedaMessage &msg, bool block)
     std::string data((const char*)m.data(), m.size());
     msg.decode(data);
   }
-  return code;
+  return code != 0;
 }
 

@@ -4,25 +4,14 @@
 #include <map>
 #include <string>
 #include <seda/comm/Encodeable.hpp>
+#include <seda/comm/Connection.hpp>
 #include <seda/comm/SedaMessage.hpp>
+
 
 #include <zmq.hpp>
 
 namespace seda {
 namespace comm {
-  class ConnectionListener {
-  public:
-    virtual void onMessage(const seda::comm::SedaMessage::Ptr &) = 0;
-  };
-
-  class Connection {
-  public:
-    virtual void start() = 0;
-    virtual void stop() = 0;
-
-    virtual void send(const seda::comm::SedaMessage::Ptr &) = 0;
-  };
-
   class ZMQConnection {
   public:
     typedef int exchange_t;
@@ -36,8 +25,7 @@ namespace comm {
     void stop();
 
     void send(const seda::comm::SedaMessage &);
-    int receive(seda::comm::SedaMessage &m, bool block = true);
-
+    bool recv(seda::comm::SedaMessage &m, bool block = true);
   protected:
     exchange_t locate(const SedaMessage::address_type &);
   private:
