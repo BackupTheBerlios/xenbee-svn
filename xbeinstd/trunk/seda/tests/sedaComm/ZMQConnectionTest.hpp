@@ -10,6 +10,7 @@ namespace seda { namespace comm { namespace tests {
     CPPUNIT_TEST( testAbortException );
     CPPUNIT_TEST( testSendReceive );
     CPPUNIT_TEST( testStartStop );
+    CPPUNIT_TEST( testConnectionFactory );
     CPPUNIT_TEST_SUITE_END();
 
     private:
@@ -24,6 +25,7 @@ namespace seda { namespace comm { namespace tests {
     void testSendReceive();
     void testStartStop();
     void testAbortException();
+    void testConnectionFactory();
   };
 }}}
 

@@ -7,6 +7,7 @@
 
 #include <seda/comm/SedaMessage.hpp>
 #include <seda/comm/ZMQConnection.hpp>
+#include <seda/comm/ConnectionFactory.hpp>
 
 using namespace seda::comm::tests;
 
@@ -29,6 +30,33 @@ ZMQConnectionTest::tearDown() {
 }
 
 void
+ZMQConnectionTest::testConnectionFactory() {
+  seda::comm::ConnectionParameters params("zmq", "localhost", "test");
+  params.put("iface_in", "*:5222");
+  params.put("iface_out", "*");
+  try {
+    seda::comm::ConnectionFactory::ptr_t factory(new seda::comm::ConnectionFactory());
+    seda::comm::Connection::ptr_t conn = factory->createConnection(params);
+    conn->start();
+    seda::comm::SedaMessage msg1("test", "test", "foo");
+    conn->send(msg1);
+
+    seda::comm::SedaMessage msg2;
+    conn->recv(msg2);
+    CPPUNIT_ASSERT_MESSAGE("received payload differs from sent payload", msg1.payload() == msg2.payload());
+    conn->stop();
+  }
+  catch (const std::exception &ex) {
+    SEDA_LOG_ERROR("could not create the connection: " << ex.what());
+    CPPUNIT_ASSERT_MESSAGE("connection could not be created!", false);
+  }
+  catch (...)
+  {
+    CPPUNIT_ASSERT_MESSAGE("connection could not be created: unknown reason!", false);
+  }
+}
+
+void
 ZMQConnectionTest::testSendReceive() {
   seda::comm::ZMQConnection conn("localhost", "test", "*:5222", "*");
   try {
@@ -44,6 +72,7 @@ ZMQConnectionTest::testSendReceive() {
   seda::comm::SedaMessage msg2;
   conn.recv(msg2);
   CPPUNIT_ASSERT_MESSAGE("received payload differs from sent payload", msg1.payload() == msg2.payload());
+  conn.stop();
 }
 
 void
@@ -51,7 +80,7 @@ ZMQConnectionTest::testStartStop() {
   seda::comm::ZMQConnection conn("localhost", "test", "*:5222", "*");
   try {
     // FIXME: this segfaults for larger loop-counts! problem of libzmq!
-    for (std::size_t i(0); i < 10; i++) {
+    for (std::size_t i(0); i < 3; i++) {
       conn.start();
 
       seda::comm::SedaMessage msg1("test", "test", "foo");
@@ -61,6 +90,7 @@ ZMQConnectionTest::testStartStop() {
       CPPUNIT_ASSERT_MESSAGE("received payload differs from sent payload", msg1.payload() == msg2.payload());
 
       conn.stop();
+      sleep(1);
     }
   } catch (const std::exception &ex) {
     SEDA_LOG_ERROR("could not start the zmq-connection: " << ex.what());

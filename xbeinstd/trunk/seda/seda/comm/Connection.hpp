@@ -19,16 +19,19 @@
 #ifndef SEDA_COMM_CONNECTION_HPP
 #define SEDA_COMM_CONNECTION_HPP
 
+#include <seda/shared_ptr.hpp>
 #include <seda/comm/SedaMessage.hpp>
 
 namespace seda { namespace comm {
   class Connection {
   public:
+    typedef seda::shared_ptr<Connection> ptr_t;
+
     virtual void start() = 0;
     virtual void stop() = 0;
 
-    virtual void send(const seda::comm::SedaMessage::Ptr &m) = 0;
-    virtual bool recv(seda::comm::SedaMessage::Ptr &m, bool block = true) = 0;
+    virtual void send(const seda::comm::SedaMessage &m) = 0;
+    virtual bool recv(seda::comm::SedaMessage &m, bool block = true) = 0;
   };
 }}
 

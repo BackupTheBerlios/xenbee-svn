@@ -12,7 +12,7 @@
 
 namespace seda {
 namespace comm {
-  class ZMQConnection {
+  class ZMQConnection : public seda::comm::Connection {
   public:
     typedef int exchange_t;
     typedef int queue_t;
