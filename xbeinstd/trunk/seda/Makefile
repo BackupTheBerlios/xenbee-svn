@@ -20,6 +20,6 @@ doc: config
 	make -C build doc
 
 .DEFAULT:
-	make -C $(BUILD_DIR) $(MAKECMDGOALS)
+	@cd $(BUILD_DIR) && $(MAKE) -$(MAKEFLAGS) $(MAKECMDGOALS)
 
 .PHONY: clean distclean all default doc
