@@ -3,4 +3,8 @@
 
 #include <boost/tr1/memory.hpp>
 
+namespace seda {
+    using std::tr1::shared_ptr;
+}
+
 #endif
