@@ -5,19 +5,25 @@
 
 using namespace seda::comm;
 
-ZMQConnection::ZMQConnection(const std::string &locator, const std::string &name, const std::string &in_interface, const std::string &out_interface)
-  : locator_host_(locator),
-    name_(name),
-    in_iface_(in_interface),
-    out_iface_(out_interface),
-    dispatcher_(0),
-    locator_(0),
-    io_thread_(0),
-    api_(0),
-    incoming_queue_(-1)
-{}
+ZMQConnection::ZMQConnection(
+    const std::string &locator
+  , const std::string &name
+  , const std::string &in_interface
+  , const std::string &out_interface)
+  : locator_host_(locator)
+  , name_(name)
+  , in_iface_(in_interface)
+  , out_iface_(out_interface)
+  , dispatcher_(0)
+  , locator_(0)
+  , io_thread_(0)
+  , api_(0)
+  , incoming_queue_(-1)
+{
+}
 
-ZMQConnection::~ZMQConnection() {
+ZMQConnection::~ZMQConnection()
+{
   try {
     stop();
   } catch(...) {
@@ -25,7 +31,8 @@ ZMQConnection::~ZMQConnection() {
   }
 }
 
-void ZMQConnection::start() {
+void ZMQConnection::start()
+{
   assert(dispatcher_ == 0);
   assert(locator_ == 0);
   assert(io_thread_ == 0);
@@ -39,7 +46,8 @@ void ZMQConnection::start() {
   incoming_queue_ = api_->create_queue(qname.c_str(), zmq::scope_global, in_iface_.c_str(), io_thread_, 1, &io_thread_);
 }
 
-void ZMQConnection::stop() {
+void ZMQConnection::stop()
+{
   if (locator_) {
     delete locator_;
     locator_ = 0;
@@ -48,17 +56,14 @@ void ZMQConnection::stop() {
     delete dispatcher_;
     dispatcher_ = 0;
   }
-  /*
-  if (io_thread_) {
-    delete io_thread_;
-  }
-  */
   io_thread_ = 0;
   api_ = 0;
   incoming_queue_ = -1;
+  exchanges_.clear();
 }
 
-void ZMQConnection::send(const seda::comm::SedaMessage &msg) {
+void ZMQConnection::send(const seda::comm::SedaMessage &msg)
+{
   std::string encodedMsg(msg.encode());
 
   zmq::message_t m((void*)encodedMsg.data(), encodedMsg.size(), 0);
@@ -67,7 +72,8 @@ void ZMQConnection::send(const seda::comm::SedaMessage &msg) {
   api_->send(eid, m);
 }
 
-ZMQConnection::exchange_t ZMQConnection::locate(const SedaMessage::address_type &addr) {
+ZMQConnection::exchange_t ZMQConnection::locate(const SedaMessage::address_type &addr)
+{
   exchange_t eid = -1;
   address_map_t::iterator it(exchanges_.find(addr));
   if (it == exchanges_.end()) {
@@ -82,7 +88,8 @@ ZMQConnection::exchange_t ZMQConnection::locate(const SedaMessage::address_type 
   return eid;
 }
 
-int ZMQConnection::receive(SedaMessage &msg, bool block) {
+int ZMQConnection::receive(SedaMessage &msg, bool block)
+{
   zmq::message_t m;
   const int code = api_->receive(&m, block);
   if (code == incoming_queue_) {
@@ -92,3 +99,4 @@ int ZMQConnection::receive(SedaMessage &msg, bool block) {
   }
   return code;
 }
+
