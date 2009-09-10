@@ -17,7 +17,7 @@ namespace comm {
   public:
     typedef int exchange_t;
     typedef int queue_t;
-    typedef std::map<SedaMessage::address_type, exchange_t> address_map_t;
+    typedef std::map<address_type, exchange_t> address_map_t;
 
     ZMQConnection(const std::string &locator
                 , const std::string &name
@@ -33,7 +33,7 @@ namespace comm {
 
     void operator()();
   protected:
-    exchange_t locate(const SedaMessage::address_type &);
+    exchange_t locate(const address_type &);
   private:
     // no copy constructor
     ZMQConnection(const ZMQConnection&);

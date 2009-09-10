@@ -9,12 +9,12 @@
 
 namespace seda {
 namespace comm {
+    typedef std::string payload_type;
+    typedef std::string address_type;
+
     class SedaMessage : public seda::UserEvent, public seda::comm::Encodeable, public seda::comm::Decodeable {
     public:
         typedef std::tr1::shared_ptr<SedaMessage> Ptr;
-
-        typedef std::string payload_type;
-        typedef std::string address_type;
 
         explicit
         SedaMessage()

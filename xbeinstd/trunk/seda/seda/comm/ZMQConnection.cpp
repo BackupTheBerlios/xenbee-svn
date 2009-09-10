@@ -201,7 +201,7 @@ void ZMQConnection::send(const seda::comm::SedaMessage &msg)
   send_api_->send(eid, m);
 }
 
-ZMQConnection::exchange_t ZMQConnection::locate(const SedaMessage::address_type &addr)
+ZMQConnection::exchange_t ZMQConnection::locate(const address_type &addr)
 {
   boost::unique_lock<boost::recursive_mutex> lock(mtx_);
   exchange_t eid = -1;
