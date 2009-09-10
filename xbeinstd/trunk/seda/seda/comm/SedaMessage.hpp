@@ -12,6 +12,19 @@ namespace comm {
     typedef std::string payload_type;
     typedef std::string address_type;
 
+    class From {
+    public:
+      explicit From(const address_type &val)
+      : val(val) {}
+      address_type val;
+    };
+    class To {
+    public:
+      explicit To(const address_type &val)
+      : val(val) {}
+      address_type val;
+    };
+
     class SedaMessage : public seda::UserEvent, public seda::comm::Encodeable, public seda::comm::Decodeable {
     public:
         typedef std::tr1::shared_ptr<SedaMessage> Ptr;
