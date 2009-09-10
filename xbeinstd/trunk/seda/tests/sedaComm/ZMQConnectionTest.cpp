@@ -77,7 +77,7 @@ ZMQConnectionTest::testSendReceive() {
   } catch(...) {
     CPPUNIT_ASSERT_MESSAGE("zmq connection could not be started", false);
   }
-  for (std::size_t cnt(0); cnt < 100; ++cnt)
+  for (std::size_t cnt(0); cnt < 1000; ++cnt)
   {
     std::ostringstream ostr;
     ostr << "foo " << cnt;
