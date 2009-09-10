@@ -66,7 +66,7 @@ ELSE(WIN32)
     NAMES
     protoc
     PATHS
-    ${PB_HOME}/bin
+    ${_pb_HOME}/bin
     ${CMAKE_BINARY_PATH}
     /usr/local/bin
     /usr/bin
