@@ -32,9 +32,9 @@ void ConnectionStrategy::perform(const IEvent::Ptr &toSend)
   }
 }
 
-void ConnectionStrategy::onMessage(const seda::comm::SedaMessage::Ptr &recvMsg)
+void ConnectionStrategy::onMessage(const seda::comm::SedaMessage &recvMsg)
 {
-  ForwardStrategy::perform(recvMsg);
+  ForwardStrategy::perform(SedaMessage::Ptr(new SedaMessage(recvMsg)));
 }
 
 void ConnectionStrategy::onStageStart(const std::string &stageName)

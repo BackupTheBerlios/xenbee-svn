@@ -36,7 +36,7 @@ namespace seda { namespace comm {
     }
 
     void perform(const IEvent::Ptr &toSend);
-    void onMessage(const seda::comm::SedaMessage::Ptr &);
+    void onMessage(const seda::comm::SedaMessage &);
 
     Connection::ptr_t connection() { return conn_; }
 
