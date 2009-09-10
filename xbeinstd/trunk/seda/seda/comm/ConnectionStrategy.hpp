@@ -29,8 +29,11 @@ namespace seda { namespace comm {
     ConnectionStrategy(const std::string &targetStage, const seda::comm::Connection::ptr_t &conn)
       : ForwardStrategy(targetStage), conn_(conn)
     {
+      conn_->registerListener(this);
     }
-    ~ConnectionStrategy() {}
+    ~ConnectionStrategy() {
+      conn_->removeListener(this); 
+    }
 
     void perform(const IEvent::Ptr &toSend);
     void onMessage(const seda::comm::SedaMessage::Ptr &);
