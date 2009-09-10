@@ -4,6 +4,7 @@
 #include <string>
 #include <stdexcept>
 #include <signal.h>
+#include <sys/wait.h>
 
 #include <seda/seda-config.hpp>
 #include <seda/comm/SedaMessage.hpp>
@@ -154,7 +155,13 @@ bool ZMQConnectionTest::start_zmq_server(pid_t *pid, uint32_t *port)
   {
     SEDA_LOG_INFO("forked with pid: " << *pid);
   }
-  sleep(1);
+  sleep(0.5);
+  int status;
+  if (waitpid(*pid, &status, WNOHANG) != 0)
+  {
+    SEDA_LOG_ERROR("zmq_server could not be started: " << WEXITSTATUS(status));
+    return false;
+  }
 }
 
 bool ZMQConnectionTest::stop_zmq_server(pid_t *pid)
