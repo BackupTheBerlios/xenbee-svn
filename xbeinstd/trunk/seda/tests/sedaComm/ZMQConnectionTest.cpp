@@ -44,6 +44,7 @@ ZMQConnectionTest::setUp() {
 void
 ZMQConnectionTest::tearDown() {
   stop_zmq_server(&zmq_server_pid_);
+  sleep(1);
 }
 
 void
