@@ -3,6 +3,7 @@
 
 #include <cppunit/extensions/HelperMacros.h>
 #include <seda/logging.hpp>
+#include <unistd.h>
 
 namespace seda { namespace comm { namespace tests {
   class ZMQConnectionTest : public CppUnit::TestFixture {
@@ -14,14 +15,22 @@ namespace seda { namespace comm { namespace tests {
     CPPUNIT_TEST_SUITE_END();
 
     private:
-
     public:
     ZMQConnectionTest();
+    ~ZMQConnectionTest();
     void setUp();
     void tearDown();
 
     protected:
+
     SEDA_DECLARE_LOGGER();
+    pid_t zmq_server_pid_;
+    uint32_t zmq_server_port_;
+
+    bool start_zmq_server(pid_t *pid, uint32_t *port);
+    bool stop_zmq_server(pid_t *pid);
+
+
     void testSendReceive();
     void testStartStop();
     void testAbortException();

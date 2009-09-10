@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <signal.h>
 
+#include <seda/seda-config.hpp>
 #include <seda/comm/SedaMessage.hpp>
 #include <seda/comm/ZMQConnection.hpp>
 #include <seda/comm/ConnectionFactory.hpp>
@@ -19,14 +20,23 @@ void sighandler(int signal) {
 
 ZMQConnectionTest::ZMQConnectionTest()
   : SEDA_INIT_LOGGER("tests.seda.comm.ZMQConnectionTest")
-{}
+  , zmq_server_port_(5682)
+  , zmq_server_pid_(-1)
+{
+}
+
+ZMQConnectionTest::~ZMQConnectionTest()
+{
+}
 
 void
 ZMQConnectionTest::setUp() {
+  start_zmq_server(&zmq_server_pid_, &zmq_server_port_);
 }
 
 void
 ZMQConnectionTest::tearDown() {
+  stop_zmq_server(&zmq_server_pid_);
 }
 
 void
@@ -67,11 +77,16 @@ ZMQConnectionTest::testSendReceive() {
   } catch(...) {
     CPPUNIT_ASSERT_MESSAGE("zmq connection could not be started", false);
   }
-  seda::comm::SedaMessage msg1("test", "test", "foo");
-  conn.send(msg1);
-  seda::comm::SedaMessage msg2;
-  conn.recv(msg2);
-  CPPUNIT_ASSERT_MESSAGE("received payload differs from sent payload", msg1.payload() == msg2.payload());
+  for (std::size_t cnt(0); cnt < 100; ++cnt)
+  {
+    std::ostringstream ostr;
+    ostr << "foo " << cnt;
+    seda::comm::SedaMessage msg1("test", "test", ostr.str());
+    conn.send(msg1);
+    seda::comm::SedaMessage msg2;
+    conn.recv(msg2);
+    CPPUNIT_ASSERT_MESSAGE("received payload differs from sent payload", msg1.payload() == msg2.payload());
+  }
   conn.stop();
 }
 
@@ -116,4 +131,57 @@ ZMQConnectionTest::testAbortException() {
     CPPUNIT_ASSERT_EQUAL(expected, actual);
   }
   CPPUNIT_ASSERT(got_exception);
+}
+
+bool ZMQConnectionTest::start_zmq_server(pid_t *pid, uint32_t *port)
+{
+  const std::string zmq_server_path(ZMQ_SERVER_PATH);
+  if (0 == zmq_server_path.size())
+  {
+    SEDA_LOG_WARN("I have not path to the zmq_server, please define ZMQ_SERVER_PATH!");
+    return false;
+  }
+  SEDA_LOG_INFO("starting zmq_server (" << zmq_server_path << ") on port " << *port);
+  *pid = fork();
+  if (0 == *pid)
+  {
+    if (execl(zmq_server_path.c_str(), "zmq_server", (char*)NULL) < 0)
+    {
+      exit(errno);
+    }
+  }
+  else
+  {
+    SEDA_LOG_INFO("forked with pid: " << *pid);
+  }
+  sleep(1);
+}
+
+bool ZMQConnectionTest::stop_zmq_server(pid_t *pid)
+{
+  if (*pid <= 0)
+  {
+    SEDA_LOG_WARN("zmq_server has not been started, but we are trying to stop it.");
+    return false;
+  }
+
+  if (0 == kill(*pid, 0))
+  {
+    // process seems to be alive and we are allowed to send signals
+    for (std::size_t trial(0); trial < 3; ++trial)
+    {
+      SEDA_LOG_INFO("sending SIGTERM to " << *pid);
+      kill(*pid, SIGTERM);
+      sleep(1);
+      if (0 != kill(*pid, 0)) break;
+    }
+  }
+
+  if (0 == kill(*pid, 0))
+  {
+    SEDA_LOG_WARN("sending SIGKILL to " << *pid);
+    kill(*pid, SIGKILL);
+  }
+  *pid = -1;
+  return true;
 }
