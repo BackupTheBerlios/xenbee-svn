@@ -4,6 +4,7 @@
 #include <map>
 #include <deque>
 #include <string>
+#include <seda/common.hpp>
 #include <seda/comm/Encodeable.hpp>
 #include <seda/comm/Connection.hpp>
 #include <seda/comm/SedaMessage.hpp>
@@ -37,6 +38,8 @@ namespace comm {
   private:
     // no copy constructor
     ZMQConnection(const ZMQConnection&);
+
+    SEDA_DECLARE_LOGGER();
 
     // zmq related variables
     std::string locator_host_;

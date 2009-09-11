@@ -12,7 +12,9 @@ ZMQConnection::ZMQConnection(
   , const std::string &name
   , const std::string &in_interface
   , const std::string &out_interface)
-  : locator_host_(locator)
+
+  : SEDA_INIT_LOGGER(std::string("seda.comm.") + name)
+  , locator_host_(locator)
   , name_(name)
   , in_iface_(in_interface)
   , out_iface_(out_interface)
@@ -39,7 +41,7 @@ ZMQConnection::~ZMQConnection()
 void ZMQConnection::start()
 {
   boost::unique_lock<boost::recursive_mutex> lock(mtx_);
-  std::cerr << "starting connection..." << std::endl;
+  SEDA_LOG_DEBUG("starting connection...");
   if (dispatcher_ != 0)
     return;
 
@@ -64,34 +66,31 @@ void ZMQConnection::start()
                                      , &io_thread_);
   self_exchange_ = locate(name_);
 
-  std::cerr << "registered " << qname << " with zmq: " << incoming_queue_ << " and exchange to self: " << self_exchange_ << std::endl;
+  SEDA_LOG_DEBUG("registered " << qname << " with zmq: " << incoming_queue_ << " and exchange to self: " << self_exchange_);
 
   // initialize the receive thread
   recv_thread_ = new boost::thread(boost::ref(*this));
 
-  std::cerr << "connection started up" << std::endl;
+  SEDA_LOG_DEBUG("connection started up");
 }
 
 void ZMQConnection::stop()
 {
   boost::unique_lock<boost::recursive_mutex> lock(mtx_);
-  std::cerr << "stopping connection" << std::endl;
+  SEDA_LOG_DEBUG("stopping connection");
   if (dispatcher_ == 0) return;
 
   {
     recv_thread_->interrupt();
-    std::cerr << "interrupted thread" << std::endl;
     zmq::message_t m(10);
     send_api_->send(self_exchange_, m);
     recv_thread_->join();
-    std::cerr << "joined thread" << std::endl;
   }
 
   if (recv_thread_)
   {
     delete recv_thread_;
     recv_thread_ = 0;
-    std::cerr << "thread deleted" << std::endl;
   }
 
   if (locator_)
@@ -113,7 +112,7 @@ void ZMQConnection::stop()
   self_exchange_ = -1;
   exchanges_.clear();
 
-  std::cerr << "connection shut down" << std::endl;
+  SEDA_LOG_DEBUG("connection shut down");
 }
 
 void ZMQConnection::operator()()
@@ -124,18 +123,11 @@ void ZMQConnection::operator()()
     zmq::message_t m;
     int code;
 
-    std::cerr << "api->receive()" << std::endl;
-    // FIXME: I don't see a way how to avoid polling here
-    // when i choose 'true' the api->send and api->receive calls don't play together ;-(
-    // when i create new api-thread for this thread, i get a failed assertion ;-(
-
     {
       code = recv_api_->receive(&m, true);
-      std::cerr << "api->receive() returned: " << code << std::endl;
       try {
         boost::this_thread::interruption_point();
       } catch (const boost::thread_interrupted &irq) {
-        std::cerr << "interrupted" << std::endl;
         break;
       }
     }
@@ -144,6 +136,8 @@ void ZMQConnection::operator()()
     {
       // message seems to be ok
       std::string data((const char*)m.data(), m.size());
+
+      /*
       {
         std::stringstream sstr;
         sstr << std::hex << std::right;
@@ -153,18 +147,22 @@ void ZMQConnection::operator()()
         }
         std::cerr << "got message: " << sstr.str() << std::endl;
       }
+      */
 
       seda::comm::SedaMessage msg;
       try {
         msg.decode(data);
+      } catch (const std::exception &ex) {
+        SEDA_LOG_ERROR("could not decode message: " << ex.what());
+        continue;
       } catch (...) {
+        SEDA_LOG_ERROR("could not decode message due to an unknwon reason");
         continue;
       }
 
       if (listener_list_.empty())
       {
         boost::unique_lock<boost::recursive_mutex> lock(mtx_);
-        std::cerr << "enqueueing message " << std::endl;
         incoming_messages_.push_back(msg);
         recv_cond_.notify_one();
       }
@@ -173,19 +171,17 @@ void ZMQConnection::operator()()
         if (recv_waiting_)
         {
           boost::unique_lock<boost::recursive_mutex> lock(mtx_);
-          std::cerr << "enqueueing message " << std::endl;
           incoming_messages_.push_back(msg);
           recv_cond_.notify_one();
         }
         else
         {
-          std::cerr << "notifying listener processes" << std::endl;
           notifyListener(msg);
         }
       }
     }
   }
-  std::cerr << "recv thread shut down" << std::endl;
+  SEDA_LOG_DEBUG("recv thread shut down");
 }
 
 void ZMQConnection::send(const seda::comm::SedaMessage &msg)
@@ -197,7 +193,6 @@ void ZMQConnection::send(const seda::comm::SedaMessage &msg)
   exchange_t eid = locate(msg.to());
 
   boost::unique_lock<boost::recursive_mutex> lock(mtx_);
-  std::cerr << "api->send("<<eid<<", " << msg.str() << ")" << std::endl;
   send_api_->send(eid, m);
 }
 
@@ -211,7 +206,6 @@ ZMQConnection::exchange_t ZMQConnection::locate(const address_type &addr)
     // create a local exchange called "E_<from>_<to>" and bind it to the global Q_<to>
     std::string xname(std::string("E_") + name_ + "_" + addr);
     std::string qname(std::string("Q_") + addr);
-    std::cerr << "creating exchange between " << xname << " and " << qname << std::endl;
     eid = send_api_->create_exchange(xname.c_str());
     send_api_->bind(xname.c_str(), qname.c_str(), io_thread_, io_thread_);
     exchanges_.insert(std::make_pair(addr, eid));
@@ -235,7 +229,6 @@ bool ZMQConnection::recv(SedaMessage &msg, const bool block) throw(boost::thread
 
   recv_waiting_mgr<std::size_t> waiting_mgr(&recv_waiting_);
 
-  std::cerr << "conn->recv()" << std::endl;
   if (block)
   {
     while (incoming_messages_.empty())
@@ -245,7 +238,6 @@ bool ZMQConnection::recv(SedaMessage &msg, const bool block) throw(boost::thread
 
     msg = incoming_messages_.front();
     incoming_messages_.pop_front();
-    std::cerr << "got message: " << msg.str() << std::endl;
     return true;
   }
   else
