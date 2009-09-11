@@ -208,7 +208,8 @@ ZMQConnection::exchange_t ZMQConnection::locate(const address_type &addr)
   address_map_t::iterator it(exchanges_.find(addr));
   if (it == exchanges_.end())
   {
-    std::string xname(std::string("E_") + addr);
+    // create a local exchange called "E_<from>_<to>" and bind it to the global Q_<to>
+    std::string xname(std::string("E_") + name_ + "_" + addr);
     std::string qname(std::string("Q_") + addr);
     std::cerr << "creating exchange between " << xname << " and " << qname << std::endl;
     eid = send_api_->create_exchange(xname.c_str());
