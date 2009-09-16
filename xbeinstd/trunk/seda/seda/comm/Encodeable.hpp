@@ -17,7 +17,7 @@ namespace comm {
 
     class Encodeable {
     public:
-        virtual std::string encode() const throw(EncodingError) = 0;
+        virtual const std::string &encode() const throw(EncodingError) = 0;
     };
 }}
 

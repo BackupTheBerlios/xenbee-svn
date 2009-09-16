@@ -8,35 +8,35 @@
 #include <string>
 
 namespace seda {
-namespace comm {
+  namespace comm {
     typedef std::string payload_type;
     typedef std::string address_type;
 
     class From {
-    public:
-      explicit From(const address_type &val)
-      : val(val) {}
-      address_type val;
+      public:
+        explicit From(const address_type &val)
+          : val(val) {}
+        address_type val;
     };
     class To {
-    public:
-      explicit To(const address_type &val)
-      : val(val) {}
-      address_type val;
+      public:
+        explicit To(const address_type &val)
+          : val(val) {}
+        address_type val;
     };
 
     class SedaMessage : public seda::UserEvent, public seda::comm::Encodeable, public seda::comm::Decodeable {
-    public:
+      public:
         typedef std::tr1::shared_ptr<SedaMessage> Ptr;
 
         explicit
-        SedaMessage()
-            : from_(address_type()), to_(address_type()), payload_(payload_type()), valid_(false) {}
+          SedaMessage()
+          : from_(address_type()), to_(address_type()), payload_(payload_type()), valid_(false) {}
         SedaMessage(const address_type & from, const address_type & to, const payload_type & payload)
-            : from_(from), to_(to), payload_(payload), valid_(true) { }
+          : from_(from), to_(to), payload_(payload), valid_(true) { }
 
         SedaMessage(const SedaMessage &other)
-            : from_(other.from()), to_(other.to()), payload_(other.payload()), valid_(other.is_valid()) {}
+          : from_(other.from()), to_(other.to()), payload_(other.payload()), valid_(other.is_valid()) {}
         virtual ~SedaMessage() {}
 
         const SedaMessage &operator=(const SedaMessage &rhs) {
@@ -45,25 +45,28 @@ namespace comm {
             to_ = rhs.to();
             payload_ = rhs.payload();
             valid_ = rhs.is_valid();
+            encode_buf_ = rhs.encode_buf_;
+            strrep_buf_ = rhs.strrep_buf_;
           }
           return *this;
         }
 
         std::string str() const;
         virtual void decode(const std::string&) throw(DecodingError);
-        virtual std::string encode() const throw(EncodingError);
+        virtual const std::string &encode() const throw(EncodingError);
 
         const address_type & from() const { return from_; }
         const address_type & to() const { return to_; }
         const payload_type & payload() const { return payload_; }
         bool is_valid() const { return valid_; }
-
-    private:
+      private:
         address_type from_;
         address_type to_;
         payload_type payload_;
         bool valid_;
+        mutable std::string encode_buf_;
+        mutable std::string strrep_buf_;
     };    
-}}
+  }}
 
 #endif
