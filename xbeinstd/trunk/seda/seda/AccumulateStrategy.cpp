@@ -14,9 +14,9 @@ namespace seda {
         StrategyDecorator::perform(e);
     }
 
-    std::string AccumulateStrategy::str() {
+    std::string AccumulateStrategy::str() const {
         std::ostringstream ostream(std::ostringstream::out);
-        seda::AccumulateStrategy::iterator it;
+        seda::AccumulateStrategy::const_iterator it;
         for (it=begin(); it != end(); it++) {
             ostream <<(*it)->str() << std::endl;
         }

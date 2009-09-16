@@ -31,7 +31,7 @@ namespace seda {
 
       const_iterator begin() const { return _accumulator.begin(); }
       const_iterator end() const { return _accumulator.end(); }
-      std::string str();
+      std::string str() const;
 
       /***
        * Provide a list of type-names that represent the type

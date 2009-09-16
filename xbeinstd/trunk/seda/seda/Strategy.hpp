@@ -20,6 +20,7 @@ namespace seda {
         virtual void onStageStop(const std::string& stageName)  {}
         const std::string& name() const { return _name; }
 
+        virtual std::string str() const { return name(); }
         /* TODO:  introduce a notation  for maximum  number of  threads this
            strategy supports.  It may be that particular  strategies must be
            executed sequentially. Can also be solved by acquiring a mutex from
