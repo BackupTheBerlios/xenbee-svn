@@ -28,14 +28,27 @@ SET(_zmq_BINARY_SEARCH_DIRS
   /usr/lib
   )
 
-message("ZMQ_HOME = $ENV{ZMQ_HOME}")
+##
+if( "${ZMQ_HOME}" STREQUAL "")
+  if("" MATCHES "$ENV{ZMQ_HOME}")
+    message(STATUS "ZMQ_HOME env is not set, setting it to /usr/local")
+    set (ZMQ_HOME ${_zmq_HOME})
+  else("" MATCHES "$ENV{ZMQ_HOME}")
+    set (ZMQ_HOME "$ENV{ZMQ_HOME}")
+  endif("" MATCHES "$ENV{ZMQ_HOME}")
+else( "${ZMQ_HOME}" STREQUAL "")
+  message(STATUS "ZMQ_HOME is not empty: \"${ZMQ_HOME}\"")
+endif( "${ZMQ_HOME}" STREQUAL "")
+##
 
-IF( NOT $ENV{ZMQ_HOME} STREQUAL "" )
-    SET(_zmq_INCLUDE_SEARCH_DIRS $ENV{ZMQ_HOME}/include ${_zmq_INCLUDE_SEARCH_DIRS})
-    SET(_zmq_LIBRARIES_SEARCH_DIRS $ENV{ZMQ_HOME}/lib ${_zmq_LIBRARIES_SEARCH_DIRS})
-    SET(_zmq_BINARY_SEARCH_DIRS $ENV{ZMQ_HOME}/bin ${_zmq_BINARY_SEARCH_DIRS})
-    SET(_zmq_HOME $ENV{ZMQ_HOME})
-ENDIF( NOT $ENV{ZMQ_HOME} STREQUAL "" )
+message(STATUS "Looking for zmq in ${ZMQ_HOME}")
+
+IF( NOT ${ZMQ_HOME} STREQUAL "" )
+    SET(_zmq_INCLUDE_SEARCH_DIRS ${ZMQ_HOME}/include ${_zmq_INCLUDE_SEARCH_DIRS})
+    SET(_zmq_LIBRARIES_SEARCH_DIRS ${ZMQ_HOME}/lib ${_zmq_LIBRARIES_SEARCH_DIRS})
+    SET(_zmq_BINARY_SEARCH_DIRS ${ZMQ_HOME}/bin ${_zmq_BINARY_SEARCH_DIRS})
+    SET(_zmq_HOME ${ZMQ_HOME})
+ENDIF( NOT ${ZMQ_HOME} STREQUAL "" )
 
 IF( NOT $ENV{ZMQ_INCLUDEDIR} STREQUAL "" )
   SET(_zmq_INCLUDE_SEARCH_DIRS $ENV{ZMQ_INCLUDEDIR} ${_zmq_INCLUDE_SEARCH_DIRS})
