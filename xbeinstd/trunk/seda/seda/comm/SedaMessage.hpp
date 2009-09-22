@@ -59,7 +59,17 @@ namespace seda {
         const address_type & to() const { return to_; }
         const payload_type & payload() const { return payload_; }
         bool is_valid() const { return valid_; }
+
+        void from(const address_type &new_from) { from_ = new_from; reset_buffers(); }
+        void to(const address_type &new_to) { to_ = new_to; reset_buffers(); }
+        void payload(const payload_type &new_payload) { payload_ = new_payload; reset_buffers(); }
       private:
+        void reset_buffers()
+        {
+          encode_buf_.clear();
+          strrep_buf_.clear();
+        }
+
         address_type from_;
         address_type to_;
         payload_type payload_;
