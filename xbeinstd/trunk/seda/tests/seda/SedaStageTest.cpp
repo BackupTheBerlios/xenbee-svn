@@ -43,7 +43,7 @@ SedaStageTest::testSendFoo() {
 
     stage->start();
 
-    const std::size_t numMsgs(10);
+    const std::size_t numMsgs(1000);
     for (std::size_t i=0; i < numMsgs; ++i) {
         stage->send(seda::IEvent::Ptr(new seda::StringEvent("foo")));
     }
@@ -51,7 +51,7 @@ SedaStageTest::testSendFoo() {
     stage->waitUntilEmpty();
     ecs->wait(numMsgs, 1000);
 
-    CPPUNIT_ASSERT_EQUAL(std::size_t(0), stage->size());
+    CPPUNIT_ASSERT_EQUAL(0U, stage->size());
     CPPUNIT_ASSERT_EQUAL(numMsgs, ecs->count());
 
     stage->stop();
