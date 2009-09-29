@@ -3,7 +3,8 @@
 #include <iostream>
 #include <string>
 #include <stdexcept>
-#include <signal.h>
+#include <csignal>
+#include <stdint.h>
 #include <sys/wait.h>
 
 #include <seda/seda-config.hpp>

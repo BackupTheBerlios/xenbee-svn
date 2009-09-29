@@ -3,6 +3,7 @@
 
 #include <cppunit/extensions/HelperMacros.h>
 #include <seda/logging.hpp>
+#include <stdint.h>
 #include <unistd.h>
 
 namespace seda { namespace comm { namespace tests {
