@@ -51,7 +51,7 @@ SedaStageTest::testSendFoo() {
     stage->waitUntilEmpty();
     ecs->wait(numMsgs, 1000);
 
-    CPPUNIT_ASSERT_EQUAL(0U, stage->size());
+    CPPUNIT_ASSERT_EQUAL(std::size_t(0), stage->size());
     CPPUNIT_ASSERT_EQUAL(numMsgs, ecs->count());
 
     stage->stop();
@@ -205,8 +205,8 @@ void SedaStageTest::testLossyDaemonStrategy() {
     first->waitUntilEmpty(4000);
 
     CPPUNIT_ASSERT(first->empty());
-    CPPUNIT_ASSERT((std::size_t)0   < ecs->count());
-    CPPUNIT_ASSERT((std::size_t)100 > ecs->count());
+    CPPUNIT_ASSERT(std::size_t(0)   < ecs->count());
+    CPPUNIT_ASSERT(std::size_t(100) > ecs->count());
 
     first->stop();
 }
@@ -226,7 +226,7 @@ void SedaStageTest::testFilterStrategy() {
     first->waitUntilEmpty(500);
 
     CPPUNIT_ASSERT(first->empty());
-    CPPUNIT_ASSERT_EQUAL((std::size_t)0, ecs->count());
+    CPPUNIT_ASSERT_EQUAL(std::size_t(0), ecs->count());
 
     // timer events are not filtered
     first->send(seda::IEvent::Ptr(new seda::TimerEvent("test-timer")));
@@ -235,7 +235,7 @@ void SedaStageTest::testFilterStrategy() {
     ecs->wait(1, 1000);
 
     CPPUNIT_ASSERT(first->empty());
-    CPPUNIT_ASSERT_EQUAL((std::size_t)1, ecs->count());
+    CPPUNIT_ASSERT_EQUAL(std::size_t(1), ecs->count());
 
     first->stop();
 }
