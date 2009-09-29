@@ -19,6 +19,7 @@
 #include <iostream> // std::cout
 #include <fstream>
 #include <sstream>
+#include <cstdlib>
 #include <seda/comm/ConnectionFactory.hpp>
 #include <seda/comm/SedaMessage.hpp>
 
@@ -32,7 +33,7 @@ int main(int argc, char **argv)
     std::cerr << "\tfrom - the logical name to send messages from" << std::endl;
     std::cerr << "\tfrom - the logical name to send messages to" << std::endl;
     std::cerr << "\tpayload - the message body (if not specified or equals to -, stdin is taken)" << std::endl;
-    exit(1);
+    std::exit(1);
   }
   const std::string from(argv[1]);
   const std::string to(argv[2]);
@@ -77,5 +78,5 @@ int main(int argc, char **argv)
   } catch (std::exception &ex) {
     std::cerr << "error during send(): " << ex.what();
   }
-  exit(0);
+  std::exit(0);
 }

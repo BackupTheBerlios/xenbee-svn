@@ -18,6 +18,7 @@
  */
 
 #include <iostream> // std::cout
+#include <cstdlib>
 #include <seda/comm/ConnectionFactory.hpp>
 #include <seda/comm/SedaMessage.hpp>
 
@@ -29,7 +30,7 @@ int main(int argc, char **argv)
   {
     std::cerr << "usage: " << argv[0] << " name" << std::endl;
     std::cerr << "\tname - the logical to listen on" << std::endl;
-    exit(1);
+    std::exit(1);
   }
   ConnectionFactory::ptr_t cFactory(new ConnectionFactory());
   ConnectionParameters params("zmq", "localhost", argv[1]);
@@ -50,5 +51,5 @@ int main(int argc, char **argv)
       std::cerr << "error during recv(): " << ex.what();
     }
   }
-  exit(0);
+  std::exit(0);
 }
