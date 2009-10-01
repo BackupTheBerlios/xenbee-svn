@@ -47,7 +47,9 @@ else(UNIX)
 endif(UNIX)
 
 ## add doxygen support
-include(TargetDoc OPTIONAL)
+if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
+  include(TargetDoc.cmake OPTIONAL)
+endif(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
 
 ## PkgConfig is helpful
 include(FindPkgConfig)
