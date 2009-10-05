@@ -34,17 +34,31 @@ set(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} ${CMAKE_ADDITIONAL_PATH}/include)
 set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} ${CMAKE_ADDITIONAL_PATH}/lib)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/modules")
 
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
+include_directories(${${PROJECT_NAME}_SOURCE_DIR})
+
 # Definitions for different compilations.
 # Debug is the default development mode. Warn as much as possible, but
 # CPPUnit raises some errors about virtual functions - suppress them.
-if (UNIX)
-  set(CMAKE_CXX_FLAGS_DEBUG "-Wall -Werror -Wno-non-virtual-dtor" CACHE STRING "compiler flags - debug")
-  # Releases are made with the release build. Optimize code.
-  set(CMAKE_CXX_FLAGS_RELEASE "-Wall -Werror -O3 -Wno-non-virtual-dtor" CACHE STRING "compiler flags - release")
-  set(CMAKE_CXX_FLAGS "-Wall -Werror -O3 -Wno-non-virtual-dtor" CACHE STRING "compiler flags")
-else(UNIX)
+if (WIN32)
   # make windows happy
-endif(UNIX)
+else(WIN32)
+  if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
+    # set(CMAKE_CXX_FLAGS "-Wall -Wno-non-virtual-dtor -Werror")
+    set(CMAKE_CXX_FLAGS "-Wall -Wno-non-virtual-dtor")
+    # Releases are made with the release build. Optimize code.
+    set(CMAKE_CXX_FLAGS_RELEASE "-O3 ")
+    set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -ggdb -W -Wreturn-type -Wshadow -fno-omit-frame-pointer")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wunused-variable -Wunused-parameter")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wunused-function -Wunused")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Woverloaded-virtual -Wno-system-headers")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}  -pg -fprofile-arcs -ftest-coverage")
+    # gprof and gcov support
+    set(CMAKE_CXX_FLAGS_PROFILE "-O0 -g -ggdb -Wreturn-type -Woverloaded-virtual")
+    set(CMAKE_CXX_FLAGS_PROFILE "${CMAKE_CXX_FLAGS_PROFILE} -Wno-system-headers -pg")
+    set(CMAKE_CXX_FLAGS_PROFILE "${CMAKE_CXX_FLAGS_PROFILE} -fprofile-arcs -ftest-coverage")
+  endif(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
+endif(WIN32)
 
 ## add doxygen support
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
@@ -59,13 +73,6 @@ if ( PKG_CONFIG_FOUND )
     message(STATUS "CPPUnit: ${CPPUNIT_CFLAGS} ${CPPUNIT_LDFLAGS} STATIC=${CPPUNIT_STATIC_LDFLAGS}")
   endif (ENABLE_UNIT_TESTS)
 
-  if (ENABLE_LOGGING)
-    pkg_check_modules (LOG4CPP log4cpp>=1.0)
-    # The log4cpp package config is broken, doesn't set static library -
-    # therefore do it manually here.
-    set(LOG4CPP_STATIC_LIBRARIES log4cpp.a)
-    message(STATUS "LOG4CPP: ${LOG4CPP_CFLAGS} ${LOG4CPP_LDFLAGS} STATIC=${LOG4CPP_STATIC_LDFLAGS}")
-  endif (ENABLE_LOGGING)
 else  ( PKG_CONFIG_FOUND )
   message("No PKGCONFIG found - hoping for the best.")
 
@@ -75,13 +82,13 @@ else  ( PKG_CONFIG_FOUND )
     set(CPPUNIT_LIBRARIES "cppunit" CACHE PATH "CPPUnit libraries")
   endif (ENABLE_UNIT_TESTS)
 
-  if (ENABLE_LOGGING)
-    set(LOG4CPP_STATIC_INCLUDE_DIRS "${CMAKE_ADDITIONAL_PATH}/include" CACHE PATH "Log4cpp Include dir")
-    set(LOG4CPP_STATIC_LIBRARY_DIRS "${CMAKE_ADDITIONAL_PATH}/lib" CACHE PATH "Log4cpp Library dir")
-    set(LOG4CPP_STATIC_LIBRARIES    "log4cpp" CACHE STRING "Log4cpp libraries")
-    set(LOG4CPP_FOUND NO CACHE BOOL "Log4cpp found")
-  endif (ENABLE_LOGGING)
 endif ( PKG_CONFIG_FOUND )
+
+## logging
+if (ENABLE_LOGGING)
+  include(FindLogging)
+  message(STATUS "LOG4CPP: -I${LOG4CPP_INCLUDE_DIRS} '${LOG4CPP_LIBRARY}'")
+endif (ENABLE_LOGGING)
 
 ## check for threads
 Include(FindThreads)
@@ -147,10 +154,8 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/libseda.pc.in   ${CMAKE_CURRENT_BINAR
 ADD_DEFINITIONS( -DHAVE_CONFIG_H )
 
 # Make sure all subdirectories include correctly
-include_directories(${CMAKE_CURRENT_BINARY_DIR})
-include_directories(${${PROJECT_NAME}_SOURCE_DIR})
 if (ENABLE_LOGGING)
-  include_directories(${LOG4CPP_STATIC_INCLUDE_DIRS})
+  include_directories(${LOG4CPP_INCLUDE_DIRS})
 endif (ENABLE_LOGGING)
 include_directories(${Boost_INCLUDE_DIRS})
 if (ENABLE_COMM_LIB)
@@ -159,7 +164,7 @@ endif (ENABLE_COMM_LIB)
 include_directories(${PB_INCLUDE_DIR})
 
 include_directories(${CMAKE_INCLUDE_PATH})
-link_directories(${CMAKE_LIBRARY_PATH} ${LOG4CPP_STATIC_LIBRARY_DIRS})
+link_directories(${CMAKE_LIBRARY_PATH})
 link_directories(${${PROJECT_NAME}_BINARY_DIR})
 link_directories(${Boost_LIBRARY_DIRS})
     if (CMAKE_USE_PTHREADS_INIT)
@@ -167,7 +172,7 @@ link_directories(${Boost_LIBRARY_DIRS})
 endif(CMAKE_USE_PTHREADS_INIT)
 link_libraries(${Boost_LIBRARIES})
 if(ENABLE_LOGGING)
-  link_libraries(-Wl,-Bstatic ${LOG4CPP_STATIC_LIBRARIES})
+  link_libraries(${LOG4CPP_LIBRARY})
 endif(ENABLE_LOGGING)
 
 # Reflect the package structure
@@ -231,7 +236,7 @@ message("***** Configuration *****")
 message("  prefix: ${CMAKE_INSTALL_PREFIX}")
 if (ENABLE_LOGGING)
   message("  logging: yes")
-  message("  LOG4CPP: -I${LOG4CPP_STATIC_INCLUDE_DIRS} -L${LOG4CPP_STATIC_LIBRARY_DIRS} -l${LOG4CPP_STATIC_LIBRARIES}")
+  message("  LOG4CPP: -I${LOG4CPP_INCLUDE_DIRS} -l${LOG4CPP_LIBRARY}")
 else (ENABLE_LOGGING)
   message("  logging: no")
 endif (ENABLE_LOGGING)
