@@ -83,6 +83,11 @@ else  ( PKG_CONFIG_FOUND )
   endif (ENABLE_UNIT_TESTS)
 
 endif ( PKG_CONFIG_FOUND )
+## logging
+if (ENABLE_LOGGING)
+  include(FindLogging)
+  message(STATUS "LOG4CPP: ${LOG4CPP_CFLAGS} ${LOG4CPP_LDFLAGS} STATIC=${LOG4CPP_STATIC_LDFLAGS}")
+endif (ENABLE_LOGGING)
 
 ## logging
 if (ENABLE_LOGGING)

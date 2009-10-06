@@ -28,8 +28,8 @@ void sighandler(int signal) {
 
 ZMQConnectionTest::ZMQConnectionTest()
   : SEDA_INIT_LOGGER("tests.seda.comm.ZMQConnectionTest")
-  , zmq_server_port_(5682)
   , zmq_server_pid_(-1)
+  , zmq_server_port_(5682)
 {
 }
 
@@ -262,6 +262,7 @@ bool ZMQConnectionTest::start_zmq_server(pid_t *pid, uint32_t *port)
     SEDA_LOG_ERROR("zmq_server could not be started: " << WEXITSTATUS(status));
     return false;
   }
+  return true;
 }
 
 bool ZMQConnectionTest::stop_zmq_server(pid_t *pid)
