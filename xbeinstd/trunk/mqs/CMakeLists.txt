@@ -27,6 +27,10 @@ OPTION(PERFORM_CHANNEL_IS_STARTED_CHECK
  "Perform sanity checks when calling mqs::Channel methods"
  YES)
 
+OPTION(USE_STL_TR1 
+ "Use tr1 from stl"
+ YES)
+
 set(TEST_BROKER_URI "tcp://localhost:61613?wireFormat=stomp&username=guest&password=guest" CACHE STRING "The ActiveMQ broker to use for unit tests")
 
 cmake_minimum_required(VERSION "2.6" FATAL_ERROR)
@@ -132,7 +136,17 @@ if (CMAKE_USE_PTHREADS_INIT)
     link_libraries(-lpthread)
 endif(CMAKE_USE_PTHREADS_INIT)
 link_libraries(${Boost_LIBRARIES})
+
+IF(WIN32)
+  # Path to be fixed
+  link_directories("C:/Program Files/GnuWin32/lib")
+  link_libraries(ws2_32.lib rpcrt4.lib)
+  link_libraries(libactivemq-cpp.lib )
+  link_libraries(cppunit.lib)
+ELSE(WIN32)
 link_libraries(-Wl,-Bstatic ${AMQ_STATIC_LDFLAGS} -Wl,-Bdynamic)
+ENDIF(WIN32)
+
 if(ENABLE_LOGGING)
   link_libraries(${LOG4CPP_STATIC_LIBRARIES})
 endif(ENABLE_LOGGING)

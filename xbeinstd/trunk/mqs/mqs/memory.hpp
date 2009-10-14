@@ -20,6 +20,7 @@
 #define MQS_MEMORY_HPP 1
 
 #ifdef HAVE_CONFIG_H
+#  include <config.h>
 #endif
 
 #if defined(USE_STL_TR1) && (USE_STL_TR1 == 1)
@@ -30,7 +31,7 @@
 
 namespace mqs
 {
-  using ::tr1::shared_ptr;
+  using ::std::tr1::shared_ptr;
 }
 
 #endif
