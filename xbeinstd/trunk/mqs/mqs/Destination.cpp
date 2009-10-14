@@ -42,12 +42,12 @@ Destination::Destination() throw()
     _isValid = false;
 }
 
-std::tr1::shared_ptr<cms::Destination>
+shared_ptr<cms::Destination>
 Destination::toCMSDestination(cms::Session &session) const {
     if (isTopic())
-        return std::tr1::shared_ptr<cms::Destination>(session.createTopic(str()));
+        return shared_ptr<cms::Destination>(session.createTopic(str()));
     else
-        return std::tr1::shared_ptr<cms::Destination>(session.createQueue(str()));
+        return shared_ptr<cms::Destination>(session.createQueue(str()));
 }
 
 void

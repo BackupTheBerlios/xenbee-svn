@@ -8,7 +8,7 @@
 #include <ostream>
 #include <cms/Destination.h>
 #include <cms/Session.h>
-#include <mqs/shared_ptr.hpp>
+#include <mqs/memory.hpp>
 
 namespace mqs {
     /**
@@ -48,7 +48,7 @@ namespace mqs {
         long long getLongLongProperty(const std::string& key, long long def = 0) const;
         bool getBooleanProperty(const std::string& key, bool def = false) const;
     
-        std::tr1::shared_ptr<cms::Destination> toCMSDestination(cms::Session &session) const;
+        shared_ptr<cms::Destination> toCMSDestination(cms::Session &session) const;
         bool hasProperty(const std::string& key) const;
         bool isTopic() const;
         bool isQueue() const;

@@ -80,7 +80,7 @@ Channel::start(bool doFlush) throw(ChannelConnectionFailed) {
         return;
   
     // Create a ConnectionFactory
-    std::tr1::shared_ptr<ActiveMQConnectionFactory> connectionFactory(new ActiveMQConnectionFactory(_broker.value));
+    shared_ptr<ActiveMQConnectionFactory> connectionFactory(new ActiveMQConnectionFactory(_broker.value));
   
     MQS_LOG_DEBUG("creating connection");
     try {
@@ -205,8 +205,8 @@ Channel::addIncomingQueue(const mqs::Destination &dst) {
   
     struct Consumer consumer;
     consumer.destination = dst.toCMSDestination(*_session);
-    consumer.mqs_destination = std::tr1::shared_ptr<mqs::Destination>(new mqs::Destination(dst));
-    consumer.consumer = std::tr1::shared_ptr<cms::MessageConsumer>(_session->createConsumer(consumer.destination.get()));
+    consumer.mqs_destination = shared_ptr<mqs::Destination>(new mqs::Destination(dst));
+    consumer.consumer = shared_ptr<cms::MessageConsumer>(_session->createConsumer(consumer.destination.get()));
     consumer.consumer->setMessageListener(this);
 
     boost::unique_lock<boost::recursive_mutex> lock(_mtx);
@@ -239,9 +239,9 @@ const std::string&
 Channel::send(const mqs::Message &msg) {
     ENSURE_STARTED();
 
-    std::tr1::shared_ptr<cms::Message> m(_session->createBytesMessage((unsigned char*)msg.body().c_str(), msg.body().size()));
-    std::tr1::shared_ptr<cms::Destination> to(msg.to().toCMSDestination(*_session));
-    std::tr1::shared_ptr<cms::Destination> from(msg.from().toCMSDestination(*_session));
+    shared_ptr<cms::Message> m(_session->createBytesMessage((unsigned char*)msg.body().c_str(), msg.body().size()));
+    shared_ptr<cms::Destination> to(msg.to().toCMSDestination(*_session));
+    shared_ptr<cms::Destination> from(msg.from().toCMSDestination(*_session));
 
     if (msg.id().empty()) {
         mqs::Message &m(const_cast<mqs::Message&>(msg));

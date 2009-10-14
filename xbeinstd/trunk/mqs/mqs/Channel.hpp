@@ -2,7 +2,7 @@
 #define MQS_CHANNEL_HPP
 
 #include <mqs/common.hpp>
-#include <mqs/shared_ptr.hpp>
+#include <mqs/memory.hpp>
 
 #include <vector>
 #include <list>
@@ -41,7 +41,7 @@ namespace mqs {
                     public cms::ExceptionListener,
                     public mqs::Observable {
     public:
-        typedef std::tr1::shared_ptr<Channel> Ptr;
+        typedef shared_ptr<Channel> Ptr;
 
         enum State {
             DISCONNECTED,
@@ -209,15 +209,15 @@ namespace mqs {
         mqs::Destination _outQueue;
         mqs::MessageSequenceGenerator::Ptr _msgSeqGen;
 
-        std::tr1::shared_ptr<cms::Connection> _connection;
-        std::tr1::shared_ptr<cms::Session> _session;
-        std::tr1::shared_ptr<cms::MessageProducer> _producer;
-        std::tr1::shared_ptr<cms::Destination> _producer_destination;
+        shared_ptr<cms::Connection> _connection;
+        shared_ptr<cms::Session> _session;
+        shared_ptr<cms::MessageProducer> _producer;
+        shared_ptr<cms::Destination> _producer_destination;
 
         struct Consumer {
-            std::tr1::shared_ptr<mqs::Destination> mqs_destination;
-            std::tr1::shared_ptr<cms::Destination> destination;
-            std::tr1::shared_ptr<cms::MessageConsumer> consumer;
+            shared_ptr<mqs::Destination> mqs_destination;
+            shared_ptr<cms::Destination> destination;
+            shared_ptr<cms::MessageConsumer> consumer;
         };
         std::list<Consumer> _consumer;
 

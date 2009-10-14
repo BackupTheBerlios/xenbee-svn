@@ -3,12 +3,12 @@
 
 #include <string>
 #include <boost/thread.hpp>
-#include <mqs/shared_ptr.hpp>
+#include <mqs/memory.hpp>
 
 namespace mqs {
     class MessageSequenceGenerator { 
         public:
-            typedef std::tr1::shared_ptr<MessageSequenceGenerator> Ptr;
+            typedef shared_ptr<MessageSequenceGenerator> Ptr;
 
             static Ptr newInstance();
 

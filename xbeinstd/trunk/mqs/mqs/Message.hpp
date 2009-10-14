@@ -2,14 +2,14 @@
 #define MQS_MESSAGE_HPP 1
 
 #include <string>
-#include <mqs/shared_ptr.hpp>
+#include <mqs/memory.hpp>
 #include <mqs/MQSException.hpp>
 #include <mqs/Destination.hpp>
 
 namespace mqs {
     class Message {
         public:
-            typedef std::tr1::shared_ptr<Message> Ptr;
+            typedef shared_ptr<Message> Ptr;
 
             Message(const std::string &body, const mqs::Destination &from, const mqs::Destination &to)
                 : _id(""),
