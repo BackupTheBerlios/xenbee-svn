@@ -1,16 +1,47 @@
+#include <fstream>
 #include <mqs/common.hpp>
 
 #include <cppunit/extensions/TestFactoryRegistry.h>
-#include <cppunit/ui/text/TestRunner.h>
 #include <cppunit/CompilerOutputter.h>
+#include <cppunit/XmlOutputter.h>
+#include <cppunit/TestResult.h>
+#include <cppunit/TestResultCollector.h>
+#include <cppunit/TextTestRunner.h>
+#include <cppunit/ui/text/TestRunner.h>
+#include <cppunit/TextTestProgressListener.h>
+#include <cppunit/BriefTestProgressListener.h>
+#include <cppunit/TestFailure.h>
+#include <cppunit/Test.h>
+
+#include <cppunit/XmlOutputterHook.h>
+#include <cppunit/tools/XmlElement.h>
+#include <cppunit/tools/StringTools.h>
+#include <cppunit/tools/XmlDocument.h>
+#include <cppunit/TestFailure.h>
+#include <cppunit/SourceLine.h>
+#include <cppunit/Exception.h>
+#include <cppunit/Message.h>
 
 int
 main(int argc, char **argv) {
     mqscommon::LoggingConfigurator::configure();
     
-    CppUnit::TextUi::TestRunner runner;
-    CppUnit::TestFactoryRegistry &registry = CppUnit::TestFactoryRegistry::getRegistry();
-    runner.addTest( registry.makeTest() );
+  CPPUNIT_NS::TestResult           testresult;
+  CPPUNIT_NS::TestResultCollector  collectedresults;
+  testresult.addListener (&collectedresults);
+
+  CPPUNIT_NS::TestRunner runner;
+  CPPUNIT_NS::TestFactoryRegistry &registry = CPPUNIT_NS::TestFactoryRegistry::getRegistry();
+  runner.addTest( registry.makeTest() );
+
+#if 1
+  runner.run (testresult);
+  std::ofstream outStream("out.xml");
+  CPPUNIT_NS::XmlOutputter xmloutputter (&collectedresults, outStream);
+  //CPPUNIT_NS::XmlOutputter xmloutputter (&collectedresults, std::cout);
+  xmloutputter.write ();
+  bool wasSuccessful = collectedresults.wasSuccessful () ;
+#else
     CppUnit::CompilerOutputter *outputter =
         new CppUnit::CompilerOutputter(&runner.result(), std::cout);
     outputter->setLocationFormat("%p(%l) : ");
@@ -22,5 +53,6 @@ main(int argc, char **argv) {
                                     true,  // doPrintResult
                                     true   // doPrintProgress
                                     );
+#endif
     return !wasSuccessful;  
 }

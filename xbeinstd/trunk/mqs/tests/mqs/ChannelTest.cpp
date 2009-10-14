@@ -229,11 +229,19 @@ void ChannelTest::testConnectionLoss() {
         if (_exceptionArrived) break;
 
         MQS_LOG_INFO("please kill the message-queue server now");
+#if defined(WIN32)
+        Sleep(10000);
+#else
         sleep(10);
+#endif
     }
     if (_exceptionArrived) {
         MQS_LOG_INFO("you may restart the message-queue server now");
+#if defined(WIN32)
+        Sleep(10000);
+#else
         sleep(10);
+#endif
     } else {
         CPPUNIT_ASSERT_MESSAGE("Expected exception did not occur during connection loss test", false);
     }
