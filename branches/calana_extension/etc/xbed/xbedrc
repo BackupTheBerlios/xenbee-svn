@@ -1,0 +1,34 @@
+[DEFAULT]
+etc: /usr/local/xenbee/etc
+
+[global]
+pidfile: /var/run/xbed.pid
+backend: xen
+schema_dir: %(etc)s/xml/schema
+spool: /srv/xenbee
+
+[logging]
+logconf: %(etc)s/xbed/logging.rc
+;logfile: /var/log/xenbee/xbed.log
+
+[stomp]
+uri: stomp://192.168.122.1/xenbee.daemon.1
+user: guest
+pass: guest
+
+[security]
+privkey: %(etc)s/xbed/xbed-key.pem
+pubkey:  %(etc)s/xbed/xbed.pem
+cacert:  %(etc)s/xbed/ca-cert.pem
+userdb:  %(etc)s/xbed/allowed-users
+
+[instance]
+macdb: %(etc)s/xbed/mac-addresses
+jailpkg: /srv/xenbee/jail-package.tar.bz2
+diskproto: file
+
+[network]
+bridge: virbr0
+gateway: 192.168.122.1
+nameserver: 192.168.122.1
+netmask: 255.255.255.0
