@@ -1,0 +1,66 @@
+%class BrokerDispatcher
+%package net.calana.comm.sm
+%import net.calana.data.job.Job
+//%import net.calana.data.Peer
+//%import net.calana.data.Bid
+//%import net.calana.data.BrokerRequestContext
+%access public
+%start BrokerDispatcherFSM::StInitial
+%map BrokerDispatcherFSM
+%%
+StInitial {
+    BookingReq(job: Job, reqCtxt: BrokerRequestContext) StAuctionRunning {
+    	inBookingReq(job, reqCtxt);
+    }
+}
+StAuctionRunning {
+	AddBid(bid: Bid) StAuctionRunning {
+		inAuctionBid(bid);
+	}
+	EndAuction(job: Job, brokerCtxt: BrokerRequestContext)
+	    // Guard for successful auction
+	    [ctxt.hasBids(job) == true]
+		StWaitForWinner {
+			endSuccessfulAuction(job, brokerCtxt);
+		}
+	EndAuction(job: Job, brokerCtxt: BrokerRequestContext)
+		// No bid received - reject the request
+		[ctxt.hasBids(job) == false]
+		StRejectingWait {
+			endFailureAuction(job, brokerCtxt);
+		}
+}
+StWaitForWinner {
+ 	ProviderBooked(job: Job, brokerCtxt: BrokerRequestContext) StBooked {
+ 		inProviderBooked(job, brokerCtxt);
+ 	}
+ 	ProviderRejected(job: Job, brokerCtxt: BrokerRequestContext) StTerminated {
+ 		inProviderBookingRejected(job, brokerCtxt);
+ 	}
+}
+StRejectingWait {
+ 	BookingRejectedAck StTerminated { inBookingRejectedAck(); }
+}
+StBooked {
+	Confirm(job: Job, brokerCtxt: BrokerRequestContext) StConfirmed {
+		inConfirm(job, brokerCtxt);
+	}
+}
+StConfirmed {
+	ProviderClose(job: Job, brokerCtxt: BrokerRequestContext) StClosingWaitAck {
+		inProviderClose(job, brokerCtxt);
+	}
+}
+StClosing {
+	Close(job: Job, brokerCtxt: BrokerRequestContext) StClosingWaitAck {
+		outClose(job, brokerCtxt);
+	}
+}
+StClosingWaitAck {
+	CloseAck(job: Job, brokerCtxt: BrokerRequestContext) StTerminated {
+		inCloseAck(job, brokerCtxt);
+	}
+}
+StTerminated {
+}
+%%
