@@ -72,6 +72,10 @@ class CalanaBrokerDaemon(Daemon):
             "--stomp-pass", dest="stomp_pass", type="string",
             help="password for the stomp connection")
 
+        p.add_option(
+            "--bid-timeout", dest="bid_timeout", type="int",
+            help="Timeout for waiting for Auction BIDs")
+
         try:
             import optcomplete
         except ImportError:
@@ -124,6 +128,9 @@ class CalanaBrokerDaemon(Daemon):
             self.opts.stomp_user = cp.get("network", "user")
         if self.opts.stomp_pass is None:
             self.opts.stomp_pass = cp.get("network", "pass")
+
+        if self.opts.bid_timeout is None:
+            self.opts.bid_timeout = cp.get("network", "bidtimeout")
 
     def setup_logging(self):
         try:
@@ -211,7 +218,7 @@ class CalanaBrokerDaemon(Daemon):
         reactor.connectTCP(host,
                            port,
                            XenBEEBrokerProtocolFactory(self,
-                                                       queue="/queue/"+queue,
+                                                       my_queue="/queue/"+queue,
                                                        topic="/queue/xenbee.daemons",
                                                        server_queue="/queue/"+self.server_queue,
                                                        user=self.opts.stomp_user,

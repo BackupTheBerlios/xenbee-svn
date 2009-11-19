@@ -37,24 +37,34 @@ from lxml import etree
 from twisted.internet import defer, reactor
 from twisted.python import failure
 
-class StringTransport:
+#class StringTransport:
+#    def __init__(self, transport):
+#        self.__transport = transport
+#
+#    def write(self, data):
+#        return self.__transport.write(str(data))
+
+#class XMLTransport(StringTransport):
+class XMLTransport:
     def __init__(self, transport):
         self.__transport = transport
+#        StringTransport.__init__(self, transport)
 
-    def write(self, data):
-        return self.__transport.write(str(data))
-
-class XMLTransport(StringTransport):
-    def __init__(self, transport):
-        StringTransport.__init__(self, transport)
-
-    def write(self, msg):
+    def write(self, msg, destination=None):
+        log.debug("XMLTransport.write")
+        _destination = destination
+        if hasattr(msg, "destination"):
+            _destination = msg.destination
+            
         if isinstance(msg, (etree._Element, etree._ElementTree)):
             msg = etree.tostring(msg, xml_declaration=True)
+            #log.debug("XML1 '%s'" % msg)
         elif isinstance(msg, message.Message):
             msg = msg.as_str()
+            #log.debug("XML2 '%s'" % msg)
         if msg is not None:
-            StringTransport.write(self, msg)
+            log.debug(" XMLTransport: '%s' '%s'" % (_destination, self.__transport))
+            self.__transport.write(msg, _destination)
         return None
 
 class XMLProtocol(object):
@@ -97,6 +107,7 @@ class XMLProtocol(object):
             self.__understood.append(tag)
 
     def transformResultToMessage(self, result):
+            
         if result is None:
             # do not reply, so return None
             return None
@@ -108,13 +119,21 @@ class XMLProtocol(object):
                                    result.getErrorMessage())
         assert isinstance(result, message.Message), "attempted to transform strange result"
 
+        if hasattr(result, "destination"):
+            log.debug("transformResultToMessage '%s'" % result.destination)
+
         # return the xml document
-        return result.as_xml()
+        return result
+    #return result.as_xml()
 
     def sendMessage(self, msg):
         if msg is not None:
             try:
-                return self.transport.write(msg)
+                _destination = None
+                if hasattr(msg, "destination"):
+                    _destination = msg.destination
+                    log.debug("sendMessage dest='%s'" % _destination)
+                return self.transport.write(msg, _destination)
             except Exception, e:
                 log.error("message sending failed: %s" % (e,))
 
@@ -165,17 +184,26 @@ class XMLProtocol(object):
         error = message.MessageBuilder.from_xml(err.getroottree())
         log.error("got error:\n%s" % repr(error))
 
+    def do_CipherData(self, err, *args, **kw):
+        log.debug("Call do_CipherData of XMLProtocol")
+        pass
+
 class SecureXMLTransport(XMLTransport):
     def __init__(self, transport, securityLayer):
         XMLTransport.__init__(self, transport)
         self.securityLayer = securityLayer
         
-    def write(self, msg):
+    def write(self, msg, destination=None):
+        log.debug("SecureXMLTransport.write")
+        _destination = destination
+        if hasattr(msg, "destination"):
+            _destination = msg.destination
+        
         if isinstance(msg, message.Message):
             msg = msg.as_xml()
         _msg = self.securityLayer.sign(msg)[0]
         _msg = self.securityLayer.encrypt(_msg)
-        return XMLTransport.write(self, _msg)
+        return XMLTransport.write(self, _msg, _destination)
 
 class SecureProtocol(XMLProtocol):
     protocol = None
@@ -197,6 +225,9 @@ class SecureProtocol(XMLProtocol):
         self.mtx = threading.RLock()
         self.__message_queue = []
 
+    def cert(self):
+        return self.__cert
+    
     def do_EstablishMLS(self, elem, *a, **kw):
         """handle a MLS establish request."""
         
@@ -263,6 +294,9 @@ class SecureProtocol(XMLProtocol):
                     msg = None
             return msg
 
+    def getsecurityLayer(self):
+        return self.__securityLayer
+    
     def __establish(self, layer):
         log.info("Message Layer Security established")
         self.__securityLayer = layer

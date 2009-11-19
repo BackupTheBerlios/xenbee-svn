@@ -786,8 +786,10 @@ class TaskManager(singleton.Singleton, Observable):
             "Failed" : 4,
             "Terminated" : 4
         }
+        XBEDaemon.getInstance().protocolfactory.brokerJobState(task.ticket_id(), task.id(), state, stateMap[state])
         try:
             log.info("state of task changed: %s -> %s", task.id(), state)
+            # calana extension
             self.mtx.acquire()
             exitcode = 0
             if hasattr(task, "exitcode"):

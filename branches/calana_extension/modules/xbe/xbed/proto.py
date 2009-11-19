@@ -28,6 +28,7 @@ __version__ = "$Rev$"
 __author__ = "$Author: petry $"
 
 # system imports
+import sys, os, os.path, random
 import logging, re, time, threading
 log = logging.getLogger(__name__)
 
@@ -42,12 +43,17 @@ from twisted.internet import defer, reactor, threads
 from xbe.proto import XenBEEProtocolFactory, XenBEEProtocol
 from xbe.xml.namespaces import *
 from xbe.xml import xsdl, message, protocol, errcode, jsdl
+from xbe.xml import message, errcode, protocol as xmlprotocol, jsdl
 from xbe.concurrency import LockMgr
 
 from xbe.xbed.daemon import XBEDaemon
 from xbe.xbed.ticketstore import TicketStore
 from xbe.xbed.task import TaskManager
 from xbe.xbed.instance import InstanceManager
+
+
+from twisted.internet import task
+from xbe.stomp.proto import StompTransport
 
 import xbe.xbed.xbemsg_pb2 as xbemsg
 
@@ -63,9 +69,11 @@ class XenBEEClientProtocol(protocol.XMLProtocol):
         self.client = client
 
     def connectionMade(self):
+        log.debug("===== connectionMade - client")
         log.debug("client %s has connected" % (self.client))
-
+        
     def do_ConfirmReservation(self, elem, *args, **kw):
+        log.debug("=============== XenBEEClient2BrokerProtocol::do_ConfirmReservation")
         try:
             confirm = message.MessageBuilder.from_xml(elem.getroottree())
         except Exception, e:
@@ -86,6 +94,7 @@ class XenBEEClientProtocol(protocol.XMLProtocol):
 #            TaskManager.getInstance().removeTask(ticket.task)
 #            del ticket.task
 #            TicketStore.getInstance().release(ticket)
+            #self.factory.brokerJobState(confirm.ticket(), "xxx", "FAIL")
             return message.Error(errcode.ILLEGAL_REQUEST, "JSDL document is invalid: %s" % (e.error_log,))
 
         try:
@@ -101,8 +110,10 @@ class XenBEEClientProtocol(protocol.XMLProtocol):
             msg = message.Error(errcode.NO_INSTANCE_DESCRIPTION, str(e))
         else:
             ticket.task.confirm(confirm.jsdl(), jsdl_doc)
+            #self.factory.brokerJobState(confirm.ticket(), "xxx", "CONFIRM")
             if confirm.start_task():
                 ticket.task.start()
+                #self.factory.brokerJobState(confirm.ticket(), "xxx", "START")
             msg = message.Error(errcode.OK, "reservation confirmed")
         return msg
 
@@ -216,6 +227,12 @@ class XenBEEClientProtocol(protocol.XMLProtocol):
             return message.Error(errcode.INTERNAL_SERVER_ERROR, reason.getErrorMessage())
         d.addCallback(_success).addErrback(_failure).addCallback(self.sendMessage)
 
+    def do_PingRequest(self, elem, *args, **kw):
+        log.debug("XenBEEClientProtocol::pingRequest:")
+        request = message.MessageBuilder.from_xml(elem.getroottree())
+        msg = message.PongResponse(request.uuid())
+        return msg
+
 class XenBEEInstanceProtocol(protocol.XMLProtocol):
     """The XBE instance side protocol.
 
@@ -307,6 +324,188 @@ class XenBEEInstanceProtocol(protocol.XMLProtocol):
         else:
             log.warn("got execution finished from suspicious source")
 
+## calana extensions
+# TODO: hier muss die Implementierung hin!!!
+class XenBEEBrokerProtocol(protocol.XMLProtocol):
+    """The XBE broker side protocol.
+
+    This protocol is spoken between the broker and the provider.
+    The protocol is based on XML
+    """
+
+    def __init__(self, client=None, bla=None):
+        log.debug("XenBEEBrokerProtocol::init - 0")
+        protocol.XMLProtocol.__init__(self)
+        #xmlprotocol.XMLProtocol.__init__(self)
+        #self.aliveSender = task.LoopingCall(self.sendAliveMessage)
+        if client is None:
+            log.debug("XenBEEBrokerProtocol::init - 0, argc=0")
+            self.aliveSender = task.LoopingCall(self.sendAliveMessage)
+        else:
+            log.debug("XenBEEBrokerProtocol::init - 0, argc=1")
+            self.client = client
+
+#    def __init__(self, client):
+#        log.debug("XenBEEBrokerProtocol::init - 1")
+#        protocol.XMLProtocol.__init__(self)
+#        #xmlprotocol.XMLProtocol.__init__(self)
+#        #self.aliveSender = task.LoopingCall(self.sendAliveMessage)
+#        self.client = client
+
+#    def __init__(self):
+#        log.debug("XenBEEBrokerProtocol::init - 2")
+#        #protocol.XMLProtocol.__init__(self)
+#        protocol.XMLProtocol.__init__(self)
+#        self.aliveSender = task.LoopingCall(self.sendAliveMessage)
+#        #self.client = client
+#        #pass ???
+        
+    def connectionMade(self):
+        log.info("notifying xbe broker, that i am available now")
+        try:
+            msg = message.XbedAvailable(self.factory.instance_id)
+            log.debug("Send '%s'" % msg.as_xml())
+            self.sendMessage(self.transformResultToMessage(msg))
+        except Exception, e:
+            log.exception("send failed: %s" % e)
+            raise
+
+        # send an alive packet every 30 seconds
+        self.aliveSender.start(30, now=False)
+
+    def __get_uptime(self):
+        if os.path.exists("/proc/uptime"):
+            return map(float, open("/proc/uptime").read().split())
+        return (None, None)
+
+    def sendAliveMessage(self):
+        _id = self.factory.instance_id
+        _uptime, _idle = self.__get_uptime()
+        msg = message.XbedAlive(_id, _uptime, _idle)
+        log.debug("Send '%s'" % msg.as_xml())
+        self.sendMessage(self.transformResultToMessage(msg))
+
+    def sendJobState(self, ticket, task, state, state_msg):
+        msg = message.JobState(ticket, task, state)
+        log.debug("Send '%s'" % msg.as_xml())
+        self.sendMessage(self.transformResultToMessage(msg))
+    
+    def sendJobStart(self, ticket, task):
+        pass
+
+    def sendJobTerminate(self, ticket, task):
+        pass
+
+    def sendJobFailed(self, ticket, task):
+        pass
+
+    def do_CipherData(self, elem, *args, **kw):
+#    def do_CipherData(self, cipherdata, msg):
+#        msg = message.MessageBuilder.from_xml(elem.getroottree())
+        log.debug("Call do_CipherData BROKER 1 '%s'" % "msg")
+        pass
+
+    def do_PingRequest(self, elem, *args, **kw):
+        log.debug("XenBEEBrokerProtocol::pingRequest:")
+        request = message.MessageBuilder.from_xml(elem.getroottree())
+        msg = message.PongResponse(request.uuid())
+        log.debug("======> Sleep (%s)" % self.factory.queue)
+        if self.factory.queue == "/queue/xenbee.daemon.1":
+            log.debug("======> Sleep")
+            time.sleep(15)
+            log.debug("======> Sleep done")
+        return msg
+
+    def do_BookingRequest(self, elem, *args, **kw):
+        # use nearly the same code as for do_ReservationRequest
+        request = message.MessageBuilder.from_xml(elem.getroottree())
+        log.debug("==== XenBEEBrokerProtocol::bookingRequest: ")
+
+        #return message.BrokerError(request.uuid(), errcode.SERVER_BUSY)
+
+        ticket = TicketStore.getInstance().new()
+        if ticket is None:
+            # if no ticket could be generated:
+            msg = message.Error(request.uuid(), errcode.SERVER_BUSY)
+        else:
+            xbedurl     = self.factory.daemon.broker_uri
+            task        = TaskManager.getInstance().new(ticket.id())
+            ticket.task = task
+            #price       = 10*random.random()
+            price       = self.factory.daemon.price
+            msg = message.AuctionBidResponse(request.uuid(), xbedurl, ticket.id(), task.id(), price)
+        return msg
+            
+    def do_AuctionAccept(self, elem, *args, **kw):
+        request = message.MessageBuilder.from_xml(elem.getroottree())
+        log.debug("==== XenBEEBrokerProtocol::AuctionAccept: ")
+        return message.BrokerError(request.uuid(), errcode.OK)
+        return message.BrokerError(request.uuid(), errcode.SERVER_BUSY)
+        #return message.Error(errcode.TICKET_INVALID, request.ticket())
+        #return message.Error(errcode.OK)
+
+    def do_AuctionDeny(self, elem, *args, **kw):
+        # use nearly the same code as for do_CancelReservation
+        request = message.MessageBuilder.from_xml(elem.getroottree())
+        log.debug("==== XenBEEBrokerProtocol::AuctionDeny: ")
+
+        log.debug(str(request.ticket()))
+        ticket = TicketStore.getInstance().lookup(request.ticket())
+        if ticket is not None:
+            if not ticket.task.is_done():
+                reactor.callInThread(TaskManager.getInstance().terminateTask, ticket.task, "")
+                #return message.Error(errcode.OK, "termination in progress")
+        #else:
+        #    return message.Error(errcode.TICKET_INVALID, request.ticket())
+
+    def do_ConfirmReservation(self, elem, *args, **kw):
+        log.debug("=============== XenBEEClient2BrokerProtocol::do_ConfirmReservation")
+        try:
+            confirm = message.MessageBuilder.from_xml(elem.getroottree())
+        except Exception, e:
+            return message.BrokerError(confirm.uuid(), errcode.ILLEGAL_REQUEST, str(e))
+        ticket = TicketStore.getInstance().lookup(confirm.ticket())
+        if ticket is None:
+            return message.BrokerError(confirm.uuid(), errcode.TICKET_INVALID, confirm.ticket())
+        log.debug("got confirmation with ticket %s" % confirm.ticket())
+
+        xbed = XBEDaemon.getInstance()
+        jsdl_doc = jsdl.JsdlDocument(schema_map=xbed.schema_map)
+        try:
+            if hasattr(etree, 'clearErrorLog'): etree.clearErrorLog()
+            if hasattr(etree, 'clear_error_log'): etree.clear_error_log()
+            parsed_jsdl = jsdl_doc.parse(confirm.jsdl())
+        except etree.DocumentInvalid, e:
+            log.info("got invalid document: %s" % str(e.error_log))
+#            TaskManager.getInstance().removeTask(ticket.task)
+#            del ticket.task
+#            TicketStore.getInstance().release(ticket)
+            return message.BrokerError(confirm.uuid(), errcode.ILLEGAL_REQUEST, "JSDL document is invalid: %s" % (e.error_log,))
+
+        try:
+            # does the job have our InstanceDescription element?
+            # otherwise drop the job
+            jsdl_doc.lookup_path(
+                "JobDefinition/JobDescription/Resources/"+
+                "InstanceDefinition/InstanceDescription")
+        except Exception, e:
+#            TicketStore.getInstance().release(ticket)
+#            TaskManager.getInstance().removeTask(ticket.task)
+#            del ticket.task
+            msg = message.BrokerError(confirm.uuid(), errcode.NO_INSTANCE_DESCRIPTION, str(e))
+        else:
+            ticket.task.confirm(confirm.jsdl(), jsdl_doc)
+            if confirm.start_task():
+                ticket.task.start()
+            msg = message.BrokerError(confirm.uuid(), errcode.OK, "reservation confirmed")
+        return msg
+
+    def _success(uid):
+        return message.Error(errcode.OK, uid)
+
+    def _failure(reason):
+        return message.Error(errcode.INTERNAL_SERVER_ERROR, reason.getErrorMessage())
+
 class BaseProtocol(object):
     def __init__(self):
         self.mtx = threading.RLock()
@@ -317,9 +516,11 @@ class BaseProtocol(object):
     def makeConnection(self, transport):
         self.connected = 1
         self.transport = transport
+        log.debug("===== makeConnection - base")
         self.connectionMade()
 
     def connectionMade(self):
+        log.debug("===== connectionMade - base")
         pass
     def connectionLost(self):
         pass
@@ -356,6 +557,7 @@ class XenBEEInstanceProtocolPB(BaseProtocol):
         self.log.debug("initializing protocol")
 
     def connectionMade(self):
+        log.debug("===== connectionMade - Instance")
         BaseProtocol.connectionMade(self)
         self.log.debug("connection made")
     
@@ -536,13 +738,17 @@ class _XBEDProtocol(XenBEEProtocol):
 class XenBEEDaemonProtocolFactory(XenBEEProtocolFactory):
     protocol = _XBEDProtocol
 
-    def __init__(self, daemon, queue, topic, user, password):
+    def __init__(self, daemon, queue, broker, topic, user, password):
 	XenBEEProtocolFactory.__init__(self, queue, user, password)
+        self.broker_queue = broker
         self.daemon = daemon
         self.__topic = topic
         self.__protocolRemovalTimeout = 60
         self.__clientProtocols = {}
         self.__clientMutex = threading.RLock()
+
+        self.__brokerProtocols = {}
+        self.__brokerMutex = threading.RLock()
 
         self.__instanceProtocols = {}
         self.__instanceMutex = threading.RLock()
@@ -553,28 +759,50 @@ class XenBEEDaemonProtocolFactory(XenBEEProtocolFactory):
         self.cert = daemon.certificate
         self.ca_cert = daemon.ca_certificate
 
-        from twisted.internet import task
         self.__cleanupLoop = task.LoopingCall(self.__cleanupOldProtocols)
         self.__cleanupLoop.start(5*60)
 
-    def stompConnectionMade(self, stomp_prot):
-        stomp_prot.subscribe(self.__topic)
+        # calana extension
+        self.pbroker = None
+        self.instance_id = 1
+        log.debug("Broker queue: '%s'" % self.broker_queue)
+        log.debug("My     queue: '%s'" % self.queue)
+
+    def stompConnectionMade(self, stomp_protocol):
+        log.debug("===== stompConnectionMade - Daemon")
+        stomp_protocol.subscribe(self.__topic)
+        # calana extension
+        if self.pbroker is None:
+            self.pbroker = XenBEEBrokerProtocol()
+            self.pbroker.factory = self
+            self.pbroker.makeConnection(xmlprotocol.XMLTransport(
+                StompTransport(stomp_protocol, self.broker_queue)))
+
 
     def dispatchToProtocol(self, transport, msg, domain, sourceType, sourceId=None):
         assert sourceType != None, "the source-type must not be None"
 
-        if domain != "xenbee":
-            raise ValueError("illegal domain: %s, expected 'xenbee'" % domain)
-        if sourceId is None:
-            raise ValueError(
-                "illegal reply-to value, must be of the form: "+
-                "/(queue|topic)/xenbee.[type].[id]")
-        getattr(self, (sourceType.lower()+"Message"))(transport, msg, sourceId)
+        if domain != "xenbee" and domain != "calana":
+            raise ValueError("illegal domain: %s, expected 'xenbee' or 'calana'" % domain)
+
+        if domain == "calana":
+            if sourceId is None:
+                raise ValueError(
+                    "illegal reply-to value, must be of the form: "+
+                    "/(queue|topic)/calana.[type].[id]")
+            getattr(self, (sourceType.lower()+"Message"))(transport, msg, sourceId)
+        else:
+            if sourceId is None:
+                raise ValueError(
+                    "illegal reply-to value, must be of the form: "+
+                    "/(queue|topic)/xenbee.[type].[id]")
+            getattr(self, (sourceType.lower()+"Message"))(transport, msg, sourceId)
 
     def __messageHelper(self, id, msg, trnsprt, protocols, mtx, cls, *args, **kw):
         try:
             mtx.acquire()
             p = protocols.get(id)
+            log.debug("__messageHelper: client/daemon '%s' not found p=%s. Proto: %s" % (id, protocols, cls))
             if p is None:
                 p = cls(*args, **kw)
                 p.factory = self
@@ -583,7 +811,7 @@ class XenBEEDaemonProtocolFactory(XenBEEProtocolFactory):
             p.timeOflastReceive = time.time()
         finally:
             mtx.release()
-#        log.debug("got message for %r" % (p,))
+        log.debug("got message for %r" % (p,))
         d = p.messageReceived(msg)
         if d is not None:
             # log sent answers
@@ -603,6 +831,7 @@ class XenBEEDaemonProtocolFactory(XenBEEProtocolFactory):
             logfunc(fmt % dictionary)
 
     def clientMessage(self, transport, msg, client):
+        log.debug("call __messageHelper from clientMessage")
         self.__messageHelper(client, msg, transport,
                              self.__clientProtocols,
                              self.__clientMutex,
@@ -613,6 +842,7 @@ class XenBEEDaemonProtocolFactory(XenBEEProtocolFactory):
                              XenBEEClientProtocol, client)
 
     def instanceMessage(self, transport, msg, inst):
+        log.debug("call __messageHelper from instanceMessage")
         try:
             self.__messageHelper(inst, msg, transport,
                                  self.__instanceProtocols,
@@ -624,12 +854,31 @@ class XenBEEDaemonProtocolFactory(XenBEEProtocolFactory):
                                  self.__instanceMutex,
                                  XenBEEInstanceProtocolPB, inst)
 
+    def brokerMessage(self, transport, msg, broker):
+        log.debug("call __messageHelper from brokerMessage")
+        try:
+            self.__messageHelper(broker, msg, transport,
+                                 self.__brokerProtocols,
+                                 self.__brokerMutex,
+                                 XenBEEBrokerProtocol, broker, "leer")
+        except:
+            self.__messageHelper(broker, msg, transport,
+                                 self.__brokerProtocols,
+                                 self.__brokerMutex,
+                                 XenBEEBrokerProtocol, broker)
+
+    def brokerJobState(self, ticket, task, state, state_msg):
+        log.debug("====> brokerJobState: '%s', '%s', '%s'"% (ticket, task, state))
+        self.pbroker.sendJobState(ticket, task, state, state_msg)
+        pass
+    
     def certificateChecker(self, certificate):
         return XBEDaemon.getInstance().userDatabase.check_x509(certificate)
 
     # clean up registered protocols after some inactivity threshold
     def __cleanupOldProtocols(self):
         self.__cleanupHelper(self.__clientProtocols, self.__clientMutex)
+        self.__cleanupHelper(self.__brokerProtocols, self.__brokerMutex)
         self.__cleanupHelper(self.__instanceProtocols, self.__instanceMutex)
 
     def __cleanupHelper(self, protocols, mtx):

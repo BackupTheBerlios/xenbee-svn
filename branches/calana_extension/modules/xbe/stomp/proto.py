@@ -131,12 +131,18 @@ class StompTransport:
 	self.queue = queue
         self.ttl = ttl
 
-    def write(self, data, *args, **kw):
+    def write(self, data, destination=None, *args, **kw):
 	"""Write data to the destination queue."""
-        return threads.deferToThread(self.stomp.send,
-                                     self.queue,
-                                     str(data), self.ttl, *args, **kw)
-        
+        log.debug("StompTransport.write '%s' '%s'" % (destination, self.queue))
+        if destination is None:
+            return threads.deferToThread(self.stomp.send,
+                                         self.queue,
+                                         str(data), self.ttl, *args, **kw)
+        else:
+            return threads.deferToThread(self.stomp.send,
+                                         destination,
+                                         str(data), self.ttl, *args, **kw)
+
 class StompClient(LineReceiver):
     """Implementation of the STOMP protocol - client side.
 

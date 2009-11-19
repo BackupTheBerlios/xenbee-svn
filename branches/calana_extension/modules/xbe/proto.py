@@ -69,6 +69,7 @@ class XenBEEProtocol(StompClient):
         self.factory.stompConnectionMade(self)
 
     def _messageReceived(self, msg):
+        log.debug("XenBEEProtocol:_messageReceived")
         # use the reply-to field
         try:
             replyTo = msg.header["reply-to"]
@@ -91,6 +92,7 @@ class XenBEEProtocol(StompClient):
             log.error("could not dispatch according to MOM identifier: %s", momIdentifier, exc_info=1)
             
     def messageReceived(self, msg):
+        log.debug("proto::messageReceived")
         reactor.callInThread(self._messageReceived, msg)
 
     def errorOccured(self, msg, detail):

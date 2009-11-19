@@ -4,7 +4,7 @@
 
 # this section is provided by the ConfigParser
 [DEFAULT]
-default_logfile = /var/tmp/xenbee/xbed.log
+default_logfile = /var/tmp/xenbee/broker.log
 
 [loggers]
 keys = root
@@ -12,17 +12,17 @@ keys = root
 [logger_root]
 level = DEBUG
 # NOTE: it is important to *not* have spaces in the comma separated list
-handlers = stderr,syslog,logfile
+handlers = stderr,logfile
 
 [handlers]
-keys = stderr,syslog,logfile
+keys = stderr,logfile
 
 [formatters]
-keys = console,syslog,file
+keys = console,file
 
 [handler_stderr]
 class = StreamHandler
-level = WARN
+level = DEBUG
 formatter = console
 args = (sys.stderr,)
 
@@ -36,7 +36,7 @@ args = ()
 class = FileHandler
 level = DEBUG
 formatter = file
-args = ("/var/tmp/xenbee/xbed.log", 'w')
+args = ("/var/tmp/xenbee/broker.log", 'w')
 
 [formatter_console]
 format = %(asctime)s %(threadName)s %(levelname)-8s %(message)s

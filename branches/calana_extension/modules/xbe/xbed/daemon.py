@@ -106,6 +106,12 @@ class XBEDaemon(Daemon):
         p.add_option(
             "--stomp-pass", dest="stomp_pass", type="string",
             help="password for the stomp connection")
+        p.add_option(
+            "--broker", dest="broker", type="string",
+            help="borker queue name")
+        p.add_option(
+            "--price", dest="price", type="float",
+            help="price per minute")
         try:
             import optcomplete
         except ImportError:
@@ -177,6 +183,18 @@ class XBEDaemon(Daemon):
         if self.opts.jail_package is None:
             self.opts.jail_package = cp.get("instance", "jailpkg")
 
+        if self.opts.broker is None:
+            self.opts.broker = cp.get("broker", "queue")
+
+        if self.opts.price is not None:
+            self.price = self.opts.price
+        elif cp.has_option("broker", "price"):
+            self.price = os.path.expanduser(cp.get("broker", "price"))
+        else:
+            self.price = 0.0
+
+        print "Test 1"
+            
     def setup_logging(self):
         try:
             if os.path.exists(self.opts.log_conf):
@@ -190,6 +208,7 @@ class XBEDaemon(Daemon):
                 xbe.initLogging(self.opts.log_file)
         except IOError, ioe:
             raise Exception("%s: %s" % (ioe.strerror, ioe.filename))
+        print "Test 3"
         global log
         log = logging.getLogger()
         log.info("logging has been set up")
@@ -283,15 +302,24 @@ class XBEDaemon(Daemon):
         self.broker = "tcp://%s:%d?wireFormat=%s&username=%s&password=%s" % (
             host, port, "stomp", self.opts.stomp_user, self.opts.stomp_pass
         )
+        #self.broker_uri = "%s://%s:%d/%s" % ("stomp", host, port, queue)
+        self.broker_uri = "%s://%s/%s" % ("stomp", host,queue)
         self.qname = queue
                  
+        self.protocolfactory = XenBEEDaemonProtocolFactory(self,
+                                                           queue="/queue/"+queue,
+                                                           broker="/queue/"+self.opts.broker,
+                                                           topic="/queue/xenbee.daemons",
+                                                           user=self.opts.stomp_user,
+                                                           password=self.opts.stomp_pass)
         reactor.connectTCP(host,
                            port,
-                           XenBEEDaemonProtocolFactory(self,
-                                                       queue="/queue/"+queue,
-                                                       topic="/queue/xenbee.daemons",
-                                                       user=self.opts.stomp_user,
-                                                       password=self.opts.stomp_pass))
+                           self.protocolfactory)
+#                           XenBEEDaemonProtocolFactory(self,
+#                                                       queue="/queue/"+queue,
+#                                                       topic="/queue/xenbee.daemons",
+#                                                       user=self.opts.stomp_user,
+#                                                       password=self.opts.stomp_pass))
         log.info("  done.")
         
     def run(self, *args, **kw):
