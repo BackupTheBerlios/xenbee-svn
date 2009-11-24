@@ -27,7 +27,7 @@ The Xen Based Execution Environment XML Messages
 __version__ = "$Rev: 203 $"
 __author__ = "$Author: petry $"
 
-import logging, random, os
+import logging, random, os, time
 log = logging.getLogger(__name__)
 
 from textwrap import dedent
@@ -51,9 +51,15 @@ class Job:
         self.__ticket    = None
         self.__task_id   = None
 
+        self.__jobStart  = 0
+        self.__jobEnd    = 0
+        self.__jobPrice  = 0
         self.__xbeclient = xbeclient
 
         self.__nextTransition = "startNegotiation"
+
+    def bidContext(self):
+        return self.__bidCtxt
 
     def ticket(self):
         return self.__ticket
@@ -61,21 +67,44 @@ class Job:
     def task(self):
         return self.__task_id
 
+    def uuid(self):
+        return self.__client_uuid
+
     def setUser(self, user):
         self.__user = user
         
-    def setBid(self, bid):
-        self.__ticket      = bid.ticket()
-        self.__task_id     = bid.task_id()
-        self.__client_uuid = bid.uuid()
+    def setBid(self, bidCtxt):
+        self.__bidCtxt     = bidCtxt
+        self.__ticket      = bidCtxt.bid().ticket()
+        self.__task_id     = bidCtxt.bid().task_id()
+        self.__client_uuid = bidCtxt.bid().uuid()
+        self.__jobPrice    = bidCtxt.bid().price()
+
+    def getTime(self):
+        if self.getEnd()>0:
+            return self.__jobEnd - self.__jobStart
+        else:
+            return 0
+    def getCost(self):
+        return self.__jobPrice * (self.getTime())/60
+    def getStart(self):
+        return self.__jobStart
+    def getEnd(self):
+        return self.__jobEnd
+    def getState(self):
+        return self.__fsm.getState().getName()
 
     # handle next event
     def do_Event(self, event, reqCtxt):
+        
+        log.debug("JOB '%s' run in state '%s' event '%s'" %
+                  (self.ticket(), self.__fsm.getState().getName(), event))
         if hasattr(self.__fsm, event):
             log.debug("Run event '%s'" % event)
             getattr(self.__fsm, event)(self, reqCtxt)
         else:
             log.debug("Event '%s' not found." % event)
+            raise CommandFailed("jobFSM: No such Transition '%s'." % event)
 
     def do_EventByMap(self, eventkey, reqCtxt):
         eventMap = {
@@ -86,7 +115,7 @@ class Job:
             "Running:Executing"         : "runJob_Execute",
             "Running:Stage-Out"         : "runJob_StageOut",
             "Running:Instance-Stopping" : "",
-            "Finished"   : "closeJob_Closed",
+            "Finished"   : "closeJob_Closing",
 
             #"Running:Instance-Starting" : "runJob_Execute",
             #"Running:Executing"         : "runJob_StageOut",
@@ -97,23 +126,28 @@ class Job:
             "Terminated" : "terminate"
         }
         event = eventMap[eventkey]
-        log.debug("=========>do_Event[%s]" % event)
+        log.debug("=========>do_Event '%s' run in state '%s' even [%s]" % 
+                  (self.ticket(), self.__fsm.getState().getName(), event))
         if hasattr(self.__fsm, event):
-            log.debug("Run event '%s'" % event)
-            getattr(self.__fsm, event)(self, reqCtxt)
-            if (event == "runJob_StageOut" ):
-                self.__fsm.closeJob_Executed(self, reqCtxt)
-                self.__fsm.closeJob_Closing(self, reqCtxt)
+            try:
+                log.debug("Run event '%s'" % event)
+                getattr(self.__fsm, event)(self, reqCtxt)
+                if (event == "runJob_StageOut" ):
+                    self.__fsm.closeJob_Executed(self, reqCtxt)
+            except Exception, e:
+                log.debug("FAILED: %s." % e)
         else:
             log.debug("Event '%s' not found." % event)
         
     def terminate(self, reqCtxt):
-        log.debug("==job.terminate")
+        log.debug("==job.terminate '%s' run in state '%s' event '%s'" %
+                  (self.ticket(), self.__fsm.getState().getName(), "terminate"))
         self.__fsm.terminate(self, reqCtxt)
         
     def nextEvent(self, reqCtxt):
-        log.debug("==job.nextEvent")
         event = self.popEvent()
+        log.debug("==job.nextEvent '%s' run event '%s'" %
+                  (self.ticket(), event))
         if event is not None:
             if hasattr(self.__fsm, event):
                 getattr(self.__fsm, event)(self, reqCtxt)
@@ -136,10 +170,12 @@ class Job:
     # implementation of statemachine actions
     def terminateImpl(self, job, cCtxt):
         log.debug("==job::terminateImpl")
+        self.__jobEnd = time.time()
         pass
     
     def failImpl(self, job, cCtxt):
         log.debug("==job::failImpl")
+        self.__jobEnd = time.time()
         pass
 
     def startNegotiationImpl(self, job, cCtxt):
@@ -152,17 +188,15 @@ class Job:
         bid = cCtxt.bid()
         job.setBid(bid)
         self.print_info()
-        self.pushEvent("confirm")
-        pass
 
     def confirmImpl(self, job, cCtxt):
-        log.debug("==job::confirmImpl")
-        self.pushEvent("runJob_StageIn")
-        pass
+        log.debug("==job::confirmImpl and push event")
+        self.__xbeclient.pushEvent("Confirm")
 
     def	runJob_StageInImpl(self, job, cCtxt):
         log.debug("==job::runJob_StageInImpl")
         self.pushEvent("runJob_Execute")
+        self.__jobStart = time.time()
         pass
 
     def	runJob_ExecuteImpl(self, job, cCtxt):
@@ -182,11 +216,16 @@ class Job:
 
     def	closeJob_ClosingImpl(self, job, cCtxt):
         log.debug("==job::closeJob_ClosingImpl")
-        self.pushEvent("closeJob_Closed")
+        self.__jobEnd = time.time()
+        #cCtxt.success()
+        self.__xbeclient.pushEvent("ProviderClose")
         pass
 
     def closeJob_ClosedImpl(self, job, cCtxt):
         log.debug("==job::closeJob_ClosedImpl")
+        log.debug("Job finished: Time: %d sec" % self.getTime())
+        self.__xbeclient.pushEvent("CloseAck")
+
         pass
 
     def print_info(self):
@@ -202,8 +241,8 @@ class JobContext():
     """The job context definition
 
     """
-    def __init__(self, factory):
-        self.__factory = factory
-        self.__fsm     = Job()
+    def __init__(self, factory, xbed):
+        self.__xbed = xbed
+        self.__job  = Job(factory)
         pass
     

@@ -428,7 +428,8 @@ class XenBEEBrokerProtocol(protocol.XMLProtocol):
             # if no ticket could be generated:
             msg = message.Error(request.uuid(), errcode.SERVER_BUSY)
         else:
-            xbedurl     = self.factory.daemon.broker_uri
+            #xbedurl     = self.factory.daemon.broker_uri
+            xbedurl     = self.factory.daemon.qname
             task        = TaskManager.getInstance().new(ticket.id())
             ticket.task = task
             #price       = 10*random.random()
@@ -440,9 +441,7 @@ class XenBEEBrokerProtocol(protocol.XMLProtocol):
         request = message.MessageBuilder.from_xml(elem.getroottree())
         log.debug("==== XenBEEBrokerProtocol::AuctionAccept: ")
         return message.BrokerError(request.uuid(), errcode.OK)
-        return message.BrokerError(request.uuid(), errcode.SERVER_BUSY)
-        #return message.Error(errcode.TICKET_INVALID, request.ticket())
-        #return message.Error(errcode.OK)
+        #return message.BrokerError(request.uuid(), errcode.SERVER_BUSY)
 
     def do_AuctionDeny(self, elem, *args, **kw):
         # use nearly the same code as for do_CancelReservation
@@ -495,10 +494,10 @@ class XenBEEBrokerProtocol(protocol.XMLProtocol):
             msg = message.BrokerError(confirm.uuid(), errcode.NO_INSTANCE_DESCRIPTION, str(e))
         else:
             ticket.task.confirm(confirm.jsdl(), jsdl_doc)
-            if confirm.start_task():
-                ticket.task.start()
-            msg = message.BrokerError(confirm.uuid(), errcode.OK, "reservation confirmed")
-        return msg
+            #if confirm.start_task():
+            #    ticket.task.start()
+            #msg = message.BrokerError(confirm.uuid(), errcode.OK, "reservation confirmed")
+        #return msg
 
     def _success(uid):
         return message.Error(errcode.OK, uid)

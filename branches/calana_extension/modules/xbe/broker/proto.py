@@ -62,6 +62,15 @@ class Reply:
         self.msg = None
 
         
+class BidContext:
+    def __init__(self, bid, xbedproto):
+        self.__bid = bid
+        self.__xbedproto = xbedproto
+    def bid(self):
+        return self.__bid
+    def xbedproto(self):
+        return self.__xbedproto
+    
 class CommandFailed(Exception):
     pass
 
@@ -81,51 +90,97 @@ class XenBEEClient2BrokerProtocol(protocol.XMLProtocol):
         #protocol.XMLProtocol.__init__(self)
         self.mtx    = threading.RLock()
         self.client = client
-        self.__job  = job.Job(self.factory)
+        self.__jobList = {}
         
         # smc State Machine
         self.__fsm = BrokerDispatcher_sm.BrokerDispatcher_sm(self)
         self.__fsm.setDebugFlag(2)
 
-        self.__pollCounter = 0
         self.__xbedaemonTimer = {}
         self.__auctionBids = {}
         self.__nextTransition = "PollReq"
 
-        self.__hasBids  = False
-        self.__hasPongs = False
+        self.__hasBestBid = False
+        self.__hasBids    = False
+        self.__hasPongs   = False
         self.__requestend = 0
-        self.__xbedid   = 0
-        self.__xbeproto = 0
+        self.__xbedid     = 0
+        self.__xbeproto   = 0
 
         self.__hasProviderError    = False
         self.__statusProvider      = 0
+        self.__bestbid_ticket      = None
 
+        self.__reply    = Reply()
         self.triggerFSM = task.LoopingCall(self.handleFSM)
 
 
+    def getFSM(self):
+        return self.__fsm
+
+    def stopFSM(self):
+        log.debug("Stopping FSM")
+        self.triggerFSM.stop()
+
     def handleFSM(self):
         log.debug("XenBEEClient2BrokerProtocol::handleFSM event '%s'", self.__nextTransition)
-        #self.incrPollCounter()
-        #if (self.getPollCounter()> 5):
-        #    self.triggerFSM.stop()
-
-    
+        request = ""
+        reply = Reply()
+        try:
+            event = self.popEvent()
+            if event is None:
+                return
+            log.debug("===handleFSM event '%s'", event)
+            if hasattr(self.__fsm, event):
+                getattr(self.__fsm, event)(self.getJob(), self)
+            else:
+                raise CommandFailed("No such Transition '%s'." % self.__nextTransition)
+        except Exception, e:
+            log.debug("FSM Failed: transition failed in State '%s' : '%s'" %
+                      (self.__fsm.getState().getName() , e))
+            self.sendReply(self._failure("FSM Failed: transition failed in State '%s' : '%s'" %
+                      (self.__fsm.getState().getName() , e)))
+            self.stopFSM()
+        pass
 
     def getJob(self):
-        if self.hasBids():
-            return self.factory.jobGet(self.bid().ticket())
+        log.debug("Getjob: '%s'" % (self.__bestbid_ticket))
+        if self.hasBestBid():
+            job = self.factory.jobGet(self.__bestbid_ticket)
+            log.debug("Got: '%s'" % job.ticket())
+            return job
+            #return self.factory.jobGet(self.bid().bid().ticket())
         else:
-            return self.__job
+            #return self.__job
+            return None
         
+    def getJobByTicket(self, ticket):
+        log.debug("Getjob: '%s'" % (ticket))
+        job = self.factory.jobGet(ticket)
+        if job is None:
+            job = self.__jobList.get(ticket)
+
+        if job is not None:
+            log.debug("Got: '%s'" % job.ticket())
+        return job
+
+    def allJobNextEvent(self):
+        for xbed, job in self.__jobList.iteritems():
+            job.nextEvent(self)
+        pass
+    
+    def allJobTerminate(self):
+        for xbed, job in self.__jobList.iteritems():
+            job.terminate(self)
+        pass
+
     def connectionMade(self):
         log.debug("=====+++ client %s has connected" % (self.client))
         #layer = self.getsecurityLayer()
         cl = self.factory.getClient(self.client)
         if hasattr(cl, "cert"):
-            subject = cl.cert().subject()
-            self.__job.setUser(subject)
-            log.debug("Have CERT '%s'" % subject)
+            self.__subject = cl.cert().subject()
+            log.debug("Have CERT '%s'" % self.__subject)
         else:
             log.debug("DO NOT Have CERT")
         self.triggerFSM.start(1, now=False)
@@ -142,53 +197,82 @@ class XenBEEClient2BrokerProtocol(protocol.XMLProtocol):
             
     def do_recvPong(self, xbed, pong):
         log.debug("===***=== do_recvPong")
-        if self.hasPongs():
-            log.debug("===***=== do_recvPong have it")
-            pass
-        else:
-            log.debug("===***=== do_recvPong -> pong is new, save it")
-            self.__hasPongs  = True
-            self.__xbedid    = xbed.xbedaemon
-            self.__xbedproto = xbed
-            self.__auctionBids[self.__xbedid] = pong
+        log.debug("===***=== do_recvPong -> pong is new, save it")
+        self.__hasPongs  = True
+        pongCtxt = BidContext(pong, xbed)
+        self.__xbedid    = xbed.xbedaemon
+        self.__auctionBids[self.__xbedid] = pongCtxt
         
     def do_recvBid(self, xbed, bid):
         log.debug("===***=== do_recvBid")
-        log.debug("===Price %3.2f" % bid.price())
-        if self.hasBids():
-            # return AuctionDeny
-            log.debug("===***=== do_recvBid have it -> reject the this one")
-            self.factory.sendAuctionDeny(xbed, bid.uuid(), bid.ticket(), bid.task_id())
-        else:
-            log.debug("===***=== do_recvBid -> bid is new, save it")
-            self.__hasBids  = True
-            self.__xbedid    = xbed.xbedaemon
-            self.__xbedproto = xbed
-            self.__auctionBids[self.__xbedid] = bid
-            self.__job.setBid(bid)
-            self.factory.jobAdd(bid.ticket(), self.__job)
-            self.__job = None
+        log.debug("===Price %3.2f Ticket='%s'" % (bid.price(), bid.ticket()))
+        log.debug("===***=== do_recvBid -> bid is new, save it")
+        self.__hasBids  = True
+        bidCtxt = BidContext(bid, xbed)
+        xbedid    = xbed.xbedaemon
+        self.__auctionBids[xbedid] = bidCtxt
+        self.__jobList[xbedid].setBid(bidCtxt)
+        self.factory.jobAdd(bid.ticket(), self.__jobList[xbedid])
+        log.debug("===***=== do_recvBid -> bid is new, save it done")
          
     def do_recvBrokerError(self, xbed, response):
-        log.debug("===***=== do_recvBrokerError '%s'" % response)
+        log.debug("===***=== do_recvBrokerError '%d'" % response.code())
         self.__hasProviderError    = True
         self.__statusProvider      = response
 
 
     #
-    def messageBooked(self):
-        bid = self.__auctionBids[self.__xbedid]
-        return message.BookedResponse(bid.uuid(), self.__xbedid, bid.xbedurl(), bid.ticket(), bid.task_id())
+    def sendReply(self, msg):
+        log.debug("sendReply(%s)" % msg.as_xml())
+        self.__reply.hasMsg = False #True
+        self.__reply.msg = msg
+        self.transport.write(msg.as_xml())
+        
+    #
+    def getBestBid(self):
+        log.debug("getBestBid")
+        bestbid = None
+        bestxbed = None
+        for xbed, bidCtxt in self.__auctionBids.iteritems():
+            if bestbid is None:
+                bestbid  = bidCtxt
+                bestxbed = xbed
+            if bidCtxt.bid().price() < bestbid.bid().price():
+                bestbid  = bidCtxt
+                bestxbed = xbed
+        # update job data
+        self.__bestbid_ticket = bestbid.bid().ticket()
+        self.__job        = None
+        self.__hasBestBid = True
+        self.__xbedid    = bestxbed
+
+        # send deny to other xbedaemons
+        for xbed, bidCtxt in self.__auctionBids.iteritems():
+            if bestxbed != xbed:
+                self.sendAuctionDeny(bidCtxt)
+        return bestbid
 
     #
-    def sendAuctionAccept(self, response):
-        self.__pollCounter = 0
-        bid = self.__auctionBids[self.__xbedid]
-        self.factory.sendAuctionAccept(self.__xbedproto, bid.uuid(), bid.ticket(), bid.task_id())
+    def messageBooked(self):
+        bidCtxt = self.__auctionBids[self.__xbedid]
+        bid = bidCtxt.bid()
+        return message.BookedResponse(bid.uuid(), self.__xbedid, bid.xbedurl(),
+               bid.ticket(), bid.task_id(), bid.price())
 
-    def sendConfirmReservation(self, response):
-        self.__pollCounter = 0
-        self.factory.sendConfirmReservation(self.__xbedproto, response)
+    #
+    def sendAuctionAccept(self, bidCtxt):
+        log.debug("--sendAuctionAccept")
+        bid = bidCtxt.bid()
+        self.factory.sendAuctionAccept(bidCtxt.xbedproto(), bid.uuid(), bid.ticket(), bid.task_id())
+
+    def sendAuctionDeny(self, bidCtxt):
+        log.debug("--sendAuctionDeny")
+        bid = bidCtxt.bid()
+        self.factory.sendAuctionDeny(bidCtxt.xbedproto(), bid.uuid(), bid.ticket(), bid.task_id())
+
+    def sendConfirmReservation(self, job, msg):
+        bidCtxt = job.bidContext()
+        self.factory.sendConfirmReservation(bidCtxt.xbedproto(), msg)
 
     #
     def do_PollRequest(self, elem, *args, **kw):
@@ -197,92 +281,72 @@ class XenBEEClient2BrokerProtocol(protocol.XMLProtocol):
         request = message.MessageBuilder.from_xml(elem.getroottree())
         log.debug("XenBEEClient2BrokerProtocol::do_PollRequest() %s",
                   request.cmd_name())
-        event = self.__nextTransition
-        if event is None:
-            event = "PollReq"
-        if hasattr(self.__fsm, event):
-            log.debug("========== Next ===>  %s, p=%d"
-                      % (event, self.getPollCounter()))
 
-        reply = Reply()
-        try:
-            while reply.hasMsg == False:
-                event = self.popEvent()
-                if event is None:
-                    event = "PollReq"
-                if hasattr(self.__fsm, event):
-                    getattr(self.__fsm, event)(self.getJob(), self, request, reply)
-                else:
-                    raise CommandFailed("No such Transition '%s'." % self.__nextTransition)
-
-            log.debug("XenBEEClient2BrokerProtocol::do_PollRequest() has message '%s'"% reply.msg)
+        reply = self.__reply
+        if reply.hasMsg:
+            log.debug("do_PollRequest: '%s'" % reply.msg)
+            self.__reply.hasMsg = False
             return reply.msg
-        except Exception, e:
-            msg = message.Error(errcode.ILLEGAL_REQUEST,
-                                "PollReq failed: Transition failed in State '%s'. '%s'" %
-                                (self.__fsm.getState().getName() , e))
 
-        return msg
-
-
+        log.debug("do_PollRequest: DEFAULT '%s'" % request.cmd_name())
+        #return  message.PollResponse(self.client, request.cmd_name())
+    
     def do_PingRequest(self, elem, *args, **kw):
         log.debug("XenBEEClient2BrokerProtocol::do_PingRequest()")
         log.debug("Current: '%s'" % self.__fsm.getState().getName())
         request = message.MessageBuilder.from_xml(elem.getroottree())
-        reply = Reply()
-        try:
-            self.__fsm.PingReq(self.getJob(), self, reply)
-            msg = reply.msg
-        except Exception, e:
-            msg = message.Error(errcode.ILLEGAL_REQUEST,
-                                "PingRequest failed: Transition failed in State '%s': '%s'" % 
-                                (self.__fsm.getState().getName() , e))
-            log.debug("XenBEEClient2BrokerProtocol::do_PingRequest() FAIL")
-
+        self.pushEvent("PingReq")
+        msg = message.PollResponse(self.client, "PongResponse")
         log.debug("do_PingRequest: '%s'" % msg)
         return msg
 
     def do_BookingRequest(self, elem, *args, **kw):
         msg = message.MessageBuilder.from_xml(elem.getroottree())
         log.debug("bookingRequest: ")
-        reply = Reply()
-        try:
-            self.__fsm.BookingReq(self.getJob(), self, reply)
-            msg = reply.msg
-        except Exception, e:
-            msg = message.Error(errcode.ILLEGAL_REQUEST,
-                                "BookingRequest failed: Transition failed State '%s': '%s'" %
-                                (self.__fsm.getState().getName() , e))
-            log.debug("XenBEEClient2BrokerProtocol::do_BookingRequest() FAIL")
-            
+        self.pushEvent("BookingReq")
+        msg = message.PollResponse(self.client, "BookedResponse")
         log.debug("response (%s)" % msg)
-        return msg
             
     def do_ConfirmReservation(self, elem, *args, **kw):
         log.debug("=============== XenBEEClient2BrokerProtocol::do_ConfirmReservation")
         msgin = message.MessageBuilder.from_xml(elem.getroottree())
-        log.debug("bookingRequest: ")
-        reply = Reply()
-        try:
-            self.__fsm.Confirm(self.getJob(), self, msgin, reply)
-            msg = reply.msg
-        except Exception, e:
-            msg = message.Error(errcode.ILLEGAL_REQUEST,
-                                "BookingRequest failed: Transition failed State '%s': '%s'" %
-                                (self.__fsm.getState().getName() , e))
-            log.debug("XenBEEClient2BrokerProtocol::do_BookingRequest() FAIL")
-            
-        log.debug("response (%s)" % msg)
-        return msg
+        msg =  message.ConfirmReservation(msgin.ticket(), msgin.jsdl(), False)
+        job = self.getJobByTicket(msgin.ticket())
+        if job is None:
+            self.sendReply(message.Error(errcode.TICKET_INVALID, msgin.ticket()))
+        else:
+            self.sendConfirmReservation(job, msg)
 
-    def _success(uid):
+    def do_JobStatusRequest(self, elem, *args, **kw):
+        log.debug("=============== XenBEEClient2BrokerProtocol::do_JobStatusRequest")
+        msgin = message.MessageBuilder.from_xml(elem.getroottree())
+        job = self.getJobByTicket(msgin.ticket())
+        if job is None:
+            msg = message.Error(errcode.TICKET_INVALID, msgin.ticket())
+        else:
+            msg = message.JobStatusResponse(msgin.ticket(), job.task(), job.getTime(),
+                                            job.getCost(), job.getStart(), job.getEnd(),
+                                            job.getState())
+            if (job.getState()=='JobFSM.StFinishedClosing'):
+                job.do_Event("closeJob_Closed", self)
+        #return msg
+        self.sendReply(msg)
+
+    def success(self):
+        self.sendReply(self._success("Ok"))
+
+    def failure(self, reason):
+        self.sendReply(self._failure(reason))
+
+    def _success(self, uid):
         return message.Error(errcode.OK, uid)
-    def _failure(reason):
-        return message.Error(errcode.INTERNAL_SERVER_ERROR, reason.getErrorMessage())
+    def _failure(self, reason):
+        return message.Error(errcode.INTERNAL_SERVER_ERROR, reason)
 
     #
     #
     def pushEvent(self, event):
+        log.debug("=========PUSH(%s)" % event)
         self.__nextTransition = event
         
     def popEvent(self):
@@ -293,22 +357,35 @@ class XenBEEClient2BrokerProtocol(protocol.XMLProtocol):
             self.__nextTransition = None
         return event
 
-    def getPollCounter(self):
-        return self.__pollCounter
-    
-    def incrPollCounter(self):
-        self.__pollCounter = self.__pollCounter+1
+    def setTimeout(self):
+        broker = CalanaBrokerDaemon.getInstance()
+        self.__requestend = int(broker.opts.bid_timeout) + time.time()
+
+    def checkForEnd(self):
+        log.debug("checkForEnd: %d < %d" % (self.__requestend , time.time()))
+        if ( self.__requestend < time.time()):
+            return True
+        if ( self.ReqLen() < self.RespLen()):
+            return False
+        else:
+            return True
 
     def clearXBEDaemon(self):
         for id, p in self.__xbedaemonTimer.iteritems():
             p = 0
 
     def addXBEDaemon(self, id):
+        #self.__jobList[id] = job.Job(self.factory)
+        self.__jobList[id] = job.Job(self)
+        self.__jobList[id].setUser(self.__subject)
         self.__xbedaemonTimer[id] = time.time()
 
     #
     def bid(self):
         return self.__auctionBids[self.__xbedid]
+
+    def hasBestBid(self):
+        return self.__hasBestBid
 
     def hasBids(self):
         return self.__hasBids
@@ -338,31 +415,27 @@ class XenBEEClient2BrokerProtocol(protocol.XMLProtocol):
             
     # Define StateMachine Actions here
     # wait for Pong from xenbee Daemon
-    def waitForResponse(self, job, reqCtxt, request, reply):
+    def waitForResponse(self, job, reqCtxt):
         # e.g. can handle timer
-        reply.hasMsg = True
-        reply.msg = message.PollResponse(self.client, request.cmd_name())
+        reqCtxt.sendReply(message.PollResponse(self.client, request.cmd_name()))
         log.debug("=== *** XenBEEBrokerProtocolFactory::waitForResponse '%s' " % request.cmd_name())
         
-        reqCtxt.incrPollCounter()
         if (self.__requestend < time.time()):
             reqCtxt.pushEvent("EndReq")
         else:
             reqCtxt.pushEvent("PollReq")
 
-    def waitForAck(self, job, reqCtxt, request, reply):
-        log.debug("XenBEEBrokerProtocolFactory::waitForAck")
-        reply.hasMsg = True
-        reply.msg = message.PollResponse(self.client, request.cmd_name())
-        log.debug("=== *** XenBEEBrokerProtocolFactory::waitForResponse '%s' " % request.cmd_name())
+    def waitForAck(self, job, reqCtxt):
+        log.debug("XenBEEBrokerProtocolFactory::waitForAck: %d < %d"
+                  % (self.__requestend , time.time()))
         
-        reqCtxt.incrPollCounter()
-        if reqCtxt.getPollCounter() > 2:
+        if (self.__requestend < time.time()):
             reqCtxt.pushEvent("ProviderRejected")
         else:
             if reqCtxt.hasProviderError():
                 # evaluate result
-                if reqCtxt.getProviderErrorCode():
+                log.debug("WAIT: %d %d" % ( reqCtxt.getProviderErrorCode() , errcode.OK))
+                if ( reqCtxt.getProviderErrorCode() == errcode.OK):
                     reqCtxt.pushEvent("ProviderBooked")
                 else:
                     reqCtxt.pushEvent("ProviderRejected")
@@ -370,14 +443,13 @@ class XenBEEClient2BrokerProtocol(protocol.XMLProtocol):
             else:
                 reqCtxt.pushEvent("PollReq")
         
-    def waitForConfirm(self, job, reqCtxt, request, reply):
+    def waitForConfirm(self, job, reqCtxt):
         log.debug("XenBEEBrokerProtocolFactory::waitForConfirm")
-        reply.hasMsg = True
-        reply.msg = message.PollResponse(self.client, request.cmd_name())
+        reqCtxt.sendReply(message.PollResponse(self.client, request.cmd_name()))
         log.debug("=== *** XenBEEBrokerProtocolFactory::waitForResponse '%s' " % request.cmd_name())
         
-        reqCtxt.incrPollCounter()
-        if reqCtxt.getPollCounter() > 2:
+        log.debug("waitForConfirm: %d < %d" % (self.__requestend , time.time()))
+        if (self.__requestend > time.time()):
             reqCtxt.pushEvent("ProviderClose")
         else:
             if reqCtxt.hasProviderError():
@@ -393,110 +465,189 @@ class XenBEEClient2BrokerProtocol(protocol.XMLProtocol):
     # brokerCtxt   has type BrokerRequestContext
     # job          has type 
     # bid          has type 
-    def inBookingReq(self, job, reqCtxt, reply):
+    def inBookingReq(self, job, reqCtxt):
         log.debug("XenBEEBrokerProtocolFactory::inBookingReq")
         self.clearXBEDaemon()
         self.__hasBids    = False
-        self.__requestend = reqCtxt.daemon.factory.bid_timeout + time.time()
-        reply.hasMsg = True
+
+        reqCtxt.setTimeout()
 
         try:
-            self.factory.sendBookingRequest(MyData)
-            job.nextEvent(MyData)
-            reply.msg = message.PollResponse(self.client, "BookedResponse")
-            log.debug("========== Sendet %d bookingRequest" % MyData.ReqLen())
+            self.factory.sendBookingRequest(reqCtxt)
+            reqCtxt.allJobNextEvent()
+            msg = message.PollResponse(self.client, "BookedResponse")
+            reqCtxt.pushEvent("AddBid")
+            log.debug("========== Sendet %d bookingRequest" % reqCtxt.ReqLen())
         except Exception, e:
-            job.terminate(MyData)
+            reqCtxt.pushEvent("EndReq")
+            #reqCtxt.allJobTerminate()
             log.debug("inBookingReq Failed: '%s'" % e )
-            reply.msg = message.Error(errcode.ILLEGAL_REQUEST, "No XbeDaemons connected. '%s'" % e)
+            msg = message.Error(errcode.ILLEGAL_REQUEST, "No XbeDaemons connected. '%s'" % e)
 
-    def endSuccessfulAuction(self, job, reqCtxt, bid, reply): ##job, brokerCtxt):
+        reqCtxt.sendReply(msg)
+
+    def inAuctionBid(self, job, reqCtxt): #, bid):
+        log.debug("inAuctionBid: %d < %d" % (self.__requestend , time.time()))
+        if ( reqCtxt.checkForEnd() ):
+            # Booking end
+            self.pushEvent("EndReq")
+        else:
+            self.pushEvent("AddBid")
+        pass
+
+    def endSuccessfulAuction(self, job, reqCtxt): ##job, brokerCtxt):
         # send do_Cancel to most of xbedaemons
         # do_ConfirmReservation
         log.debug("XenBEEBrokerProtocolFactory::endSuccessfulAuction")
-        reqCtxt.sendAuctionAccept(bid)
-
-    def endFailureAuction(self, job, reqCtxt, request, reply): ##job, brokerCtxt):
+        bidCtxt = reqCtxt.getBestBid()
+        reqCtxt.sendAuctionAccept(bidCtxt)
+        reqCtxt.setTimeout()
+        reqCtxt.pushEvent("PollReq")
+        reqCtxt.clearProviderError()
+ 
+    def endFailureAuction(self, job, reqCtxt): ##job, brokerCtxt):
     #def endFailureAuction(self, job, brokerCtxt):
         log.debug("XenBEEBrokerProtocolFactory::endFailureAuction")
         reqCtxt.pushEvent("BookingRejectedAck")
-        job.terminate(reqCtxt)
+        if job is None:
+            reqCtxt.allJobTerminate()
+        else:
+            job.terminate(reqCtxt)
+        log.debug("XenBEEBrokerProtocolFactory::endFailureAuction - done")
 
-    def inProviderBooked(self, job, reqCtxt, request, reply):
+    def inProviderBooked(self, job, reqCtxt):
         #def inProviderBooked(self, job, brokerCtxt):
         # send AuctionAccept to the first one,
         # send AuctionDeny to all others
         log.debug("XenBEEBrokerProtocolFactory::inProviderBooked")
 
-        reply.hasMsg = True
-        reply.msg = reqCtxt.messageBooked()
+        self.sendReply(reqCtxt.messageBooked())
         job.do_Event("endNegotiation", reqCtxt)
 
-    def inProviderBookingRejected(self, job, reqCtxt, request, reply):
+    def inProviderBookingRejected(self, job, reqCtxt):
         log.debug("XenBEEBrokerProtocolFactory::inProviderBookingRejected")
-        reply.hasMsg = True
-        reply.msg = message.Error(errcode.SERVER_BUSY)
+
+        reqCtxt.sendReply(message.Error(errcode.SERVER_BUSY))
         job.do_Event("terminate", reqCtxt)
-        
-    def inConfirm(self, job, reqCtxt, request, reply):
-        log.debug("XenBEEBrokerProtocolFactory::inConfirm")
-        reply.hasMsg = True
-        try:
-            reqCtxt.sendConfirmReservation(request)
-            reply.msg = message.PollResponse(self.client, "ConfirmResponse")
-        except Exception, e:
-            log.debug("inConfirm Failed: '%s'" % e )
-            reply.msg = message.Error(errcode.ILLEGAL_REQUEST, "No XbeDaemons connected. '%s'" % e)
-        
-        #confirm = message.MessageBuilder.from_xml(elem.getroottree())
-        #return message.Error(errcode.ILLEGAL_REQUEST, str(e))
-        #ticket = TicketStore.getInstance().lookup(confirm.ticket())
-        #if ticket is None:
-        #    return message.Error(errcode.TICKET_INVALID, confirm.ticket())
-        #log.debug("got confirmation with ticket %s" % confirm.ticket())
-
-    def inProviderClose(self, job, brokerCtxt, request, reply):
-        log.debug("XenBEEBrokerProtocolFactory::")
-
-    def outClose(self, job, brokerCtxt, request, reply):
-        log.debug("XenBEEBrokerProtocolFactory::")
-
-    def inCloseAck(self, job, brokerCtxt, request, reply):
-        log.debug("XenBEEBrokerProtocolFactory::")
-
-    def inBookingRejectedAck(self, job, reqCtxt, request, reply):
-        reply.hasMsg = True
+        reqCtxt.stopFSM()
+        #reqCtxt.pushEvent("BookingRejectAck")
         #reply.msg = message.Error(errcode.ILLEGAL_REQUEST, "Ping failed")
-        reply.msg = message.Error(errcode.SERVER_BUSY)
+        #reply.msg = message.Error(errcode.SERVER_BUSY)
 
     # do the same for ping
     # send ping to all xenbeeDaemons
-    def inPingReq(self, job, MyData, reply):
-        log.debug("XenBEEBrokerProtocolFactory::inPingReq for %s" % MyData.client)
-        self._hasPongs = False
-        reply.hasMsg   = True
+    def inPingReq(self, job, reqCtxt):
+        log.debug("XenBEEBrokerProtocolFactory::inPingReq for %s" % reqCtxt.client)
         self.clearXBEDaemon()
+        self._hasPongs = False
+
+        reqCtxt.setTimeout()
         try:
-            self.factory.sendPingRequest(MyData)
-            reply.msg = message.PollResponse(self.client, "PongResponse")
-            log.debug("========== Sendet %d pingRequest" % MyData.ReqLen())
+            self.factory.sendPingRequest(reqCtxt)
+            reqCtxt.pushEvent("AddPing")
+            msg = message.PollResponse(self.client, "PongResponse")
+            log.debug("========== Sendet %d pingRequest" % reqCtxt.ReqLen())
         except Exception, e:
+            reqCtxt.pushEvent("EndReq")
             log.debug("inPingReq Failed: '%s'" % e )
-            reply.msg = message.Error(errcode.ILLEGAL_REQUEST, "No XbeDaemons connected. '%s'" % e)
-        
+            msg = message.Error(errcode.ILLEGAL_REQUEST, "No XbeDaemons connected. '%s'" % e)
+
+        reqCtxt.sendReply(msg)
+
+    def inCollectingPing(self, job, reqCtxt): #, bid):
+        log.debug("inCollectingPing: %d < %d" % (self.__requestend , time.time()))
+        if ( reqCtxt.checkForEnd() ):
+            # Booking end
+            self.pushEvent("EndReq")
+        else:
+            self.pushEvent("AddPing")
+
+        pass
+    
     # Have Pong, send pong to xbe Client
-    def endFailurePing(self, job, reqCtxt, request, reply):
+    def endFailurePing(self, job, reqCtxt):
         log.debug("=== *** XenBEEBrokerProtocolFactory::endFailurePing")
         reqCtxt.pushEvent("BookingRejectedAck")
 
     # Have Pong, send pong to xbe Client
-    def endSuccessfulPing(self, job, reqCtxt, request, reply):
+    def endSuccessfulPing(self, job, reqCtxt):
         log.debug("=== *** XenBEEBrokerProtocolFactory::endSuccessfulPing")
-        reply.hasMsg = True
         if hasattr(message, request.cmd_name()):
-            reply.msg = getattr(message, request.cmd_name())("None", 1)
+            msg = getattr(message, request.cmd_name())("None", 1)
         else:
-            reply.msg = message.Error(errcode.ILLEGAL_REQUEST, "No such command")
+            msg = message.Error(errcode.ILLEGAL_REQUEST, "No such command")
+        reqCtxt.sendReply(msg)
+        
+    def inConfirm(self, job, reqCtxt):
+        log.debug("XenBEEBrokerProtocolFactory::inConfirm")
+        msg = self._success("xx")
+        reqCtxt.sendReply(msg)
+
+    def inProviderClose(self, job, brokerCtxt):
+        log.debug("XenBEEBrokerProtocolFactory::")
+        job = brokerCtxt.getJob()
+        log.debug("Time for Job: %f", job.getTime())
+
+    def outClose(self, job, brokerCtxt):
+        log.debug("XenBEEBrokerProtocolFactory::")
+        # send response to client
+        
+    def inCloseAck(self, job, brokerCtxt):
+        log.debug("XenBEEBrokerProtocolFactory::inCloseAck")
+        brokerCtxt.stopFSM()
+
+    def inBookingRejectedAck(self, job, reqCtxt):
+        log.debug("XenBEEBrokerProtocolFactory::inBookingRejectedAck")
+        reqCtxt.stopFSM()
+        reqCtxt.sendReply(message.Error(errcode.ILLEGAL_REQUEST, "Request failed"))
+
+    # do the same for ping
+    # send ping to all xenbeeDaemons
+    def inPingReq(self, job, reqCtxt):
+        log.debug("XenBEEBrokerProtocolFactory::inPingReq for %s" % reqCtxt.client)
+        self.clearXBEDaemon()
+        self._hasPongs = False
+
+        broker = CalanaBrokerDaemon.getInstance()
+        self.__requestend = int(broker.opts.bid_timeout) + time.time()
+        try:
+            self.factory.sendPingRequest(reqCtxt)
+            reqCtxt.pushEvent("AddPing")
+            msg = message.PollResponse(self.client, "PongResponse")
+            log.debug("========== Sendet %d pingRequest" % reqCtxt.ReqLen())
+        except Exception, e:
+            reqCtxt.pushEvent("EndReq")
+            log.debug("inPingReq Failed: '%s'" % e )
+            msg = message.Error(errcode.ILLEGAL_REQUEST, "No XbeDaemons connected. '%s'" % e)
+
+        reqCtxt.sendReply(msg)
+
+    def inCollectingPing(self, job, reqCtxt): #, bid):
+        log.debug("inCollectingPing: c=%d, t:%d < %d" %
+                  (reqCtxt.RespLen(), self.__requestend , time.time()))
+        if ( self.__requestend < time.time()):
+            # Booking end
+            self.pushEvent("EndReq")
+        else:
+            self.pushEvent("AddPing")
+
+        pass
+    
+    # Have Pong, send pong to xbe Client
+    def endFailurePing(self, job, reqCtxt):
+        log.debug("=== *** XenBEEBrokerProtocolFactory::endFailurePing")
+        reqCtxt.pushEvent("BookingRejectedAck")
+
+    # Have Pong, send pong to xbe Client
+    def endSuccessfulPing(self, job, reqCtxt):
+        log.debug("=== *** XenBEEBrokerProtocolFactory::endSuccessfulPing")
+        
+        #if hasattr(message, request.cmd_name()):
+        #    reply.msg = getattr(message, request.cmd_name())("None", 1)
+        #else:
+        #    reply.msg = message.Error(errcode.ILLEGAL_REQUEST, "No such command")
+        reqCtxt.sendReply(message.PongResponse("None", reqCtxt.RespLen()))
+        reqCtxt.stopFSM()
 
     
 ##################################################
@@ -573,17 +724,17 @@ class XenBEEDaemon2BrokerProtocol(protocol.XMLProtocol):
         log.debug("======= %s =====" % type(auctionBidMsg))
         self.factory.propagateResponseToClient(auctionBidMsg.uuid(), "Bid", self, auctionBidMsg)
 
-    def do_ReservationConfirm(self, err, *args, **kw):
-        log.debug("======================= do_ReservationConfirm: ")
-        msg = message.MessageBuilder.from_xml(err.getroottree()) 
-        self.factory.propagateResponseToJob(msg.ticket, "confirm", self, msg)
-        self.factory.propagateResponseToClient(msg.uuid(), "Confirm", self, msg)
+    #def do_ReservationConfirm(self, err, *args, **kw):
+    #    log.debug("======================= do_ReservationConfirm: ")
+    #    msg = message.MessageBuilder.from_xml(err.getroottree()) 
+    #    self.factory.propagateResponseToJob(msg.ticket, "confirm", self, msg)
+    #    self.factory.propagateResponseToClient(msg.uuid(), "Confirm", self, msg)
 
-    def do_ConfirmAck(self, err, *args, **kw):
-        log.debug("======================= do_ConfirmAck: ")
-        msg = message.MessageBuilder.from_xml(err.getroottree()) 
-        self.factory.propagateResponseToJob(msg.ticket(), "confirm", self, msg)
-        #self.factory.propagateResponseToClient(msg.uuid(), "Confirm", self, msg)
+    #def do_ConfirmAck(self, err, *args, **kw):
+    #    log.debug("======================= do_ConfirmAck: ")
+    #    msg = message.MessageBuilder.from_xml(err.getroottree()) 
+    #    self.factory.propagateResponseToJob(msg.ticket(), "confirm", self, msg)
+    #    #self.factory.propagateResponseToClient(msg.uuid(), "Confirm", self, msg)
 
     def do_JobState(self, err, *args, **kw):
         log.debug("======================= do_JobState: ")
@@ -664,28 +815,35 @@ class XenBEEBrokerProtocolFactory(XenBEEProtocolFactory):
         self.__cleanupLoop.start(5*60)
 
     def jobAdd(self, ticket, job):
-        log.debug("=====> Add Job....'%s'" % ticket)
+        log.debug("=====> XenBEEBrokerProtocolFactory: Add Job....'%s'" % ticket)
         self.__jobList[ticket] = job
         pass
 
     def jobGet(self, ticket):
         p = self.__jobList.get(ticket)
         if p is None:
-            log.debug("no job found found '%s' " % ticket)
+            log.debug("XenBEEBrokerProtocolFactory: no job found '%s' " % ticket)
             return None
         else:
             return p
 
     def jobEvent(self, ticket, event, reqCtxt):
-        log.debug("jobEvent from '%s' to %s" % (event, ticket))
+        log.debug("XenBEEBrokerProtocolFactory jobEvent from '%s' to %s" % (event, ticket))
+
         p = self.__jobList.get(ticket)
         if p is None:
-            log.debug("no job found found")
+            log.debug("no job found for '%s'" % ticket)
         else:
             log.debug("propagate event to job. " )
-            p.do_EventByMap(event, reqCtxt)
-    
+            try:
+                clientCtxt = self.getClient(p.uuid())
+                p.do_EventByMap(event, clientCtxt)
+            except Exception, e:
+                pass
+            #self.jobEvent(ticket, event, client.protocol)
+
     def propagateResponseToJob(self, ticket, event, reqCtxt, msg):
+        log.debug("Broker:propagate to job '%s' msg '%s'" % (ticket, msg))
         self.jobEvent(ticket, event, reqCtxt)
         pass
     
@@ -728,7 +886,7 @@ class XenBEEBrokerProtocolFactory(XenBEEProtocolFactory):
             log.debug("no client found")
             return None
         else:
-            log.debug("propagate response to client. '%s'" % p.protocol)
+            log.debug("Client(%s) found at '%s'" % (client, p.protocol))
             return p
 
     def propagateResponseToClient(self, client, event, xbedaemon, response):
@@ -750,15 +908,6 @@ class XenBEEBrokerProtocolFactory(XenBEEProtocolFactory):
             p.protocol.recvReservationConfirm(xbedaemon, response)
 
         
-    #def propagateAuctionBidToClient(self, client, xbedaemon, response):
-    #    log.debug("propagateAuctionBidToClient %s", client)
-    #    p = self.__clientProtocols.get(client)
-    #    if p is None:
-    #        log.debug("no client found")
-    #    else:
-    #        log.debug("propagate AuctionBid to client. '%s'" % p.protocol)
-    #        p.protocol.recvAuctionBid(xbedaemon, response)
-
     def stompConnectionMade(self, stomp_prot):
         log.debug("===== stompConnectionMade")
         stomp_prot.subscribe(self.__topic)
@@ -845,6 +994,8 @@ class XenBEEBrokerProtocolFactory(XenBEEProtocolFactory):
             tbr = [] # list of 'to be removed' items
             for id, p in protocols.iteritems():
                 if (p.timeOflastReceive + self.__protocolRemovalTimeout) < time.time():
+                    p.stopFSM()
+                    log.debug("================REMOVE '%s'" % id)
                     log.debug(
                         "removing registered protocol %s due to inactivity." % (id,))
                     tbr.append(id)

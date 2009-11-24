@@ -1475,13 +1475,14 @@ class BookedResponse(BaseServerMessage):
     """
     tag = XBE("BookedResponse")
     
-    def __init__(self, uuid, xbedid, xbedurl, ticket, task_id):
+    def __init__(self, uuid, xbedid, xbedurl, ticket, task_id, price):
         BaseServerMessage.__init__(self)
         self.__uuid    = uuid
         self.__xbedid  = xbedid
         self.__xbedurl = xbedurl
         self.__ticket  = ticket
         self.__task_id = task_id
+        self.__price   = price
 
     def uuid(self):
         return self.__uuid
@@ -1493,6 +1494,8 @@ class BookedResponse(BaseServerMessage):
         return self.__task_id
     def ticket(self):
         return self.__ticket
+    def price(self):
+        return self.__price
     
     def as_xml(self):
         root, hdr, body = MessageBuilder.xml_parts()
@@ -1503,6 +1506,8 @@ class BookedResponse(BaseServerMessage):
         elem.attrib["task-id"] = str(self.task_id())
         reservation = etree.SubElement(elem, XBE("Booked"))
         etree.SubElement(reservation, XBE("Ticket")).text = self.ticket()
+        price = etree.SubElement(elem, XBE("Price"))
+        etree.SubElement(price, XBE("Cost")).text = str(self.price())
         return root
     def from_xml(cls, root, hdr, body):
         elem = body.find(cls.tag)
@@ -1515,9 +1520,113 @@ class BookedResponse(BaseServerMessage):
         ticket  = elem.findtext(XBE("Booked/Ticket"))
         if ticket is None:
             raise MessageParserError("no 'Ticket' found!")
-        return cls(uuid, xbedid, xbedurl, ticket, task_id)
+        price   = float(elem.findtext(XBE("Price/Cost")))
+        if price is None:
+            raise MessageParserError("no 'Price' found!")
+        return cls(uuid, xbedid, xbedurl, ticket, task_id, price)
     from_xml = classmethod(from_xml)
 MessageBuilder.register(BookedResponse)
+
+class JobStatusRequest(BaseClientMessage):
+    """Query the status of a job in the broker
+    <JobStatusRequest/>
+    """
+    tag = XBE("JobStatusRequest")
+    
+    def __init__(self, uuid, ticket, task_id):
+        BaseClientMessage.__init__(self)
+        self.__uuid    = uuid
+        self.__ticket  = ticket
+        self.__task_id = task_id
+
+    def uuid(self):
+        return self.__uuid
+    def task_id(self):
+        return self.__task_id
+    def ticket(self):
+        return self.__ticket
+    
+    def as_xml(self):
+        root, hdr, body = MessageBuilder.xml_parts()
+        elem = etree.SubElement(body, self.tag)
+        elem.attrib["uuid"]    = self.uuid()
+        elem.attrib["task-id"] = str(self.task_id())
+        reservation = etree.SubElement(elem, XBE("Booked"))
+        etree.SubElement(reservation, XBE("Ticket")).text = self.ticket()
+        return root
+    def from_xml(cls, root, hdr, body):
+        elem = body.find(cls.tag)
+        if elem is None:
+            raise MessageParserError("could not find 'BookedResponse' element")
+        uuid    = elem.attrib["uuid"]
+        task_id = elem.attrib.get("task-id")
+        ticket  = elem.findtext(XBE("Booked/Ticket"))
+        if ticket is None:
+            raise MessageParserError("no 'Ticket' found!")
+        return cls(uuid, ticket, task_id)
+    from_xml = classmethod(from_xml)
+MessageBuilder.register(JobStatusRequest)
+
+class JobStatusResponse(BaseServerMessage):
+    """Response to the JobStatueRequest
+    <JobStatusResponse/>
+    """
+    tag = XBE("JobStatusResponse")
+    
+    def __init__(self, ticket, task_id, time, cost,
+                 startTime, endTime, jobState):
+        BaseServerMessage.__init__(self)
+        self.__ticket    = ticket
+        self.__task_id   = task_id
+        self.__time      = time
+        self.__cost      = cost
+        self.__startTime = startTime
+        self.__endTime   = endTime
+        self.__state     = jobState
+
+    def task_id(self):
+        return self.__task_id
+    def ticket(self):
+        return self.__ticket
+    def time(self):
+        return self.__time
+    def cost(self):
+        return self.__cost
+    def start(self):
+        return self.__startTime
+    def end(self):
+        return self.__endTime
+    def state(self):
+        return self.__state
+    
+    def as_xml(self):
+        root, hdr, body = MessageBuilder.xml_parts()
+        elem = etree.SubElement(body, self.tag)
+        elem.attrib["task-id"] = str(self.task_id())
+        reservation = etree.SubElement(elem, XBE("Booked"))
+        etree.SubElement(reservation, XBE("Ticket")).text = self.ticket()
+        etree.SubElement(reservation, XBE("Time")).text = str(self.time())
+        etree.SubElement(reservation, XBE("Cost")).text = str(self.cost())
+        etree.SubElement(reservation, XBE("Start")).text = str(self.start())
+        etree.SubElement(reservation, XBE("End")).text = str(self.end())
+        etree.SubElement(reservation, XBE("State")).text = self.state()
+        return root
+    def from_xml(cls, root, hdr, body):
+        elem = body.find(cls.tag)
+        if elem is None:
+            raise MessageParserError("could not find 'BookedResponse' element")
+        task_id = elem.attrib.get("task-id")
+        ticket  = elem.findtext(XBE("Booked/Ticket"))
+        time    = float(elem.findtext(XBE("Booked/Time")))
+        cost    = float(elem.findtext(XBE("Booked/Cost")))
+        start   = float(elem.findtext(XBE("Booked/Start")))
+        end     = float(elem.findtext(XBE("Booked/End")))
+        state   = elem.findtext(XBE("Booked/State"))
+        if ticket is None:
+            raise MessageParserError("no 'Ticket' found!")
+        return cls(ticket, task_id, time, cost, start, end, state)
+    from_xml = classmethod(from_xml)
+MessageBuilder.register(JobStatusResponse)
 
 class BrokerError(Error):
     ns  = XBE
@@ -1552,6 +1661,10 @@ class BrokerError(Error):
 MessageBuilder.register(BrokerError)        
 
 class JobState(BaseServerMessage):
+    """JobState: message send from xbed to broker
+       used to notify the broker that the job passed to a new state
+       """
+
     ns  = XBE
     tag = ns("JobState")
     

@@ -116,6 +116,14 @@ class ClientXMLProtocol(protocol.XMLProtocol):
         else:
             log.debug("===========Ups")
             
+    def do_JobStatusResponse(self, elem, *a, **kw):
+        log.info("JobStatus")
+        JobStatusInformation = message.MessageBuilder.from_xml(elem.getroottree())
+        if self.protocol is not None:
+            self.protocol.jobstatusResponseReceived(JobStatusInformation)
+        else:
+            log.debug("===========Ups")
+
 class BaseCommandLineProtocol(BaseProtocol):
     connected = 0
 
@@ -227,6 +235,19 @@ class BaseCommandLineProtocol(BaseProtocol):
     def bookingRequestPoll(self):
 	log.info("booking request of ticket: ")
         msg = message.BookingRequestPoll()
+        log.debug("sending: %s" % msg.as_xml())
+        self.transport.sendMessage(msg.as_xml())
+
+    #def bookedConfirm(self, uuid, ticket, task_id):
+    #log.info("confirm booked of ticket: ")
+    #    # BookedConfirm(uuid, ticket, task_id)
+    #    msg = message.BookedConfirm(uuid, ticket, task_id)
+    #    log.debug("sending: %s" % msg.as_xml())
+    #    self.transport.sendMessage(msg.as_xml())
+
+    def jobstatusRequest(self, uuid, ticket, task_id):
+	log.info("job status request of ticket: ")
+        msg = message.JobStatusRequest(uuid, ticket, task_id)
         log.debug("sending: %s" % msg.as_xml())
         self.transport.sendMessage(msg.as_xml())
 
