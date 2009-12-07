@@ -261,6 +261,28 @@ xbed:
                                `--UUID(entry2)
                                             `+--data
 
+        Calana Broker extension
+        =======================
+
+             * the queue to the broker can be specified with a
+               command-line option
+
+	             --broker=<BROKER>
+		where <BROKER> is the queue name of the broker
+
+		The price for job may be specified as command-line
+		option
+		
+		     --price=<PRICE>
+
+		where <PRICE> is the price per minute
+
+             * using the config file:
+             
+		     [broker]
+		     queue: calana.broker.1
+		     price: 0
+
 
      Starting the daemon:
 	 * The first start:
@@ -338,7 +360,14 @@ xbe (command line tool):
                file:
 
                      [network]
-                     server: stomp://<active-mq>/xenbee.daemon.1
+                     server: stomp://<active-mq>/
+		     queue: xenbee.daemon.1
+		     broker_queue: calana.broker.1
+
+	     * using the command-line
+	             -S <MQ-server-url>
+		     -B <Broker-Queue>
+		     -q <xbed-queue>
 
 Executing some task:
 --------------------
@@ -469,3 +498,89 @@ Using the cache:
           in the  location elements  for the instance)  are referenced
           using URIs. In  all that cases, you may as  well give an URI
           you received using 'xbe showcache'.
+
+
+Using the calana broker:
+------------------------
+
+        Start the broker
+        ================
+$ broker start -D -l /var/log/xenbee/broker.log
+
+        Configuration File:
+        ===================
+
+             * -c or --config lets you specify a configuration file
+             * this file holds all configuration information required
+               for the xbed
+
+        Connecting to the server:
+        =========================
+
+             * You have to specify  the stomp-server through which the
+               'xbed'  can be  reached.  That can  be  done either  by
+               specifying  it as an  option (-S)  or using  the config
+               file:
+
+                     [network]
+		     bidtimeout: 5
+		     timeout: 10
+		     uri: stomp://188.40.38.195/calana.broker.1
+		     server: stomp://188.40.38.195/xenbee.daemon.1
+
+
+Executing some task using the broker:
+-------------------------------------
+
+	Booking an instance
+	===================
+$ xbe book
+ticket:bbad9f0d-7fbb-452c-9007-5b3ccf7d69f9
+task  :6c34b475-b5e8-4a55-b004-879c594f677c
+
+Reservation Ticket  : bbad9f0d-7fbb-452c-9007-5b3ccf7d69f9
+Reservation task-id : 6c34b475-b5e8-4a55-b004-879c594f677c
+Reservation my-id   : a58ac77a-7ffc-4f4f-b4f4-48326dace106
+Reservation serverid: xenbee.daemon.1
+Price per minute    :  1.50
+jobstatus: xbe jobstatus -t bbad9f0d-7fbb-452c-9007-5b3ccf7d69f9 -U a58ac77a-7ffc-4f4f-b4f4-48326dace106
+status   : xbe st -q xenbee.daemon.1
+start    : xbe start -q xenbee.daemon.1 -t bbad9f0d-7fbb-452c-9007-5b3ccf7d69f9
+
+	 Confirm the request and upload the jobdescription
+	 =================================================
+
+$ xbe confirm -x /home/ptgrid/povray.xsdl -t bbad9f0d-7fbb-452c-9007-5b3ccf7d69f9 -U a58ac77a-7ffc-4f4f-b4f4-48326dace106
+ 
+	Query the status of the request
+	===============================
+$ xbe jobstatus -t bbad9f0d-7fbb-452c-9007-5b3ccf7d69f9 -U a58ac77a-7ffc-4f4f-b4f4-48326dace106
+ticket:bbad9f0d-7fbb-452c-9007-5b3ccf7d69f9
+task  :6c34b475-b5e8-4a55-b004-879c594f677c
+
+Reservation Ticket  : bbad9f0d-7fbb-452c-9007-5b3ccf7d69f9
+Reservation task-id : 6c34b475-b5e8-4a55-b004-879c594f677c
+Job State           : JobFSM.StPendingConfirmed
+Time start          :  0.00 sec
+Time end            :  0.00 sec
+Time used           :  0.00 sec
+Total cost          :  0.00
+
+      Start the job
+      =============
+$ xbe start -q xenbee.daemon.1 -t bbad9f0d-7fbb-452c-9007-5b3ccf7d69f9
+
+      Output when job is finished
+      ===========================
+
+$ xbe jobstatus -t bbad9f0d-7fbb-452c-9007-5b3ccf7d69f9 -U a58ac77a-7ffc-4f4f-b4f4-48326dace106
+ticket:bbad9f0d-7fbb-452c-9007-5b3ccf7d69f9
+task  :6c34b475-b5e8-4a55-b004-879c594f677c
+
+Reservation Ticket  : bbad9f0d-7fbb-452c-9007-5b3ccf7d69f9
+Reservation task-id : 6c34b475-b5e8-4a55-b004-879c594f677c
+Job State           : JobFSM.StFinishedClosing
+Time start          : 1260179163.38 sec
+Time end            : 1260179258.33 sec
+Time used           : 94.94 sec
+Total cost          :  2.37
