@@ -32,3 +32,7 @@ bridge: virbr0
 gateway: 192.168.122.1
 nameserver: 192.168.122.1
 netmask: 255.255.255.0
+
+[broker]
+queue: calana.broker.1
+price: 0

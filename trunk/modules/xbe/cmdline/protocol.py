@@ -51,6 +51,7 @@ class ClientXMLProtocol(protocol.XMLProtocol):
     
     def connectionMade(self):
         """send initialization stuff"""
+        log.debug("===== connectionMade")
         log.debug("client xml protocol connected")
         if self.protocolFactory is not None:
             self.protocol = self.protocolFactory(*self.protocolFactoryArgs,
@@ -87,10 +88,47 @@ class ClientXMLProtocol(protocol.XMLProtocol):
         if self.protocol is not None:
             self.protocol.errorReceived(error)
 
+##calana extensions
+    def do_PollResponse(self, elem, *a, **kw):
+        log.info("ClientXMLProtocol::PollResponse")
+        pollmsg = message.MessageBuilder.from_xml(elem.getroottree())
+        log.info("ClientXMLProtocol::PollResponse (%s)" % pollmsg)
+        if self.protocol is not None:
+            self.protocol.pollResponseReceived(pollmsg)
+
+    def do_PongWaitResponse(self, elem, *a, **kw):
+        log.info("ClientXMLProtocol::Pong")
+        pongmsg = message.MessageBuilder.from_xml(elem.getroottree())
+        if self.protocol is not None:
+            self.protocol.pongResponseReceived(pongmsg)
+
+    def do_PongResponse(self, elem, *a, **kw):
+        log.info("ClientXMLProtocol::Pong")
+        pongmsg = message.MessageBuilder.from_xml(elem.getroottree())
+        if self.protocol is not None:
+            self.protocol.pongResponseReceived(pongmsg)
+
+    def do_BookedResponse(self, elem, *a, **kw):
+        log.info("Booked")
+        bookingInformation = message.MessageBuilder.from_xml(elem.getroottree())
+        if self.protocol is not None:
+            self.protocol.bookedResponseReceived(bookingInformation)
+        else:
+            log.debug("===========Ups")
+            
+    def do_JobStatusResponse(self, elem, *a, **kw):
+        log.info("JobStatus")
+        JobStatusInformation = message.MessageBuilder.from_xml(elem.getroottree())
+        if self.protocol is not None:
+            self.protocol.jobstatusResponseReceived(JobStatusInformation)
+        else:
+            log.debug("===========Ups")
+
 class BaseCommandLineProtocol(BaseProtocol):
     connected = 0
 
     def makeConnection(self, transport):
+        log.debug("===== makeConnection")
         log.debug("making command line protocol connection")
         if not isinstance(transport, protocol.XMLProtocol):
             raise ValueError("sorry, but I expect a XMLProtocol")
@@ -100,6 +138,7 @@ class BaseCommandLineProtocol(BaseProtocol):
         self.connectionMade()
 
     def connectionMade(self):
+        log.debug("===== connectionMade")
         pass
 
     def reservationResponseReceived(self, reservationResponse):
@@ -163,10 +202,64 @@ class BaseCommandLineProtocol(BaseProtocol):
         msg = message.StartRequest(ticket)
         log.debug("sending: %s" % msg.as_xml())
         self.transport.sendMessage(msg.as_xml())
+        
+## calana extensions
+    def pollRequest(self, cmdname):
+	log.info("BaseCommandLineProtocol::pollRequest")
+        msg = message.PollRequest(cmdname)
+        log.debug("sending: %s" % msg.as_xml())
+        self.transport.sendMessage(msg.as_xml())
+
+    def pingRequest(self):
+	log.info("ping request of ticket: ")
+        msg = message.PingRequest()
+        log.debug("sending: %s" % msg.as_xml())
+        self.transport.sendMessage(msg.as_xml())
+
+    def pingRequestPoll(self):
+	log.info("pingRequest poll: ")
+        msg = message.PingRequestPoll()
+        log.debug("sending: %s" % msg.as_xml())
+        self.transport.sendMessage(msg.as_xml())
+
+    def pongResponseReceived(self, pongmsg):
+	log.info("====pongResponseReceived.")
+        pass
+
+    def bookingRequest(self):
+	log.info("booking request of ticket: ")
+        msg = message.BookingRequest()
+        log.debug("sending: %s" % msg.as_xml())
+        self.transport.sendMessage(msg.as_xml())
+
+    def bookingRequestPoll(self):
+	log.info("booking request of ticket: ")
+        msg = message.BookingRequestPoll()
+        log.debug("sending: %s" % msg.as_xml())
+        self.transport.sendMessage(msg.as_xml())
+
+    #def bookedConfirm(self, uuid, ticket, task_id):
+    #log.info("confirm booked of ticket: ")
+    #    # BookedConfirm(uuid, ticket, task_id)
+    #    msg = message.BookedConfirm(uuid, ticket, task_id)
+    #    log.debug("sending: %s" % msg.as_xml())
+    #    self.transport.sendMessage(msg.as_xml())
+
+    def jobstatusRequest(self, uuid, ticket, task_id):
+	log.info("job status request of ticket: ")
+        msg = message.JobStatusRequest(uuid, ticket, task_id)
+        log.debug("sending: %s" % msg.as_xml())
+        self.transport.sendMessage(msg.as_xml())
 
 class SimpleCommandLineProtocol(BaseCommandLineProtocol):
     def errorReceived(self, error):
         print >>sys.stderr, repr(error)
+
+    def bookedResponseReceived(self, bookingInformation):
+	log.info("====================SimpleCommandLineProtocol::bookedResponseReceived")
+        #msg = message.ConfirmReservation(ticket, jsdl, auto_start)
+        pass
+
 
 class ClientProtocolFactory(XenBEEProtocolFactory):
     def __init__(self, id, stomp_user, stomp_pass,
@@ -176,6 +269,7 @@ class ClientProtocolFactory(XenBEEProtocolFactory):
                  protocolFactoryKwArgs={}):
         log.debug("initializing client protocol factory: id=%s,user=%s,server=%s" % (id, stomp_user, server_queue))
         XenBEEProtocolFactory.__init__(self,
+#                                       "/queue/calana.client.%s" % (id),
                                        "/queue/xenbee.client.%s" % (id),
                                        stomp_user, stomp_pass)
         self.protocolFactory = protocolFactory
@@ -193,6 +287,7 @@ class ClientProtocolFactory(XenBEEProtocolFactory):
         d.addErrback(log.error)
 
     def stompConnectionMade(self, stomp_protocol):
+        log.debug("===== stompConnectionMade")
         log.debug("stomp connection established")
         try:
             self.xml_protocol

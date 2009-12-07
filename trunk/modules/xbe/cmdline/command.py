@@ -22,7 +22,7 @@
 
 """Commands used by the commandline tool"""
 
-import logging, sys, re, os, uuid, os.path, threading
+import logging, sys, re, time, os, uuid, os.path, threading
 log = logging.getLogger(__name__)
 
 from optparse import OptionParser
@@ -142,6 +142,12 @@ class RemoteCommand(Command, SimpleCommandLineProtocol):
         p.add_option("--ca-cert",
                      dest="ca_cert",  type="string",
                      help="the certificate of the CA")
+        p.add_option("-q", "--queue",
+                     dest="queue", type="string",
+                     help="the queue to connect to")
+        p.add_option("-B", "--broker-queue",
+                     dest="broker_queue", type="string",
+                     help="the broker queue to connect to")
         p.add_option("-S", "--server",
                      dest="server", type="string",
                      help="the server to connect to")
@@ -190,6 +196,10 @@ class RemoteCommand(Command, SimpleCommandLineProtocol):
         
         if opts.timeout is None:
             opts.timeout = cp.getfloat("network", "timeout")
+        if opts.queue is None:
+            opts.queue = cp.get("network", "queue")
+        if opts.broker_queue is None:
+            opts.broker_queue = cp.get("network", "broker_queue")
         if opts.server is None:
             opts.server = cp.get("network", "server")
         if opts.stomp_user is None:
@@ -330,6 +340,11 @@ class RemoteCommand(Command, SimpleCommandLineProtocol):
     def tearDown(self):
         pass
 
+    def bookedResponseReceived(self, bookingInformation):
+	log.info("====================RemoteCommand::bookedResponseReceived")
+        #msg = message.ConfirmReservation(ticket, jsdl, auto_start)
+        pass
+
 class HasTicket:
     def __init__(self, parser):
         p = parser
@@ -344,6 +359,47 @@ class HasTicket:
         else:
             ticket = self.opts.ticket
         return ticket
+
+class HasUuid:
+    def __init__(self, parser):
+        p = parser
+        if not p.has_option("-U"):
+            p.add_option("-U", "--uuid", dest="uuid",
+                         type="string", help="the client uuid used during the booking request")
+        self.parser = p
+
+    def get_uuid(self):
+        if not hasattr(self.opts, "uuid") or self.opts.uuid is None:
+            raise ValueError("no uuid")
+        else:
+            uuid = self.opts.uuid
+        return uuid
+
+## Calana extensions
+class BrokerCommand(RemoteCommand):
+    def __init__(self, argv):
+        """Initialize some common options for broker commands."""
+        RemoteCommand.__init__(self, argv)
+
+    def _execute(self):
+        log.info("BrokerCommand::_execute")
+        self.scheduleTimeout(name="ping")
+        self.pingRequest()
+        return False
+
+    def pollResponseReceived(self, msg):
+        log.info("BrokerCommand::pollResponseReceived (%s)" % msg.cmd_name())
+        #tag = 
+        self.scheduleTimeout(name="ping")
+        #self.pingRequest()
+        time.sleep(2)
+        self.pollRequest( msg.cmd_name() )
+        return False
+
+    def bookedResponseReceived(self, bookingInformation):
+	log.info("====================BrokerCommand::bookedResponseReceived")
+        #msg = message.ConfirmReservation(ticket, jsdl, auto_start)
+        pass
 
 class Command_help(Command):
     """\
@@ -521,14 +577,18 @@ class Command_start(RemoteCommand, HasTicket):
         return False
 CommandFactory.getInstance().registerCommand(Command_start, "start")
 
-class Command_confirm(Command_terminate):
+#class Command_confirm(BrokerCommand, HasUuid, Command_terminate):
+class Command_confirm(BrokerCommand, HasUuid, HasTicket):
     """\
     confirm: confirm a previously made reservation
 
     """
     def __init__(self, argv = []):
         """initialize the 'confirm' command."""
-        Command_terminate.__init__(self, argv)
+        BrokerCommand.__init__(self, argv)
+        #Command_terminate.__init__(self, argv)
+        HasTicket.__init__(self, self.parser)
+        HasUuid.__init__(self, self.parser)
         
         p = self.parser
         p.add_option("-x", "--xsdl", dest="xsdl",  type="string",
@@ -537,7 +597,19 @@ class Command_confirm(Command_terminate):
                      help="path to a directory, containing required xsd schema definitions.")
         
     def check_opts_and_args(self, opts, args):
-        Command_terminate.check_opts_and_args(self, opts, args)
+        #Command_terminate.check_opts_and_args(self, opts, args)
+        #HasTicket.check_opts_and_args(self, opts, args)
+        #HasUuid.check_opts_and_args(self, opts, args)
+        if opts.uuid is None:
+            if len(args):
+                opts.uuid = args.pop(0)
+            else:
+                raise CommandFailed("uuid required")
+        if opts.ticket is None:
+            if len(args):
+                opts.ticket = args.pop(0)
+            else:
+                raise CommandFailed("ticket required")
         if opts.xsdl is None:
             if len(args):
                 opts.xsdl = args.pop(0)
@@ -710,6 +782,232 @@ class Command_showcache(RemoteCommand):
         self.stop()
 CommandFactory.getInstance().registerCommand(Command_showcache, "showcache", "sc")
 
+## Calana extensions
+
+class Command_pingpong(BrokerCommand):
+    """\
+    ping: make a ping request
+
+    """
+    def __init__(self, argv = []):
+        """initialize the 'create' command."""
+        BrokerCommand.__init__(self, argv)
+
+    def _execute(self):
+        log.info("Command_pingpong::_execute")
+        self.scheduleTimeout(name="ping")
+        self.pingRequest()
+        return False
+
+    def pongResponseReceived(self, pongmsg):
+        log.info("Command_pingpong::Pong c=%s" % pongmsg.count())
+        print "Pong c=%s" % pongmsg.count()
+        #        self.ticket = reservationResponse.ticket()
+        #        self.task = reservationResponse.task_id()
+        #        self.print_info(self.ticket, self.task)
+        #        self.madeReservation(self.ticket, self.task)
+        self.stop()
+
+    def print_info(self, ticket, task):
+        print dedent("""\
+        ticket:%(ticket)s
+        task:%(task)s
+        """ % {"ticket": ticket,
+               "task": task,
+               }
+        )
+CommandFactory.getInstance().registerCommand(Command_pingpong, "ping")
+
+
+class Command_bookingreq(BrokerCommand):
+    """\
+    bookingrequest: make a bookingRequest
+
+    """
+    def __init__(self, argv = []):
+        """initialize the 'create' command."""
+        BrokerCommand.__init__(self, argv)
+        self.__ticket  = None
+        
+    def _execute(self):
+        self.scheduleTimeout(name="bookingreq")
+        self.bookingRequest()
+        log.info("Command_bookingreq::bookedResponseReceived DONE, next command")
+        return False
+
+    def bookedResponseReceived(self, reservationResponse):
+        log.info("Command_bookingreq::bookedResponseReceived")
+        self.print_info(reservationResponse.ticket(), reservationResponse.task_id(),
+                   reservationResponse.uuid(),  reservationResponse.xbedurl(),
+	           reservationResponse.price())
+        self.__ticket = reservationResponse.ticket()
+        # no send confirm
+
+        self.madeReservation(reservationResponse.ticket(), reservationResponse.task_id(),
+                   reservationResponse.uuid(),  reservationResponse.xbedid())
+        self.stop()
+        return True
+
+    def print_info(self, ticket, task, uuid, xbeid, price):
+        print dedent("""\
+        ticket:%(ticket)s
+        task  :%(task)s
+        """ % {"ticket": ticket,
+               "task": task,
+               }
+        )
+        print "Reservation Ticket  : %s" % ticket
+        print "Reservation task-id : %s" % task
+        print "Reservation my-id   : %s" % uuid
+        print "Reservation serverid: %s" % xbeid
+        print "Price per minute    : %5.2f " % price
+        #print "confirm  : xbe bc -t %s -U %s" % (ticket, uuid)
+        print "jobstatus: xbe jobstatus -t %s -U %s" % (ticket, uuid)
+        print "status   : xbe st -q %s" % (xbeid)
+        print "start    : xbe start -q %s -t %s" % (xbeid, ticket)
+
+    def madeReservation(self, ticket, task, uuid, xbeid):
+        self.ticket = ticket
+        self.task   = task
+        #Command_confirm._execute(self)
+
+CommandFactory.getInstance().registerCommand(Command_bookingreq, "bookingreq", "book")
+
+
+#class Command_bookedconfirm(BrokerCommand, HasUuid, HasTicket): #, Command_confirm):
+#    """\
+#    bookingrequest: confirm a booking response
+#
+#    """
+#    def __init__(self, argv = []):
+#        """initialize the 'create' command."""
+#        BrokerCommand.__init__(self, argv)
+#        #Command_confirm.__init__(self, self.parser)
+#        HasUuid.__init__(self, self.parser)
+#
+#        #p = self.parser
+#        #if not p.has_option("-U"):
+#        #    p.add_option("-U", "--uuid", dest="uuid",  type="string",
+#        #                 help="uuid from session")
+#        #self.parser = p
+#
+#        #Command_confirm.__init__(self, argv)
+#        #self.__uuid    = None
+#        #self.__ticket  = None
+#        #self.__task_id = None
+#        
+#    def check_opts_and_args(self, opts, args):
+#        #Command_terminate.check_opts_and_args(self, opts, args)
+#        if opts.ticket is None:
+#            if len(args):
+#                opts.ticket = args.pop(0)
+#            else:
+#                raise CommandFailed("ticket required")
+#        if opts.uuid is None:
+#            if len(args):
+#                opts.uuid = args.pop(0)
+#            else:
+#                raise CommandFailed("uuid required")
+#        return True
+#
+#    def _execute(self):
+#        self.scheduleTimeout(name="bookconfirm")
+#        task_id="none"
+#        self.bookedConfirm(self.get_uuid(), self.get_ticket(), task_id)
+#        log.info("Command_bookedconfirm::bookedResponseReceived DONE, next command")
+#        return False
+#
+#    def bookedResponseReceived(self, reservationResponse):
+#        log.info("Command_bookedconfirm::bookedResponseReceived")
+#        self.stop()
+#        return True
+#
+#    def print_info(self, ticket, task, uuid, xbeid, price):
+#        print dedent("""\
+#        ticket:%(ticket)s
+#        task  :%(task)s
+#        """ % {"ticket": ticket,
+#               "task": task,
+#               }
+#        )
+#        print "Reservation Ticket  : %s" % ticket
+#        print "Reservation task-id : %s" % task
+#        print "Reservation my-id   : %s" % uuid
+#        print "Reservation serverid: %s" % xbeid
+#        print "Price per minute    : %5.2f " % price
+#
+#    def madeReservation(self, ticket, task, uuid, xbeid):
+#        self.ticket = ticket
+#        self.task   = task
+#        #Command_confirm._execute(self)
+#
+#CommandFactory.getInstance().registerCommand(Command_bookedconfirm, "bookconfirm", "bc")
+
+class Command_jobstatusreq(BrokerCommand, HasUuid, HasTicket):
+    """\
+    jobstatusrequest: make a job status Request
+
+    """
+    def __init__(self, argv = []):
+        """initialize the 'create' command."""
+        BrokerCommand.__init__(self, argv)
+        HasTicket.__init__(self, self.parser)
+        HasUuid.__init__(self, self.parser)
+        self.__ticket  = None
+        
+    def check_opts_and_args(self, opts, args):
+        #Command_terminate.check_opts_and_args(self, opts, args)
+        #HasTicket.check_opts_and_args(self, opts, args)
+        #HasUuid.check_opts_and_args(self, opts, args)
+        if opts.uuid is None:
+            if len(args):
+                opts.uuid = args.pop(0)
+            else:
+                raise CommandFailed("uuid required")
+        if opts.ticket is None:
+            if len(args):
+                opts.ticket = args.pop(0)
+            else:
+                raise CommandFailed("ticket required")
+        return True
+
+    def _execute(self):
+        self.scheduleTimeout(name="jobstatusreq")
+        self.jobstatusRequest(self.get_uuid(), self.get_ticket(), "none")
+        log.info("Command_jobstatusreq::statusResponseReceived DONE, next command")
+        return False
+
+    def jobstatusResponseReceived(self, statusResponse):
+        log.info("Command_jobstatusreq::statusResponseReceived")
+        self.print_info(statusResponse.ticket(), statusResponse.task_id(),
+                        statusResponse.time(), statusResponse.cost(),
+                        statusResponse.start(), statusResponse.end(),statusResponse.state() )
+        self.__ticket = statusResponse.ticket()
+        # no send confirm
+        self.stop()
+        return True
+
+    def print_info(self, ticket, task, time, cost, start, end, state):
+        print dedent("""\
+        ticket:%(ticket)s
+        task  :%(task)s
+        """ % {"ticket": ticket,
+               "task": task,
+               }
+        )
+        print "Reservation Ticket  : %s" % ticket
+        print "Reservation task-id : %s" % task
+        print "Job State           : %s" % state
+        print "Time start          : %5.2f sec " % start
+        print "Time end            : %5.2f sec " % end
+        print "Time used           : %5.2f sec " % time
+        print "Total cost          : %5.2f " % cost
+
+CommandFactory.getInstance().registerCommand(Command_jobstatusreq, "jobstatus", "jst")
+
+## Calana extensions
+
+
 class CommandLineClient:
     def __init__(self,home,out=sys.stdout,err=sys.stderr):
 	self.__home = home
@@ -755,17 +1053,29 @@ class CommandLineClient:
 
                 if isinstance(cmd, RemoteCommand):
                     from xbe.util import network
-                    prot, host, stomp_queue, u1, u2, u3 = network.urlparse(cmd.opts.server)
+                    server = cmd.opts.server
+                    #prot, host, stomp_queue, u1, u2, u3 = network.urlparse(server)
+                    prot, host, stomp_queue, u1, u2, u3 = network.urlparse(server)
+                    if isinstance(cmd, BrokerCommand):
+                        stomp_queue = cmd.opts.broker_queue
+                    else:
+                        stomp_queue = cmd.opts.queue
+
                     if prot != "stomp":
                         raise ValueError("I do not understand this wire-protocol", prot)
-                    log.debug("connecting to: %s" % cmd.opts.server)
+                    log.debug("connecting to: %s" % server)
                     from xbe.cmdline.protocol import ClientProtocolFactory, ClientXMLProtocol
                     # TODO: generate ID or use some given one
+                    if hasattr(cmd, "get_uuid"):
+                        client_id = getattr(cmd , "get_uuid")()
+                        pass
+                    else:
+                        client_id=str(uuid.uuid4())
                     factory = ClientProtocolFactory(
-                        id=str(uuid.uuid4()),
+                        id = client_id,
                         stomp_user=cmd.opts.stomp_user, stomp_pass=cmd.opts.stomp_pass,
                         certificate=cmd.user_cert, ca_cert=cmd.ca_cert,
-                        server_queue="/queue"+stomp_queue,
+                        server_queue="/queue/"+stomp_queue,
                         protocolFactory=ClientXMLProtocol,
                         protocolFactoryArgs=(cmd,))
                     

@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # XenBEE is a software that provides execution of applications
 # in self-contained virtual disk images on a remote host featuring
 # the Xen hypervisor.
@@ -22,24 +20,33 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA
 
-"""Xen based execution environment (XBE) instance daemon.
+"""
+The XenBEE task module
 
-This  daemon  runs  within  a  Xen instance  and  is  responsible  for
-application execution.
-
+contains:
+    TaskManager:
+	used to create new tasks
+	manages all currently known tasks
 """
 
-__version__ = "$Rev: 91 $"
+__version__ = "$Rev: 464 $"
 __author__ = "$Author: petry $"
 
-import sys
-import os.path
+import logging, time, threading, os, os.path
+log = logging.getLogger(__name__)
 
-# add some temporary module paths
-xbe_home = os.environ.get("XBE_HOME") or (os.path.normpath(os.path.abspath(sys.argv[0]) + "/../.."))
-sys.path.append(os.path.expanduser(os.path.join(xbe_home, "modules")))
-#sys.path.append("/root/xenbee/modules")
+try:
+    from traceback import format_exc as format_exception
+except:
+    from traceback import format_exception
 
-from xbe.xbeinstd.daemon import main
-if __name__ == "__main__":
-    main(sys.argv)
+from xbe.util import singleton
+from xbe.util.exceptions import *
+from xbe.util import fsm
+from xbe.util.observer import Observable
+from xbe import util
+# from xbe.broker.task_fsm import TaskFSM
+from xbe.broker.daemon import XBEDaemon
+
+from twisted.internet import reactor, defer, threads
+from twisted.python import failure

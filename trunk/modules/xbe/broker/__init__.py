@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # XenBEE is a software that provides execution of applications
 # in self-contained virtual disk images on a remote host featuring
 # the Xen hypervisor.
@@ -22,24 +20,14 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA
 
-"""Xen based execution environment (XBE) instance daemon.
-
-This  daemon  runs  within  a  Xen instance  and  is  responsible  for
-application execution.
-
+"""
+	The XenBEE broker module
 """
 
-__version__ = "$Rev: 91 $"
+__version__ = "$Rev: 203 $"
 __author__ = "$Author: petry $"
 
-import sys
-import os.path
-
-# add some temporary module paths
-xbe_home = os.environ.get("XBE_HOME") or (os.path.normpath(os.path.abspath(sys.argv[0]) + "/../.."))
-sys.path.append(os.path.expanduser(os.path.join(xbe_home, "modules")))
-#sys.path.append("/root/xenbee/modules")
-
-from xbe.xbeinstd.daemon import main
-if __name__ == "__main__":
-    main(sys.argv)
+def TestSuite():
+    import unittest
+    s = []
+    return unittest.TestSuite(s)
