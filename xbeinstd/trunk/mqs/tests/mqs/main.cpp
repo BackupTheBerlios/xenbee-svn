@@ -24,7 +24,9 @@
 
 int
 main(int argc, char **argv) {
+#if ENABLE_LOGGING == 1
     mqscommon::LoggingConfigurator::configure();
+#endif
     
   CPPUNIT_NS::TestResult           testresult;
   CPPUNIT_NS::TestResultCollector  collectedresults;

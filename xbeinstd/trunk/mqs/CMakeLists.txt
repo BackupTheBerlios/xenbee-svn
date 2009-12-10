@@ -36,7 +36,7 @@ OPTION(USE_STL_TR1
  "Use tr1 from stl"
  YES)
 
-set(TEST_BROKER_URI "tcp://10.199.136.15:61613?wireFormat=stomp&username=guest&password=guest" CACHE STRING "The ActiveMQ broker to use for unit tests")
+set(TEST_BROKER_URI "tcp://localhost:61613?wireFormat=stomp&username=guest&password=guest" CACHE STRING "The ActiveMQ broker to use for unit tests")
 
 cmake_minimum_required(VERSION "2.6" FATAL_ERROR)
 # Where are the additional libraries installed? Note: provide includes
@@ -68,7 +68,7 @@ if ( PKG_CONFIG_FOUND )
    set(LOG4CPP_STATIC_LIBRARIES log4cpp.a)
    message(STATUS "LOG4CPP: ${LOG4CPP_CFLAGS} ${LOG4CPP_LDFLAGS}")
 
-   pkg_check_modules(AMQ REQUIRED activemq-cpp=2.1.3)
+   pkg_check_modules(AMQ REQUIRED activemq-cpp)
    message(STATUS "ActiveMQ: ${AMQ_CFLAGS} ${AMQ_LDFLAGS}")
 else  ( PKG_CONFIG_FOUND )
   message("No PKGCONFIG found - hoping for the best.")
