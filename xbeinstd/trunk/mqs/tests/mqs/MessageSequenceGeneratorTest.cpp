@@ -18,8 +18,9 @@ void MessageSequenceGeneratorTest::setUp() { }
 void MessageSequenceGeneratorTest::tearDown() { }
 
 void MessageSequenceGeneratorTest::testUniqueness() {
-    MQS_LOG_INFO("**** TEST: " << __func__);
-
+  //MQS_LOG_INFO("**** TEST: " << __func__);
+  MQS_LOG_INFO("**** TEST: testUniqueness");
+  
     mqs::MessageSequenceGenerator::Ptr idgen(mqs::MessageSequenceGenerator::newInstance());
     std::vector<std::string> msgIds;
 

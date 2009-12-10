@@ -1,5 +1,10 @@
 # -*- mode: cmake; -*-
 project(libmqs)
+cmake_minimum_required(VERSION 2.6)
+cmake_policy(VERSION 2.6)
+if(POLICY CMP0011)
+  cmake_policy(SET CMP0011 NEW)
+endif(POLICY CMP0011)
 
 # have the full monty in makefiles
 set(CMAKE_VERBOSE_MAKEFILE true)
@@ -31,7 +36,7 @@ OPTION(USE_STL_TR1
  "Use tr1 from stl"
  YES)
 
-set(TEST_BROKER_URI "tcp://localhost:61613?wireFormat=stomp&username=guest&password=guest" CACHE STRING "The ActiveMQ broker to use for unit tests")
+set(TEST_BROKER_URI "tcp://10.199.136.15:61613?wireFormat=stomp&username=guest&password=guest" CACHE STRING "The ActiveMQ broker to use for unit tests")
 
 cmake_minimum_required(VERSION "2.6" FATAL_ERROR)
 # Where are the additional libraries installed? Note: provide includes
