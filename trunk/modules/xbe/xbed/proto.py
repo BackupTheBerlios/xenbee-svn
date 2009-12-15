@@ -55,8 +55,6 @@ from xbe.xbed.instance import InstanceManager
 from twisted.internet import task
 from xbe.stomp.proto import StompTransport
 
-import xbe.xbed.xbemsg_pb2 as xbemsg
-
 class XenBEEClientProtocol(protocol.XMLProtocol):
     """The XBE client side protocol.
 
@@ -546,189 +544,192 @@ class BaseProtocol(object):
             else:
                 log.warn("tried to send a message while not connected!")
 
-class XenBEEInstanceProtocolPB(BaseProtocol):
-    def __init__(self, instanceID):
-        BaseProtocol.__init__(self)
-        self._instanceID = instanceID
-        self._conv_id = None
-        self._task_id = 0
-        self.log = logging.getLogger("xbed.proto.instance.%s" % instanceID)
-        self.log.debug("initializing protocol")
+WITH_PROTOBUF=False
+if WITH_PROTOBUF == True:
+  import xbe.xbed.xbemsg_pb2 as xbemsg
+  class XenBEEInstanceProtocolPB(BaseProtocol):
+	  def __init__(self, instanceID):
+		  BaseProtocol.__init__(self)
+		  self._instanceID = instanceID
+		  self._conv_id = None
+		  self._task_id = 0
+		  self.log = logging.getLogger("xbed.proto.instance.%s" % instanceID)
+		  self.log.debug("initializing protocol")
 
-    def connectionMade(self):
-        log.debug("===== connectionMade - Instance")
-        BaseProtocol.connectionMade(self)
-        self.log.debug("connection made")
-    
-    def connectionLost(self):
-        self.log.debug("connection lost")
-        BaseProtocol.connectionLost(self)
+	  def connectionMade(self):
+		  log.debug("===== connectionMade - Instance")
+		  BaseProtocol.connectionMade(self)
+		  self.log.debug("connection made")
+	  
+	  def connectionLost(self):
+		  self.log.debug("connection lost")
+		  BaseProtocol.connectionLost(self)
 
-    def messageReceived(self, msg):
-        m = xbemsg.XbeMessage()
-        reply = None
-        try:
-            m.ParseFromString(msg)
-            if not m.IsInitialized():
-                raise ValueError("could not parse message into XbeMessage: unknown reason")
-            self.log.debug("received message: %s" % m)
+	  def messageReceived(self, msg):
+		  m = xbemsg.XbeMessage()
+		  reply = None
+		  try:
+			  m.ParseFromString(msg)
+			  if not m.IsInitialized():
+				  raise ValueError("could not parse message into XbeMessage: unknown reason")
+			  self.log.debug("received message: %s" % m)
 
-            conv_id = m.header.conversation_id
-            if self._conv_id is None:
-                self._conv_id = conv_id
-            if self._conv_id != conv_id:
-                raise RuntimeError("wrong conversation-id: got: %s, expected: %s" % (conv_id, self._conv_id))
+			  conv_id = m.header.conversation_id
+			  if self._conv_id is None:
+				  self._conv_id = conv_id
+			  if self._conv_id != conv_id:
+				  raise RuntimeError("wrong conversation-id: got: %s, expected: %s" % (conv_id, self._conv_id))
 
-            if m.HasField("error"):
-                reply = self.do_error(m.error)
-            elif m.HasField("execute"):
-                reply = self.do_execute(m.execute)
-            elif m.HasField("execute_ack"):
-                reply = self.do_execute_ack(m.execute_ack)
-            elif m.HasField("execute_nak"):
-                reply = self.do_execute_nak(m.execute_nak)
-            elif m.HasField("status_req"):
-                reply = self.do_status_req(m.status_req)
-            elif m.HasField("status"):
-                reply = self.do_status(m.status)
-            elif m.HasField("finished"):
-                reply = self.do_finished(m.finished)
-            elif m.HasField("finished_ack"):
-                reply = self.do_finished_ack(m.finished_ack)
-            elif m.HasField("failed"):
-                reply = self.do_failed(m.failed)
-            elif m.HasField("failed_ack"):
-                reply = self.do_failed_ack(m.failed_ack)
-            elif m.HasField("shutdown"):
-                reply = self.do_shutdown(m.shutdown)
-            elif m.HasField("shutdown_ack"):
-                reply = self.do_shutdown_ack(m.shutdown_ack)
-            elif m.HasField("terminate"):
-                reply = self.do_terminate(m.terminate)
-            elif m.HasField("terminate_ack"):
-                reply = self.do_terminate_ack(m.terminate_ack)
-            elif m.HasField("life_sign"):
-                reply = self.do_life_sign(m.life_sign)
-            else:
-                raise RuntimeError("message does not contain any element")
-        except Exception, e:
-            self.log.error("received message could not be handled: %s", e)
+			  if m.HasField("error"):
+				  reply = self.do_error(m.error)
+			  elif m.HasField("execute"):
+				  reply = self.do_execute(m.execute)
+			  elif m.HasField("execute_ack"):
+				  reply = self.do_execute_ack(m.execute_ack)
+			  elif m.HasField("execute_nak"):
+				  reply = self.do_execute_nak(m.execute_nak)
+			  elif m.HasField("status_req"):
+				  reply = self.do_status_req(m.status_req)
+			  elif m.HasField("status"):
+				  reply = self.do_status(m.status)
+			  elif m.HasField("finished"):
+				  reply = self.do_finished(m.finished)
+			  elif m.HasField("finished_ack"):
+				  reply = self.do_finished_ack(m.finished_ack)
+			  elif m.HasField("failed"):
+				  reply = self.do_failed(m.failed)
+			  elif m.HasField("failed_ack"):
+				  reply = self.do_failed_ack(m.failed_ack)
+			  elif m.HasField("shutdown"):
+				  reply = self.do_shutdown(m.shutdown)
+			  elif m.HasField("shutdown_ack"):
+				  reply = self.do_shutdown_ack(m.shutdown_ack)
+			  elif m.HasField("terminate"):
+				  reply = self.do_terminate(m.terminate)
+			  elif m.HasField("terminate_ack"):
+				  reply = self.do_terminate_ack(m.terminate_ack)
+			  elif m.HasField("life_sign"):
+				  reply = self.do_life_sign(m.life_sign)
+			  else:
+				  raise RuntimeError("message does not contain any element")
+		  except Exception, e:
+			  self.log.error("received message could not be handled: %s", e)
 
-        if reply is not None:
-            self.log.debug("replying with: %s", reply)
-            self.sendMessage(reply.SerializeToString())
+		  if reply is not None:
+			  self.log.debug("replying with: %s", reply)
+			  self.sendMessage(reply.SerializeToString())
 
-    def requestStatus(self, caller, executeStatusTask=False):
-        self.log.info("requesting status from instance")
-        msg = xbemsg.XbeMessage()
-        msg.header.conversation_id = self._conv_id
-        msg.status_req.execute_status_task = executeStatusTask
-        self.sendMessage(msg.SerializeToString())
+	  def requestStatus(self, caller, executeStatusTask=False):
+		  self.log.info("requesting status from instance")
+		  msg = xbemsg.XbeMessage()
+		  msg.header.conversation_id = self._conv_id
+		  msg.status_req.execute_status_task = executeStatusTask
+		  self.sendMessage(msg.SerializeToString())
 
-    def executeTask(self, caller, jsdl):
-        #TODO: translate jsdl to PB
-        msg = xbemsg.XbeMessage()
-        msg.header.conversation_id = self._conv_id
-        msg.execute.main_task.executable = "/bin/sleep"
-        msg.execute.main_task.argument.append("600")
-        e = msg.execute.main_task.env.add()
-        e.key = "HOME"
-        e.val = "/"
-        msg.execute.main_task.wd = "/"
-        msg.execute.status_task.executable = "/bin/ps"
-        msg.execute.status_task.argument.append("aux")
-        
-        self.log.info("sending request for execution to instance: %s", msg)
-        self.sendMessage(msg.SerializeToString())
+	  def executeTask(self, caller, jsdl):
+		  #TODO: translate jsdl to PB
+		  msg = xbemsg.XbeMessage()
+		  msg.header.conversation_id = self._conv_id
+		  msg.execute.main_task.executable = "/bin/sleep"
+		  msg.execute.main_task.argument.append("600")
+		  e = msg.execute.main_task.env.add()
+		  e.key = "HOME"
+		  e.val = "/"
+		  msg.execute.main_task.wd = "/"
+		  msg.execute.status_task.executable = "/bin/ps"
+		  msg.execute.status_task.argument.append("aux")
+		  
+		  self.log.info("sending request for execution to instance: %s", msg)
+		  self.sendMessage(msg.SerializeToString())
 
-    def requestTermination(self, caller, reason=None):
-        self.log.info("sending request for termination to instance")
-        msg = xbemsg.XbeMessage()
-        msg.header.conversation_id = self._conv_id
-        msg.terminate.task = self._task_id
-        self.sendMessage(msg.SerializeToString())
+	  def requestTermination(self, caller, reason=None):
+		  self.log.info("sending request for termination to instance")
+		  msg = xbemsg.XbeMessage()
+		  msg.header.conversation_id = self._conv_id
+		  msg.terminate.task = self._task_id
+		  self.sendMessage(msg.SerializeToString())
 
-    def requestShutdown(self, caller, reason=None):
-        self.log.info("sending request for shutdown to instance")
-        msg = xbemsg.XbeMessage()
-        msg.header.conversation_id = self._conv_id
-        msg.shutdown.reason = str(reason)
-        self.sendMessage(msg.SerializeToString())
+	  def requestShutdown(self, caller, reason=None):
+		  self.log.info("sending request for shutdown to instance")
+		  msg = xbemsg.XbeMessage()
+		  msg.header.conversation_id = self._conv_id
+		  msg.shutdown.reason = str(reason)
+		  self.sendMessage(msg.SerializeToString())
 
-    def do_error(self, error):
-        self.log.info("instance had an error: %s", error)
+	  def do_error(self, error):
+		  self.log.info("instance had an error: %s", error)
 
-    def do_execute(self, execute):
-        pass
+	  def do_execute(self, execute):
+		  pass
 
-    def do_execute_ack(self, execute_ack):
-        self.log.info("execution accepted by instance: %s", execute_ack)
-        self._task_id = execute_ack.task
+	  def do_execute_ack(self, execute_ack):
+		  self.log.info("execution accepted by instance: %s", execute_ack)
+		  self._task_id = execute_ack.task
 
-    def do_execute_nak(self, execute_nak):
-        self.log.info("execution *not* accepted by instance: %s", execute_nak)
+	  def do_execute_nak(self, execute_nak):
+		  self.log.info("execution *not* accepted by instance: %s", execute_nak)
 
-    def do_status_req(self, status_req):
-        pass
+	  def do_status_req(self, status_req):
+		  pass
 
-    def do_status(self, status):
-        self.log.info("received status information: %s", status)
+	  def do_status(self, status):
+		  self.log.info("received status information: %s", status)
 
-        inst = InstanceManager.getInstance().lookupByUUID(self._instanceID)
-        if inst is not None:
-            inst.task.signalStatus(status)
+		  inst = InstanceManager.getInstance().lookupByUUID(self._instanceID)
+		  if inst is not None:
+			  inst.task.signalStatus(status)
 
-    def do_finished(self, finished):
-        self.log.info("execution on instance has finished: %d", finished.exitcode)
-        # send a finished ack to the instance
-        ack = xbemsg.XbeMessage()
-        ack.header.conversation_id = self._conv_id
-        ack.finished_ack.task = finished.task
-        
-        inst = InstanceManager.getInstance().lookupByUUID(self._instanceID)
-        if inst is not None:
-            inst.task.signalExecutionEnd(finished.exitcode)
+	  def do_finished(self, finished):
+		  self.log.info("execution on instance has finished: %d", finished.exitcode)
+		  # send a finished ack to the instance
+		  ack = xbemsg.XbeMessage()
+		  ack.header.conversation_id = self._conv_id
+		  ack.finished_ack.task = finished.task
+		  
+		  inst = InstanceManager.getInstance().lookupByUUID(self._instanceID)
+		  if inst is not None:
+			  inst.task.signalExecutionEnd(finished.exitcode)
 
-        return ack
+		  return ack
 
-    def do_finished_ack(self, finished_ack):
-        pass
+	  def do_finished_ack(self, finished_ack):
+		  pass
 
-    def do_failed(self, failed):
-        self.log.info("execution on instance has failed: %d", failed.reason)
-        # send a failed ack to the instance
-        ack = xbemsg.XbeMessage()
-        ack.header.conversation_id = self._conv_id
-        ack.failed_ack.task = failed.task
+	  def do_failed(self, failed):
+		  self.log.info("execution on instance has failed: %d", failed.reason)
+		  # send a failed ack to the instance
+		  ack = xbemsg.XbeMessage()
+		  ack.header.conversation_id = self._conv_id
+		  ack.failed_ack.task = failed.task
 
-        inst = InstanceManager.getInstance().lookupByUUID(self._instanceID)
-        if inst is not None:
-            inst.task.signalExecutionFailed(failed.reason)
-        return ack
+		  inst = InstanceManager.getInstance().lookupByUUID(self._instanceID)
+		  if inst is not None:
+			  inst.task.signalExecutionFailed(failed.reason)
+		  return ack
 
-    def do_failed_ack(self, failed_ack):
-        pass
+	  def do_failed_ack(self, failed_ack):
+		  pass
 
-    def do_shutdown(self, shutdown):
-        pass
+	  def do_shutdown(self, shutdown):
+		  pass
 
-    def do_shutdown_ack(self, shutdown_ack):
-        self.log.info("instance acknowledged shutdown request")
+	  def do_shutdown_ack(self, shutdown_ack):
+		  self.log.info("instance acknowledged shutdown request")
 
-    def do_terminate(self, terminate):
-        pass
+	  def do_terminate(self, terminate):
+		  pass
 
-    def do_terminate_ack(self, terminate_ack):
-        self.log.info("instance acknowledged terminate request")
+	  def do_terminate_ack(self, terminate_ack):
+		  self.log.info("instance acknowledged terminate request")
 
-    def do_life_sign(self, life_sign):
-        self.log.debug("instance %s is alive", self._instanceID)
-        inst = InstanceManager.getInstance().lookupByUUID(self._instanceID)
-        if inst is not None:
-            inst.life_sign(self, life_sign)
-        else:
-            self.log.warn("unknown instance: %s", self._instanceID)
-            self.requestShutdown(None, None)
+	  def do_life_sign(self, life_sign):
+		  self.log.debug("instance %s is alive", self._instanceID)
+		  inst = InstanceManager.getInstance().lookupByUUID(self._instanceID)
+		  if inst is not None:
+			  inst.life_sign(self, life_sign)
+		  else:
+			  self.log.warn("unknown instance: %s", self._instanceID)
+			  self.requestShutdown(None, None)
 
 class _XBEDProtocol(XenBEEProtocol):
     def post_connect(self):
