@@ -1,0 +1,54 @@
+#!/usr/bin/python
+
+# XenBEE is a software that provides execution of applications
+# in self-contained virtual disk images on a remote host featuring
+# the Xen hypervisor.
+#
+# Copyright (C) 2007 Alexander Petry <petry@itwm.fhg.de>.
+# This file is part of XenBEE.
+
+# XenBEE is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+# 
+# XenBEE is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301, USA
+
+import xbe, sys
+from twisted.internet import reactor
+xbe.initLogging("/tmp/foo")
+
+from xbe.cached.cache import Cache
+path = "/srv/xen-images/xenbee/cache"
+
+if len(sys.argv) < 3:
+    print >>sys.stderr, "usage:", sys.argv[0], "uri", "{image,kernel,initrd,data}", "[description]"
+    sys.exit(1)
+
+uri, fileType = sys.argv[1:3]
+desc = " ".join(sys.argv[3:])
+
+if fileType not in ("image", "kernel", "initrd", "data"):
+    print >>sys.stderr, "illegal file type"
+    sys.exit(2)
+
+cache = Cache(path)
+
+def _s(uid):
+    print uid
+    reactor.stop()
+
+def _f(err):
+    print err.getErrorMessage()
+    reactor.stop()
+
+cache.cache(uri, fileType, desc).addCallback(_s).addErrback(_f)
+reactor.run()
