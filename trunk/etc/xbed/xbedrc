@@ -35,4 +35,4 @@ netmask: 255.255.255.0
 
 [broker]
 queue: calana.broker.1
-price: 0
+price:  1.2
