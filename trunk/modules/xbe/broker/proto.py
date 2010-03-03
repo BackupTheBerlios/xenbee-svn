@@ -98,7 +98,7 @@ class XenBEEClient2BrokerProtocol(protocol.XMLProtocol):
 
         self.__xbedaemonTimer = {}
         self.__auctionBids = {}
-        self.__nextTransition = "PollReq"
+        self.__nextTransition = ["PollReq"]
 
         self.__hasBestBid = False
         self.__hasBids    = False
@@ -123,7 +123,8 @@ class XenBEEClient2BrokerProtocol(protocol.XMLProtocol):
         self.triggerFSM.stop()
 
     def handleFSM(self):
-        log.debug("XenBEEClient2BrokerProtocol::handleFSM event '%s'", self.__nextTransition)
+        log.debug("XenBEEClient2BrokerProtocol::handleFSM client=%s eventstack='%s'" %
+                  (self.client, self.__nextTransition))
         request = ""
         reply = Reply()
         try:
@@ -347,14 +348,13 @@ class XenBEEClient2BrokerProtocol(protocol.XMLProtocol):
     #
     def pushEvent(self, event):
         log.debug("=========PUSH(%s)" % event)
-        self.__nextTransition = event
+        self.__nextTransition.append(event)
         
     def popEvent(self):
-        if self.__nextTransition is None:
+        if len(self.__nextTransition) == 0:
             return None #event = "PollReq"
         else:
-            event = self.__nextTransition
-            self.__nextTransition = None
+            event = self.__nextTransition.pop()
         return event
 
     def setTimeout(self):
