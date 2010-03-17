@@ -154,7 +154,7 @@ class Image(object):
         finally:
              _module_lock.release()
 
-    def umount(self, retries=5):
+    def umount(self, retries=2):
         """U(n)mount the image.
 
         If the image is currently mounted, umount it and delete the
@@ -191,13 +191,14 @@ class Image(object):
                 self.__umount()
                 break
             except NotMountedException:
-                raise
+                break
             except Exception, e:
                 print >>sys.stderr, "umount failed", e
                 do, retries, delay = retry(retries, delay)
                 if not do:
                    try:
-                       self.__umount(force=True)
+                      print >>sys.stderr, "forcing umount"
+                      self.__umount(force=True)
                    except:
                        raise
 

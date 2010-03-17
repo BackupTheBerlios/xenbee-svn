@@ -157,13 +157,30 @@ class TestFSTab(unittest.TestCase):
     def test_adding(self):
         fstab = FSTab()
         fstab.add("proc", "/proc", "proc", "defaults", "0", "0")
+
+class TestBusyImage(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.NamedTemporaryFile()
+        makeImage(self.tmp.name, FS_EXT2, mega_bytes=2)
+
+    def tearDown(self):
+        pass
+
+    def testUmountWhileBusy(self):
+        img = mountImage(self.tmp.name)
+        mount_point = img.mount_point()
+        f = open( os.path.join(mount_point, "foo"), "w")
+        img.umount(0)
+        self.assertTrue(not img.is_mounted())
         
 def suite():
-    s1 = unittest.makeSuite(TestMakeSparse, "test")
-    s2 = unittest.makeSuite(TestMakeSwap, "test")
-    s3 = unittest.makeSuite(TestMakeGuessFSType, "test")
-    s4 = unittest.makeSuite(TestMakeMakeImage, "test")
-    return unittest.TestSuite((s1,s2,s3,s4))
+  tests = []
+  tests.append ( unittest.makeSuite(TestMakeSparse, "test") )
+  tests.append ( unittest.makeSuite(TestMakeSwap, "test") )
+  tests.append ( unittest.makeSuite(TestMakeGuessFSType, "test") )
+  tests.append ( unittest.makeSuite(TestMakeMakeImage, "test") )
+  tests.append ( unittest.makeSuite(TestBusyImage, "test") )
+  return unittest.TestSuite(tests)
 
 if __name__ == "__main__":
     unittest.main()
