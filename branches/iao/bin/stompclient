@@ -1,0 +1,228 @@
+#!/usr/bin/env python
+
+# XenBEE is a software that provides execution of applications
+# in self-contained virtual disk images on a remote host featuring
+# the Xen hypervisor.
+#
+# Copyright (C) 2007 Alexander Petry <petry@itwm.fhg.de>.
+# This file is part of XenBEE.
+
+# XenBEE is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+# 
+# XenBEE is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301, USA
+
+"""A command line tool for the stomp protocol"""
+
+import sys, time
+from twisted.internet import reactor
+from twisted.internet.protocol import ClientFactory
+from twisted.internet.stdio import StandardIO
+from xbe.stomp.proto import StompClientFactory, StompClient
+from twisted.protocols import basic
+from textwrap import dedent
+
+from optparse import OptionParser
+
+p = OptionParser()
+p.add_option("-H", "--hostname", dest="hostname", default="localhost", type="string", help="hostname to connect to")
+p.add_option("-P", "--port", dest="port", default=61613, type="int", help="port to connect to")
+p.add_option("-u", "--username", dest="username", default="test", type="string", help="username used for login")
+p.add_option("-p", "--password", dest="password", default="test", type="string", help="password used for login")
+
+stompClient = None
+stdioClient = None
+
+class Client(StompClient):
+    def __init__(self):
+        StompClient.__init__(self)
+        self.header = {}
+        global stompClient
+        stompClient = self
+
+    def send(self, *args, **kw):
+        kw.update(self.header)
+        kw["timestamp"] = int(time.time()*1000)
+        StompClient.send(self, *args, **kw)
+
+    def connectedReceived(self, frame):
+	StandardIO(CommandLineProtocol(prompt=""))
+        print "connected to stomp server"
+
+    def _messageReceived(self, msg):
+        tstamp = int(msg.header.get("timestamp", time.time()*1000))
+        stdioClient.sendLine("On %s, I got message in queue %s:" % (
+            time.ctime(tstamp/1000.0), msg.header["destination"]))
+        for k,v in msg.header.iteritems():
+            stdioClient.sendLine("%s: %s" % (k,v))
+        stdioClient.sendLine("")
+        stdioClient.sendLine(msg.body)
+    
+    def messageReceived(self, msg):
+        try:
+            self._messageReceived(msg)
+        except Exception, e:
+            print >>sys.stderr, "Message handling failed", e
+            
+    def errorOccurred(self, msg, detail):
+        stdioClient.sendLine(msg)
+        stdioClient.sendLine(detail)
+
+class CommandLineProtocol(basic.LineReceiver):
+    from os import linesep as delimiter
+    
+    def __init__(self, prompt="> "):
+        self.parser = OptionParser()
+        self.prompt = prompt
+        self.subscriptions = []
+
+        global stdioClient
+        stdioClient = self
+
+    def connectionMade(self):
+        self.transport.write(self.prompt)
+
+    def dispatch(self, cmd, *args, **kw):
+        try:
+            m = getattr(self, "do_%s" % (cmd))
+        except AttributeError:
+            raise AttributeError("no such command")
+        m(*args, **kw)
+
+    def lineReceived(self, line):
+        if not len(line):
+            self.transport.write(self.prompt)
+            return
+        
+        line = line.strip()
+        commandParts = line.split()
+        command = commandParts[0].lower()
+        args = commandParts[1:]
+
+        try:
+            self.dispatch(command, *args)
+        except Exception, e:
+            self.sendLine("E: " + str(e))
+        self.transport.write(self.prompt)
+
+    def do_inreply(self, *args, **kw):
+        raise RuntimeError("command disabled")
+    
+        if not len(args):
+            raise ValueError("cannot reply with empty command")
+        if not stompClient.replyTo:
+            raise ValueError("cannot reply to this message")
+        cmd = args[0].lower()
+        
+        cmdargs = [ stompClient.replyTo ]
+        cmdargs.extend(args[1:])
+        self.dispatch(cmd, *cmdargs)
+
+    def do_send(self, queue, *msg):
+        stompClient.send(queue, " ".join(msg), 10*1000)
+
+    def do_sendfile(self, queue, path):
+        self.do_send(queue, file(path).read())
+    do_sf = do_sendfile
+    
+    def do_help(self, command=None):
+        if not command:
+            self.sendLine(dedent("""
+            Available commands:
+
+            send <queue> msg       -- send 'msg' to queue
+            sendfile <queue> file  -- sends the given file to queue
+            subscribe <queue>      -- subscribe to queue
+            subscribex <queue>     -- exclusively subscribe to queue
+            unsubscribe <queue>    -- unsubscribe from queue
+            show subscriptions     -- prints the current subscriptions
+            hdr [key [value]]      -- shows the header
+                    if key given, delete the header field it
+                    if key and value given, add the pair to the header
+            quit                   -- quit the program
+            help                   -- show this help
+            """))
+
+    def do_subscribe(self, queue):
+        stompClient.subscribe(queue)
+        self.subscriptions.append(queue)
+    do_sub = do_subscribe
+
+    def do_subscribex(self, queue):
+        stompClient.subscribe(queue, exclusive=True)
+        self.subscriptions.append(queue)
+    do_subx = do_subscribex
+    
+    def do_show(self, target, *args):
+        try:
+            method = getattr(self, 'do_show_' + target)
+        except AttributeError, e:
+            self.sendLine("E: no such config variable")
+        else:
+            try:
+                method(*args)
+            except Exception, e:
+                self.sendLine("E: " + str(e))
+
+    def do_show_subscriptions(self):
+        map(self.sendLine, self.subscriptions)
+
+    def do_show_hdr(self, field=None):
+        if field:
+            if field in stompClient.header:
+                self.sendLine("%s: %s" % (field, stompClient.header[field]))
+            else:
+                self.sendLine("E: field not set")
+        else:
+            for k,v in stompClient.header.iteritems():
+                self.sendLine("%s: %s" % (k,v))
+
+    def do_unsubscribe(self, queue):
+        try:
+            self.subscriptions.remove(queue)
+        except:
+            self.sendLine("E: not subscribed to " + queue)
+        else:
+            stompClient.unsubscribe(queue)
+
+    do_unsub = do_unsubscribe
+    
+    def do_hdr(self, key=None, value=None):
+        if key and value:
+            stompClient.header[key] = value
+            self.sendLine("set header field '%s' to '%s'" % (key,value))
+        elif key:
+            if key in stompClient.header:
+                self.sendLine("removed header field: %s" % key)
+                stompClient.header.pop(key)
+            else:
+                self.sendLine("E: no such header field")
+        else:
+            for k,v in stompClient.header.iteritems():
+                self.sendLine("%s: %s" % (k,v))
+    do_header = do_hdr
+    
+    def do_quit(self):
+        stompClient.disconnect()
+        reactor.stop()
+
+def main():
+    opts, args = p.parse_args(sys.argv)
+    f = StompClientFactory(opts.username, opts.password)
+    f.protocol = Client
+    reactor.connectTCP(opts.hostname, opts.port, f)
+    reactor.run()
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- image submission extension for JSDL -->
+
+<jsdl:JobDefinition xmlns:jsdl="http://schemas.ggf.org/jsdl/2005/11/jsdl"
+    xmlns:jsdl-posix="http://schemas.ggf.org/jsdl/2005/11/jsdl-posix"
+    xmlns:xsdl="http://www.example.com/schemas/xbe/2007/01/xsdl">
+    <jsdl:JobDescription>
+        <jsdl:JobIdentification>
+            <jsdl:JobName>MAGMA</jsdl:JobName>
+            <jsdl:Description>run a magma simulation</jsdl:Description>
+        </jsdl:JobIdentification>
+        <jsdl:Application>
+            <jsdl-posix:POSIXApplication>
+                <jsdl-posix:Executable>/opt/magma-v4.4p19/ms</jsdl-posix:Executable>
+                <jsdl-posix:Argument>-start</jsdl-posix:Argument>
+                <jsdl-posix:Argument>-proj</jsdl-posix:Argument>
+                <jsdl-posix:Argument>CleanFive</jsdl-posix:Argument>
+                <jsdl-posix:Argument>-dir</jsdl-posix:Argument>
+                <jsdl-posix:Argument>CleanFive</jsdl-posix:Argument>
+                <jsdl-posix:Argument>-shlocal</jsdl-posix:Argument>
+                <jsdl-posix:Argument>+logging</jsdl-posix:Argument>
+                <jsdl-posix:Output filesystemName="SPOOL">program.out</jsdl-posix:Output>
+                <jsdl-posix:Error filesystemName="SPOOL">program.err</jsdl-posix:Error>
+                <jsdl-posix:WorkingDirectory filesystemName="SPOOL"/>
+            </jsdl-posix:POSIXApplication>
+        </jsdl:Application>
+        <jsdl:Resources>
+            <jsdl:FileSystem name="ROOT">
+                <jsdl:Description>the root filesystem</jsdl:Description>
+                <jsdl:MountPoint>/</jsdl:MountPoint>
+            </jsdl:FileSystem>
+            <jsdl:FileSystem name="USR">
+                <jsdl:Description>the usr filesystem</jsdl:Description>
+                <jsdl:MountPoint>/usr</jsdl:MountPoint>
+            </jsdl:FileSystem>
+            <jsdl:FileSystem name="SPOOL">
+                <jsdl:Description>a spool directory</jsdl:Description>
+                <jsdl:MountPoint>/spool</jsdl:MountPoint>
+            </jsdl:FileSystem>
+            <jsdl:TotalCPUCount><jsdl:Exact>2</jsdl:Exact></jsdl:TotalCPUCount>
+
+            <xsdl:InstanceDefinition>
+                <xsdl:InstanceDescription>
+                    <xsdl:Instance>
+                        <xsdl:Kernel>
+                            <xsdl:Location><xsdl:URI>file:///opt/home/xenbee/spool/images/magma/kernel-2.6.19-4-amd64</xsdl:URI></xsdl:Location>
+                        </xsdl:Kernel>
+
+                        <!-- the initrd is optional -->
+                        <xsdl:Initrd>
+                            <xsdl:Location><xsdl:URI>file:///opt/home/xenbee/spool/images/magma/initrd-2.6.19-4-amd64</xsdl:URI></xsdl:Location>
+                        </xsdl:Initrd>
+                        <!-- the image is mandatory -->
+                        <xsdl:Image fs-type="ext3">
+                            <xsdl:Location><xsdl:URI>file:///opt/home/xenbee/spool/images/magma/magma2.img</xsdl:URI></xsdl:Location>
+                        </xsdl:Image>
+                    </xsdl:Instance>
+                </xsdl:InstanceDescription>
+            </xsdl:InstanceDefinition>
+        </jsdl:Resources>
+        <jsdl:DataStaging>
+            <jsdl:FileName>CleanFive.tgz</jsdl:FileName>
+            <jsdl:FilesystemName>SPOOL</jsdl:FilesystemName>
+            <jsdl:CreationFlag>overwrite</jsdl:CreationFlag>
+            <jsdl:DeleteOnTermination>true</jsdl:DeleteOnTermination>
+            <jsdl:Source>
+                <jsdl:URI>file:///opt/home/xenbee/spool/magma-test/CleanFive.tgz</jsdl:URI>
+                <xsdl:Compression algorithm="tgz"/>
+            </jsdl:Source>
+        </jsdl:DataStaging>
+        <jsdl:DataStaging>
+            <jsdl:FileName>CleanFive</jsdl:FileName>
+            <jsdl:FilesystemName>SPOOL</jsdl:FilesystemName>
+            <jsdl:CreationFlag>overwrite</jsdl:CreationFlag>
+            <jsdl:DeleteOnTermination>false</jsdl:DeleteOnTermination>
+            <jsdl:Target>
+                <jsdl:URI>file:///opt/home/xenbee/spool/output/magma/CleanFive-out.tgz</jsdl:URI>
+                <xsdl:Compression algorithm="tgz"/>
+            </jsdl:Target>
+        </jsdl:DataStaging>
+    </jsdl:JobDescription>
+</jsdl:JobDefinition>
+
+<!--
+Local Variables: ***
+mode: nxml ***
+End: ***
+-->

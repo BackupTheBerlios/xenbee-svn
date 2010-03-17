@@ -1,0 +1,23 @@
+[DEFAULT]
+etc: /usr/local/xenbee/etc
+
+[global]
+pidfile: /var/run/xbebroker.pid
+schema_dir: %(etc)s/xml/schema
+
+[logging]
+logconf: %(etc)s/broker/logging.rc
+;logfile: /var/log/xenbee/broker.log
+
+[security]
+privkey: %(etc)s/xbed/xbed-key.pem
+pubkey:  %(etc)s/xbed/xbed.pem
+cacert:  %(etc)s/xbed/ca-cert.pem
+userdb:  %(etc)s/xbed/allowed-users
+
+[network]
+uri: stomp://188.40.38.195/calana.broker.1
+server: stomp://188.40.38.195/xenbee.daemon.1
+user: guest
+pass: guest
+bidtimeout: 5

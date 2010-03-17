@@ -1,0 +1,42 @@
+#!/usr/bin/env python
+
+# XenBEE is a software that provides execution of applications
+# in self-contained virtual disk images on a remote host featuring
+# the Xen hypervisor.
+#
+# Copyright (C) 2007 Alexander Petry <petry@itwm.fhg.de>.
+# This file is part of XenBEE.
+
+# XenBEE is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+# 
+# XenBEE is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301, USA
+
+"""Xen based execution environment (XBE) commandline tool.
+
+usage: xbe <subcommand> [options] [args]
+Version: $Revision: 515 $
+Author: Alexander Petry <petry@itwm.fhg.de>
+
+Type 'xbe help <subcommand>' for help on a specific subcommand.
+"""
+
+import sys
+import os.path
+xbe_home = os.environ.get("XBE_HOME") or (os.path.normpath(os.path.abspath(sys.argv[0]) + "/../.."))
+sys.path.append(os.path.expanduser(os.path.join(xbe_home, "modules")))
+
+if __name__ == "__main__":
+    from xbe.cmdline.command import CommandLineClient
+    client = CommandLineClient(home=xbe_home)#err=open("/tmp/xbe.err", "wb"))
+    sys.exit(client.main(sys.argv))

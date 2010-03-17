@@ -1,0 +1,22 @@
+[DEFAULT]
+prefix: ~/.xbe
+
+[global]
+schema_dir: /root/xenbee/etc/xml/schema
+
+[network]
+timeout: 10
+queue: xenbee.daemon.1
+broker_queue: calana.broker.1
+server: stomp://188.40.38.195/
+user: client-1
+pass: Aefith3s
+
+[security]
+privkey: %(prefix)s/user-key.pem
+pubkey:  %(prefix)s/user.pem
+cacert:  %(prefix)s/ca-cert.pem
+
+
+[broker]
+broker: stomp://188.40.38.195/calana.broker.1
