@@ -32,6 +32,9 @@ log = logging.getLogger(__name__)
 
 # use sqlite
 try:
-    from pysqlite3 import dbapi2 as dbapi
+    from sqlite3 import dbapi2 as dbapi
 except:    
-    from pysqlite2 import dbapi2 as dbapi
+    try:
+        from pysqlite3 import dbapi2 as dbapi
+    except:
+        from pysqlite2 import dbapi2 as dbapi

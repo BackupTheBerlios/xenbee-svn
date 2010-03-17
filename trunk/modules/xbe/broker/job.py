@@ -80,6 +80,10 @@ class Job:
         self.__client_uuid = bidCtxt.bid().uuid()
         self.__jobPrice    = bidCtxt.bid().price()
 
+    def getClientUUID(self):
+        return self.__client_uuid
+    def getUser(self):
+        return self.__user
     def getTime(self):
         if self.getEnd()>0:
             return self.__jobEnd - self.__jobStart
@@ -163,18 +167,23 @@ class Job:
         if len(self.__nextTransition) == 0:
             return None #event = "PollReq"
         else:
-            event = self.__nextTransition.pop()
-         return event
+            return self.__nextTransition.pop()
 
     # implementation of statemachine actions
     def terminateImpl(self, job, cCtxt):
         log.debug("==job::terminateImpl")
         self.__jobEnd = time.time()
+        if self.__jobStart == 0:
+            self.__jobStart = self.__jobEnd
+        self.log_job_closed()
         pass
     
     def failImpl(self, job, cCtxt):
         log.debug("==job::failImpl")
         self.__jobEnd = time.time()
+        if self.__jobStart == 0:
+            self.__jobStart = self.__jobEnd
+        self.log_job_closed()
         pass
 
     def startNegotiationImpl(self, job, cCtxt):
@@ -224,8 +233,11 @@ class Job:
         log.debug("==job::closeJob_ClosedImpl")
         log.debug("Job finished: Time: %d sec" % self.getTime())
         self.__xbeclient.pushEvent("CloseAck")
-
+        self.log_job_closed()
         pass
+
+    def log_job_closed(self):
+        log.info("Job finished: Ticket:%s Task:%s User:%s Start:%f End:%f Time:%f Price:%f State:%s" % (self.ticket(), self.task(), self.getUser(), self.jobStart(), self.jobEnd(), self.getTime(), self.getCost(), self.getState()))
 
     def print_info(self):
         print dedent("""\

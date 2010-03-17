@@ -29,6 +29,7 @@ __author__ = "$Author: petry $"
 
 # system imports
 import logging, re, time, threading
+import random
 log = logging.getLogger(__name__)
 
 from pprint import pprint, pformat
@@ -229,18 +230,36 @@ class XenBEEClient2BrokerProtocol(protocol.XMLProtocol):
         self.__reply.msg = msg
         self.transport.write(msg.as_xml())
         
+    def compareBids(self, bid_ctxt_A, bid_ctxt_B):
+        if bid_ctxt_A.bid().price() < bid_ctxt_B.bid().price():
+          return -1
+        if bid_ctxt_A.bid().price() == bid_ctxt_B.bid().price():
+          return 0
+        return 1
+
     #
     def getBestBid(self):
         log.debug("getBestBid")
-        bestbid = None
-        bestxbed = None
+        bestbids = [] # holds a tuple of (bidctxt, xbed)
+        log.debug("collecting best bids")
         for xbed, bidCtxt in self.__auctionBids.iteritems():
-            if bestbid is None:
-                bestbid  = bidCtxt
-                bestxbed = xbed
-            if bidCtxt.bid().price() < bestbid.bid().price():
-                bestbid  = bidCtxt
-                bestxbed = xbed
+            if len(bestbids):
+              current_best, _ = bestbids[0]
+              compare_val = self.compareBids(bidCtxt, current_best)
+              if compare_val == 0:
+                # remember an equally good bid
+                log.debug("found equally good bid=%s" % str(bidCtxt))
+                bestbids.append( (bidCtxt, xbed) )
+              if compare_val == -1:
+                # replace all bids with the new best
+                log.debug("replacing current best with new bid=%s" % str(bidCtxt))
+                bestbids = [(bidCtxt, xbed)]
+            else:
+              bestbids = [(bidCtxt, xbed)]
+        log.debug("bestbids=%s" % str(bestbids))
+        assert len(bestbids), "Could not find best bid, array was empty!"
+        bestbid, bestxbed = random.choice(bestbids)
+
         # update job data
         self.__bestbid_ticket = bestbid.bid().ticket()
         self.__job        = None
@@ -676,8 +695,7 @@ class XenBEEDaemon2BrokerProtocol(protocol.XMLProtocol):
         pass
 
     def sendPingRequest(self, clientProto):
-	log.info("send a ping request to xbed '%s' with id '%s'" %
-                 (self.xbedaemon , clientProto.client))
+        log.info("send a ping request to xbed '%s' with id '%s'" % (self.xbedaemon , clientProto.client))
         msg = message.PingRequest(clientProto.client)
 
         #log.debug("sending: %s" % msg.as_xml())
@@ -793,7 +811,7 @@ class XenBEEBrokerProtocolFactory(XenBEEProtocolFactory):
         log.debug("initializing broker protocol factory: id=%s,user=%s,server=%s" %
                   (my_queue, user, server_queue))
 
-	XenBEEProtocolFactory.__init__(self, my_queue, user, password)
+        XenBEEProtocolFactory.__init__(self, my_queue, user, password)
         self.daemon = daemon
         self.__topic = topic
         self.__server_queue = server_queue
