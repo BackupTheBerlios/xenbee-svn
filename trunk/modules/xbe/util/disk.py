@@ -126,29 +126,33 @@ class Image(object):
             _module_lock.release()
         return self.__mount_point[0]
 
-    def __umount(self):
+    def __umount(self, force=False):
         try:
-            mount_point = self.__mount_point
+             mount_point = self.__mount_point
         except AttributeError:
-            raise NotMountedException()
-        
+             raise NotMountedException()
+
         _module_lock.acquire()
         try:
-            try:
-                p = subprocess.Popen(getCommand("umount")+[mount_point[0]],
-                                     stdout=devnull, stderr=subprocess.PIPE)
+             try:
+                if force:
+                    p = subprocess.Popen(getCommand("umount")+["-f", "-l", mount_point[0]],
+                                         stdout=devnull, stderr=subprocess.PIPE)
+                else:
+                    p = subprocess.Popen(getCommand("umount")+[mount_point[0]],
+                                         stdout=devnull, stderr=subprocess.PIPE)
                 stdout, stderr = p.communicate()
                 if p.returncode != 0:
                     raise ProcessError(p.returncode, "umount", stderr, stdout)
-            except OSError, e:
+             except OSError, e:
                 raise RuntimeError("'umount' could not be called", e)
-            except:
+             except:
                 raise
-            del self.__mount_point
-            if mount_point[1]:
-                os.rmdir(mount_point[0])
+             del self.__mount_point
+             if mount_point[1]:
+                 os.rmdir(mount_point[0])
         finally:
-            _module_lock.release()
+             _module_lock.release()
 
     def umount(self, retries=5):
         """U(n)mount the image.
@@ -185,14 +189,17 @@ class Image(object):
         while True:
             try:
                 self.__umount()
-		break
+                break
             except NotMountedException:
                 raise
             except Exception, e:
                 print >>sys.stderr, "umount failed", e
                 do, retries, delay = retry(retries, delay)
                 if not do:
-                    raise
+                   try:
+                       self.__umount(force=True)
+                   except:
+                       raise
 
 def getCommand(cmd):
     if os.geteuid() != 0:
@@ -216,9 +223,10 @@ def guess_fs_type(path):
             raise ProcessError(p.returncode, "file", stderr, stdout)
         else:
             # single line: example: Linux rev 1.0 ext3 filesystem data
-            file_info = stdout.split()
-            if len(file_info) == 6 and " ".join(file_info[-2:]) == "filesystem data":
-                return file_info[-3]
+            file_info = stdout
+            if file_info.find("filesystem data") > -1:
+              components = file_info.split()
+              return file_info.split()[3]
             else:
                 raise ValueError("could not guess filesystem type")
     except OSError, e:
