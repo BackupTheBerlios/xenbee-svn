@@ -96,7 +96,10 @@ class Job:
     def getEnd(self):
         return self.__jobEnd
     def getState(self):
-        return self.__fsm.getState().getName()
+        try:
+            return self.__fsm.getState().getName()
+        except:
+            return "Terminated"
 
     # handle next event
     def do_Event(self, event, reqCtxt):
@@ -107,7 +110,7 @@ class Job:
             log.debug("Run event '%s'" % event)
             getattr(self.__fsm, event)(self, reqCtxt)
         else:
-            log.debug("Event '%s' not found." % event)
+            log.error("Event '%s' not found." % event)
             raise CommandFailed("jobFSM: No such Transition '%s'." % event)
 
     def do_EventByMap(self, eventkey, reqCtxt):
@@ -130,7 +133,7 @@ class Job:
             "Terminated" : "terminate"
         }
         event = eventMap[eventkey]
-        log.debug("=========>do_Event '%s' run in state '%s' even [%s]" % 
+        log.debug("=========>do_Event '%s' run in state '%s' event [%s]" % 
                   (self.ticket(), self.__fsm.getState().getName(), event))
         if hasattr(self.__fsm, event):
             try:
@@ -139,9 +142,9 @@ class Job:
                 if (event == "runJob_StageOut" ):
                     self.__fsm.closeJob_Executed(self, reqCtxt)
             except Exception, e:
-                log.debug("FAILED: %s." % e)
+                log.error("FAILED: %s." % e)
         else:
-            log.debug("Event '%s' not found." % event)
+            log.error("Event '%s' not found." % event)
         
     def terminate(self, reqCtxt):
         log.debug("==job.terminate '%s' run in state '%s' event '%s'" %
@@ -237,7 +240,8 @@ class Job:
         pass
 
     def log_job_closed(self):
-        log.info("Job finished: Ticket:%s Task:%s User:%s Start:%f End:%f Time:%f Price:%f State:%s" % (self.ticket(), self.task(), self.getUser(), self.getStart(), self.getEnd(), self.getTime(), self.getCost(), self.getState()))
+        log.debug("Job finished: Ticket:%s Task:%s User:%s Start:%f End:%f Time:%f Price:%f State:%s" % (self.ticket(), self.task(), self.getUser(), self.getStart(), self.getEnd(), self.getTime(), self.getCost(), self.getState()))
+        return True
 
     def print_info(self):
         print dedent("""\
