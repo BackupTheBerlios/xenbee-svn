@@ -146,7 +146,7 @@ class XenBEEClientProtocol(protocol.XMLProtocol):
             return message.Error(errcode.TICKET_INVALID, msg.ticket())
 
     def do_StatusRequest(self, elem, *args, **kw):
-	"""Handle status request."""
+        """Handle status request."""
         request = message.MessageBuilder.from_xml(elem.getroottree())
         ticket = TicketStore.getInstance().lookup(request.ticket())
         status_list = message.StatusList()
@@ -164,13 +164,13 @@ class XenBEEClientProtocol(protocol.XMLProtocol):
             elif request.ticket() == "all":
                 log.info("user requested the status of all tasks, remove that functionality")
                 toberemoved = [] 
-		for tid, ticket in TicketStore.getInstance().all().iteritems():
+                for tid, ticket in TicketStore.getInstance().all().iteritems():
                     if ticket.task:
                         task = ticket.task
                         status_list.add(task.id(), task.state(), ticket.id(), task.getStatusInfo())
 
-	                # remove the task entry
-	                if task.is_done() and request.removeEntry():
+                        # remove the task entry
+                        if task.is_done() and request.removeEntry():
                             toberemoved.append( (ticket, task) )
                 for (ticket, task) in toberemoved:
                     log.debug("removing task-entry: %s", task.id())
@@ -239,7 +239,7 @@ class XenBEEInstanceProtocol(protocol.XMLProtocol):
 
     def __init__(self, instid):
         protocol.XMLProtocol.__init__(self)
-	self.instid = instid
+        self.instid = instid
 
     def executeTask(self, jsdl, task):
         """send the request to the application.
@@ -450,8 +450,18 @@ class XenBEEBrokerProtocol(protocol.XMLProtocol):
         ticket = TicketStore.getInstance().lookup(request.ticket())
         if ticket is not None:
             if not ticket.task.is_done():
-                reactor.callInThread(TaskManager.getInstance().terminateTask, ticket.task, "")
-                #return message.Error(errcode.OK, "termination in progress")
+
+              def deny(ticket):
+                task = ticket.task
+                TaskManager.getInstance().terminateTask(task, "auction-deny")
+                if task.is_done():
+                    log.debug("removing task-entry: %s", task.id())
+                    TaskManager.getInstance().removeTask(task)
+                    TicketStore.getInstance().release(ticket)
+                    del ticket.task
+
+              reactor.callInThread(deny, ticket)
+               #return message.Error(errcode.OK, "termination in progress")
         #else:
         #    return message.Error(errcode.TICKET_INVALID, request.ticket())
 
@@ -739,7 +749,7 @@ class XenBEEDaemonProtocolFactory(XenBEEProtocolFactory):
     protocol = _XBEDProtocol
 
     def __init__(self, daemon, queue, broker, topic, user, password):
-	XenBEEProtocolFactory.__init__(self, queue, user, password)
+        XenBEEProtocolFactory.__init__(self, queue, user, password)
         self.broker_queue = broker
         self.daemon = daemon
         self.__topic = topic
@@ -753,7 +763,7 @@ class XenBEEDaemonProtocolFactory(XenBEEProtocolFactory):
         self.__instanceProtocols = {}
         self.__instanceMutex = threading.RLock()
 
-	self.instanceManager = daemon.instanceManager
+        self.instanceManager = daemon.instanceManager
         self.taskManager = daemon.taskManager
         self.cache = daemon.cache
         self.cert = daemon.certificate
