@@ -99,7 +99,7 @@ class XenBEEClient2BrokerProtocol(protocol.XMLProtocol):
 
         self.__xbedaemonTimer = {}
         self.__auctionBids = {}
-        self.__nextTransition = "PollReq"
+        self.__nextTransition = ["PollReq"]
 
         self.__hasBestBid = False
         self.__hasBids    = False
@@ -124,7 +124,8 @@ class XenBEEClient2BrokerProtocol(protocol.XMLProtocol):
         self.triggerFSM.stop()
 
     def handleFSM(self):
-        log.debug("XenBEEClient2BrokerProtocol::handleFSM event '%s'", self.__nextTransition)
+        log.debug("XenBEEClient2BrokerProtocol::handleFSM client=%s eventstack='%s'" %
+                  (self.client, self.__nextTransition))
         request = ""
         reply = Reply()
         try:
@@ -230,36 +231,34 @@ class XenBEEClient2BrokerProtocol(protocol.XMLProtocol):
         self.transport.write(msg.as_xml())
         
     def compareBids(self, bid_ctxt_A, bid_ctxt_B):
-	if bid_ctxt_A.bid().price() < bid_ctxt_B.bid().price():
-		return -1
-	if bid_ctxt_A.bid().price() == bid_ctxt_B.bid().price():
-		return 0
-	return 1
+        if bid_ctxt_A.bid().price() < bid_ctxt_B.bid().price():
+          return -1
+        if bid_ctxt_A.bid().price() == bid_ctxt_B.bid().price():
+          return 0
+        return 1
 
     #
     def getBestBid(self):
         log.debug("getBestBid")
-	bestbids = [] # holds a tuple of (bidctxt, xbed)
-	log.debug("collecting best bids")
+        bestbids = [] # holds a tuple of (bidctxt, xbed)
+        log.debug("collecting best bids")
         for xbed, bidCtxt in self.__auctionBids.iteritems():
             if len(bestbids):
-		current_best, _ = bestbids[0]
-		compare_val = self.compareBids(bidCtxt, current_best)
-		if compare_val == 0:
-			# remember an equally good bid
-			log.debug("found equally good bid=%s" % str(bidCtxt))
-			bestbids.append( (bidCtxt, xbed) )
-            	if compare_val == -1:
-			# replace all bids with the new best
-			log.debug("replacing current best with new bid=%s" % str(bidCtxt))
-			bestbids = [(bidCtxt, xbed)]
-		# else do nothing
+              current_best, _ = bestbids[0]
+              compare_val = self.compareBids(bidCtxt, current_best)
+              if compare_val == 0:
+                # remember an equally good bid
+                log.debug("found equally good bid=%s" % str(bidCtxt))
+                bestbids.append( (bidCtxt, xbed) )
+              if compare_val == -1:
+                # replace all bids with the new best
+                log.debug("replacing current best with new bid=%s" % str(bidCtxt))
+                bestbids = [(bidCtxt, xbed)]
             else:
-		bestbids = [(bidCtxt, xbed)]
-	log.debug("bestbids=%s" % str(bestbids))
-
-	assert len(bestbids), "Could not find best bid, array was empty!"
-	bestbid, bestxbed = random.choice(bestbids)
+              bestbids = [(bidCtxt, xbed)]
+        log.debug("bestbids=%s" % str(bestbids))
+        assert len(bestbids), "Could not find best bid, array was empty!"
+        bestbid, bestxbed = random.choice(bestbids)
 
         # update job data
         self.__bestbid_ticket = bestbid.bid().ticket()
@@ -368,14 +367,13 @@ class XenBEEClient2BrokerProtocol(protocol.XMLProtocol):
     #
     def pushEvent(self, event):
         log.debug("=========PUSH(%s)" % event)
-        self.__nextTransition = event
+        self.__nextTransition.append(event)
         
     def popEvent(self):
-        if self.__nextTransition is None:
+        if len(self.__nextTransition) == 0:
             return None #event = "PollReq"
         else:
-            event = self.__nextTransition
-            self.__nextTransition = None
+            event = self.__nextTransition.pop()
         return event
 
     def setTimeout(self):

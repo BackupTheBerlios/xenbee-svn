@@ -56,7 +56,7 @@ class Job:
         self.__jobPrice  = 0
         self.__xbeclient = xbeclient
 
-        self.__nextTransition = "startNegotiation"
+        self.__nextTransition = ["startNegotiation"]
 
     def bidContext(self):
         return self.__bidCtxt
@@ -81,9 +81,9 @@ class Job:
         self.__jobPrice    = bidCtxt.bid().price()
 
     def getClientUUID(self):
-	return self.__client_uuid
+        return self.__client_uuid
     def getUser(self):
-	return self.__user
+        return self.__user
     def getTime(self):
         if self.getEnd()>0:
             return self.__jobEnd - self.__jobStart
@@ -161,31 +161,30 @@ class Job:
             raise CommandFailed("JobFSM, No such Transition '%s'." % self.__nextTransition)
             
     def pushEvent(self, event):
-        self.__nextTransition = event
+        self.__nextTransition.append(event)
         
     def popEvent(self):
-        if self.__nextTransition is None:
+        if len(self.__nextTransition) == 0:
             return None #event = "PollReq"
         else:
-            event = self.__nextTransition
-            self.__nextTransition = None
-        return event
+            event = self.__nextTransition.pop()
+         return event
 
     # implementation of statemachine actions
     def terminateImpl(self, job, cCtxt):
         log.debug("==job::terminateImpl")
         self.__jobEnd = time.time()
-	if self.__jobStart == 0:
-		self.__jobStart = self.__jobEnd
-	self.log_job_closed()
+        if self.__jobStart == 0:
+            self.__jobStart = self.__jobEnd
+        self.log_job_closed()
         pass
     
     def failImpl(self, job, cCtxt):
         log.debug("==job::failImpl")
         self.__jobEnd = time.time()
-	if self.__jobStart == 0:
-		self.__jobStart = self.__jobEnd
-	self.log_job_closed()
+        if self.__jobStart == 0:
+            self.__jobStart = self.__jobEnd
+        self.log_job_closed()
         pass
 
     def startNegotiationImpl(self, job, cCtxt):
@@ -235,7 +234,7 @@ class Job:
         log.debug("==job::closeJob_ClosedImpl")
         log.debug("Job finished: Time: %d sec" % self.getTime())
         self.__xbeclient.pushEvent("CloseAck")
-	self.log_job_closed()
+        self.log_job_closed()
         pass
 
     def log_job_closed(self):
