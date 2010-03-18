@@ -100,12 +100,13 @@ class Task(TaskFSM):
         """Initialize a new task."""
         TaskFSM.__init__(self)
         self.mtx = self.fsm.getLock()
-	self.__ticket_id = ticket_id
+        self.__ticket_id = ticket_id
         self.__timestamps = {}
         self.__timestamps["submit"] = time.time()
         self.__activity_logs = {}
         self.__id = id
         self.__statusTaskWaiter = WaitStruct()
+        self.__spool = None
         self.log = logging.getLogger("task."+self.id())
         self.state_log = logging.getLogger("JobState."+self.__ticket_id)
         self.mgr = mgr
@@ -125,9 +126,10 @@ class Task(TaskFSM):
 
     def cleanUp(self):
         """cleans up the task, i.e. removes the task's spool directory"""
-        self.log.info("removing spool directory")
-        from xbe.util import removeDirCompletely
-        removeDirCompletely(self.__spool)
+        if self.__spool is not None:
+          self.log.info("removing spool directory")
+          from xbe.util import removeDirCompletely
+          removeDirCompletely(self.__spool)
 
     def signalStatus(self, statusMsg):
         self.__statusTaskWaiter.signalUpdate(statusMsg)
