@@ -237,7 +237,7 @@ class Job:
         pass
 
     def log_job_closed(self):
-        log.info("Job finished: Ticket:%s Task:%s User:%s Start:%f End:%f Time:%f Price:%f State:%s" % (self.ticket(), self.task(), self.getUser(), self.jobStart(), self.jobEnd(), self.getTime(), self.getCost(), self.getState()))
+        log.info("Job finished: Ticket:%s Task:%s User:%s Start:%f End:%f Time:%f Price:%f State:%s" % (self.ticket(), self.task(), self.getUser(), self.getStart(), self.getEnd(), self.getTime(), self.getCost(), self.getState()))
 
     def print_info(self):
         print dedent("""\
