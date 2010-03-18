@@ -1,0 +1,99 @@
+#!/bin/bash
+set -e
+
+# /etc/init.d/xbeinstd: start and stop the XBE instance daemon
+
+export PYTHONPATH="$PYTHONPATH":/root/xenbee/modules
+daemon=/root/xenbee/bin/xbeinstd
+logfile="/var/log/xenbee/xbeinstd.log"
+pidfile="/var/run/xbeinstd.pid"
+envfile="/var/run/xbeinstd.env"
+
+test -x $daemon || exit 0
+
+if test -f /etc/default/xbeinstd; then
+    . /etc/default/xbeinstd
+fi
+
+. /lib/lsb/init-functions
+
+export PATH="${PATH:+$PATH:}/usr/sbin:/sbin"
+
+function check_logfile() {
+	logdir=`dirname $logfile`
+	mkdir -p "$logdir"
+	# empty the logfile
+	:> "$logfile"
+}
+
+function save_environ() {
+	if [ -n "$XBE_SERVER" ]; then
+		:> "$envfile"
+		echo "export XBE_SERVER=$XBE_SERVER" >> "$envfile"
+		echo "export XBE_UUID=$XBE_UUID" >> "$envfile"
+	fi
+}
+
+function load_environ() {
+	if [ -z "$XBE_SERVER" -a -r "$envfile" ]; then
+		source "$envfile"
+	fi
+}
+
+function config_network() {
+	# ip variable layout:
+	#	ip=<client-ip>:<boot-server-ip>:<gateway>:<netmask>
+	if [ -z "$XBE_IP_CONFIG" ]; then
+		XBE_IP_CONFIG=`/bin/grep -o 'ip=[^ ]\+' /proc/cmdline | /usr/bin/cut -d '=' -f 2`
+		export XBE_IP_CONFIG
+	fi
+	if [ -n "$XBE_IP_CONFIG" ]; then
+		echo -e "\tconfiguring network..."
+		my_ip=`echo $XBE_IP_CONFIG | cut -d : -f 1`
+                my_dns=`echo $XBE_IP_CONFIG | cut -d : -f 2`
+		my_gw=`echo $XBE_IP_CONFIG | cut -d : -f 3`
+		my_nm=`echo $XBE_IP_CONFIG | cut -d : -f 4`
+		echo -e "\t\t ip=$my_ip gw=$my_gw nm=$my_nm dns=$my_dns"
+		/sbin/ifconfig eth0 "$my_ip" netmask "$my_nm"
+		/sbin/route add default gw "$my_gw" dev eth0
+		echo "nameserver $my_dns" > /etc/resolv.conf
+	fi
+}
+
+case "$1" in
+  start)
+	log_begin_msg "Starting XenBEE instance daemon..."
+	check_logfile
+	save_environ
+	config_network
+	"$daemon" start --pidfile "$pidfile" $XBEINSTD_OPTS || log_end_msg 1
+	log_end_msg 0
+	;;
+  stop)
+	log_begin_msg "Stopping XenBEE instance daemon..."
+	"$daemon" stop --pidfile "$pidfile" $XBEINSTD_OPTS || log_end_msg 1
+	log_end_msg 0
+	;;
+
+  reload|force-reload)
+	log_begin_msg "Reloading XenBEE instance daemon..."
+	check_logfile
+	load_environ
+	"$daemon" restart --pidfile "$pidfile" $XBEINSTD_OPTS || log_end_msg 1
+	log_end_msg 0
+	;;
+
+  restart)
+	log_begin_msg "Restarting XenBEE instance daemon..."
+	check_logfile
+	load_environ
+	"$daemon" restart --pidfile "$pidfile" $XBEINSTD_OPTS || log_end_msg 1
+	log_end_msg 0
+	;;
+
+  *)
+	log_success_msg "Usage: /etc/init.d/xbeinstd {start|stop|reload|force-reload|restart}"
+	exit 1
+esac
+
+exit 0

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<jsdl:JobDefinition
+    xmlns:jsdl="http://schemas.ggf.org/jsdl/2005/11/jsdl"
+    xmlns:jsdl-posix="http://schemas.ggf.org/jsdl/2005/11/jsdl-posix"  
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <jsdl:JobDescription> 
+    <jsdl:JobIdentification> 
+      <jsdl:JobName>update-xbeinstd</jsdl:JobName>
+      <jsdl:JobAnnotation></jsdl:JobAnnotation>
+      <jsdl:Description>update the xenbee repository</jsdl:Description> 
+    </jsdl:JobIdentification> 
+    <jsdl:Application> 
+      <jsdl:ApplicationName>subversion</jsdl:ApplicationName> 
+      <jsdl-posix:POSIXApplication> 
+	<jsdl-posix:Executable>/usr/bin/svn</jsdl-posix:Executable> 
+	<jsdl-posix:Argument>up</jsdl-posix:Argument> 
+	<jsdl-posix:Argument>/root/xenbee</jsdl-posix:Argument> 
+      </jsdl-posix:POSIXApplication> 
+    </jsdl:Application> 
+  </jsdl:JobDescription> 
+</jsdl:JobDefinition> 
+
+<!--
+    Local Variables: ***
+    mode: nxml ***
+    End: ***
+-->
+

@@ -1,0 +1,122 @@
+#!/usr/bin/env python
+
+import os, os.path, sys
+from subprocess import Popen, PIPE
+
+debug = True
+
+if debug:
+    def trace(fmt, *args):
+        print >>sys.stderr, "*** DBG:", fmt % args
+else:
+    def trace(fmt, *args):
+        pass
+
+
+def runcmd(cmd):
+    pipe = Popen(cmd, stdout=PIPE, stderr=PIPE, close_fds=True)
+    (stdout, stderr) = pipe.communicate()
+    exitcode = pipe.wait()
+    return (exitcode, stdout.split("\n"), stderr.split("\n"))
+
+def get_ldd_deps(file):
+    deps = []
+    
+    exitcode, output, _ = runcmd(["ldd", file])
+    if exitcode == 0:
+        for line in output:
+            line = line.strip()
+            if not len(line): continue
+            if line == "statically linked": continue
+            if '=>' in line:
+                deps.append(line.split()[2])
+            else:
+                deps.append(line.split()[0])
+    return deps
+
+def get_other_deps(file):
+    deps = []
+    (exitcode, output, _) = runcmd(["strings", file])
+    if exitcode == 0:
+        for line in output:
+            if line.startswith("/") and os.path.exists(line):
+                deps.append(line)
+    return deps
+
+def copy_file(src, dst_base, do_strip=True):
+    # get the directory that contains the original file
+    # relative to the root directory
+    (_, src_dir) = os.path.splitdrive(os.path.dirname(src))
+    relative_src_dir = src_dir.lstrip(os.path.sep)
+
+    # the actual file name
+    src_nam = os.path.basename(src)
+
+    # copy the file to the destination directory
+    dst_path = os.path.join(dst_base, relative_src_dir)
+    # makedirs
+    if not os.path.exists(dst_path):
+        os.makedirs(dst_path)
+    dst_file = os.path.join(dst_path, src_nam)
+    if os.path.isfile(dst_file) and not os.path.exists(dst_file):
+        exitcode, out, err = runcmd(["cp", "-aP", src, dst_path])
+    elif os.path.isdir(dst_file):
+        exitcode, out, err = runcmd(["cp", "-aP", src, dst_path])
+    
+    if do_strip and os.access(src, os.X_OK):
+        runcmd(["strip", os.path.join(dst_path, src_nam)])
+
+def get_symlinks(src):
+    if os.path.islink(src):
+        link = os.readlink(src)
+        # make it absolute
+        if not os.path.isabs(link):
+            link = os.path.join(os.path.dirname(src), link)
+        return [link] + get_symlinks(link)
+    else:
+        return []
+
+def make_copy_fun(dst, do_strip=True):
+    return lambda src: copy_file(src, dst, do_strip)
+def make_blacklist_fun(blacklist):
+    return lambda path: not is_blacklisted(path, blacklist)
+
+def is_blacklisted(path, blacklist):
+    for e in blacklist:
+        if path.startswith(e):
+            trace("filtering %s", path)
+            return True
+    return False
+
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print >>sys.stderr, "usage: %s: dst-path [files]" % sys.argv[0]
+        sys.exit(1)
+    DstDir = os.path.abspath(sys.argv[1])
+    
+    C = make_copy_fun(DstDir)
+    B = make_blacklist_fun(["/usr/share/locale",
+                            "/var/run",
+                            "/proc",
+                            DstDir])
+
+    for f in sys.argv[2:]:
+        trace("handling %s", f)
+        deps = [f]
+        deps.extend(get_ldd_deps(f))
+        other_deps = get_other_deps(f)
+        deps.extend(other_deps)
+        for other in other_deps:
+            deps.extend(get_ldd_deps(other))
+        for d in deps:
+            deps.extend(get_symlinks(d))
+        deps = map(os.path.normpath, deps)
+
+        # filter duplicates
+        deps.sort()
+        unique_deps = set(deps)
+
+        # filter blacklisted items
+        filtered_deps = filter(B, unique_deps)
+        trace("%s depends on %s", f, filtered_deps)
+        map(C, filtered_deps)

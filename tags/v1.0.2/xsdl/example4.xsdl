@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- image submission extension for JSDL -->
+
+<jsdl:JobDefinition xmlns:jsdl="http://schemas.ggf.org/jsdl/2005/11/jsdl"
+		    xmlns:jsdl-posix="http://schemas.ggf.org/jsdl/2005/11/jsdl-posix"
+		    xmlns:xsdl="http://www.example.com/schemas/xbe/2007/01/xsdl">
+ <jsdl:JobDescription>
+    <jsdl:JobIdentification>
+      <jsdl:JobName>foobar</jsdl:JobName>
+      <jsdl:Description>blah</jsdl:Description>
+      <jsdl:JobAnnotation>anno 1</jsdl:JobAnnotation>
+      <jsdl:JobAnnotation>anno 2</jsdl:JobAnnotation>
+      <jsdl:JobAnnotation>anno 3</jsdl:JobAnnotation>
+    </jsdl:JobIdentification>
+    <jsdl:Application>
+      <jsdl:ApplicationName>test app name</jsdl:ApplicationName>
+      <jsdl:ApplicationVersion>4.3</jsdl:ApplicationVersion>
+<!--
+      <xbe:XBEApplication xmlns:xbe="http://www.example.com/schemas/xbe/2007/01/xbe">
+	<xbe:ContinuousTask/>
+      </xbe:XBEApplication>
+-->
+      <jsdl-posix:POSIXApplication>
+	<jsdl-posix:Executable filesystemName="USR">
+	  bin/sha1sum
+	</jsdl-posix:Executable>
+	<jsdl-posix:Argument filesystemName="SPOOL">test.file</jsdl-posix:Argument>
+	<jsdl-posix:Output filesystemName="SPOOL">test.file.sha1</jsdl-posix:Output>
+      </jsdl-posix:POSIXApplication>
+    </jsdl:Application>
+    <jsdl:Resources>
+      <jsdl:FileSystem name="ROOT">
+	<jsdl:Description>the root filesystem</jsdl:Description>
+	<jsdl:MountPoint>/</jsdl:MountPoint>
+      </jsdl:FileSystem>
+      <jsdl:FileSystem name="SPOOL">
+	<jsdl:Description>a spool directory</jsdl:Description>
+	<jsdl:MountPoint>/spool</jsdl:MountPoint>
+      </jsdl:FileSystem>
+      <jsdl:FileSystem name="TMP">
+	<jsdl:Description>a temporary directory</jsdl:Description>
+	<jsdl:MountPoint>/tmp</jsdl:MountPoint>
+      </jsdl:FileSystem>
+      <jsdl:FileSystem name="USR">
+	<jsdl:Description>a temporary directory</jsdl:Description>
+	<jsdl:MountPoint>/usr</jsdl:MountPoint>
+      </jsdl:FileSystem>
+      <jsdl:TotalCPUCount>
+	<jsdl:Exact>2</jsdl:Exact>
+      </jsdl:TotalCPUCount>
+      <jsdl:TotalPhysicalMemory>
+	<jsdl:Exact>134217728</jsdl:Exact>
+      </jsdl:TotalPhysicalMemory>
+
+      <xsdl:InstanceDefinition>
+	<xsdl:InstanceDescription>
+	  
+	  <xsdl:Instance>
+	    <xsdl:Kernel>
+	      <xsdl:Location>
+		<xsdl:URI>
+		  file:///srv/xen-images/xenbee/packages/simple-pkg/kernel
+		</xsdl:URI>
+		<xsdl:Hash algorithm="sha1">
+		  a3b180e5dc2359849ffa927b93414ada20807a0c
+		</xsdl:Hash>
+	      </xsdl:Location>
+	    </xsdl:Kernel>
+
+	    <!-- the initrd is optional -->
+	    <xsdl:Initrd>
+	      <xsdl:Location>
+		<xsdl:URI>
+		  file:///srv/xen-images/xenbee/packages/simple-pkg/initrd
+		</xsdl:URI>
+		<xsdl:Hash algorithm="sha1">
+		  748e72fbce57ec21ebc94471ed8db24cb712f717
+		</xsdl:Hash>
+	      </xsdl:Location>
+	    </xsdl:Initrd>
+
+	    <!-- the image is mandatory -->
+	    <xsdl:Image>
+	      <xsdl:Location>
+		<xsdl:URI>
+		  file:///srv/xen-images/base.img
+		</xsdl:URI>
+	      </xsdl:Location>
+	    </xsdl:Image>
+	  </xsdl:Instance>
+
+	  <xsdl:Control>
+	    <xsdl:Script target="setup">
+	      <xsdl:Location>
+		<xsdl:URI>
+		  file:///srv/xen-images/xenbee/packages/simple-pkg/scripts/setup
+		</xsdl:URI>
+	      </xsdl:Location>
+	    </xsdl:Script>
+	    <xsdl:Script target="cleanup">
+	      <xsdl:Location>
+		<xsdl:URI>
+		  file:///srv/xen-images/xenbee/packages/simple-pkg/scripts/cleanup
+		</xsdl:URI>
+	      </xsdl:Location>
+	    </xsdl:Script>
+	  </xsdl:Control>
+	</xsdl:InstanceDescription>
+
+      </xsdl:InstanceDefinition>
+    </jsdl:Resources>
+    <jsdl:DataStaging>
+      <jsdl:FileName>test.file</jsdl:FileName>
+      <jsdl:FilesystemName>SPOOL</jsdl:FilesystemName>
+      <jsdl:CreationFlag>overwrite</jsdl:CreationFlag>
+      <jsdl:DeleteOnTermination>true</jsdl:DeleteOnTermination>
+      <jsdl:Source>
+	<jsdl:URI>file:///srv/xen-images/xenbee/packages/simple-pkg/kernel</jsdl:URI>
+	<xsdl:Hash algorithm="sha1">a3b180e5dc2359849ffa927b93414ada20807a0c</xsdl:Hash>
+      </jsdl:Source>
+    </jsdl:DataStaging>
+    <jsdl:DataStaging>
+      <jsdl:FileName>test.file.sha1</jsdl:FileName>
+      <jsdl:FilesystemName>SPOOL</jsdl:FilesystemName>
+      <jsdl:CreationFlag>overwrite</jsdl:CreationFlag>
+      <jsdl:DeleteOnTermination>true</jsdl:DeleteOnTermination>
+      <jsdl:Target>
+	<jsdl:URI>file:///srv/xen-images/scratch/test.file.sha1</jsdl:URI>
+      </jsdl:Target>
+    </jsdl:DataStaging>
+  </jsdl:JobDescription>
+</jsdl:JobDefinition>
+
+<!--
+    Local Variables: ***
+    mode: nxml ***
+    End: ***
+-->

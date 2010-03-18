@@ -1,0 +1,88 @@
+%class JobStateMachine
+%package net.calana.data.job
+%import xbe.broker.proto
+// %import net.calana.data.job.Job
+// %import net.calana.data.CalanaContext
+%access public
+%start JobFSM::StPendingNew
+%map JobFSM
+%%
+StPendingNew {
+    startNegotiation(job: Job, cCtxt: XenBEEClient2BrokerProtocol) StPendingNegotiating {
+    	startNegotiationImpl(job, cCtxt);
+    }
+    terminate(job: Job, cCtxt: XenBEEClient2BrokerProtocol) StTerminated {
+    	terminateImpl(job, cCtxt);
+    }
+}
+StPendingNegotiating {
+    endNegotiation(job: Job, cCtxt: XenBEEClient2BrokerProtocol) StPendingBooked {
+    	endNegotiationImpl(job, cCtxt);
+    }
+    terminate(job: Job, cCtxt: XenBEEClient2BrokerProtocol) StTerminated {
+    	terminateImpl(job, cCtxt);
+    }
+}
+StPendingBooked {
+    confirm(job: Job, cCtxt: XenBEEClient2BrokerProtocol) StPendingConfirmed {
+        confirmImpl(job, cCtxt);
+    }
+    terminate(job: Job, cCtxt: XenBEEClient2BrokerProtocol) StTerminated {
+    	terminateImpl(job, cCtxt);
+    }
+}
+StPendingConfirmed {
+    runJob_StageIn(job: Job, cCtxt: XenBEEClient2BrokerProtocol) StRunning_StageIn {
+    	runJob_StageInImpl(job, cCtxt);
+    }
+    terminate(job: Job, cCtxt: XenBEEClient2BrokerProtocol) StTerminated {
+    	terminateImpl(job, cCtxt);
+    }
+}
+StRunning_StageIn {
+    runJob_Execute(job: Job, cCtxt: XenBEEClient2BrokerProtocol) StRunning_Executing {
+    	runJob_ExecuteImpl(job, cCtxt);
+    }
+    terminate(job: Job, cCtxt: XenBEEClient2BrokerProtocol) StTerminated {
+    	terminateImpl(job, cCtxt);
+    }
+    fail(job: Job, cCtxt: XenBEEClient2BrokerProtocol) StFailed {
+    	failImpl(job, cCtxt);
+    }
+}
+StRunning_Executing {
+    runJob_StageOut(job: Job, cCtxt: XenBEEClient2BrokerProtocol) StRunning_StageOut {
+    	runJob_StageOutImpl(job, cCtxt);
+    }
+    terminate(job: Job, cCtxt: XenBEEClient2BrokerProtocol) StTerminated {
+    	terminateImpl(job, cCtxt);
+    }
+    fail(job: Job, cCtxt: XenBEEClient2BrokerProtocol) StFailed {
+    	failImpl(job, cCtxt);
+    }
+}
+StRunning_StageOut {
+	closeJob_Executed(job: Job, cCtxt: XenBEEClient2BrokerProtocol) StFinishedExecuted {
+    	closeJob_ExecutedImpl(job, cCtxt);
+    }
+    terminate(job: Job, cCtxt: XenBEEClient2BrokerProtocol) StTerminated {
+    	terminateImpl(job, cCtxt);
+    }
+}
+StFinishedExecuted {
+	closeJob_Closing(job: Job, cCtxt: XenBEEClient2BrokerProtocol) StFinishedClosing {
+    	closeJob_ClosingImpl(job, cCtxt);
+    }
+}
+StFinishedClosing {
+    closeJob_Closed(job:Job, cCtxt: XenBEEClient2BrokerProtocol) StFinishedClosed {
+        closeJob_ClosedImpl(job, cCtxt);
+    }
+}
+StFinishedClosed {
+}
+StTerminated {
+}
+StFailed {
+}
+%%

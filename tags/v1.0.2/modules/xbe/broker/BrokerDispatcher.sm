@@ -1,0 +1,141 @@
+%class BrokerDispatcher
+%package net.calana.comm.sm
+//%import net.calana.data.job.Job
+//%import net.calana.data.Peer
+//%import net.calana.data.Bid
+//%import net.calana.data.BrokerRequestContext
+%import xbe.broker.proto
+%import xbe.broker.job
+%access public
+%start BrokerDispatcherFSM::StInitial
+%map BrokerDispatcherFSM
+%%
+StInitial {
+    BookingReq(job: Job, reqCtxt: XenBEEClient2BrokerProtocol) StAuctionRunning {
+    	inBookingReq(job, reqCtxt);
+    }
+    PingReq(job: Job, reqCtxt: XenBEEClient2BrokerProtocol) StPingRunning {
+    	inPingReq(job, reqCtxt);
+    }
+}
+
+StAuctionRunning {
+//    AddBid(bid: Bid) StAuctionRunning {
+    AddBid(job: Job, reqCtxt: XenBEEClient2BrokerProtocol) StAuctionRunning {
+	inAuctionBid(job, reqCtxt);
+    }
+//    AddResponse(job: Job, reqCtxt: XenBEEClient2BrokerProtocol, xbedCtxt: XenBEEDaemon2BrokerProtocol, message: PongResponse)
+//        StAuctionRunning {
+//		inAuctionBid(reqCtxt, xbedCtxt, message);
+//	}
+
+//    PollReq(job: Job, reqCtxt: XenBEEClient2BrokerProtocol, request: PollRequest, reply: Reply)
+    PollReq(job: Job, reqCtxt: XenBEEClient2BrokerProtocol)
+	// Guard for successful auction
+	StAuctionRunning {
+	waitForResponse(job, reqCtxt);
+    }
+
+    EndReq(job: Job, reqCtxt: XenBEEClient2BrokerProtocol)
+	// Guard for successful auction
+	[ctxt.hasBids() == True]
+	StWaitForWinner {
+	endSuccessfulAuction(job, reqCtxt);
+    }
+    EndReq(job: Job, reqCtxt: XenBEEClient2BrokerProtocol)
+	// Guard for successful auction
+	[ctxt.hasBids() == False]
+	StRejectingWait {
+	endFailureAuction(job, reqCtxt);
+    }
+//	EndAuction(job: Job, brokerCtxt: BrokerRequestContext)
+//	    // Guard for successful auction
+//	    [ctxt.hasBids() == True]
+//		StWaitForWinner {
+//			endSuccessfulAuction(job, brokerCtxt);
+//		}
+//	EndAuction(job: Job, brokerCtxt: BrokerRequestContext)
+//		// No bid received - reject the request
+//		[ctxt.hasBids() == False]
+//		StRejectingWait {
+//			endFailureAuction(job, brokerCtxt);
+//		}
+}
+StWaitForWinner {
+    PollReq(job: Job, reqCtxt: XenBEEClient2BrokerProtocol)
+	// Guard for successful auction
+	StWaitForWinner {
+	waitForAck(job, reqCtxt);
+    }
+
+    ProviderBooked(job: Job, reqCtxt: XenBEEClient2BrokerProtocol)
+ 	StBooked {
+ 		inProviderBooked(job, reqCtxt);
+    }
+
+    ProviderRejected(job: Job, reqCtxt: XenBEEClient2BrokerProtocol)
+        StTerminated {
+ 		inProviderBookingRejected(job, reqCtxt);
+ 	}
+}
+StRejectingWait {
+    BookingRejectedAck(job: Job, reqCtxt: XenBEEClient2BrokerProtocol)
+    //    BookingRejectedAck
+        StTerminated { inBookingRejectedAck(job, reqCtxt); }
+}
+StBooked {
+    Confirm(job: Job, reqCtxt: XenBEEClient2BrokerProtocol)
+	StConfirmed {
+	    inConfirm(job, reqCtxt);
+	}
+}
+StConfirmed {
+    PollReq(job: Job, reqCtxt: XenBEEClient2BrokerProtocol)
+	// Guard for successful auction
+	StConfirmed {
+	waitForConfirm(job, reqCtxt);
+    }
+    ProviderClose(job: Job, reqCtxt: XenBEEClient2BrokerProtocol)
+        StClosingWaitAck {
+		inProviderClose(job, reqCtxt);
+	}
+}
+StClosing {
+	Close(job: Job, reqCtxt: XenBEEClient2BrokerProtocol) StClosingWaitAck {
+		outClose(job, reqCtxt);
+	}
+}
+StClosingWaitAck {
+	CloseAck(job: Job, reqCtxt: XenBEEClient2BrokerProtocol) StTerminated {
+		inCloseAck(job, reqCtxt);
+	}
+}
+StTerminated {
+}
+
+StPingRunning {
+    AddPing(job: Job, reqCtxt: XenBEEClient2BrokerProtocol) StPingRunning {
+	inCollectingPing(job, reqCtxt);
+    }
+    PollReq(job: Job, reqCtxt: XenBEEClient2BrokerProtocol)
+	// Guard for successful auction
+	StPingRunning {
+	waitForResponse(job, reqCtxt);
+    }
+
+
+    EndReq(job: Job, reqCtxt: XenBEEClient2BrokerProtocol)
+	// Guard for successful auction
+	[ctxt.hasPongs() == True]
+	StTerminated {
+	endSuccessfulPing(job, reqCtxt);
+    }
+    EndReq(job: Job, reqCtxt: XenBEEClient2BrokerProtocol)
+	// Guard for successful auction
+	[ctxt.hasPongs() == False]
+	StRejectingWait {
+	endFailurePing(job, reqCtxt);
+    }
+}
+
+%%

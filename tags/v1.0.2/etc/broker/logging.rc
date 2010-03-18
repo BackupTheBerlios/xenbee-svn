@@ -1,0 +1,54 @@
+#
+# logging configuration for the xbed
+#
+
+# this section is provided by the ConfigParser
+[DEFAULT]
+default_logfile = /var/tmp/xenbee/broker.log
+
+[loggers]
+keys = root
+
+[logger_root]
+level = DEBUG
+# NOTE: it is important to *not* have spaces in the comma separated list
+handlers = stderr,logfile
+
+[handlers]
+keys = stderr,logfile
+
+[formatters]
+keys = console,file
+
+[handler_stderr]
+class = StreamHandler
+level = DEBUG
+formatter = console
+args = (sys.stderr,)
+
+[handler_syslog]
+class = handlers.SysLogHandler
+level = ERROR
+formatter = syslog
+args = ()
+
+[handler_logfile]
+class = FileHandler
+level = DEBUG
+formatter = file
+args = ("/var/tmp/xenbee/broker.log", 'w')
+
+[formatter_console]
+format = %(asctime)s %(threadName)s %(levelname)-8s %(message)s
+datefmt =
+class = logging.Formatter
+
+[formatter_syslog]
+format = %(asctime)s %(threadName)s %(name)s:%(lineno)d %(levelname)-8s %(message)s
+datefmt =
+class = logging.Formatter
+
+[formatter_file]
+format = %(asctime)s %(threadName)s %(name)s:%(lineno)d %(levelname)-8s %(message)s
+datefmt =
+class = logging.Formatter
