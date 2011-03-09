@@ -285,6 +285,7 @@ Channel::send(const mqs::Message &msg) {
                   << " prio:"     << msg.priority()
                   << " ttl:"      << msg.ttl()
                   << " corr:"     << msg.correlation()
+                  << " size:"     << msg.size()
     );
      
     return msg.id();
@@ -400,8 +401,8 @@ Channel::buildMessage(const cms::Message *cm) const {
 
     cms::Message *m = const_cast<cms::Message*>(cm);
     if (cms::BytesMessage *bm = dynamic_cast<cms::BytesMessage*>(m)) {
-        MQS_LOG_DEBUG("got a new bytes-message");
-        body = std::string((char*)bm->getBodyBytes(), bm->getBodyLength());
+      MQS_LOG_DEBUG("got a new bytes-message");
+      body = std::string((char*)bm->getBodyBytes(), bm->getBodyLength());
     } else if (cms::TextMessage *tm = dynamic_cast<cms::TextMessage*>(m)) {
         MQS_LOG_DEBUG("got a new text-message");
         body = tm->getText();
@@ -441,8 +442,8 @@ Channel::onMessage(const cms::Message *msg) {
     // handle incoming messages
     try {
         mqs::Message::Ptr m(buildMessage(msg));
-        MQS_LOG_DEBUG("got new message: " << m->id());
-  
+        MQS_LOG_DEBUG("got new message: " << m->id() << " with size: "<< m->size());
+
         // 1. check for a thread waiting for a response
         {
             const std::string correlationID = m->correlation();

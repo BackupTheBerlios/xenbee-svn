@@ -32,11 +32,11 @@ main(int argc, char **argv) {
   CPPUNIT_NS::TestResultCollector  collectedresults;
   testresult.addListener (&collectedresults);
 
+#if 0
   CPPUNIT_NS::TestRunner runner;
   CPPUNIT_NS::TestFactoryRegistry &registry = CPPUNIT_NS::TestFactoryRegistry::getRegistry();
   runner.addTest( registry.makeTest() );
 
-#if 1
   runner.run (testresult);
   std::ofstream outStream("out.xml");
   CPPUNIT_NS::XmlOutputter xmloutputter (&collectedresults, outStream);
@@ -44,8 +44,12 @@ main(int argc, char **argv) {
   xmloutputter.write ();
   bool wasSuccessful = collectedresults.wasSuccessful () ;
 #else
-    CppUnit::CompilerOutputter *outputter =
-        new CppUnit::CompilerOutputter(&runner.result(), std::cout);
+  CPPUNIT_NS::TextUi::TestRunner runner;
+  CPPUNIT_NS::TestFactoryRegistry &registry = CPPUNIT_NS::TestFactoryRegistry::getRegistry();
+  runner.addTest( registry.makeTest() );
+
+    CPPUNIT_NS::CompilerOutputter *outputter =
+        new CPPUNIT_NS::CompilerOutputter(&runner.result(), std::cout);
     outputter->setLocationFormat("%p(%l) : ");
     //outputter->setWrapColumn(19);
     outputter->setNoWrap();

@@ -61,7 +61,9 @@ std::string MessageSequenceGenerator::next() {
 
     time_t tstamp(time(NULL));
     std::stringstream sstr;
-    sstr << _hostId << ":" << tstamp << ":" << _globalId << ":" << _generatorId << ":" << count;
+    const std::string sep(".");
+    
+    sstr << _hostId << sep << tstamp << sep << _globalId << sep << _generatorId << sep << count;
     return sstr.str();
 }
 

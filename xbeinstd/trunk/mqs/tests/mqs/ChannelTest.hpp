@@ -15,6 +15,7 @@ namespace mqs {
             CPPUNIT_TEST( testMessageId );
             CPPUNIT_TEST( testStartStopChannel );
             CPPUNIT_TEST( testSendReply );
+            CPPUNIT_TEST( testSendReceiveLarge );
             CPPUNIT_TEST( testAddDelIncomingQueue );
             CPPUNIT_TEST( testMultipleSender );
             CPPUNIT_TEST( testStartNoQueueServer );
@@ -34,6 +35,7 @@ namespace mqs {
             void testStart_illegal_URI_Throws();
             void testStart_Timeout_Throws();
             void testSendReceiveSimple();
+            void testSendReceiveLarge();
             void testMessageId();
             void testSendReply();
             void testStartNoQueueServer();

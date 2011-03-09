@@ -85,8 +85,30 @@ void ChannelTest::testSendReceiveSimple() {
     mqs::Message::Ptr rmsg = _channel->recv(1000);
 
     CPPUNIT_ASSERT(rmsg.get() != NULL);
-    MQS_LOG_DEBUG("received message with body: " << rmsg->body());
+    //MQS_LOG_DEBUG("received message with body: " << rmsg->body());
     CPPUNIT_ASSERT_EQUAL(std::string("hello world!"), rmsg->body());
+}
+
+void ChannelTest::testSendReceiveLarge() {
+    MQS_LOG_INFO("**** TEST: testSendReceiveLarge");
+
+    doStart("tests.mqs?type=queue");
+    MQS_LOG_INFO("sending message");
+    
+    char p[128*1024];
+    memset(p, 'a', sizeof(p));
+    std::string largeMessage(p, sizeof(p));
+
+    mqs::Message msg(largeMessage, "tests.mqs", "tests.mqs");
+    _channel->async_request(msg);
+    //_channel->send(msg);
+    MQS_LOG_INFO("message sent");
+    MQS_LOG_INFO("waiting for message");
+    mqs::Message::Ptr rmsg = _channel->recv(1000);
+
+    CPPUNIT_ASSERT(rmsg.get() != NULL);
+    MQS_LOG_DEBUG("received message with body: " << rmsg->body());
+    CPPUNIT_ASSERT_EQUAL(largeMessage, rmsg->body());
 }
 
 void ChannelTest::testMessageId() {

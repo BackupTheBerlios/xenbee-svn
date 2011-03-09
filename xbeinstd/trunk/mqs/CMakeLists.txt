@@ -95,12 +95,12 @@ if (CMAKE_USE_PTHREADS_INIT)
 endif (CMAKE_USE_PTHREADS_INIT)
 
 ## check for boost
-set(BOOST_ROOT "/usr/local")
+#set(BOOST_ROOT "/usr/local")
 set(Boost_ADDITIONAL_VERSIONS "1.36.0" "1.36" "1.37.0" "1.37")
 set(Boost_FIND_QUIETLY false)
 set(Boost_USE_STATIC_LIBS ON)
 include(FindBoost)
-find_package(Boost 1.36 REQUIRED COMPONENTS thread)
+find_package(Boost 1.37 REQUIRED COMPONENTS thread)
 message(STATUS "Boost: -I${Boost_INCLUDE_DIRS} -L${Boost_LIBRARY_DIRS} -l${Boost_LIBRARIES}")
 
 if (PERFORM_CHANNEL_IS_STARTED_CHECK)
