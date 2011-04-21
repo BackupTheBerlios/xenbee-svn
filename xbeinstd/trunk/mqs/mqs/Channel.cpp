@@ -275,6 +275,7 @@ Channel::send(const mqs::Message &msg) {
 
     /* work around stomp */
     m->setStringProperty("amqp-message-id", msg.id());
+    m->setStringProperty("content-type", "application/octet-stream");
 
     _producer->send(to.get(), m.get(), msg.deliveryMode(), msg.priority(), msg.ttl());
 
@@ -287,6 +288,8 @@ Channel::send(const mqs::Message &msg) {
                   << " corr:"     << msg.correlation()
                   << " size:"     << msg.size()
     );
+    MQS_LOG_DEBUG("sent message body: '"<< msg.body() << "'");
+    
      
     return msg.id();
 }
@@ -401,7 +404,8 @@ Channel::buildMessage(const cms::Message *cm) const {
 
     cms::Message *m = const_cast<cms::Message*>(cm);
     if (cms::BytesMessage *bm = dynamic_cast<cms::BytesMessage*>(m)) {
-      MQS_LOG_DEBUG("got a new bytes-message");
+      MQS_LOG_DEBUG("got a new bytes-message of len " << bm->getBodyLength());
+      MQS_LOG_DEBUG("got data 2: '"<< bm->getBodyBytes() << "'");
       body = std::string((char*)bm->getBodyBytes(), bm->getBodyLength());
     } else if (cms::TextMessage *tm = dynamic_cast<cms::TextMessage*>(m)) {
         MQS_LOG_DEBUG("got a new text-message");
@@ -409,6 +413,9 @@ Channel::buildMessage(const cms::Message *cm) const {
     } else {
         throw MQSException("message not understood - must be TextMessage or BytesMessage");
     }
+    //MQS_LOG_DEBUG("got data: '"<<bm->getBodyBytes() << "'");
+    MQS_LOG_DEBUG("got data: '"<< body << "'");
+
     mqs::Message::Ptr msg(new mqs::Message(body,
                 mqs::Destination(m->getCMSReplyTo()),
                 mqs::Destination(m->getCMSDestination())));
@@ -462,6 +469,7 @@ Channel::onMessage(const cms::Message *msg) {
 //                return; // discard the message
             }
         }
+        MQS_LOG_DEBUG("got new message: '" << m->body() << "'");
 
         // if  we have  a message  listener registered,  let him  handle all
         // incoming messages unless there are blocked receivers

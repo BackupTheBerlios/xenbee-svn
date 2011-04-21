@@ -96,7 +96,33 @@ void ChannelTest::testSendReceiveLarge() {
     MQS_LOG_INFO("sending message");
     
     char p[128*1024];
-    memset(p, 'a', sizeof(p));
+    unsigned int i=0, j=0;
+    char z='0';
+    p[i++] = '0';
+    p[i++] = '0';
+    p[i++] = z++;i++;
+    
+    do {
+      p[i-1]= 'a'+(j%26);
+      if(!((j+1)%26)) {
+        p[i++] = '\n';
+        p[i++] = '0';
+        p[i++] = '0';
+        p[i++] = z++;
+        p[i++] = ':';
+        if(z > '9') z='0';
+      }
+      
+      i++;j++;
+      
+    }
+    while (i <= sizeof(p));
+    
+    //for(unsigned int i=0; i < sizeof(p); i++) {
+    //  p[i]= 'a'+(i%26);
+    //  if(!(i%26)) p[i] = '\n';
+    //}
+    //memset(p, 'a', sizeof(p));
     std::string largeMessage(p, sizeof(p));
 
     mqs::Message msg(largeMessage, "tests.mqs", "tests.mqs");
@@ -104,7 +130,7 @@ void ChannelTest::testSendReceiveLarge() {
     //_channel->send(msg);
     MQS_LOG_INFO("message sent");
     MQS_LOG_INFO("waiting for message");
-    mqs::Message::Ptr rmsg = _channel->recv(1000);
+    mqs::Message::Ptr rmsg = _channel->recv(2000);
 
     CPPUNIT_ASSERT(rmsg.get() != NULL);
     MQS_LOG_DEBUG("received message with body: " << rmsg->body());
