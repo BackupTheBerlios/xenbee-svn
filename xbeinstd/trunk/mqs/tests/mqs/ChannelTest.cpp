@@ -50,10 +50,10 @@ void ChannelTest::testStart_illegal_URI_Throws() {
 void ChannelTest::testStartNoQueueServer() {
     MQS_LOG_INFO("**** TEST: testStartNoQueueServer_Throws");
 
-    mqs::Channel::Ptr c(new mqs::Channel(mqs::BrokerURI("tcp://127.0.0.1:12345"), "tests.mqs"));
     try {
-        c->start();
-        CPPUNIT_ASSERT_MESSAGE("connection to 127.0.0.1:12345 succeeded, please make sure nothing listens there", false);
+      mqs::Channel::Ptr c(new mqs::Channel(mqs::BrokerURI("tcp://localhost:12345"), "tests.mqs"));
+      c->start();
+      CPPUNIT_ASSERT_MESSAGE("connection to 127.0.0.1:12345 succeeded, please make sure nothing listens there", false);
     } catch (const mqs::ChannelConnectionFailed &ex) {
         MQS_LOG_INFO("connection failed with reason: " << ex.what());
     } catch (const cms::CMSException &ex) {
@@ -75,14 +75,15 @@ void ChannelTest::testStart_Timeout_Throws() {
 void ChannelTest::testSendReceiveSimple() {
     MQS_LOG_INFO("**** TEST: testSendReceiveSimple");
 
-    doStart("tests.mqs?type=queue");
-    MQS_LOG_INFO("sending message");
+    CPPUNIT_ASSERT_NO_THROW(doStart("tests.mqs?type=queue"));
+    MQS_LOG_INFO("sending message :"<< TEST_BROKER_URI);
     
     mqs::Message msg("hello world!", "tests.mqs", "tests.mqs");
-    _channel->send(msg);
+    CPPUNIT_ASSERT_NO_THROW(_channel->send(msg));
     MQS_LOG_INFO("message sent");
     MQS_LOG_INFO("waiting for message");
-    mqs::Message::Ptr rmsg = _channel->recv(1000);
+    mqs::Message::Ptr rmsg;
+    CPPUNIT_ASSERT_NO_THROW(rmsg = _channel->recv(1000));
 
     CPPUNIT_ASSERT(rmsg.get() != NULL);
     //MQS_LOG_DEBUG("received message with body: " << rmsg->body());
@@ -92,7 +93,7 @@ void ChannelTest::testSendReceiveSimple() {
 void ChannelTest::testSendReceiveLarge() {
     MQS_LOG_INFO("**** TEST: testSendReceiveLarge");
 
-    doStart("tests.mqs?type=queue");
+    CPPUNIT_ASSERT_NO_THROW(doStart("tests.mqs?type=queue"));
     MQS_LOG_INFO("sending message");
     
     char p[128*1024];
@@ -126,7 +127,7 @@ void ChannelTest::testSendReceiveLarge() {
     std::string largeMessage(p, sizeof(p));
 
     mqs::Message msg(largeMessage, "tests.mqs", "tests.mqs");
-    _channel->async_request(msg);
+    CPPUNIT_ASSERT_NO_THROW(_channel->async_request(msg));
     //_channel->send(msg);
     MQS_LOG_INFO("message sent");
     MQS_LOG_INFO("waiting for message");
@@ -140,10 +141,10 @@ void ChannelTest::testSendReceiveLarge() {
 void ChannelTest::testMessageId() {
     MQS_LOG_INFO("**** TEST: testMessageId");
 
-    doStart("tests.mqs?type=queue");
+    CPPUNIT_ASSERT_NO_THROW(doStart("tests.mqs?type=queue"));
 
     mqs::Message msg("hello world!", "tests.mqs", "tests.mqs");
-    _channel->send(msg);
+    CPPUNIT_ASSERT_NO_THROW(_channel->send(msg));
 
     MQS_LOG_INFO("message sent id:" << msg.id());
     mqs::Message::Ptr rmsg = _channel->recv(1000);
@@ -155,7 +156,7 @@ void ChannelTest::testMessageId() {
 void ChannelTest::testSendReply() {
     MQS_LOG_INFO("**** TEST: testSendReply");
 
-    doStart("tests.mqs?type=queue");
+    CPPUNIT_ASSERT_NO_THROW(doStart("tests.mqs?type=queue"));
     mqs::Message msg("hello", "tests.mqs", "tests.mqs");
     std::string id = _channel->async_request(msg);
 
@@ -176,12 +177,12 @@ void ChannelTest::testStartStopChannel() {
     MQS_LOG_INFO("starting the channel");
 
     // start the channel
-    doStart("tests.mqs?type=queue");
+    CPPUNIT_ASSERT_NO_THROW(doStart("tests.mqs?type=queue"));
     CPPUNIT_ASSERT_MESSAGE("channel could not be started", _channel->is_started());
 
     // send a message
     MQS_LOG_INFO("sending first message");
-    _channel->send(mqs::Message("hello 1", "tests.mqs", "tests.mqs"));
+    CPPUNIT_ASSERT_NO_THROW(_channel->send(mqs::Message("hello 1", "tests.mqs", "tests.mqs")));
 
     // receive
     mqs::Message::Ptr msg1(_channel->recv(1000));
@@ -201,7 +202,7 @@ void ChannelTest::testStartStopChannel() {
 
     // send another message
     MQS_LOG_INFO("sending second message");
-    _channel->send(mqs::Message("hello 2", "tests.mqs", "tests.mqs"));
+    CPPUNIT_ASSERT_NO_THROW(_channel->send(mqs::Message("hello 2", "tests.mqs", "tests.mqs")));
     mqs::Message::Ptr msg2(_channel->recv(1000));
 
     CPPUNIT_ASSERT_MESSAGE("did not receive a message", msg2.get() != NULL);
@@ -215,10 +216,10 @@ void ChannelTest::testAddDelIncomingQueue() {
     MQS_LOG_WARN("sending messages with ttl != unlimited, since we get already received messages otherwise");
 
     // start the channel
-    doStart("tests.mqs?type=queue");
+    CPPUNIT_ASSERT_NO_THROW(doStart("tests.mqs?type=queue"));
 
     // send a message to the channel's queue
-    msg_id = _channel->send(mqs::Message("hello world!", "tests.mqs", "tests.mqs?timeToLive=1000"));
+    CPPUNIT_ASSERT_NO_THROW(msg_id = _channel->send(mqs::Message("hello world!", "tests.mqs", "tests.mqs?timeToLive=1000")));
     {
         mqs::Message::Ptr msg(_channel->recv(1000));
         CPPUNIT_ASSERT_MESSAGE("did not receive a message", msg.get() != 0);
@@ -231,7 +232,7 @@ void ChannelTest::testAddDelIncomingQueue() {
     _channel->delIncomingQueue("tests.mqs?type=queue");
 
     // repeat the sending, no message should be received
-    msg_id = _channel->send(mqs::Message("hello world!", "tests.mqs", "tests.mqs?timeToLive=1000&deliveryMode=persistent"));
+    CPPUNIT_ASSERT_NO_THROW(msg_id = _channel->send(mqs::Message("hello world!", "tests.mqs", "tests.mqs?timeToLive=1000&deliveryMode=persistent")));
     {
         mqs::Message::Ptr msg(_channel->recv(1000));
         CPPUNIT_ASSERT_MESSAGE("received an unexpected message", msg.get() == 0);
@@ -240,7 +241,7 @@ void ChannelTest::testAddDelIncomingQueue() {
     // adding the queue again should result in a message
     MQS_LOG_DEBUG("adding incoming queue");
     _channel->addIncomingQueue("tests.mqs?type=queue");
-    msg_id = _channel->send(mqs::Message("hello world!", "tests.mqs", "tests.mqs?timeToLive=1000&deliveryMode=persistent"));
+    CPPUNIT_ASSERT_NO_THROW(msg_id = _channel->send(mqs::Message("hello world!", "tests.mqs", "tests.mqs?timeToLive=1000&deliveryMode=persistent")));
     {
         MQS_LOG_DEBUG("trying to receive message");
         mqs::Message::Ptr msg(_channel->recv(1000));
@@ -271,6 +272,19 @@ void ChannelTest::testConnectionLoss() {
         CPPUNIT_ASSERT_MESSAGE("could not connect to message queue server", false);
     }
  
+    // test communication
+    mqs::Message msg("hello world!", "tests.mqs", "tests.mqs");
+    CPPUNIT_ASSERT_NO_THROW(c->send(msg));
+    MQS_LOG_INFO("message sent");
+    MQS_LOG_INFO("waiting for message");
+    mqs::Message::Ptr rmsg = c->recv(1000);
+
+    CPPUNIT_ASSERT(rmsg.get() != NULL);
+    CPPUNIT_ASSERT_EQUAL(std::string("hello world!"), rmsg->body());
+
+    for( int i=0; i< 1000; i++) {
+      
+    // 
     MQS_LOG_INFO("think about a way how to check this automatically");
     _awaitingException=true;
     for (size_t i = 0; i < 3; ++i) {
@@ -284,15 +298,31 @@ void ChannelTest::testConnectionLoss() {
 #endif
     }
     if (_exceptionArrived) {
+      _exceptionArrived = false;
+      
         MQS_LOG_INFO("you may restart the message-queue server now");
 #if defined(WIN32)
         Sleep(10000);
 #else
         sleep(10);
 #endif
+        c->reconnect();
+
+        // test communication
+        mqs::Message msg("hello world!", "tests.mqs", "tests.mqs");
+        CPPUNIT_ASSERT_NO_THROW(c->send(msg));
+        MQS_LOG_INFO("message sent");
+        MQS_LOG_INFO("waiting for message");
+        mqs::Message::Ptr rmsg = c->recv(1000);
+
+        CPPUNIT_ASSERT(rmsg.get() != NULL);
+        CPPUNIT_ASSERT_EQUAL(std::string("hello world!"), rmsg->body());
+        
     } else {
         CPPUNIT_ASSERT_MESSAGE("Expected exception did not occur during connection loss test", false);
     }
+    } // for i < 1000
+    
 }
 
 void ChannelTest::testMultipleSender() {
@@ -332,6 +362,53 @@ void ChannelTest::testMultipleSender() {
     CPPUNIT_ASSERT(msgB.get() != 0);
     CPPUNIT_ASSERT_EQUAL(idB, msgB->id());
 }
+
+void ChannelTest::testRestart() {
+    MQS_LOG_INFO("**** TEST: testRestart");
+
+    mqs::Channel::Ptr c(new mqs::Channel(mqs::BrokerURI(TEST_BROKER_URI), "tests.mqs"));
+    try {
+        c->start();
+        c->setExceptionListener(this);
+    } catch (const mqs::ChannelConnectionFailed &ex) {
+        MQS_LOG_INFO("connection failed with reason: " << ex.what());
+        CPPUNIT_ASSERT_MESSAGE("could not connect to message queue server", false);
+    } catch (const cms::CMSException &ex) {
+        MQS_LOG_INFO("connection failed: " << ex.getMessage() << ": " << ex.getStackTraceString());
+        CPPUNIT_ASSERT_MESSAGE("could not connect to message queue server", false);
+    } catch (const std::exception &ex) {
+        MQS_LOG_INFO("connection failed: " << ex.what());
+        CPPUNIT_ASSERT_MESSAGE("could not connect to message queue server", false);
+    } catch (...) {
+        MQS_LOG_INFO("connection failed with an unknown reason");
+        CPPUNIT_ASSERT_MESSAGE("could not connect to message queue server", false);
+    }
+ 
+    try {
+      for( int i=0; i< 2000; i++) {
+        MQS_LOG_INFO("call reconnect");
+        c->reconnect();
+        mqs::Message msg("hello world!", "tests.mqs", "tests.mqs");
+        CPPUNIT_ASSERT_NO_THROW(c->send(msg));
+        mqs::Message::Ptr rmsg = c->recv(1000);
+      }
+      
+    }
+    catch (...) {
+      CPPUNIT_ASSERT_MESSAGE("Expected exception did not occur during connection loss test", false);
+    }
+    
+    // test communication
+    mqs::Message msg("hello world!", "tests.mqs", "tests.mqs");
+    CPPUNIT_ASSERT_NO_THROW(c->send(msg));
+    MQS_LOG_INFO("message sent");
+    MQS_LOG_INFO("waiting for message");
+    mqs::Message::Ptr rmsg = c->recv(1000);
+
+    CPPUNIT_ASSERT(rmsg.get() != NULL);
+    CPPUNIT_ASSERT_EQUAL(std::string("hello world!"), rmsg->body());
+}
+
 
 void ChannelTest::onException(const cms::CMSException &e) {
     MQS_LOG_WARN("think about a way how to check for this automatically: " << e.getMessage());

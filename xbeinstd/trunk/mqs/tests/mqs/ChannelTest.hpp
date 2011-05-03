@@ -20,7 +20,8 @@ namespace mqs {
             CPPUNIT_TEST( testMultipleSender );
             CPPUNIT_TEST( testStartNoQueueServer );
             //      CPPUNIT_TEST_EXCEPTION( testStart_Timeout_Throws, cms::CMSException );
-          //CPPUNIT_TEST( testConnectionLoss ); // this function should be last because the broker server needs to be shut down
+            CPPUNIT_TEST( testConnectionLoss ); // this function should be last because the broker server needs to be shut down
+          //CPPUNIT_TEST( testRestart );
             CPPUNIT_TEST_SUITE_END();
 
             public:
@@ -43,6 +44,7 @@ namespace mqs {
             void testAddDelIncomingQueue();
             void testConnectionLoss();
             void testMultipleSender();
+            void testRestart();
 
             private:
             MQS_DECLARE_LOGGER();

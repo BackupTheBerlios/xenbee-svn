@@ -86,7 +86,7 @@ namespace mqs {
            @param dst the name outgoing messages are adressed to
         */
         Channel(const mqs::BrokerURI&, const mqs::Destination& src, const mqs::Destination& dst);
-        virtual ~Channel();
+        virtual ~Channel() throw();
 
         /**
            Start the channel and its underlying components.
@@ -106,6 +106,11 @@ namespace mqs {
            Stops the channel
         */
         void stop();
+
+        /**
+           Reconnect the channel
+        */
+        void reconnect();
 
         /**
            Place a request via the message broker.
@@ -216,8 +221,8 @@ namespace mqs {
                5b3: notify a potential receiver (blocked in recv)
                5b4: release lock
         */
-        void onMessage(const cms::Message*);
-
+      virtual void onMessage(const cms::Message*) throw();
+      
         void onException(const cms::CMSException&);
     private:
         void ensure_started() const throw (ChannelNotStarted);

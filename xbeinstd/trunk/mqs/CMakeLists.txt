@@ -70,6 +70,8 @@ if ( PKG_CONFIG_FOUND )
 
    pkg_check_modules(AMQ REQUIRED activemq-cpp)
    message(STATUS "ActiveMQ: ${AMQ_CFLAGS} ${AMQ_LDFLAGS}")
+   pkg_check_modules(APR1 REQUIRED apr-1)
+   pkg_check_modules(APR1 REQUIRED aprutil-1)
 else  ( PKG_CONFIG_FOUND )
   message("No PKGCONFIG found - hoping for the best.")
 
@@ -86,6 +88,12 @@ else  ( PKG_CONFIG_FOUND )
   set(LOG4CPP_STATIC_LIBRARIES    "log4cpp" CACHE STRING "Log4cpp libraries")
   set(LOG4CPP_FOUND NO CACHE BOOL "Log4cpp found")
 endif ( PKG_CONFIG_FOUND )
+
+## activemq-cpp version check
+string(REGEX REPLACE "^([0-9]+)\\.([0-9]+).*$" "\\1"
+  AMQ_VERSION_MAJOR ${AMQ_VERSION})
+string(REGEX REPLACE "^([0-9]+)\\.([0-9]+).*" "\\2"
+   AMQ_VERSION_MINOR ${AMQ_VERSION})
 
 ## check for threads
 Include(FindThreads)
@@ -149,7 +157,8 @@ IF(WIN32)
   link_libraries(libactivemq-cpp.lib )
   link_libraries(cppunit.lib)
 ELSE(WIN32)
-link_libraries(-Wl,-Bstatic ${AMQ_STATIC_LDFLAGS} -Wl,-Bdynamic)
+#link_libraries(-Wl,-Bstatic ${AMQ_STATIC_LDFLAGS} -Wl,-Bdynamic)
+link_libraries(-Wl,-Bstatic ${AMQ_STATIC_LDFLAGS} -Wl,-Bdynamic ${APR1_LDFLAGS})
 ENDIF(WIN32)
 
 if(ENABLE_LOGGING)

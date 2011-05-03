@@ -26,8 +26,12 @@
 #include <mqs/Channel.hpp>
 #include <mqs/Response.hpp>
 #include <mqs/ChannelConnectionFailed.hpp>
+#include <mqs/ChannelConnectionLost.hpp>
 
 // activemq includes
+#if AMQ_VERSION_MAJOR >= 3
+#  include <activemq/library/ActiveMQCPP.h>
+#endif
 #include <cms/Connection.h>
 #include <cms/Message.h>
 #include <cms/TextMessage.h>
@@ -39,7 +43,6 @@
 #include <cms/Topic.h>
 #include <cms/Session.h>
 #include <activemq/core/ActiveMQConnectionFactory.h>
-#include <activemq/network/SocketException.h>
 
 #if PERFORM_CHANNEL_IS_STARTED_CHECK
 #define ENSURE_STARTED() ensure_started()
@@ -63,7 +66,9 @@ Channel::Channel(const mqs::BrokerURI &broker, const mqs::Destination &inout)
       _blocked_receivers(0),
       _state(DISCONNECTED)
 {
-  
+#if AMQ_VERSION_MAJOR >= 3
+    activemq::library::ActiveMQCPP::initializeLibrary();
+#endif
 }
 
 Channel::Channel(const mqs::BrokerURI &broker, const mqs::Destination &in, const mqs::Destination &out)
@@ -77,10 +82,13 @@ Channel::Channel(const mqs::BrokerURI &broker, const mqs::Destination &in, const
       _blocked_receivers(0),
       _state(DISCONNECTED)
 {
+#if AMQ_VERSION_MAJOR >= 3
+    activemq::library::ActiveMQCPP::initializeLibrary();
+#endif
   
 }
 
-Channel::~Channel() {
+Channel::~Channel() throw() {
     _exceptionListener = NULL;
     _messageListener = NULL;
     try {
@@ -92,6 +100,7 @@ Channel::~Channel() {
     } catch (...) {
         MQS_LOG_ERROR("unknown error during channel stop procedure");
     }
+    //activemq::library::ActiveMQCPP::shutdownLibrary();
 }
 
 void
@@ -102,21 +111,26 @@ Channel::start(bool doFlush) throw(ChannelConnectionFailed) {
         return;
   
     // Create a ConnectionFactory
-    shared_ptr<ActiveMQConnectionFactory> connectionFactory(new ActiveMQConnectionFactory(_broker.value));
+    //shared_ptr<ActiveMQConnectionFactory> connectionFactory(new ActiveMQConnectionFactory(_broker.value));
+    ActiveMQConnectionFactory* connectionFactory(new ActiveMQConnectionFactory(_broker.value));
   
     MQS_LOG_DEBUG("creating connection");
     try {
         _connection.reset(connectionFactory->createConnection());
-    } catch (const activemq::network::SocketException &e) {
-        MQS_LOG_WARN("could not connect to broker: " << e.getMessage());
-        throw ChannelConnectionFailed(e.getMessage());
+        delete connectionFactory;
     } catch (const cms::CMSException &e) {
+        delete connectionFactory;
+        _connection.reset();
         MQS_LOG_WARN("could not connect to broker: " << e.getMessage());
         throw ChannelConnectionFailed(e.getMessage());
     } catch (const std::exception &e) {
+        delete connectionFactory;
+        _connection.reset();
         MQS_LOG_WARN("could not connect to broker: " << e.what());
         throw ChannelConnectionFailed(e.what());
     } catch(...) {
+        delete connectionFactory;
+        _connection.reset();
         MQS_LOG_WARN("could not connect to broker due to an unknown reason");
         throw ChannelConnectionFailed();
     }
@@ -127,12 +141,21 @@ Channel::start(bool doFlush) throw(ChannelConnectionFailed) {
         _connection->start();
     } catch (const cms::CMSException &e) {
         MQS_LOG_WARN("could not start connection to broker: " << e.getMessage());
+        _connection->stop();
+        _connection->close();
+        _connection.reset();
         throw ChannelConnectionFailed(e.getMessage());
     } catch (const std::exception &e) {
         MQS_LOG_WARN("could not connect to broker: " << e.what());
+        _connection->stop();
+        _connection->close();
+        _connection.reset();
         throw ChannelConnectionFailed(e.what());
     } catch (...) {
         MQS_LOG_WARN("could not start connection to broker due to an unknown reason");
+        _connection->stop();
+        _connection->close();
+        _connection.reset();
         throw ChannelConnectionFailed();
     }
   
@@ -169,6 +192,7 @@ Channel::start(bool doFlush) throw(ChannelConnectionFailed) {
         flushMessages();
     }
 
+    MQS_LOG_DEBUG("connection created and started.");
     notify();
 }
 
@@ -176,6 +200,14 @@ void
 Channel::stop() {
     boost::unique_lock<boost::recursive_mutex> lock(_mtx);
     MQS_LOG_INFO("stopping");
+    
+    if(!_started) return;
+    
+    if (_connection) {
+        MQS_LOG_DEBUG("closing the connection");
+        _connection->stop();
+        _connection->close();
+    }
 
     while (!_consumer.empty()) {
         struct Consumer c = _consumer.front(); _consumer.pop_front();
@@ -183,24 +215,22 @@ Channel::stop() {
         c.mqs_destination.reset();
         c.destination.reset();
         if (c.consumer) {
-            c.consumer->setMessageListener( NULL );
-            c.consumer->close();
+          //c.consumer->setMessageListener( NULL );
+          //  c.consumer->close();
             c.consumer.reset();
         }
         MQS_LOG_DEBUG("done");
     }
 
     MQS_LOG_DEBUG("resetting the producer");
-    _producer_destination.reset();
+    _producer->close();
+
     _producer.reset();
+    _producer_destination.reset();
     
     if (_session) {
         MQS_LOG_DEBUG("closing the session");
         _session->close();
-    }
-    if (_connection) {
-        MQS_LOG_DEBUG("closing the connection");
-        _connection->close();
     }
 
     try {
@@ -219,6 +249,41 @@ Channel::stop() {
     notify();
 }
 
+void Channel::reconnect() {
+  MQS_LOG_DEBUG("====>>> RESTART ");
+  //sleep(10);
+
+  //_connection->start();
+  //return;
+  
+
+#if 0
+  _started = false;
+  _state = DISCONNECTED;
+  _connection->stop();
+  _session->close();
+  _connection->close();
+
+  _session.reset();
+  _connection.reset();
+#else
+  stop();
+  
+#endif
+
+
+  sleep(5);
+  for(int i=0; i< 5; i++) {
+    try {
+      start();
+      return;
+    } catch(...) {
+      MQS_LOG_DEBUG("====>>> RESTART -- Nexttry ");
+      sleep(1);
+    }
+  }
+}
+
 void
 Channel::addIncomingQueue(const mqs::Destination &dst) {
     ENSURE_STARTED();
@@ -230,7 +295,6 @@ Channel::addIncomingQueue(const mqs::Destination &dst) {
     consumer.mqs_destination = shared_ptr<mqs::Destination>(new mqs::Destination(dst));
     consumer.consumer = shared_ptr<cms::MessageConsumer>(_session->createConsumer(consumer.destination.get()));
     consumer.consumer->setMessageListener(this);
-
     boost::unique_lock<boost::recursive_mutex> lock(_mtx);
     _consumer.push_back(consumer);
 }
@@ -261,23 +325,31 @@ const std::string&
 Channel::send(const mqs::Message &msg) {
     ENSURE_STARTED();
 
-    shared_ptr<cms::Message> m(_session->createBytesMessage((unsigned char*)msg.body().c_str(), msg.body().size()));
-    shared_ptr<cms::Destination> to(msg.to().toCMSDestination(*_session));
-    shared_ptr<cms::Destination> from(msg.from().toCMSDestination(*_session));
+    try {
+      shared_ptr<cms::Message> m(_session->createBytesMessage((unsigned char*)msg.body().c_str(), msg.body().size()));
+      MQS_LOG_DEBUG("send: 1");
+      shared_ptr<cms::Destination> to(msg.to().toCMSDestination(*_session));
+      MQS_LOG_DEBUG("send: 1");
+      shared_ptr<cms::Destination> from(msg.from().toCMSDestination(*_session));
 
-    if (msg.id().empty()) {
+      if (msg.id().empty()) {
         mqs::Message &m(const_cast<mqs::Message&>(msg));
         m.id(_msgSeqGen->next());
-    }
+      }
 
-    m->setCMSCorrelationID(msg.correlation());
-    m->setCMSReplyTo(from.get()); 
+      m->setCMSCorrelationID(msg.correlation());
+      m->setCMSReplyTo(from.get()); 
 
-    /* work around stomp */
-    m->setStringProperty("amqp-message-id", msg.id());
-    m->setStringProperty("content-type", "application/octet-stream");
+      /* work around stomp */
+      m->setStringProperty("amqp-message-id", msg.id());
+      m->setStringProperty("content-type", "application/octet-stream");
 
-    _producer->send(to.get(), m.get(), msg.deliveryMode(), msg.priority(), msg.ttl());
+#if AMQ_VERSION_MAJOR < 3
+      _producer->send(to.get(), m.get(), msg.deliveryMode(), msg.priority(), msg.ttl());
+#else
+      _producer->send(to.get(), m.get(), msg.deliveryMode(), msg.priority(), msg.ttl());
+      //_producer->send(m.get(), msg.deliveryMode(), msg.priority(), msg.ttl());
+#endif
 
     MQS_LOG_DEBUG("sent message"
                   << " id:"       << msg.id()
@@ -291,7 +363,12 @@ Channel::send(const mqs::Message &msg) {
     MQS_LOG_DEBUG("sent message body: '"<< msg.body() << "'");
     
      
+    } catch (cms::CMSException &e) {
+      MQS_LOG_DEBUG("Send failed: "<< e.what());
+  
+    }
     return msg.id();
+    
 }
 
 mqs::Message::Ptr
@@ -445,7 +522,7 @@ Channel::setExceptionListener(mqs::ExceptionListener *listener) {
 }
 
 void
-Channel::onMessage(const cms::Message *msg) {
+Channel::onMessage(const cms::Message *msg) throw() {
     // handle incoming messages
     try {
         mqs::Message::Ptr m(buildMessage(msg));
@@ -511,15 +588,20 @@ Channel::flushMessages() {
 
 void
 Channel::onException(const cms::CMSException &ex) {
-    if (_exceptionListener) {
-        try {
-            _exceptionListener->onException(ex);
-        } catch(...) {
-            MQS_LOG_WARN("exception listener could not handle: " << ex.getMessage() << " " << ex.getStackTraceString());
-        }
-    } else {
-        MQS_LOG_WARN("no exception listener registered to handle: " << ex.getMessage() << " " << ex.getStackTraceString());
+  MQS_LOG_WARN("MQS - exception listener: " << typeid(ex).name());
+  if (_exceptionListener) {
+    try {
+      //if( dynamic_cast<activemq::io::IOException*>((cms::CMSException*)&ex)) {
+      //  MQS_LOG_WARN("MQS - exception listener: LOSTCONNECT " << typeid(ex).name());
+      //  _exceptionListener->onException( ChannelConnectionLost());
+      //} else 
+        _exceptionListener->onException(ex);
+    } catch(...) {
+      MQS_LOG_WARN("exception listener could not handle: " << ex.getMessage() << " " << ex.getStackTraceString());
     }
+  } else {
+    MQS_LOG_WARN("no exception listener registered to handle: " << ex.getMessage() << " " << ex.getStackTraceString());
+  }
 }
 
 bool
