@@ -282,7 +282,7 @@ void ChannelTest::testConnectionLoss() {
     CPPUNIT_ASSERT(rmsg.get() != NULL);
     CPPUNIT_ASSERT_EQUAL(std::string("hello world!"), rmsg->body());
 
-    for( int i=0; i< 1000; i++) {
+    for( int i=0; i< 10; i++) {
       
     // 
     MQS_LOG_INFO("think about a way how to check this automatically");
@@ -411,11 +411,11 @@ void ChannelTest::testRestart() {
 
 
 void ChannelTest::onException(const cms::CMSException &e) {
-    MQS_LOG_WARN("think about a way how to check for this automatically: " << e.getMessage());
+    MQS_LOG_WARN("think about a way how to check for this automatically: CMS: " << e.getMessage());
     _exceptionArrived = true;
 }
 void ChannelTest::onException(const mqs::MQSException &e) {
-    MQS_LOG_WARN("think about a way how to check this automatically: " << e.what());
+    MQS_LOG_WARN("think about a way how to check this automatically: MQS: " << e.what());
     _exceptionArrived = true;
 }
 

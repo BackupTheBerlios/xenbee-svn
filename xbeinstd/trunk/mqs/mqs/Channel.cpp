@@ -43,6 +43,7 @@
 #include <cms/Topic.h>
 #include <cms/Session.h>
 #include <activemq/core/ActiveMQConnectionFactory.h>
+#include <activemq/transport/CommandIOException.h>
 
 #if PERFORM_CHANNEL_IS_STARTED_CHECK
 #define ENSURE_STARTED() ensure_started()
@@ -206,6 +207,9 @@ Channel::stop() {
     if (_connection) {
         MQS_LOG_DEBUG("closing the connection");
         _connection->stop();
+        MQS_LOG_DEBUG("removing sessions");
+        //_connection->removeSession(_session.get());
+
         _connection->close();
     }
 
@@ -223,7 +227,7 @@ Channel::stop() {
     }
 
     MQS_LOG_DEBUG("resetting the producer");
-    _producer->close();
+    //_producer->close();
 
     _producer.reset();
     _producer_destination.reset();
@@ -247,39 +251,23 @@ Channel::stop() {
     _started = false;
     _state = DISCONNECTED;
     notify();
+    MQS_LOG_DEBUG("stopped and cleaned the channel.");
 }
 
 void Channel::reconnect() {
-  MQS_LOG_DEBUG("====>>> RESTART ");
-  //sleep(10);
+  MQS_LOG_INFO("reconnecting");
 
-  //_connection->start();
-  //return;
-  
-
-#if 0
-  _started = false;
-  _state = DISCONNECTED;
-  _connection->stop();
-  _session->close();
-  _connection->close();
-
-  _session.reset();
-  _connection.reset();
-#else
   stop();
-  
-#endif
+  sleep(1);
 
-
-  sleep(5);
-  for(int i=0; i< 5; i++) {
+  //sleep(5);
+  for(int i=0; i< 10; i++) {
     try {
       start();
       return;
     } catch(...) {
       MQS_LOG_DEBUG("====>>> RESTART -- Nexttry ");
-      sleep(1);
+      sleep(2);
     }
   }
 }
@@ -591,10 +579,11 @@ Channel::onException(const cms::CMSException &ex) {
   MQS_LOG_WARN("MQS - exception listener: " << typeid(ex).name());
   if (_exceptionListener) {
     try {
+      if( dynamic_cast<activemq::transport::CommandIOException*>((cms::CMSException*)&ex)) {
       //if( dynamic_cast<activemq::io::IOException*>((cms::CMSException*)&ex)) {
-      //  MQS_LOG_WARN("MQS - exception listener: LOSTCONNECT " << typeid(ex).name());
-      //  _exceptionListener->onException( ChannelConnectionLost());
-      //} else 
+        MQS_LOG_WARN("MQS - exception listener: LOSTCONNECT " << typeid(ex).name());
+        _exceptionListener->onException( ChannelConnectionLost());
+      } else 
         _exceptionListener->onException(ex);
     } catch(...) {
       MQS_LOG_WARN("exception listener could not handle: " << ex.getMessage() << " " << ex.getStackTraceString());
