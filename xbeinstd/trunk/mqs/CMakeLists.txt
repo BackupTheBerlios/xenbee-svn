@@ -59,6 +59,27 @@ endif(UNIX)
 
 ## PkgConfig is helpful
 include(FindPkgConfig)
+# activemq-c[pp library
+include(FindAMQ)
+if (AMQ_FOUND)
+  include_directories(${AMQ_INCLUDE_DIR})
+  link_directories(${AMQ_LIBRARY_DIR})
+  if(WIN32)
+    set(AMQ_LIBRARY "${AMQ_LIBRARY};ws2_32.lib;rpcrt4.lib")
+  endif(WIN32)
+  #link_libraries(${AMQ_LIBRARY})
+  message(STATUS "AMQ: '${AMQ_LIBRARY}'")
+
+  pkg_check_modules(APR1 REQUIRED apr-1)
+  set(APR1_STATIC_LDFLAGS "" CACHE INTERNAL "" FORCE)
+  set(APR1_STATIC_LIBRARIES "" CACHE INTERNAL "" FORCE)
+  include_directories(${APR1_INCLUDE_DIRS})
+
+  pkg_check_modules(APRUTIL1 REQUIRED apr-util-1)
+  set(APRUTIL1_STATIC_LDFLAGS "" CACHE INTERNAL "" FORCE)
+  set(APRUTIL1_STATIC_LIBRARIES "" CACHE INTERNAL "" FORCE)
+endif(AMQ_FOUND)
+
 if ( PKG_CONFIG_FOUND )
    pkg_check_modules (CPPUNIT cppunit>=1.12)
    message(STATUS "CPPUnit: ${CPPUNIT_CFLAGS} ${CPPUNIT_LDFLAGS} STATIC=${CPPUNIT_STATIC_LDFLAGS}")
@@ -67,17 +88,8 @@ if ( PKG_CONFIG_FOUND )
    # therefore do it manually here.
    set(LOG4CPP_STATIC_LIBRARIES log4cpp.a)
    message(STATUS "LOG4CPP: ${LOG4CPP_CFLAGS} ${LOG4CPP_LDFLAGS}")
-
-   pkg_check_modules(AMQ REQUIRED activemq-cpp)
-   message(STATUS "ActiveMQ: ${AMQ_CFLAGS} ${AMQ_LDFLAGS}")
-   pkg_check_modules(APR1 REQUIRED apr-1)
-   pkg_check_modules(APR1 REQUIRED aprutil-1)
 else  ( PKG_CONFIG_FOUND )
   message("No PKGCONFIG found - hoping for the best.")
-
-  set(AMQ_STATIC_INCLUDE_DIRS "${CMAKE_ADDITIONAL_PATH}/include" CACHE PATH "ActiveMQ Include dir")
-  set(AMQ_LIBRARY_DIRS        "${CMAKE_ADDITIONAL_PATH}/lib" CACHE PATH "ActiveMQ Library dir")
-  set(AMQ_LIBRARIES           "activemq-cpp" CACHE PATH "ActiveMQ libraries")
 
   set(CPPUNIT_INCLUDE_DIRS "${CMAKE_ADDITIONAL_PATH}/include" CACHE PATH "CPPUnit Include dir")
   set(CPPUNIT_LIBRARY_DIRS "${CMAKE_ADDITIONAL_PATH}/lib" CACHE PATH "CPPUnit Library dir")
@@ -88,12 +100,6 @@ else  ( PKG_CONFIG_FOUND )
   set(LOG4CPP_STATIC_LIBRARIES    "log4cpp" CACHE STRING "Log4cpp libraries")
   set(LOG4CPP_FOUND NO CACHE BOOL "Log4cpp found")
 endif ( PKG_CONFIG_FOUND )
-
-## activemq-cpp version check
-string(REGEX REPLACE "^([0-9]+)\\.([0-9]+).*$" "\\1"
-  AMQ_VERSION_MAJOR ${AMQ_VERSION})
-string(REGEX REPLACE "^([0-9]+)\\.([0-9]+).*" "\\2"
-   AMQ_VERSION_MINOR ${AMQ_VERSION})
 
 ## check for threads
 Include(FindThreads)
