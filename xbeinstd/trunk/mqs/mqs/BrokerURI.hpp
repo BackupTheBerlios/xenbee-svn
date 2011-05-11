@@ -31,6 +31,7 @@ namespace mqs {
     explicit
     BrokerURI(const std::string& uri)
       : value(uri) {}
+    BrokerURI(const BrokerURI& original) : value(original.value) {}
   public:
     const std::string value;
   };

@@ -28,7 +28,8 @@
 namespace mqs {
     class MessageListener {
     public:
-        virtual void onMessage(const mqs::Message::Ptr &msg) = 0;
+      virtual ~MessageListener() {}
+      virtual void onMessage(const mqs::Message::Ptr &msg) = 0;
     };
 }
 

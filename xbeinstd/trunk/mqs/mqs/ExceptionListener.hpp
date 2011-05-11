@@ -29,8 +29,9 @@
 namespace mqs {
     class ExceptionListener {
     public:
-        virtual void onException(const cms::CMSException &) = 0;
-        virtual void onException(const mqs::MQSException &) = 0;
+      virtual ~ExceptionListener() {}
+      virtual void onException(const cms::CMSException &) = 0;
+      virtual void onException(const mqs::MQSException &) = 0;
     };
 }
 

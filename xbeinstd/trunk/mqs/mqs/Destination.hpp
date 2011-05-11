@@ -48,6 +48,8 @@ namespace mqs {
     */
     class Destination {
     public:
+      typedef shared_ptr<Destination> Ptr;
+
         Destination(const std::string &descriptor);
         Destination(const char *descriptor);
         Destination(const cms::Destination *d) throw();

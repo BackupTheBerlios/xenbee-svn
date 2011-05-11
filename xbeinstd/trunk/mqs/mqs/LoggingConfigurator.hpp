@@ -36,11 +36,13 @@ namespace mqscommon
 {
     class ConfigurationFunction {
     public:
+      virtual ~ConfigurationFunction() {}
         virtual void operator() () throw() = 0;
     };
 
     class DefaultConfiguration : public ConfigurationFunction {
     public:
+      virtual ~DefaultConfiguration() {}
         virtual void operator() () throw() {
 #if HAVE_LOG4CPP
             try {
@@ -65,6 +67,7 @@ namespace mqscommon
 
     class LoggingConfigurator {
     public:
+      virtual ~LoggingConfigurator() {}
         static void configure() {
             DefaultConfiguration()();
         }
