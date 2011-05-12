@@ -57,8 +57,12 @@ else(UNIX)
   # make windows happy by not specifying -Werror and stuff
 endif(UNIX)
 
+include(FindCppUnit)
+message(STATUS "CPPUnit: -I${CPPUNIT_INCLUDE_DIRS} -l${CPPUNIT_LIBRARY}")
+
 ## PkgConfig is helpful
 include(FindPkgConfig)
+
 # activemq-c[pp library
 include(FindAMQ)
 if (AMQ_FOUND)
@@ -70,35 +74,40 @@ if (AMQ_FOUND)
   #link_libraries(${AMQ_LIBRARY})
   message(STATUS "AMQ: '${AMQ_LIBRARY}'")
 
-  pkg_check_modules(APR1 REQUIRED apr-1)
-  set(APR1_STATIC_LDFLAGS "" CACHE INTERNAL "" FORCE)
-  set(APR1_STATIC_LIBRARIES "" CACHE INTERNAL "" FORCE)
-  include_directories(${APR1_INCLUDE_DIRS})
+  if (NOT WIN32)
+    pkg_check_modules(APR1 REQUIRED apr-1)
+    set(APR1_STATIC_LDFLAGS "" CACHE INTERNAL "" FORCE)
+    set(APR1_STATIC_LIBRARIES "" CACHE INTERNAL "" FORCE)
+    include_directories(${APR1_INCLUDE_DIRS})
 
-  pkg_check_modules(APRUTIL1 REQUIRED apr-util-1)
-  set(APRUTIL1_STATIC_LDFLAGS "" CACHE INTERNAL "" FORCE)
-  set(APRUTIL1_STATIC_LIBRARIES "" CACHE INTERNAL "" FORCE)
+    pkg_check_modules(APRUTIL1 REQUIRED apr-util-1)
+    set(APRUTIL1_STATIC_LDFLAGS "" CACHE INTERNAL "" FORCE)
+    set(APRUTIL1_STATIC_LIBRARIES "" CACHE INTERNAL "" FORCE)
+  endif (NOT WIN32)
 endif(AMQ_FOUND)
+
+## logging
+if (ENABLE_LOGGING)
+  message(STATUS "Building with log4cpp...")
+  include (FindLogging)
+  if (LOG4CPP_FOUND)
+    include_directories(${LOG4CPP_INCLUDE_DIR})
+    #link_libraries(${LOG4CPP_LIBRARY})
+    set(HAVE_LOG4CPP 1)
+    message(STATUS "log4cpp has been found...")
+  else (LOG4CPP_FOUND)
+    message(FATAL "Log4Cpp could not be found!")
+  endif(LOG4CPP_FOUND)
+  message(STATUS "LOG4CPP: ${LOG4CPP_CFLAGS} ${LOG4CPP_LDFLAGS}")
+endif (ENABLE_LOGGING)
 
 if ( PKG_CONFIG_FOUND )
    pkg_check_modules (CPPUNIT cppunit>=1.12)
    message(STATUS "CPPUnit: ${CPPUNIT_CFLAGS} ${CPPUNIT_LDFLAGS} STATIC=${CPPUNIT_STATIC_LDFLAGS}")
    pkg_check_modules (LOG4CPP log4cpp>=1.0)
-   # The log4cpp package config is broken, doesn't set static library -
-   # therefore do it manually here.
-   set(LOG4CPP_STATIC_LIBRARIES log4cpp.a)
-   message(STATUS "LOG4CPP: ${LOG4CPP_CFLAGS} ${LOG4CPP_LDFLAGS}")
 else  ( PKG_CONFIG_FOUND )
   message("No PKGCONFIG found - hoping for the best.")
 
-  set(CPPUNIT_INCLUDE_DIRS "${CMAKE_ADDITIONAL_PATH}/include" CACHE PATH "CPPUnit Include dir")
-  set(CPPUNIT_LIBRARY_DIRS "${CMAKE_ADDITIONAL_PATH}/lib" CACHE PATH "CPPUnit Library dir")
-  set(CPPUNIT_LIBRARIES "cppunit" CACHE PATH "CPPUnit libraries")
-
-  set(LOG4CPP_STATIC_INCLUDE_DIRS "${CMAKE_ADDITIONAL_PATH}/include" CACHE PATH "Log4cpp Include dir")
-  set(LOG4CPP_STATIC_LIBRARY_DIRS "${CMAKE_ADDITIONAL_PATH}/lib" CACHE PATH "Log4cpp Library dir")
-  set(LOG4CPP_STATIC_LIBRARIES    "log4cpp" CACHE STRING "Log4cpp libraries")
-  set(LOG4CPP_FOUND NO CACHE BOOL "Log4cpp found")
 endif ( PKG_CONFIG_FOUND )
 
 ## check for threads
