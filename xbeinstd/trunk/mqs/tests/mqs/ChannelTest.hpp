@@ -2,6 +2,7 @@
 #define MQS_TESTS_CHANNEL_HPP 1
 
 #include <cppunit/extensions/HelperMacros.h>
+#include <tests/mqs/testsconfig.hpp>
 #include <mqs/common.hpp>
 #include <mqs/Channel.hpp>
 #include <mqs/ExceptionListener.hpp>
@@ -20,7 +21,9 @@ namespace mqs {
             CPPUNIT_TEST( testMultipleSender );
             CPPUNIT_TEST( testStartNoQueueServer );
             //      CPPUNIT_TEST_EXCEPTION( testStart_Timeout_Throws, cms::CMSException );
+#if defined(WITH_CONNECTIONLOST_TEST) && WITH_CONNECTIONLOST_TEST
             CPPUNIT_TEST( testConnectionLoss ); // this function should be last because the broker server needs to be shut down
+#endif
           //CPPUNIT_TEST( testRestart );
             CPPUNIT_TEST_SUITE_END();
 

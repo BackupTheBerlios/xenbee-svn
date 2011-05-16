@@ -36,6 +36,10 @@ OPTION(USE_STL_TR1
  "Use tr1 from stl"
  YES)
 
+OPTION(WITH_CONNECTIONLOST_TEST
+  "Enable test for connecttionlost to server. One have to stop server by hand."
+  No)
+
 set(TEST_BROKER_URI "tcp://localhost:61613?wireFormat=stomp&username=guest&password=guest" CACHE STRING "The ActiveMQ broker to use for unit tests")
 
 cmake_minimum_required(VERSION "2.6" FATAL_ERROR)
