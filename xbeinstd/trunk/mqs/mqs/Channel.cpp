@@ -258,7 +258,7 @@ void Channel::reconnect() {
   MQS_LOG_INFO("reconnecting");
 
   stop();
-  sleep(1);
+  //sleep(1);
 
   //sleep(5);
   for(int i=0; i< 10; i++) {
@@ -267,7 +267,7 @@ void Channel::reconnect() {
       return;
     } catch(...) {
       MQS_LOG_DEBUG("====>>> RESTART -- Nexttry ");
-      sleep(2);
+      //sleep(2);
     }
   }
 }
