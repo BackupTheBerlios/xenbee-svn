@@ -29,7 +29,7 @@
 #include <mqs/ChannelConnectionLost.hpp>
 
 // activemq includes
-#if AMQ_VERSION_MAJOR >= 3
+#if AMQ_VERSION >= 30000
 #  include <activemq/library/ActiveMQCPP.h>
 #endif
 #include <cms/Connection.h>
@@ -67,7 +67,7 @@ Channel::Channel(const mqs::BrokerURI &broker, const mqs::Destination &inout)
       _blocked_receivers(0),
       _state(DISCONNECTED)
 {
-#if AMQ_VERSION_MAJOR >= 3
+#if AMQ_VERSION >= 30000
     activemq::library::ActiveMQCPP::initializeLibrary();
 #endif
 }
@@ -83,7 +83,7 @@ Channel::Channel(const mqs::BrokerURI &broker, const mqs::Destination &in, const
       _blocked_receivers(0),
       _state(DISCONNECTED)
 {
-#if AMQ_VERSION_MAJOR >= 3
+#if AMQ_VERSION >= 30000
     activemq::library::ActiveMQCPP::initializeLibrary();
 #endif
   
@@ -332,7 +332,7 @@ Channel::send(const mqs::Message &msg) {
       m->setStringProperty("amqp-message-id", msg.id());
       m->setStringProperty("content-type", "application/octet-stream");
 
-#if AMQ_VERSION_MAJOR < 3
+#if AMQ_VERSION < 30000
       _producer->send(to.get(), m.get(), msg.deliveryMode(), msg.priority(), msg.ttl());
 #else
       _producer->send(to.get(), m.get(), msg.deliveryMode(), msg.priority(), msg.ttl());

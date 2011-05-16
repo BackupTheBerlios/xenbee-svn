@@ -14,3 +14,6 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/testsconfig.hpp.in ${CMAKE_CURRENT_BI
 add_executable(mqstestsuite ${mqstest_src})
 add_test(mqstestsuite ${CMAKE_CURRENT_BINARY_DIR}/mqstestsuite)
 target_link_libraries(mqstestsuite mqs)
+target_link_libraries(mqstestsuite ${LOG4CPP_LIBRARY})
+target_link_libraries(mqstestsuite ${AMQ_LIBRARY})
+target_link_libraries(mqstestsuite ${CPPUNIT_LIBRARY})

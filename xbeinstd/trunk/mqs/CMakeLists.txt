@@ -10,7 +10,7 @@ endif(POLICY CMP0011)
 set(CMAKE_VERBOSE_MAKEFILE true)
 
 set(V_MAJOR 0)
-set(V_MINOR 3)
+set(V_MINOR 4)
 set(V_PATCH 0)
 
 # add a path where some libraries might be stored
@@ -60,9 +60,6 @@ endif(UNIX)
 include(FindCppUnit)
 message(STATUS "CPPUnit: -I${CPPUNIT_INCLUDE_DIRS} -l${CPPUNIT_LIBRARY}")
 
-## PkgConfig is helpful
-include(FindPkgConfig)
-
 # activemq-c[pp library
 include(FindAMQ)
 if (AMQ_FOUND)
@@ -73,17 +70,6 @@ if (AMQ_FOUND)
   endif(WIN32)
   #link_libraries(${AMQ_LIBRARY})
   message(STATUS "AMQ: '${AMQ_LIBRARY}'")
-
-  if (NOT WIN32)
-    pkg_check_modules(APR1 REQUIRED apr-1)
-    set(APR1_STATIC_LDFLAGS "" CACHE INTERNAL "" FORCE)
-    set(APR1_STATIC_LIBRARIES "" CACHE INTERNAL "" FORCE)
-    include_directories(${APR1_INCLUDE_DIRS})
-
-    pkg_check_modules(APRUTIL1 REQUIRED apr-util-1)
-    set(APRUTIL1_STATIC_LDFLAGS "" CACHE INTERNAL "" FORCE)
-    set(APRUTIL1_STATIC_LIBRARIES "" CACHE INTERNAL "" FORCE)
-  endif (NOT WIN32)
 endif(AMQ_FOUND)
 
 ## logging
@@ -100,15 +86,6 @@ if (ENABLE_LOGGING)
   endif(LOG4CPP_FOUND)
   message(STATUS "LOG4CPP: ${LOG4CPP_CFLAGS} ${LOG4CPP_LDFLAGS}")
 endif (ENABLE_LOGGING)
-
-if ( PKG_CONFIG_FOUND )
-   pkg_check_modules (CPPUNIT cppunit>=1.12)
-   message(STATUS "CPPUnit: ${CPPUNIT_CFLAGS} ${CPPUNIT_LDFLAGS} STATIC=${CPPUNIT_STATIC_LDFLAGS}")
-   pkg_check_modules (LOG4CPP log4cpp>=1.0)
-else  ( PKG_CONFIG_FOUND )
-  message("No PKGCONFIG found - hoping for the best.")
-
-endif ( PKG_CONFIG_FOUND )
 
 ## check for threads
 Include(FindThreads)
@@ -169,8 +146,6 @@ IF(WIN32)
   # Path to be fixed
   link_directories("C:/Program Files/GnuWin32/lib")
   link_libraries(ws2_32.lib rpcrt4.lib)
-  link_libraries(libactivemq-cpp.lib )
-  link_libraries(cppunit.lib)
 ELSE(WIN32)
 #link_libraries(-Wl,-Bstatic ${AMQ_STATIC_LDFLAGS} -Wl,-Bdynamic)
 link_libraries(-Wl,-Bstatic ${AMQ_STATIC_LDFLAGS} -Wl,-Bdynamic ${APR1_LDFLAGS})

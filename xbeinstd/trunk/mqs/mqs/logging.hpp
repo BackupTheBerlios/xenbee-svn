@@ -26,6 +26,12 @@
 /* Logging */
 #if ENABLE_LOGGING == 1
 
+#ifdef WIN32
+#  ifndef __PRETTY_FUNCTION__  /* this macro ist not defined under Microsoft */
+#    define __PRETTY_FUNCTION__ "xxx"
+#  endif
+#endif // WIN32
+
 #include <mqs/LoggingConfigurator.hpp>
 
 #if HAVE_LOG4CXX
